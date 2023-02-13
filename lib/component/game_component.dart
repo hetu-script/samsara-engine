@@ -1,5 +1,6 @@
 import 'package:meta/meta.dart';
 import 'package:flame/components.dart';
+import 'package:samsara/gestures.dart';
 
 import '../scene/scene.dart';
 import '../extensions.dart';
@@ -29,4 +30,7 @@ abstract class GameComponent extends PositionComponent with HasGameRef<Scene> {
   bool isVisibleInCamera() {
     return gameRef.camera.isComponentOnCamera(this);
   }
+
+  Iterable<HandlesGesture> get gestureChildren =>
+      children.whereType<HandlesGesture>().cast<HandlesGesture>();
 }

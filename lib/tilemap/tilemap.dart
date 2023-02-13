@@ -1,12 +1,12 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 
-import '../ui/pointer_detector.dart';
 import '../component/game_component.dart';
 import '../gestures/gesture_mixin.dart';
 import '../extensions.dart';
@@ -594,7 +594,9 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   @override
-  void onMouseMove(MouseMoveUpdateDetails details) {}
+  void onMouseHover(PointerHoverEvent details) {
+    engine.info(details.position);
+  }
 
   @override
   Future<void> onLoad() async {

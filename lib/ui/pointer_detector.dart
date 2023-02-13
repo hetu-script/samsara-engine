@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui';
 
 import 'package:flutter/widgets.dart';
-import 'package:flutter/foundation.dart';
+
+import 'package:flutter/gestures.dart';
+
+export 'package:flutter/gestures.dart' show PointerHoverEvent;
 
 class TouchDetails {
   int pointer;
@@ -22,8 +24,8 @@ class TouchDetails {
         currentGlobalPosition = startGlobalPosition;
 }
 
-class MouseMoveUpdateDetails {
-  /// Creates details for a [MouseMoveUpdateDetails].
+class PointerMoveUpdateDetails {
+  /// Creates details for a [PointerMoveUpdateDetails].
   ///
   /// The [delta] argument must not be null.
   ///
@@ -31,7 +33,7 @@ class MouseMoveUpdateDetails {
   /// coordinates of [delta] and the other coordinate must be zero.
   ///
   /// The [globalPosition] argument must be provided and must not be null.
-  MouseMoveUpdateDetails({
+  PointerMoveUpdateDetails({
     this.sourceTimeStamp,
     this.delta = Offset.zero,
     this.primaryDelta,
@@ -74,10 +76,6 @@ class MouseMoveUpdateDetails {
   ///
   /// Defaults to [globalPosition] if not specified in the constructor.
   final Offset localPosition;
-
-  @override
-  String toString() =>
-      '${objectRuntimeType(this, 'DragUpdateDetails')}($delta)';
 }
 
 ///  A widget that detects gestures.
@@ -100,7 +98,7 @@ class PointerDetector extends StatefulWidget {
     this.onScaleEnd,
     this.onLongPress,
     this.longPressTickTimeConsider = 400,
-    this.onMouseMove,
+    this.onMouseHover,
   });
 
   /// The widget below this widget in the tree.
@@ -155,7 +153,7 @@ class PointerDetector extends StatefulWidget {
   /// A specific duration to detect long press
   final int longPressTickTimeConsider;
 
-  final void Function(MouseMoveUpdateDetails details)? onMouseMove;
+  final void Function(PointerHoverEvent details)? onMouseHover;
 
   @override
   _PointerDetectorState createState() => _PointerDetectorState();
@@ -180,7 +178,10 @@ class _PointerDetectorState extends State<PointerDetector> {
   @override
   Widget build(BuildContext context) {
     return Listener(
-      child: widget.child,
+      child: MouseRegion(
+        child: widget.child,
+        onHover: onMouseHover,
+      ),
       onPointerDown: onPointerDown,
       onPointerUp: onPointerUp,
       onPointerMove: onPointerMove,
@@ -236,17 +237,6 @@ class _PointerDetectorState extends State<PointerDetector> {
     cleanupTimer();
 
     switch (_gestureState) {
-      case _GestureState.none:
-        if (event.kind == PointerDeviceKind.mouse) {
-          if (widget.onMouseMove != null) {
-            widget.onMouseMove!(MouseMoveUpdateDetails(
-                delta: event.delta,
-                sourceTimeStamp: event.timeStamp,
-                globalPosition: event.position,
-                localPosition: event.localPosition));
-          }
-        }
-        break;
       case _GestureState.pointerDown:
         //print('move distance: ' + distance.toString());
         if (distance > 1) {
@@ -386,6 +376,12 @@ class _PointerDetectorState extends State<PointerDetector> {
   void cleanupTimer() {
     if (_longPressTimer != null) {
       _longPressTimer!.cancel();
+    }
+  }
+
+  void onMouseHover(PointerHoverEvent event) {
+    if (widget.onMouseHover != null) {
+      widget.onMouseHover!(event);
     }
   }
 

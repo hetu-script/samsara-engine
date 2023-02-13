@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:hetu_script/hetu_script.dart';
-import 'package:hetu_script/value/struct/struct.dart';
 import 'package:hetu_script_flutter/hetu_script_flutter.dart';
 
 import 'binding/game_binding.dart';
@@ -40,7 +39,7 @@ class SamsaraEngine with SceneController, EventAggregator {
 
   late final String? _mainModName;
 
-  void updateLocale(HTStruct localeData) {
+  void loadLocale(dynamic localeData) {
     locale.loadData(localeData);
   }
 
@@ -57,8 +56,8 @@ class SamsaraEngine with SceneController, EventAggregator {
   late final Hetu hetu;
   bool isLoaded = false;
 
-  HTStruct createStruct([Map<String, dynamic> jsonData = const {}]) =>
-      hetu.interpreter.createStructfromJson(jsonData);
+  // HTStruct createStruct([Map<String, dynamic> jsonData = const {}]) =>
+  //     hetu.interpreter.createStructfromJson(jsonData);
 
   dynamic fetch(
     String varName, {
@@ -136,14 +135,10 @@ class SamsaraEngine with SceneController, EventAggregator {
   /// for accessing the assets bundle resources.
   Future<void> init(
       {Map<String, Function> externalFunctions = const {}}) async {
+    if (isLoaded) return;
     if (debugMode) {
       const root = 'scripts/';
-      final filterConfig = HTFilterConfig(root, extension: [
-        HTResource.hetuModule,
-        HTResource.hetuScript,
-        HTResource.json,
-        HTResource.json5,
-      ]);
+      final filterConfig = HTFilterConfig(root);
       final sourceContext = HTAssetResourceContext(
         root: root,
         includedFilter: [filterConfig],

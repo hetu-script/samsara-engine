@@ -27,7 +27,7 @@ class SceneWidget<T extends Scene> extends StatelessWidget {
         onScaleUpdate: scene.onScaleUpdate,
         onScaleEnd: scene.onScaleEnd,
         onLongPress: scene.onLongPress,
-        onMouseMove: scene.onMouseMove,
+        onMouseHover: scene.onMouseHover,
       ),
     );
   }

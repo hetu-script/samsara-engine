@@ -8,11 +8,11 @@ class GameEvent {
 }
 
 class EventHandler {
-  final Key ownerKey;
+  final Key? ownerKey;
 
   final void Function(GameEvent event) handle;
 
-  EventHandler(this.ownerKey, this.handle);
+  EventHandler({this.ownerKey, required this.handle});
 }
 
 abstract class EventAggregator {

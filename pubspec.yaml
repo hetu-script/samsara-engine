@@ -11,13 +11,13 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flame: ^1.2.0
+  flame: ^1.6.0
   logger: ^1.1.0
 
   hetu_script:
-    path: ../../../hetu-script/packages/hetu_script
+    path: ../hetu-script/packages/hetu_script
   hetu_script_flutter:
-    path: ../../../hetu-script/packages/hetu_script_flutter
+    path: ../hetu-script/packages/hetu_script_flutter
 
 dev_dependencies:
   flutter_test:

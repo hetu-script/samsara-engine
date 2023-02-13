@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:samsara/samsara.dart';
@@ -80,9 +81,9 @@ abstract class Scene extends FlameGame {
     }
   }
 
-  void onMouseMove(MouseMoveUpdateDetails details) {
+  void onMouseHover(PointerHoverEvent details) {
     for (var c in _gestureComponents) {
-      c.handleMouseMove(details);
+      c.handleMouseHover(details);
     }
   }
 
@@ -100,7 +101,7 @@ abstract class Scene extends FlameGame {
       onScaleUpdate: onScaleUpdate,
       onScaleEnd: onScaleEnd,
       onLongPress: onLongPress,
-      onMouseMove: onMouseMove,
+      onMouseHover: onMouseHover,
     );
   }
 }

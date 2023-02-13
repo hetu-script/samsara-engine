@@ -6,12 +6,12 @@ import '../../engine.dart';
 extension SamsaraEngineBinding on SamsaraEngine {
   dynamic htFetch(String varName) {
     switch (varName) {
-      case 'updateLocale':
+      case 'loadLocale':
         return (HTEntity object,
                 {List<dynamic> positionalArgs = const [],
                 Map<String, dynamic> namedArgs = const {},
                 List<HTType> typeArgs = const []}) =>
-            updateLocale(positionalArgs.first);
+            loadLocale(positionalArgs.first);
       // case 'updateZoneColors':
       //   return (HTEntity object,
       //           {List<dynamic> positionalArgs = const [],

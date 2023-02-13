@@ -5,8 +5,7 @@ import 'package:flame/game.dart';
 import 'package:flame/components.dart' show PositionType;
 
 import '../extensions.dart';
-import '../../ui/pointer_detector.dart'
-    show TouchDetails, MouseMoveUpdateDetails;
+import '../../ui/pointer_detector.dart' show TouchDetails;
 import '../component/game_component.dart';
 
 export 'package:flutter/gestures.dart'
@@ -18,6 +17,8 @@ export 'package:flutter/gestures.dart'
         ScaleStartDetails,
         ScaleUpdateDetails,
         LongPressStartDetails;
+export '../../ui/pointer_detector.dart'
+    show TouchDetails, PointerMoveUpdateDetails;
 
 mixin HandlesGesture on GameComponent {
   Camera get camera;
@@ -28,8 +29,9 @@ mixin HandlesGesture on GameComponent {
 
   /// A specific duration to detect double tap
   int doubleTapTimeConsider = 400;
-
   Timer? doubleTapTimer;
+
+  bool isHovering = false;
 
   void onTap(int pointer, int buttons, TapUpDetails details) {}
   void onTapDown(int pointer, int buttons, TapDownDetails details) {}
@@ -43,7 +45,9 @@ mixin HandlesGesture on GameComponent {
   void onScaleUpdate(List<TouchDetails> touches, ScaleUpdateDetails details) {}
   void onScaleEnd() {}
   void onLongPress(int buttons, LongPressStartDetails details) {}
-  void onMouseMove(MouseMoveUpdateDetails details) {}
+  void onMouseEnter() {}
+  void onMouseHover(PointerHoverEvent details) {}
+  void onMouseExit() {}
 
   void handleTapDown(int pointer, int buttons, TapDownDetails details) {
     if (!enableGesture || (tapPointer != null)) return;
@@ -190,14 +194,27 @@ mixin HandlesGesture on GameComponent {
     }
   }
 
-  void handleMouseMove(MouseMoveUpdateDetails details) {
-    if (!enableGesture) return;
+  /// If the event is captured by this object, return true.
+  bool handleMouseHover(PointerHoverEvent details) {
+    if (!enableGesture) return false;
     final pointerPosition = details.localPosition.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
+
     if (containsPoint(convertedPointerPosition)) {
-      onMouseMove(details);
+      if (!isHovering) {
+        isHovering = true;
+        onMouseEnter();
+      }
+      onMouseHover(details);
+      return true;
+    } else {
+      if (isHovering) {
+        isHovering = false;
+        onMouseExit();
+      }
+      return false;
     }
   }
 }
