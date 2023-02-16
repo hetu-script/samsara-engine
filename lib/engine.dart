@@ -80,11 +80,13 @@ class SamsaraEngine with SceneController, EventAggregator {
       );
 
   invoke(String funcName,
-          {String? moduleName,
+          {String? namespaceName,
+          String? moduleName,
           List<dynamic> positionalArgs = const [],
           Map<String, dynamic> namedArgs = const {},
           List<HTType> typeArgs = const []}) =>
       hetu.interpreter.invoke(funcName,
+          namespaceName: namespaceName,
           moduleName: moduleName,
           positionalArgs: positionalArgs,
           namedArgs: namedArgs,
