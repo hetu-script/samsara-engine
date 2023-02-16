@@ -9,7 +9,7 @@ import 'package:hetu_script_flutter/hetu_script_flutter.dart';
 import 'binding/game_binding.dart';
 import '../event/event.dart';
 import 'localization.dart';
-import '../shared/color.dart';
+import 'utils/color.dart';
 import 'scene/scene_controller.dart';
 import 'logger/printer.dart';
 import 'logger/output.dart';

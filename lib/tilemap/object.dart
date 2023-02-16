@@ -6,7 +6,7 @@ import 'package:flame/sprite.dart';
 
 import '../component/game_component.dart';
 import 'tile.dart';
-import '../shared/direction.dart';
+import '../utils/direction.dart';
 import '../engine.dart';
 import '../../event/events.dart';
 

@@ -6,8 +6,13 @@ import 'pointer_detector.dart';
 
 class SceneWidget<T extends Scene> extends StatelessWidget {
   final T scene;
+  final Map<String, OverlayWidgetBuilder<T>>? overlayBuilderMap;
 
-  const SceneWidget({super.key, required this.scene});
+  const SceneWidget({
+    super.key,
+    required this.scene,
+    this.overlayBuilderMap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +22,7 @@ class SceneWidget<T extends Scene> extends StatelessWidget {
       child: PointerDetector(
         child: GameWidget(
           game: scene,
+          overlayBuilderMap: overlayBuilderMap,
         ),
         onTapDown: scene.onTapDown,
         onTapUp: scene.onTapUp,

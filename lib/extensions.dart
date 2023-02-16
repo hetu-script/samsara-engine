@@ -4,6 +4,8 @@ import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'component/game_component.dart';
 
+export 'utils/color.dart' show HexColor;
+
 extension PercentageString on num {
   String toPercentageString([int fractionDigits = 0]) {
     return '${(this * 100).toStringAsFixed(fractionDigits).toString()}%';

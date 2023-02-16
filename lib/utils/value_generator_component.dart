@@ -1,17 +1,18 @@
+import 'package:flame/components.dart';
 import 'package:flutter/widgets.dart';
 
-import 'package:flame/components.dart';
-
+/// Component used to generate numbers using the gameLoop.
 class ValueGeneratorComponent extends Component {
   bool _isFinished = false;
-  final int _maxInMicroSeconds = 1000000;
 
+  final _maxInMilliSeconds = 1000;
   final Duration duration;
   final double begin;
   final double end;
   final Curve curve;
   final VoidCallback? onFinish;
   final ValueChanged<double>? onChange;
+  final bool autoStart;
 
   double _currentValue = 0;
   double _displacement = 0;
@@ -24,38 +25,31 @@ class ValueGeneratorComponent extends Component {
     this.curve = Curves.decelerate,
     this.onFinish,
     this.onChange,
+    this.autoStart = false,
   }) {
+    _isRunning = autoStart;
     _displacement = end - begin;
   }
 
   @override
-  void render(Canvas canvas) {}
-
-  @override
-  void update(double dt) {
-    super.update(dt);
+  void updateTree(double dt) {
     if (!_isRunning) return;
-    _currentValue += dt * _maxInMicroSeconds;
-    if (_currentValue >= duration.inMicroseconds) {
+
+    _currentValue += dt * _maxInMilliSeconds;
+    if (_currentValue >= duration.inMilliseconds) {
       finish();
     } else {
-      double value = _currentValue / duration.inMicroseconds;
-      value = curve.transform(value);
+      double value = curve.transform(_currentValue / duration.inMilliseconds);
       double realValue = begin + (_displacement * value);
-      if (onChange != null) {
-        onChange!(realValue);
-      }
+      onChange?.call(realValue);
     }
   }
 
   void finish() {
     _isFinished = true;
-    if (onChange != null) {
-      onChange!(end);
-    }
-    if (onFinish != null) {
-      onFinish!();
-    }
+    onChange?.call(end);
+    onFinish?.call();
+    removeFromParent();
   }
 
   void start() {

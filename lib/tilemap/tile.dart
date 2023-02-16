@@ -1,6 +1,6 @@
 import 'package:quiver/core.dart';
 import 'package:flame/components.dart';
-import '../shared/direction.dart';
+import '../utils/direction.dart';
 
 class TilePosition {
   final int left, top;
