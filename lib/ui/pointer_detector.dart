@@ -2,8 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
-
 import 'package:flutter/gestures.dart';
+
+import '../utils/math.dart';
 
 export 'package:flutter/gestures.dart' show PointerHoverEvent;
 
@@ -386,15 +387,4 @@ class _PointerDetectorState extends State<PointerDetector> {
   }
 
   get touchCount => _touchDetails.length;
-
-  /// Constant factor to convert and angle from degrees to radians.
-  final double degrees2Radians = math.pi / 180.0;
-
-  /// Constant factor to convert and angle from radians to degrees.
-  final double radians2Degrees = 180.0 / math.pi;
-
-  double degrees(double radians) => radians * radians2Degrees;
-
-  /// Convert [degrees] to radians.
-  double radians(double degrees) => degrees * degrees2Radians;
 }
