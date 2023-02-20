@@ -153,6 +153,7 @@ class SamsaraEngine with SceneController, EventAggregator {
           allowVariableShadowing: false,
           allowImplicitNullToZeroConversion: true,
           allowImplicitEmptyValueToFalseConversion: true,
+          resolveExternalFunctionsDynamically: true,
         ),
         sourceContext: sourceContext,
       );

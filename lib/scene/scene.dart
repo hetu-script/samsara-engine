@@ -24,65 +24,65 @@ abstract class Scene extends FlameGame {
 
   Vector2 get screenCenter => size / 2;
 
-  Iterable<HandlesGesture> get _gestureComponents =>
+  Iterable<HandlesGesture> get gestureComponents =>
       children.whereType<HandlesGesture>().cast<HandlesGesture>();
 
   void onTapDown(int pointer, int buttons, TapDownDetails details) {
-    for (var c in _gestureComponents) {
+    for (final c in gestureComponents) {
       c.handleTapDown(pointer, buttons, details);
     }
   }
 
   void onTapUp(int pointer, int buttons, TapUpDetails details) {
-    for (var c in _gestureComponents) {
+    for (final c in gestureComponents) {
       c.handleTapUp(pointer, buttons, details);
     }
   }
 
   void onDragStart(int pointer, int buttons, DragStartDetails details) {
-    for (var c in _gestureComponents) {
+    for (final c in gestureComponents) {
       c.handleDragStart(pointer, buttons, details);
     }
   }
 
   void onDragUpdate(int pointer, int buttons, DragUpdateDetails details) {
-    for (var c in _gestureComponents) {
+    for (final c in gestureComponents) {
       c.handleDragUpdate(pointer, buttons, details);
     }
   }
 
   void onDragEnd(int pointer, int buttons) {
-    for (var c in _gestureComponents) {
+    for (final c in gestureComponents) {
       c.handleDragEnd(pointer, buttons);
     }
   }
 
   void onScaleStart(List<TouchDetails> touches, ScaleStartDetails details) {
-    for (var c in _gestureComponents) {
+    for (final c in gestureComponents) {
       c.handleScaleStart(touches, details);
     }
   }
 
   void onScaleUpdate(List<TouchDetails> touches, ScaleUpdateDetails details) {
-    for (var c in _gestureComponents) {
+    for (final c in gestureComponents) {
       c.handleScaleUpdate(touches, details);
     }
   }
 
   void onScaleEnd() {
-    for (var c in _gestureComponents) {
+    for (final c in gestureComponents) {
       c.handleScaleEnd();
     }
   }
 
   void onLongPress(int pointer, int buttons, LongPressStartDetails details) {
-    for (var c in _gestureComponents) {
+    for (final c in gestureComponents) {
       c.handleLongPress(pointer, buttons, details);
     }
   }
 
   void onMouseHover(PointerHoverEvent details) {
-    for (var c in _gestureComponents) {
+    for (final c in gestureComponents) {
       c.handleMouseHover(details);
     }
   }

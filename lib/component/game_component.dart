@@ -13,7 +13,10 @@ abstract class GameComponent extends PositionComponent with HasGameRef<Scene> {
     super.angle,
     super.anchor,
     super.priority,
+    this.zIndex = 0,
   });
+
+  int zIndex;
 
   bool _isVisible = true;
 
@@ -31,6 +34,6 @@ abstract class GameComponent extends PositionComponent with HasGameRef<Scene> {
     return gameRef.camera.isComponentOnCamera(this);
   }
 
-  Iterable<HandlesGesture> get gestureChildren =>
+  Iterable<HandlesGesture> get gestureComponents =>
       children.whereType<HandlesGesture>().cast<HandlesGesture>();
 }

@@ -34,23 +34,44 @@ mixin HandlesGesture on GameComponent {
   bool isHovering = false;
 
   void onTap(int pointer, int buttons, TapUpDetails details) {}
+
   void onTapDown(int pointer, int buttons, TapDownDetails details) {}
+
   void onTapUp(int pointer, int buttons, TapUpDetails details) {}
+
   void onDoubleTap(int pointer, int buttons, TapUpDetails details) {}
+
   void onTapCancel() {}
+
   void onDragStart(int pointer, int buttons, DragStartDetails details) {}
+
   void onDragUpdate(int pointer, int buttons, DragUpdateDetails details) {}
+
   void onDragEnd(int pointer, int buttons) {}
+
   void onScaleStart(List<TouchDetails> touches, ScaleStartDetails details) {}
+
   void onScaleUpdate(List<TouchDetails> touches, ScaleUpdateDetails details) {}
+
   void onScaleEnd() {}
+
   void onLongPress(int buttons, LongPressStartDetails details) {}
+
   void onMouseEnter() {}
+
   void onMouseHover(PointerHoverEvent details) {}
+
   void onMouseExit() {}
 
   void handleTapDown(int pointer, int buttons, TapDownDetails details) {
     if (!enableGesture || (tapPointer != null)) return;
+
+    final cl = gestureComponents.toList();
+    cl.sort((c1, c2) => -c1.zIndex.compareTo(c2.zIndex));
+    for (final c in cl) {
+      c.handleTapDown(pointer, buttons, details);
+    }
+
     final pointerPosition = details.localPosition.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
@@ -66,6 +87,13 @@ mixin HandlesGesture on GameComponent {
       tapPointer = null;
       return;
     }
+
+    final cl = gestureComponents.toList();
+    cl.sort((c1, c2) => -c1.zIndex.compareTo(c2.zIndex));
+    for (final c in cl) {
+      c.handleTapUp(pointer, buttons, details);
+    }
+
     final pointerPosition = details.localPosition.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
@@ -92,11 +120,19 @@ mixin HandlesGesture on GameComponent {
     } else {
       onTapCancel();
     }
+
     tapPointer = null;
   }
 
   void handleDragStart(int pointer, int buttons, DragStartDetails details) {
     if (!enableGesture) return;
+
+    final cl = gestureComponents.toList();
+    cl.sort((c1, c2) => -c1.zIndex.compareTo(c2.zIndex));
+    for (final c in cl) {
+      c.handleDragStart(pointer, buttons, details);
+    }
+
     final pointerPosition = details.localPosition.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
@@ -109,6 +145,13 @@ mixin HandlesGesture on GameComponent {
 
   void handleDragUpdate(int pointer, int buttons, DragUpdateDetails details) {
     if (!enableGesture || !isDragging) return;
+
+    final cl = gestureComponents.toList();
+    cl.sort((c1, c2) => -c1.zIndex.compareTo(c2.zIndex));
+    for (final c in cl) {
+      c.handleDragUpdate(pointer, buttons, details);
+    }
+
     final pointerPosition = details.localPosition.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
@@ -126,6 +169,13 @@ mixin HandlesGesture on GameComponent {
 
   void handleDragEnd(int pointer, int buttons) {
     if (!enableGesture) return;
+
+    final cl = gestureComponents.toList();
+    cl.sort((c1, c2) => -c1.zIndex.compareTo(c2.zIndex));
+    for (final c in cl) {
+      c.handleDragEnd(pointer, buttons);
+    }
+
     if (isDragging && (tapPointer == pointer)) {
       isDragging = false;
       onDragEnd(pointer, buttons);
@@ -136,6 +186,13 @@ mixin HandlesGesture on GameComponent {
   void handleScaleStart(List<TouchDetails> touches, ScaleStartDetails details) {
     if (!enableGesture) return;
     assert(touches.length == 2);
+
+    final cl = gestureComponents.toList();
+    cl.sort((c1, c2) => -c1.zIndex.compareTo(c2.zIndex));
+    for (final c in cl) {
+      c.handleScaleStart(touches, details);
+    }
+
     final pointerPosition1 = touches[0].currentLocalPosition.toVector2();
     final convertedPointerPosition1 = positionType != PositionType.game
         ? pointerPosition1
@@ -157,6 +214,13 @@ mixin HandlesGesture on GameComponent {
       List<TouchDetails> touches, ScaleUpdateDetails details) {
     if (!enableGesture || !isScalling) return;
     assert(touches.length == 2);
+
+    final cl = gestureComponents.toList();
+    cl.sort((c1, c2) => -c1.zIndex.compareTo(c2.zIndex));
+    for (final c in cl) {
+      c.handleScaleUpdate(touches, details);
+    }
+
     final pointerPosition1 = touches[0].currentLocalPosition.toVector2();
     final convertedPointerPosition1 = positionType != PositionType.game
         ? pointerPosition1
@@ -175,6 +239,13 @@ mixin HandlesGesture on GameComponent {
 
   void handleScaleEnd() {
     if (!enableGesture) return;
+
+    final cl = gestureComponents.toList();
+    cl.sort((c1, c2) => -c1.zIndex.compareTo(c2.zIndex));
+    for (final c in cl) {
+      c.handleScaleEnd();
+    }
+
     if (isScalling) {
       isScalling = false;
       onScaleEnd();
@@ -185,6 +256,13 @@ mixin HandlesGesture on GameComponent {
   void handleLongPress(
       int pointer, int buttons, LongPressStartDetails details) {
     if (!enableGesture || tapPointer != pointer) return;
+
+    final cl = gestureComponents.toList();
+    cl.sort((c1, c2) => -c1.zIndex.compareTo(c2.zIndex));
+    for (final c in cl) {
+      c.handleLongPress(pointer, buttons, details);
+    }
+
     final pointerPosition = details.localPosition.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
@@ -194,14 +272,20 @@ mixin HandlesGesture on GameComponent {
     }
   }
 
-  /// If the event is captured by this object, return true.
+  /// Mouse event will be captured, so it won't traverse all child.
   bool handleMouseHover(PointerHoverEvent details) {
     if (!enableGesture) return false;
+
+    final cl = gestureComponents.toList();
+    cl.sort((c1, c2) => -c1.zIndex.compareTo(c2.zIndex));
+    for (final c in cl) {
+      c.handleMouseHover(details);
+    }
+
     final pointerPosition = details.localPosition.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
-
     if (containsPoint(convertedPointerPosition)) {
       if (!isHovering) {
         isHovering = true;
