@@ -78,7 +78,7 @@ mixin HandlesGesture on GameComponent {
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
-    if (containsLocalPoint(convertedPointerPosition)) {
+    if (containsPoint(convertedPointerPosition)) {
       tapPointer = pointer;
       onTapDown(pointer, buttons, details);
       return true;
@@ -104,7 +104,7 @@ mixin HandlesGesture on GameComponent {
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
-    if (containsLocalPoint(convertedPointerPosition)) {
+    if (containsPoint(convertedPointerPosition)) {
       if (doubleTapTimer?.isActive ?? false) {
         doubleTapTimer?.cancel();
         if (tapPointer == pointer) {
@@ -146,7 +146,7 @@ mixin HandlesGesture on GameComponent {
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
-    if (containsLocalPoint(convertedPointerPosition)) {
+    if (containsPoint(convertedPointerPosition)) {
       isDragging = true;
       onDragStart(pointer, buttons, details);
     }
@@ -166,7 +166,7 @@ mixin HandlesGesture on GameComponent {
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
-    if (containsLocalPoint(convertedPointerPosition)) {
+    if (containsPoint(convertedPointerPosition)) {
       onDragUpdate(pointer, buttons, details);
     } else {
       handleDragEnd(pointer, buttons);
@@ -213,8 +213,8 @@ mixin HandlesGesture on GameComponent {
     final convertedPointerPosition2 = positionType != PositionType.game
         ? pointerPosition2
         : gameRef.camera.screenToWorld(pointerPosition2);
-    if (containsLocalPoint(convertedPointerPosition1) &&
-        containsLocalPoint(convertedPointerPosition2)) {
+    if (containsPoint(convertedPointerPosition1) &&
+        containsPoint(convertedPointerPosition2)) {
       isScalling = true;
       onScaleStart(touches, details);
     } else {
@@ -242,8 +242,8 @@ mixin HandlesGesture on GameComponent {
     final convertedPointerPosition2 = positionType != PositionType.game
         ? pointerPosition2
         : gameRef.camera.screenToWorld(pointerPosition2);
-    if (containsLocalPoint(convertedPointerPosition1) &&
-        containsLocalPoint(convertedPointerPosition2)) {
+    if (containsPoint(convertedPointerPosition1) &&
+        containsPoint(convertedPointerPosition2)) {
       onScaleUpdate(touches, details);
     } else {
       handleScaleEnd();
@@ -282,7 +282,7 @@ mixin HandlesGesture on GameComponent {
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
-    if (containsLocalPoint(convertedPointerPosition)) {
+    if (containsPoint(convertedPointerPosition)) {
       onLongPress(buttons, details);
     }
   }
@@ -301,7 +301,7 @@ mixin HandlesGesture on GameComponent {
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
-    if (containsLocalPoint(convertedPointerPosition)) {
+    if (containsPoint(convertedPointerPosition)) {
       if (!isHovering) {
         isHovering = true;
         onMouseEnter();
