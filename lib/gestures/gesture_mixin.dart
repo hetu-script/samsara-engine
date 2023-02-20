@@ -63,8 +63,8 @@ mixin HandlesGesture on GameComponent {
 
   void onMouseExit() {}
 
-  void handleTapDown(int pointer, int buttons, TapDownDetails details) {
-    if (!enableGesture || (tapPointer != null)) return;
+  bool handleTapDown(int pointer, int buttons, TapDownDetails details) {
+    if (!enableGesture || (tapPointer != null)) return false;
 
     final cl = gestureComponents.toList();
     cl.sort((c1, c2) => -c1.zIndex.compareTo(c2.zIndex));
@@ -79,13 +79,16 @@ mixin HandlesGesture on GameComponent {
     if (containsPoint(convertedPointerPosition)) {
       tapPointer = pointer;
       onTapDown(pointer, buttons, details);
+      return true;
     }
+
+    return false;
   }
 
-  void handleTapUp(int pointer, int buttons, TapUpDetails details) {
+  bool handleTapUp(int pointer, int buttons, TapUpDetails details) {
     if (!enableGesture || (tapPointer != pointer)) {
       tapPointer = null;
-      return;
+      return false;
     }
 
     final cl = gestureComponents.toList();
@@ -117,11 +120,13 @@ mixin HandlesGesture on GameComponent {
         });
       }
       onTapUp(pointer, buttons, details);
+      return true;
     } else {
       onTapCancel();
     }
 
     tapPointer = null;
+    return false;
   }
 
   void handleDragStart(int pointer, int buttons, DragStartDetails details) {
@@ -272,7 +277,6 @@ mixin HandlesGesture on GameComponent {
     }
   }
 
-  /// Mouse event will be captured, so it won't traverse all child.
   bool handleMouseHover(PointerHoverEvent details) {
     if (!enableGesture) return false;
 
