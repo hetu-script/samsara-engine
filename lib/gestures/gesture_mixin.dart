@@ -74,7 +74,7 @@ mixin HandlesGesture on GameComponent {
       c.handleTapDown(pointer, buttons, details);
     }
 
-    final pointerPosition = details.localPosition.toVector2();
+    final pointerPosition = details.globalPosition.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
@@ -100,7 +100,7 @@ mixin HandlesGesture on GameComponent {
       c.handleTapUp(pointer, buttons, details);
     }
 
-    final pointerPosition = details.localPosition.toVector2();
+    final pointerPosition = details.globalPosition.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
@@ -142,7 +142,7 @@ mixin HandlesGesture on GameComponent {
       c.handleDragStart(pointer, buttons, details);
     }
 
-    final pointerPosition = details.localPosition.toVector2();
+    final pointerPosition = details.globalPosition.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
@@ -162,7 +162,7 @@ mixin HandlesGesture on GameComponent {
       c.handleDragUpdate(pointer, buttons, details);
     }
 
-    final pointerPosition = details.localPosition.toVector2();
+    final pointerPosition = details.globalPosition.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
@@ -205,11 +205,11 @@ mixin HandlesGesture on GameComponent {
       c.handleScaleStart(touches, details);
     }
 
-    final pointerPosition1 = touches[0].currentLocalPosition.toVector2();
+    final pointerPosition1 = touches[0].currentGlobalPosition.toVector2();
     final convertedPointerPosition1 = positionType != PositionType.game
         ? pointerPosition1
         : gameRef.camera.screenToWorld(pointerPosition1);
-    final pointerPosition2 = touches[1].currentLocalPosition.toVector2();
+    final pointerPosition2 = touches[1].currentGlobalPosition.toVector2();
     final convertedPointerPosition2 = positionType != PositionType.game
         ? pointerPosition2
         : gameRef.camera.screenToWorld(pointerPosition2);
@@ -234,11 +234,11 @@ mixin HandlesGesture on GameComponent {
       c.handleScaleUpdate(touches, details);
     }
 
-    final pointerPosition1 = touches[0].currentLocalPosition.toVector2();
+    final pointerPosition1 = touches[0].currentGlobalPosition.toVector2();
     final convertedPointerPosition1 = positionType != PositionType.game
         ? pointerPosition1
         : gameRef.camera.screenToWorld(pointerPosition1);
-    final pointerPosition2 = touches[1].currentLocalPosition.toVector2();
+    final pointerPosition2 = touches[1].currentGlobalPosition.toVector2();
     final convertedPointerPosition2 = positionType != PositionType.game
         ? pointerPosition2
         : gameRef.camera.screenToWorld(pointerPosition2);
@@ -278,7 +278,7 @@ mixin HandlesGesture on GameComponent {
       c.handleLongPress(pointer, buttons, details);
     }
 
-    final pointerPosition = details.localPosition.toVector2();
+    final pointerPosition = details.globalPosition.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
@@ -297,7 +297,7 @@ mixin HandlesGesture on GameComponent {
       c.handleMouseHover(details);
     }
 
-    final pointerPosition = details.localPosition.toVector2();
+    final pointerPosition = details.position.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
