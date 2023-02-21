@@ -1,11 +1,14 @@
 import 'package:meta/meta.dart';
 import 'package:flame/components.dart';
 import 'package:samsara/gestures.dart';
+import 'package:flame/effects.dart';
 
 import '../scene/scene.dart';
 import '../extensions.dart';
 
-abstract class GameComponent extends PositionComponent with HasGameRef<Scene> {
+abstract class GameComponent extends PositionComponent
+    with HasGameRef<Scene>
+    implements SizeProvider {
   GameComponent({
     super.position,
     super.size,
@@ -13,10 +16,7 @@ abstract class GameComponent extends PositionComponent with HasGameRef<Scene> {
     super.angle,
     super.anchor,
     super.priority,
-    this.zIndex = 0,
   });
-
-  int zIndex;
 
   bool _isVisible = true;
 

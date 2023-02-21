@@ -2,7 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/widgets.dart';
 
 /// Component used to generate numbers using the gameLoop.
-class ValueGeneratorComponent extends Component {
+class ValueGenerator extends Component {
   bool _isFinishing = false;
   bool _isFinished = false;
 
@@ -11,16 +11,16 @@ class ValueGeneratorComponent extends Component {
   final double begin;
   final double end;
   final Curve curve;
-  final VoidCallback? onStart;
-  final VoidCallback? onFinish;
-  final ValueChanged<double>? onChange;
+  final void Function()? onStart;
+  final void Function()? onFinish;
+  final void Function(double)? onChange;
   final bool autoStart;
 
   double _currentValue = 0;
   double _displacement = 0;
   bool _isRunning = false;
 
-  ValueGeneratorComponent(
+  ValueGenerator(
     this.duration, {
     this.begin = 0,
     this.end = 1,
