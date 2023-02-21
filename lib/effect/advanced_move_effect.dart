@@ -1,8 +1,9 @@
+
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:samsara/component/game_component.dart';
 
-class AdvanceMoveEffect extends Effect {
+class AdvancedMoveEffect extends Effect {
   final Vector2? startPosition, endPosition, startSize, endSize;
   final double? startAngle, endAngle;
   final GameComponent target;
@@ -12,7 +13,7 @@ class AdvanceMoveEffect extends Effect {
 
   Function? onChange;
 
-  AdvanceMoveEffect({
+  AdvancedMoveEffect({
     this.startPosition,
     this.endPosition,
     this.startSize,
