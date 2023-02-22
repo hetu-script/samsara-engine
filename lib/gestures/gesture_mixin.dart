@@ -25,14 +25,14 @@ mixin HandlesGesture on GameComponent {
   Camera get camera;
 
   bool enableGesture = true;
+
   int? tapPointer;
   bool isDragging = false, isScalling = false;
+  bool isHovering = false;
 
   /// A specific duration to detect double tap
   int doubleTapTimeConsider = 400;
   Timer? doubleTapTimer;
-
-  bool isHovering = false;
 
   void onTap(int pointer, int buttons, TapUpDetails details) {}
 

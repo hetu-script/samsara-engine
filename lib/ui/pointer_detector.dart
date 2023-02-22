@@ -205,12 +205,25 @@ class _PointerDetectorState extends State<PointerDetector> {
                 localPosition: event.localPosition,
                 kind: event.kind));
       }
-      startLongPressTimer(
-          event.pointer,
-          event.buttons,
-          LongPressStartDetails(
-              globalPosition: event.position,
-              localPosition: event.localPosition));
+
+      if (widget.onLongPress != null) {
+        if (_longPressTimer != null) {
+          _longPressTimer!.cancel();
+        }
+        _longPressTimer =
+            Timer(Duration(milliseconds: widget.longPressTickTimeConsider), () {
+          if (touchCount == 1 && _touchDetails[0].pointer == event.pointer) {
+            _gestureState = _GestureState.longPress;
+            widget.onLongPress!(
+              event.pointer,
+              event.buttons,
+              LongPressStartDetails(
+                  globalPosition: event.position,
+                  localPosition: event.localPosition),
+            );
+          }
+        });
+      }
     } else if (touchCount == 2) {
       _gestureState = _GestureState.scaleStart;
     } else {
@@ -235,7 +248,9 @@ class _PointerDetectorState extends State<PointerDetector> {
 
     detail.currentLocalPosition = event.localPosition;
     detail.currentGlobalPosition = event.position;
-    cleanupTimer();
+    if (_longPressTimer != null) {
+      _longPressTimer!.cancel();
+    }
 
     switch (_gestureState) {
       case _GestureState.pointerDown:
@@ -356,28 +371,6 @@ class _PointerDetectorState extends State<PointerDetector> {
 
     _touchDetails.removeWhere((detail) => detail.pointer == event.pointer);
     // _lastTouchUpPos = event.localPosition;
-  }
-
-  void startLongPressTimer(
-      int pointer, int buttons, LongPressStartDetails details) {
-    if (widget.onLongPress != null) {
-      if (_longPressTimer != null) {
-        _longPressTimer!.cancel();
-      }
-      _longPressTimer =
-          Timer(Duration(milliseconds: widget.longPressTickTimeConsider), () {
-        if (touchCount == 1 && _touchDetails[0].pointer == pointer) {
-          _gestureState = _GestureState.longPress;
-          widget.onLongPress!(pointer, buttons, details);
-        }
-      });
-    }
-  }
-
-  void cleanupTimer() {
-    if (_longPressTimer != null) {
-      _longPressTimer!.cancel();
-    }
   }
 
   void onMouseHover(PointerHoverEvent event) {

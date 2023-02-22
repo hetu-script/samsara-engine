@@ -1,7 +1,7 @@
-
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
-import 'package:samsara/component/game_component.dart';
+
+import '../component/game_component.dart';
 
 class AdvancedMoveEffect extends Effect {
   final Vector2? startPosition, endPosition, startSize, endSize;
