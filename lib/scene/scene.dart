@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:samsara/samsara.dart';
 
-import '../ui/pointer_detector.dart';
+import '../widget/pointer_detector.dart';
 import '../gestures/gesture_mixin.dart';
 
 abstract class Scene extends FlameGame {

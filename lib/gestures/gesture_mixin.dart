@@ -6,7 +6,7 @@ import 'package:flame/game.dart';
 import 'package:flame/components.dart' show PositionType;
 
 import '../extensions.dart';
-import '../../ui/pointer_detector.dart' show TouchDetails;
+import '../../widget/pointer_detector.dart' show TouchDetails;
 import '../component/game_component.dart';
 
 export 'package:flutter/gestures.dart'
@@ -18,7 +18,7 @@ export 'package:flutter/gestures.dart'
         ScaleStartDetails,
         ScaleUpdateDetails,
         LongPressStartDetails;
-export '../../ui/pointer_detector.dart'
+export '../../widget/pointer_detector.dart'
     show TouchDetails, PointerMoveUpdateDetails;
 
 mixin HandlesGesture on GameComponent {
