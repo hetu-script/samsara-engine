@@ -18,6 +18,7 @@ dependencies:
     path: ../hetu-script/packages/hetu_script
   hetu_script_flutter:
     path: ../hetu-script/packages/hetu_script_flutter
+  html: ^0.15.1
 
 dev_dependencies:
   flutter_test:
