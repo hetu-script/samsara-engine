@@ -19,6 +19,7 @@ dependencies:
   hetu_script_flutter:
     path: ../hetu-script/packages/hetu_script_flutter
   html: ^0.15.1
+  flutter_treeview: ^1.0.7+1
 
 dev_dependencies:
   flutter_test:

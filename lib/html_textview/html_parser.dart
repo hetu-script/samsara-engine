@@ -156,7 +156,7 @@ class HtmlParser {
           if (node.attributes.containsKey('style')) {
             style = node.attributes['style'];
 
-            //TODO OVERRIDE STYLES
+            // todo OVERRIDE STYLES
             attributes.addAll({'style': style});
           }
         }

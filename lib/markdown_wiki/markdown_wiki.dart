@@ -1,6 +1,6 @@
 library markdown_wiki;
 
-export 'src/widget.dart';
-export 'src/resource/resource.dart';
-export 'src/resource/resource_manager.dart';
-export 'src/resource/asset_manager.dart';
+export 'widget.dart';
+export 'resource/resource.dart';
+export 'resource/resource_manager.dart';
+export 'resource/asset_manager.dart';
