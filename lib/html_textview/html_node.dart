@@ -30,23 +30,23 @@ class HtmlNode {
   });
 
   TextStyle _getStyle() {
-    var family = textAttributes.containsKey("bold")
+    var family = textAttributes.containsKey('bold')
         ? fontFamilyBold ?? fontFamily
         : fontFamily;
 
     return TextStyle(
-      fontStyle: textAttributes.containsKey("italic")
+      fontStyle: textAttributes.containsKey('italic')
           ? FontStyle.italic
           : FontStyle.normal,
-      fontWeight: (textAttributes.containsKey("bold") && fontFamilyBold == null)
+      fontWeight: (textAttributes.containsKey('bold') && fontFamilyBold == null)
           ? FontWeight.bold
           : FontWeight.normal,
       fontSize: fontSize,
-      decoration: (href == null || href == "")
+      decoration: (href == null || href == '')
           ? TextDecoration.none
           : TextDecoration.underline,
       fontFamily: family,
-      color: (href == null || href == "") ? color : null,
+      color: (href == null || href == '') ? color : null,
     );
   }
 
@@ -55,7 +55,7 @@ class HtmlNode {
 
     // final data = breakLine ? '${text.trim()}/n' : text;
 
-    if (href != null && href != "") {
+    if (href != null && href != '') {
       return TextSpan(
         text: text,
         style: style,
