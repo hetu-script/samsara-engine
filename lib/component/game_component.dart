@@ -6,6 +6,8 @@ import 'package:flame/effects.dart';
 import '../scene/scene.dart';
 import '../extensions.dart';
 
+export 'package:flame/components.dart' show Anchor;
+
 abstract class GameComponent extends PositionComponent
     with HasGameRef<Scene>
     implements SizeProvider {
