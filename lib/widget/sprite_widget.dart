@@ -14,22 +14,21 @@ class SpriteWidget extends StatelessWidget {
   /// The angle to rotate this [sprite], in rad. (default = 0)
   final double angle;
 
-  final double width, height;
+  final Size size;
 
-  const SpriteWidget({
+  SpriteWidget({
     super.key,
     required this.sprite,
     this.anchor = Anchor.topLeft,
     this.angle = 0,
-    required this.width,
-    required this.height,
-  });
+    Size? size,
+  }) : size = size ?? sprite.srcSize.toSize();
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: SpritePainter(sprite, anchor, angle: angle),
-      size: Size(width, height),
+      size: size,
     );
   }
 }

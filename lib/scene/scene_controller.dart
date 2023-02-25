@@ -16,15 +16,20 @@ class SceneController {
   }
 
   @mustCallSuper
-  Future<Scene> createScene(String key, String id, [dynamic args]) async {
-    final _cached = _cachedScenes[id];
+  Future<Scene> createScene(
+    String contructorKey,
+    String sceneId, [
+    dynamic args,
+  ]) async {
+    final _cached = _cachedScenes[sceneId];
     if (_cached != null) {
       _currentScene = _cached;
       return _cached;
     } else {
-      final constructor = _sceneConstructors[key]!;
-      final Scene scene = await constructor(args);
-      _cachedScenes[id] = scene;
+      final constructor = _sceneConstructors[contructorKey];
+      assert(constructor != null);
+      final Scene scene = await constructor!(args);
+      _cachedScenes[sceneId] = scene;
       _currentScene = scene;
       return scene;
     }

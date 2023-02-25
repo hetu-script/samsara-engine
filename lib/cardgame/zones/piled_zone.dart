@@ -4,16 +4,12 @@ import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
-import 'package:flame/game.dart';
 
 import '../playing_card.dart';
 import '../../paint/paint.dart';
 
 class PiledZone extends GameComponent with HandlesGesture {
-  @override
-  Camera get camera => gameRef.camera;
-
-  final String id;
+  final String? id;
   final String? title;
 
   final double borderRadius;
@@ -24,33 +20,43 @@ class PiledZone extends GameComponent with HandlesGesture {
   final int piledCardPriority;
   final Vector2 piledCardSize;
 
-  final Vector2 pileOffset;
-  final Vector2 focusOffset;
+  final Vector2 pileMargin, pileOffset, focusOffset;
 
   final Anchor titleAnchor;
+  final bool isVericalPile;
 
   PiledZone({
-    required this.id,
+    this.id,
     this.title,
     required double x,
     required double y,
     required double width,
     required double height,
     this.borderRadius = 5.0,
-    List<PlayingCard>? cards,
+    List<PlayingCard> cards = const [],
     this.piledCardPriority = 0,
     required this.piledCardSize,
+    Vector2? pileMargin,
     Vector2? pileOffset,
     Vector2? focusOffset,
     this.titleAnchor = Anchor.topLeft,
-  })  : pileOffset = pileOffset ?? Vector2.zero(),
+    this.isVericalPile = false,
+  })  : pileMargin = pileMargin ?? Vector2(10.0, 10.0),
+        pileOffset = pileOffset ?? Vector2(50.0, 50.0),
         focusOffset = focusOffset ?? Vector2.zero() {
-    if (cards != null) this.cards.addAll(cards);
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
     generateBorder();
+    this.cards.addAll(cards);
+  }
+
+  @override
+  void onLoad() async {
+    if (cards.isNotEmpty) {
+      sortCards();
+    }
   }
 
   void generateBorder() {
@@ -59,41 +65,48 @@ class PiledZone extends GameComponent with HandlesGesture {
         RRect.fromLTRBR(0, 0, width, height, Radius.circular(borderRadius));
   }
 
-  void sortCards(Completer completer) {
+  /// 如果传入 completer 参数，则会用动画过度卡牌整理的过程
+  void sortCards({Completer? completer}) {
     // calculate the new position of each hand cards.
     for (var i = 0; i < cards.length; ++i) {
       final card = cards[i];
       card.priority = piledCardPriority + i;
 
       final endPosition = Vector2(
-          x + piledCardSize.x / 2 + i * 80 + 10, y + piledCardSize.y / 2 + 10);
+          x + (isVericalPile ? 0 : i * pileOffset.x) + pileMargin.x,
+          y + (isVericalPile ? i * pileOffset.y : 0) + pileMargin.y);
 
-      final drawingAnimation = AdvancedMoveEffect(
-        target: card,
-        controller: EffectController(duration: 0.4, curve: Curves.decelerate),
-        startPosition: card.position,
-        endPosition: endPosition,
-        startSize: card.size,
-        endSize: piledCardSize,
-        onChange: () {
-          card.generateBorder();
-        },
-        onComplete: () {
-          card.enableGesture = true;
-          card.focusOffset = focusOffset;
-          card.showTitleOnHovering = true;
+      if (completer == null) {
+        card.position = endPosition;
+        card.size = piledCardSize;
+      } else {
+        final drawingAnimation = AdvancedMoveEffect(
+          target: card,
+          controller: EffectController(duration: 0.4, curve: Curves.decelerate),
+          startPosition: card.position,
+          endPosition: endPosition,
+          startSize: card.size,
+          endSize: piledCardSize,
+          onChange: () {
+            card.generateBorder();
+          },
+          onComplete: () {
+            card.enableGesture = true;
+            card.focusOffset = focusOffset;
+            card.showTitleOnHovering = true;
 
-          card.position = endPosition;
-          card.size = piledCardSize;
-          card.generateBorder();
-          card.showPreview = true;
+            card.position = endPosition;
+            card.size = piledCardSize;
+            card.generateBorder();
+            card.showPreview = true;
 
-          if (i == cards.length - 1) {
-            completer.complete();
-          }
-        },
-      );
-      card.add(drawingAnimation);
+            if (i == cards.length - 1) {
+              completer.complete();
+            }
+          },
+        );
+        card.add(drawingAnimation);
+      }
     }
   }
 
@@ -101,7 +114,7 @@ class PiledZone extends GameComponent with HandlesGesture {
     card.state = CardState.hand;
     cards.add(card);
 
-    sortCards(completer);
+    sortCards(completer: completer);
   }
 
   void removeCard(String id) {

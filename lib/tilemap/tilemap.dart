@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
-import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 
@@ -14,7 +13,7 @@ import 'tile.dart';
 import 'object.dart';
 import 'cloud.dart';
 import '../utils/color.dart';
-import '../engine.dart';
+import '../engine/engine.dart';
 import '../../event/events.dart';
 import 'terrain.dart';
 
@@ -188,9 +187,6 @@ class TileMap extends GameComponent with HandlesGesture {
       }
     }
   }
-
-  @override
-  Camera get camera => gameRef.camera;
 
   final TextStyle captionStyle;
 
@@ -397,11 +393,11 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   Vector2 worldPosition2Screen(Vector2 position) {
-    return position - camera.position;
+    return position - gameRef.camera.position;
   }
 
   Vector2 screenPosition2World(Vector2 position) {
-    return position + camera.position;
+    return position + gameRef.camera.position;
   }
 
   Vector2 tilePosition2TileCenterInWorld(int left, int top) {
@@ -428,7 +424,7 @@ class TileMap extends GameComponent with HandlesGesture {
   Vector2 tilePosition2TileCenterInScreen(int left, int top) {
     final worldPos = tilePosition2TileCenterInWorld(left, top);
     final scaled = Vector2(worldPos.x * scale.x, worldPos.y * scale.y);
-    return scaled - camera.position;
+    return scaled - gameRef.camera.position;
   }
 
   TilePosition screenPosition2Tile(Vector2 position) {
@@ -509,10 +505,10 @@ class TileMap extends GameComponent with HandlesGesture {
     final worldPos = tilePosition2TileCenterInWorld(left, top);
     final dest =
         Vector2(worldPos.x * scale.x, worldPos.y * scale.y) - gameRef.size / 2;
-    camera.speed = speed;
-    camera.moveTo(dest);
+    gameRef.camera.speed = speed;
+    gameRef.camera.moveTo(dest);
     if (!animated) {
-      camera.snap();
+      gameRef.camera.snap();
     }
   }
 
@@ -551,7 +547,7 @@ class TileMap extends GameComponent with HandlesGesture {
 
   @override
   void onDragUpdate(int pointer, int buttons, DragUpdateDetails details) {
-    camera.snapTo(camera.position - details.delta.toVector2());
+    gameRef.camera.snapTo(gameRef.camera.position - details.delta.toVector2());
   }
 
   void _selectTile(int left, int top) {

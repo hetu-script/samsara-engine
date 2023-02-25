@@ -5,21 +5,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "samsara_engine",
-      "request": "launch",
-      "type": "dart"
-    },
-    {
-      "name": "samsara_engine (profile mode)",
+      "name": "card_game",
+      "cwd": "examples/card_game",
       "request": "launch",
       "type": "dart",
-      "flutterMode": "profile"
+      "program": "lib/main.dart"
     },
-    {
-      "name": "samsara_engine (release mode)",
-      "request": "launch",
-      "type": "dart",
-      "flutterMode": "release"
-    }
   ]
 }

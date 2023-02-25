@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
-import 'package:flame/game.dart';
 
 import '../playing_card.dart';
 import '../../paint/paint.dart';
 
 abstract class PlayableZone extends GameComponent with HandlesGesture {
-  @override
-  Camera get camera => gameRef.camera;
-
-  final String id;
+  final String? id;
   final String? title;
 
   final double borderRadius;
@@ -33,7 +29,7 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
   final String kind;
 
   PlayableZone({
-    required this.id,
+    this.id,
     this.title,
     required double x,
     required double y,

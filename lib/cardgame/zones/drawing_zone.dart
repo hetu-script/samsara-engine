@@ -3,19 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
-import 'package:flame/game.dart';
 import 'package:flame/effects.dart';
-import 'package:flame/components.dart';
 
 import '../playing_card.dart';
 import '../action.dart';
 import '../../../paint/paint.dart';
 
 class DrawingZone extends GameComponent with HandlesGesture {
-  @override
-  Camera get camera => gameRef.camera;
-
-  final String id;
+  final String? id;
 
   final double borderRadius;
   late final Rect border;
@@ -28,7 +23,7 @@ class DrawingZone extends GameComponent with HandlesGesture {
   Anchor tooltipAnchor;
 
   DrawingZone({
-    required this.id,
+    this.id,
     double x = 0,
     double y = 0,
     required double width,

@@ -2,7 +2,6 @@ import 'dart:async' show Timer;
 
 import 'package:meta/meta.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flame/game.dart';
 import 'package:flame/components.dart' show PositionType;
 
 import '../extensions.dart';
@@ -22,8 +21,6 @@ export '../../widget/pointer_detector.dart'
     show TouchDetails, PointerMoveUpdateDetails;
 
 mixin HandlesGesture on GameComponent {
-  Camera get camera;
-
   bool enableGesture = true;
 
   int? tapPointer;

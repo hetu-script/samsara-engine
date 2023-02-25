@@ -1,7 +1,6 @@
 import 'package:flame/components.dart' hide SpriteComponent;
 import 'package:flame/effects.dart';
 import 'package:flutter/material.dart' hide Image;
-import 'package:flame/game.dart';
 import 'package:flame/flame.dart';
 // import 'package:samsara/utils/math.dart';
 import 'package:samsara/samsara.dart';
@@ -23,27 +22,27 @@ enum CardState {
 }
 
 class PlayingCard extends GameComponent with HandlesGesture {
-  @override
-  Camera get camera => gameRef.camera;
-
   late Rect border;
   late Rect cardRect;
 
   int _savedPriority = 0;
   Vector2 _savedOffset = Vector2.zero();
 
-  String? playerId;
-  final String id;
-  final String? title;
+  String? ownedPlayerId;
+
+  final String? id, title, kind;
   final int cost;
-  final String? kind;
+  final Set<String> tags = {};
 
   /// 卡牌的原始数据，可能是一个Json，或者一个河图struct对象，
   /// 也可能是 null，例如资源牌这种情况。
   final dynamic data;
 
-  Sprite? frontSprite;
-  Sprite? backSprite;
+  /// the sprite id of this card, should be unique among all cards
+  final String frontSpriteId;
+  final String? illustrationSpriteId;
+  final Vector2 illustrationOffset;
+  Sprite? frontSprite, backSprite, illustrationSprite;
 
   bool showPreview;
   bool showTitleOnHovering;
@@ -65,11 +64,14 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   PlayingCard({
     this.data,
-    this.playerId,
-    required this.id,
+    this.id,
     this.title,
-    this.cost = 0,
     this.kind,
+    this.ownedPlayerId,
+    required this.frontSpriteId,
+    this.illustrationSpriteId,
+    this.cost = 0,
+    Set<String> tags = const {},
     double x = 0,
     double y = 0,
     required double width,
@@ -84,7 +86,8 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.state = CardState.deck,
     this.onFocused,
     this.onUnfocused,
-  }) : focusOffset = Vector2.zero() {
+  })  : illustrationOffset = Vector2.zero(),
+        focusOffset = Vector2.zero() {
     this.x = x;
     this.y = y;
     this.width = width;
@@ -100,7 +103,11 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   @override
   Future<void> onLoad() async {
-    frontSprite = Sprite(await Flame.images.load('cards/$id.png'));
+    frontSprite = Sprite(await Flame.images.load('cards/$frontSpriteId.png'));
+    if (illustrationSpriteId != null) {
+      illustrationSprite = Sprite(
+          await Flame.images.load('illustrations/$illustrationSpriteId.png'));
+    }
     backSprite = Sprite(await Flame.images.load('cardback.png'));
   }
 

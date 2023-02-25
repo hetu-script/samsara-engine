@@ -7,6 +7,7 @@ import '../scene/scene.dart';
 import '../extensions.dart';
 
 export 'package:flame/components.dart' show Anchor;
+export 'package:flame/game.dart' show Camera;
 
 abstract class GameComponent extends PositionComponent
     with HasGameRef<Scene>

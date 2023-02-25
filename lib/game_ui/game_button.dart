@@ -2,14 +2,10 @@ import 'dart:ui';
 
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
-import 'package:flame/game.dart';
 
 import '../paint/paint.dart';
 
 class GameButton extends GameComponent with HandlesGesture {
-  @override
-  Camera get camera => gameRef.camera;
-
   late Rect border;
   late RRect rborder;
   final double borderRadius;
