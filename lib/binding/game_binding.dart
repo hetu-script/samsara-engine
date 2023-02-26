@@ -85,3 +85,24 @@ class SamsaraEngineClassBinding extends HTExternalClass {
     return i.htFetch(varName);
   }
 }
+
+const kHetuEngineBindingSource = r'''
+external class SamsaraEngine {
+  fun loadLocale(data: Map)
+  fun loadColors(data: List)
+  // fun updateNationColors(data: Map)
+  fun log(...content: str)
+  fun debug(...content: str)
+  fun info(...content: str)
+  fun warning(...content: str)
+  fun error(...content: str)
+}
+
+var buildContext
+
+fun build(ctx) {
+  buildContext = ctx
+}
+
+var engine: SamsaraEngine
+''';

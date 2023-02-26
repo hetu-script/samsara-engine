@@ -198,6 +198,8 @@ class SamsaraEngine with SceneController, EventAggregator {
     }
 
     // hetu.interpreter.bindExternalFunction('print', info, override: true);
+
+    hetu.eval(kHetuEngineBindingSource, fileName: 'samsara_engine_binding.ht');
   }
 
   // @override
