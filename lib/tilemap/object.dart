@@ -140,7 +140,7 @@ class TileMapObject extends GameComponent with TileInfo {
     _movingTargetTilePosition = const TilePosition.leftTop();
   }
 
-  void moveTo(TilePosition target, {bool backward = false}) {
+  void walkTo(TilePosition target, {bool backward = false}) {
     assert(tilePosition != target);
     _movingTargetTilePosition = target;
     _isMoving = true;

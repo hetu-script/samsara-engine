@@ -29,6 +29,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/animation/fight/
     - assets/images/illustrations/
     - assets/images/cards/
 

@@ -1,15 +1,9 @@
-import 'dart:ui';
-
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
 
 import '../paint/paint.dart';
 
 class GameButton extends GameComponent with HandlesGesture {
-  late Rect border;
-  late RRect rborder;
-  final double borderRadius;
-
   String text;
   String? tooltip;
 
@@ -27,21 +21,9 @@ class GameButton extends GameComponent with HandlesGesture {
     required double y,
     double width = 160.0,
     double height = 80.0,
-    this.borderRadius = 5.0,
     this.onPressed,
-  }) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    generateBorder();
-  }
-
-  void generateBorder() {
-    border = Rect.fromLTWH(0, 0, width, height);
-    rborder =
-        RRect.fromLTRBR(0, 0, width, height, Radius.circular(borderRadius));
-  }
+    super.borderRadius,
+  }) : super(position: Vector2(x, y), size: Vector2(width, height));
 
   @override
   void render(Canvas canvas) {

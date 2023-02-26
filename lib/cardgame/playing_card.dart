@@ -22,11 +22,8 @@ enum CardState {
 }
 
 class PlayingCard extends GameComponent with HandlesGesture {
-  late Rect border;
-  late Rect cardRect;
-
   int _savedPriority = 0;
-  Vector2 _savedOffset = Vector2.zero();
+  late Vector2 _savedPosition, _savedSize;
 
   String? ownedPlayerId;
 
@@ -47,7 +44,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
   bool showPreview;
   bool showTitleOnHovering;
   bool showFocusBorder = false;
-  Vector2 focusOffset;
+  Vector2? focusedOffset, focusedPosition, focusedSize;
   bool _isFocused = false;
   bool stayFocused = false;
   bool isFlipped;
@@ -76,6 +73,11 @@ class PlayingCard extends GameComponent with HandlesGesture {
     double y = 0,
     required double width,
     required double height,
+    super.borderRadius,
+    Vector2? illustrationOffset,
+    this.focusedOffset,
+    this.focusedPosition,
+    this.focusedSize,
     this.showPreview = false,
     this.showTitleOnHovering = false,
     this.isFlipped = false,
@@ -86,19 +88,14 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.state = CardState.deck,
     this.onFocused,
     this.onUnfocused,
-  })  : illustrationOffset = Vector2.zero(),
-        focusOffset = Vector2.zero() {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    generateBorder();
-
-    this.enableGesture = enableGesture;
-  }
-
-  void generateBorder() {
-    border = Rect.fromLTWH(0, 0, width, height);
+  })  : illustrationOffset = illustrationOffset ?? Vector2.zero(),
+        // focusOffset = focusOffset ?? Vector2.zero(),
+        super(
+          position: Vector2(x, y),
+          size: Vector2(width, height),
+        ) {
+    _savedPosition = position.clone();
+    _savedSize = position.clone();
   }
 
   @override
@@ -118,12 +115,31 @@ class PlayingCard extends GameComponent with HandlesGesture {
     if (value) {
       _savedPriority = priority;
       priority = 1000;
-      _savedOffset = position.clone();
-      position += focusOffset;
+      _savedPosition = position.clone();
+      _savedSize = size.clone();
+
+      Vector2? endPosition;
+      if (focusedOffset != null) {
+        endPosition = position + focusedOffset!;
+      } else if (focusedPosition != null) {
+        endPosition = focusedPosition!;
+      }
+      if (endPosition != null) {
+        moveTo(
+          position: endPosition,
+          size: focusedSize,
+          duration: 0.25,
+        );
+      }
+
       onFocused?.call();
     } else {
       priority = _savedPriority;
-      position = _savedOffset;
+      moveTo(
+        position: _savedPosition,
+        size: _savedSize,
+        duration: 0.25,
+      );
       onUnfocused?.call();
     }
   }

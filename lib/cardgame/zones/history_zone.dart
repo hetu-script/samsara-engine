@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
 
@@ -7,10 +6,6 @@ import '../../paint/paint.dart';
 class HistoryZone extends GameComponent with HandlesGesture {
   final String? id;
   final String? title;
-
-  final double borderRadius;
-  late final Rect border;
-  late final RRect rborder;
 
   final Anchor titleAnchor;
 
@@ -21,21 +16,12 @@ class HistoryZone extends GameComponent with HandlesGesture {
     required double y,
     required double width,
     required double height,
-    this.borderRadius = 5.0,
+    super.borderRadius = 5.0,
     this.titleAnchor = Anchor.topLeft,
-  }) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    generateBorder();
-  }
-
-  void generateBorder() {
-    border = Rect.fromLTWH(0, 0, width, height);
-    rborder =
-        RRect.fromLTRBR(0, 0, width, height, Radius.circular(borderRadius));
-  }
+  }) : super(
+          position: Vector2(x, y),
+          size: Vector2(width, height),
+        );
 
   @override
   void render(Canvas canvas) {

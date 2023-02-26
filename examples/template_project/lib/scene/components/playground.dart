@@ -5,20 +5,10 @@ import 'package:samsara/paint/paint.dart';
 import '../../global.dart';
 
 class PlayGround extends GameComponent with HandlesGesture {
-  late Rect border;
-
   PlayGround({
     required double width,
     required double height,
-  }) {
-    width = width;
-    height = height;
-    generateBorder();
-  }
-
-  void generateBorder() {
-    border = Rect.fromLTWH(0, 0, width, height);
-  }
+  }) : super(size: Vector2(width, height));
 
   void centerGame() {
     final gameViewPortSize = gameRef.size;

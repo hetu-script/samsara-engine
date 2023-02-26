@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
-import 'package:flame/effects.dart';
 
 import '../playing_card.dart';
 import '../action.dart';
@@ -11,10 +10,6 @@ import '../../../paint/paint.dart';
 
 class DrawingZone extends GameComponent with HandlesGesture {
   final String? id;
-
-  final double borderRadius;
-  late final Rect border;
-  late final RRect rborder;
 
   final Vector2 drawedCardPosition, drawedCardSize;
 
@@ -28,24 +23,15 @@ class DrawingZone extends GameComponent with HandlesGesture {
     double y = 0,
     required double width,
     required double height,
-    this.borderRadius = 5.0,
+    super.borderRadius = 5.0,
     required this.cards,
     required this.drawedCardPosition,
     required this.drawedCardSize,
     this.tooltipAnchor = Anchor.topCenter,
-  }) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    generateBorder();
-  }
-
-  void generateBorder() {
-    border = Rect.fromLTWH(0, 0, width, height);
-    rborder =
-        RRect.fromLTRBR(0, 0, width, height, Radius.circular(borderRadius));
-  }
+  }) : super(
+          position: Vector2(x, y),
+          size: Vector2(width, height),
+        );
 
   // @override
   // Future<void> onLoad() async {
@@ -73,30 +59,21 @@ class DrawingZone extends GameComponent with HandlesGesture {
     gameActions.add(GameAction(completer: drawingAction));
     final card = cards.last;
     cards.removeLast();
-    final drawingAnimation = AdvancedMoveEffect(
-      target: card,
-      controller: EffectController(duration: 0.6, curve: Curves.easeIn),
-      startPosition: card.position,
-      endPosition: drawedCardPosition,
-      startSize: card.size,
-      endSize: drawedCardSize,
-      onChange: () {
-        card.generateBorder();
-      },
+    card.moveTo(
+      position: drawedCardPosition,
+      size: drawedCardSize,
+      duration: 0.6,
+      curve: Curves.easeIn,
       onComplete: () {
         if (flip) {
           card.isFlipped = false;
         }
         Future.delayed(const Duration(milliseconds: 400)).then((value) {
-          card.position = drawedCardPosition;
-          card.size = drawedCardSize;
-          card.generateBorder();
           // drawingAction.complete();
           onFinish?.call(card, drawingAction);
         });
       },
     );
-    card.add(drawingAnimation);
     return drawingAction.future;
   }
 

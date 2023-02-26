@@ -6,24 +6,19 @@ import 'package:samsara/paint/paint.dart';
 import '../../global.dart';
 import '../common.dart';
 import 'deck_zone.dart';
+import 'character.dart';
 
 class PlayGround extends GameComponent with HandlesGesture {
-  late Rect border;
-
   late final DeckZone player1DeckZone, player2DeckZone;
+
+  final FightSceneCharacter player1Char, player2Char;
 
   PlayGround({
     required double width,
     required double height,
-  }) {
-    this.width = width;
-    this.height = height;
-    generateBorder();
-  }
-
-  void generateBorder() {
-    border = Rect.fromLTWH(0, 0, width, height);
-  }
+    required this.player1Char,
+    required this.player2Char,
+  }) : super(size: Vector2(width, height));
 
   void centerGame() {
     final gameViewPortSize = gameRef.size;
@@ -57,6 +52,8 @@ class PlayGround extends GameComponent with HandlesGesture {
         frontSpriteId: 'template',
         width: kCardWidth,
         height: kCardHeight,
+        focusedPosition: Vector2(20, 100),
+        focusedSize: kFocusedCardSize,
       );
       player1Cards.add(card);
       add(card);
@@ -76,6 +73,13 @@ class PlayGround extends GameComponent with HandlesGesture {
       y: kPlayer2DeckZoneTop,
     );
     add(player2DeckZone);
+  }
+
+  @override
+  void onTapUp(int pointer, int buttons, TapUpDetails details) {
+    player1DeckZone.setNextCardFocused();
+
+    super.onTapUp(pointer, buttons, details);
   }
 
   @override

@@ -9,10 +9,6 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
   final String? id;
   final String? title;
 
-  final double borderRadius;
-  late final Rect border;
-  late final RRect rborder;
-
   bool isHighlighted = false;
 
   PlayingCard? card;
@@ -35,26 +31,17 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
     required double y,
     required double width,
     required double height,
-    this.borderRadius = 5.0,
+    super.borderRadius = 5.0,
     this.card,
     super.priority,
     required this.kind,
     this.onInteract,
     this.onRemoveCard,
     this.mustRotateCard = false,
-  }) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    generateBorder();
-  }
-
-  void generateBorder() {
-    border = Rect.fromLTWH(0, 0, width, height);
-    rborder =
-        RRect.fromLTRBR(0, 0, width, height, Radius.circular(borderRadius));
-  }
+  }) : super(
+          position: Vector2(x, y),
+          size: Vector2(width, height),
+        );
 
   @override
   void render(Canvas canvas) {

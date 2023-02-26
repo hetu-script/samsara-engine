@@ -115,77 +115,79 @@ class _MainGameOverlayState extends State<MainGameOverlay>
                 if (_scene.isAttached) {
                   _scene.detach();
                 }
-                final screenWidgets = [
-                  SceneWidget(scene: _scene),
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: CardGameDropMenu(
-                      onSelected: (CardGameDropMenuItems item) async {
-                        switch (item) {
-                          case CardGameDropMenuItems.console:
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) => Console(
-                                engine: engine,
-                              ),
-                            ).then((_) => setState(() {}));
-                            break;
-                          case CardGameDropMenuItems.quit:
-                            engine.leaveScene(_scene.name, clearCache: true);
-                            _isDisposing = true;
-                            gameActions.clear();
-                            Navigator.of(context).pop();
-                            break;
-                          default:
-                        }
-                      },
-                    ),
-                  ),
-                  if (_currentFocusedCardData != null) ...[
-                    // Positioned(
-                    //   child: IgnorePointer(
-                    //     child: Container(
-                    //       width: MediaQuery.of(context).size.width,
-                    //       height: MediaQuery.of(context).size.height,
-                    //       color: Colors.black45,
-                    //     ),
-                    //   ),
-                    // ),
-                    Positioned(
-                      right: 40,
-                      top: 40,
-                      child: IgnorePointer(
-                        child: Container(
-                          color: Colors.black45,
-                          padding: const EdgeInsets.all(20),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SpriteWidget(
-                                sprite: _currentFocusedCardData!.frontSprite!,
-                                anchor: Anchor.center,
-                                // angle: rotated ? radians(-90) : 0,
-                                // width: width,
-                                // height: height,
-                              ),
-                              Container(
-                                padding: const EdgeInsets.only(left: 40),
-                                width: 400,
-                                child: Text(rules),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ];
-
                 return Material(
                   color: Colors.transparent,
                   child: Stack(
-                    children: screenWidgets,
+                    children: [
+                      if (_scene.isLoading)
+                        LoadingScreen(text: engine.locale['loading']),
+                      SceneWidget(scene: _scene),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: CardGameDropMenu(
+                          onSelected: (CardGameDropMenuItems item) async {
+                            switch (item) {
+                              case CardGameDropMenuItems.console:
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) => Console(
+                                    engine: engine,
+                                  ),
+                                ).then((_) => setState(() {}));
+                                break;
+                              case CardGameDropMenuItems.quit:
+                                engine.leaveScene(_scene.name,
+                                    clearCache: true);
+                                _isDisposing = true;
+                                gameActions.clear();
+                                Navigator.of(context).pop();
+                                break;
+                              default:
+                            }
+                          },
+                        ),
+                      ),
+                      if (_currentFocusedCardData != null) ...[
+                        // Positioned(
+                        //   child: IgnorePointer(
+                        //     child: Container(
+                        //       width: MediaQuery.of(context).size.width,
+                        //       height: MediaQuery.of(context).size.height,
+                        //       color: Colors.black45,
+                        //     ),
+                        //   ),
+                        // ),
+                        Positioned(
+                          right: 40,
+                          top: 40,
+                          child: IgnorePointer(
+                            child: Container(
+                              color: Colors.black45,
+                              padding: const EdgeInsets.all(20),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SpriteWidget(
+                                    sprite:
+                                        _currentFocusedCardData!.frontSprite!,
+                                    anchor: Anchor.center,
+                                    // angle: rotated ? radians(-90) : 0,
+                                    // width: width,
+                                    // height: height,
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.only(left: 40),
+                                    width: 400,
+                                    child: Text(rules),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 );
               }

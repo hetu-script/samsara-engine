@@ -652,7 +652,7 @@ class TileMap extends GameComponent with HandlesGesture {
           _currentRoute!.removeLast();
           if (_currentRoute!.isNotEmpty) {
             final nextTile = _currentRoute!.last;
-            _hero!.moveTo(nextTile.tilePosition, backward: _backwardMoving);
+            _hero!.walkTo(nextTile.tilePosition, backward: _backwardMoving);
             final pos = nextTile.tilePosition;
             final terrain = getTerrain(pos.left, pos.top);
             if (terrain!.isWater) {
