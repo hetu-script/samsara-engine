@@ -35,23 +35,23 @@ class SceneController {
     }
   }
 
-  void leaveScene(String id, {bool clearCache = false}) {
-    assert(_cachedScenes.containsKey(id));
-    if (_currentScene?.key == _cachedScenes[id]!.key) {
+  void leaveScene(String sceneId, {bool clearCache = false}) {
+    assert(_cachedScenes.containsKey(sceneId));
+    if (_currentScene?.key == _cachedScenes[sceneId]!.key) {
       _currentScene = null;
     }
     if (clearCache) {
-      _cachedScenes.remove(id);
+      _cachedScenes.remove(sceneId);
     }
   }
 
   /// 删除某个之前缓存的场景，这里允许接收一个不存在的id
-  void clearCache(String id) {
-    if (_cachedScenes.containsKey(id)) {
-      if (_currentScene?.key == _cachedScenes[id]!.key) {
+  void clearCache(String sceneId) {
+    if (_cachedScenes.containsKey(sceneId)) {
+      if (_currentScene?.key == _cachedScenes[sceneId]!.key) {
         _currentScene = null;
       }
-      _cachedScenes.remove(id);
+      _cachedScenes.remove(sceneId);
     }
   }
 }
