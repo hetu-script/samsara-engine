@@ -108,7 +108,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
     backSprite = Sprite(await Flame.images.load('cardback.png'));
   }
 
-  void setFocused(bool value) {
+  void setFocused(bool value, {double animationDuration = 0.25}) {
     if (_isFocused == value) return;
 
     _isFocused = value;
@@ -128,7 +128,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
         moveTo(
           position: endPosition,
           size: focusedSize,
-          duration: 0.25,
+          duration: animationDuration,
         );
       }
 
@@ -138,7 +138,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
       moveTo(
         position: _savedPosition,
         size: _savedSize,
-        duration: 0.25,
+        duration: animationDuration,
       );
       onUnfocused?.call();
     }
