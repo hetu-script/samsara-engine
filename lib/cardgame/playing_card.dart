@@ -43,7 +43,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   bool showPreview;
   bool showTitleOnHovering;
-  bool showFocusBorder = false;
+  bool showBorder = false;
   Vector2? focusedOffset, focusedPosition, focusedSize;
   bool _isFocused = false;
   bool stayFocused = false;
@@ -58,6 +58,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
   PlayableZone? zone;
 
   void Function()? onFocused, onUnfocused;
+  double focusAnimationDuration;
 
   PlayingCard({
     this.data,
@@ -88,6 +89,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.state = CardState.deck,
     this.onFocused,
     this.onUnfocused,
+    this.focusAnimationDuration = 0.25,
   })  : illustrationOffset = illustrationOffset ?? Vector2.zero(),
         // focusOffset = focusOffset ?? Vector2.zero(),
         super(
@@ -108,7 +110,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
     backSprite = Sprite(await Flame.images.load('cardback.png'));
   }
 
-  void setFocused(bool value, {double animationDuration = 0.25}) {
+  void setFocused(bool value) {
     if (_isFocused == value) return;
 
     _isFocused = value;
@@ -128,17 +130,18 @@ class PlayingCard extends GameComponent with HandlesGesture {
         moveTo(
           position: endPosition,
           size: focusedSize,
-          duration: animationDuration,
+          duration: focusAnimationDuration,
         );
       }
 
       onFocused?.call();
     } else {
+      if (stayFocused) return;
       priority = _savedPriority;
       moveTo(
         position: _savedPosition,
         size: _savedSize,
-        duration: animationDuration,
+        duration: focusAnimationDuration,
       );
       onUnfocused?.call();
     }
@@ -153,7 +156,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   @override
   void onMouseExit() {
-    if (showPreview) {
+    if (showPreview && !stayFocused) {
       setFocused(false);
     }
   }
@@ -228,11 +231,11 @@ class PlayingCard extends GameComponent with HandlesGesture {
       frontSprite?.renderRect(canvas, border);
     }
 
-    if (showFocusBorder) {
+    if (showBorder) {
       canvas.drawRect(border, borderPaintSelected);
     }
 
-    if (showTitleOnHovering && isHovering) {
+    if ((showTitleOnHovering && isHovering) || _isFocused) {
       if (title != null) {
         drawScreenText(canvas, title!,
             rect: border, anchor: Anchor.topCenter, marginTop: 5);

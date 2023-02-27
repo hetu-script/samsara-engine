@@ -124,6 +124,7 @@ abstract class GameComponent extends PositionComponent
   void moveTo({
     Vector2? position,
     Vector2? size,
+    double? angle,
     required double duration,
     curve = Curves.linear,
     Function? onChange,
@@ -139,6 +140,7 @@ abstract class GameComponent extends PositionComponent
       controller: EffectController(duration: duration, curve: curve),
       endPosition: position,
       endSize: size,
+      endAngle: angle,
       onChange: onChange,
       onComplete: onComplete,
     );

@@ -13,11 +13,11 @@ class PiledZone extends GameComponent with HandlesGesture {
   final List<PlayingCard> cards = [];
   final int piledCardPriority;
   final Vector2 piledCardSize;
+  Vector2? focusedOffset, focusedPosition, focusedSize;
 
   final Vector2 pileMargin, pileOffset; //, focusOffset;
 
   final Anchor titleAnchor;
-  final bool isVericalPile;
 
   PiledZone({
     this.id,
@@ -30,11 +30,12 @@ class PiledZone extends GameComponent with HandlesGesture {
     List<PlayingCard> cards = const [],
     this.piledCardPriority = 0,
     required this.piledCardSize,
+    this.focusedOffset,
+    this.focusedPosition,
+    this.focusedSize,
     Vector2? pileMargin,
     Vector2? pileOffset,
-    // Vector2? focusOffset,
     this.titleAnchor = Anchor.topLeft,
-    this.isVericalPile = false,
   })  : pileMargin = pileMargin ?? Vector2(10.0, 10.0),
         pileOffset = pileOffset ?? Vector2(50.0, 50.0),
         // focusOffset = focusOffset ?? Vector2.zero(),
@@ -58,10 +59,14 @@ class PiledZone extends GameComponent with HandlesGesture {
     for (var i = 0; i < cards.length; ++i) {
       final card = cards[i];
       card.priority = piledCardPriority + i;
+      card.focusedOffset = focusedOffset;
+      card.focusedPosition = focusedPosition;
+      card.focusedSize = focusedSize;
 
       final endPosition = Vector2(
-          x + (isVericalPile ? 0 : i * pileOffset.x) + pileMargin.x,
-          y + (isVericalPile ? i * pileOffset.y : 0) + pileMargin.y);
+        x + card.anchor.x * piledCardSize.x + i * pileOffset.x + pileMargin.x,
+        y + card.anchor.y * piledCardSize.y + i * pileOffset.y + pileMargin.y,
+      );
 
       if (completer == null) {
         card.position = endPosition;
