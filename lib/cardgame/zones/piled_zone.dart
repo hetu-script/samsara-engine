@@ -37,7 +37,7 @@ class PiledZone extends GameComponent with HandlesGesture {
     Vector2? pileOffset,
     this.titleAnchor = Anchor.topLeft,
   })  : pileMargin = pileMargin ?? Vector2(10.0, 10.0),
-        pileOffset = pileOffset ?? Vector2(50.0, 50.0),
+        pileOffset = pileOffset ?? Vector2(50.0, 0.0),
         // focusOffset = focusOffset ?? Vector2.zero(),
         super(
           position: Vector2(x, y),
@@ -59,9 +59,9 @@ class PiledZone extends GameComponent with HandlesGesture {
     for (var i = 0; i < cards.length; ++i) {
       final card = cards[i];
       card.priority = piledCardPriority + i;
-      card.focusedOffset = focusedOffset;
-      card.focusedPosition = focusedPosition;
-      card.focusedSize = focusedSize;
+      card.focusedOffset ??= focusedOffset;
+      card.focusedPosition ??= focusedPosition;
+      card.focusedSize ??= focusedSize;
 
       final endPosition = Vector2(
         x + card.anchor.x * piledCardSize.x + i * pileOffset.x + pileMargin.x,
