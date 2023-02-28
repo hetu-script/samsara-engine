@@ -36,8 +36,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
   final dynamic data;
 
   /// the sprite id of this card, should be unique among all cards
-  final String frontSpriteId;
-  final String? illustrationSpriteId;
+  final String? frontSpriteId, backSpriteId, illustrationSpriteId;
   final Vector2 illustrationOffset;
   Sprite? frontSprite, backSprite, illustrationSprite;
 
@@ -60,15 +59,22 @@ class PlayingCard extends GameComponent with HandlesGesture {
   void Function()? onFocused, onUnfocused;
   double focusAnimationDuration;
 
+  int count;
+
   PlayingCard({
     this.data,
     this.id,
     this.title,
     this.kind,
     this.ownedPlayerId,
-    required this.frontSpriteId,
+    this.frontSpriteId,
+    this.frontSprite,
     this.illustrationSpriteId,
+    this.illustrationSprite,
+    this.backSpriteId,
+    this.backSprite,
     this.cost = 0,
+    this.count = 1,
     Set<String> tags = const {},
     double x = 0,
     double y = 0,
@@ -102,12 +108,16 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   @override
   Future<void> onLoad() async {
-    frontSprite = Sprite(await Flame.images.load('cards/$frontSpriteId.png'));
+    if (frontSpriteId != null) {
+      frontSprite = Sprite(await Flame.images.load('cards/$frontSpriteId.png'));
+    }
     if (illustrationSpriteId != null) {
       illustrationSprite = Sprite(
           await Flame.images.load('illustrations/$illustrationSpriteId.png'));
     }
-    backSprite = Sprite(await Flame.images.load('cardback.png'));
+    if (backSpriteId != null) {
+      backSprite = Sprite(await Flame.images.load('$backSpriteId.png'));
+    }
   }
 
   void setFocused(bool value) {
