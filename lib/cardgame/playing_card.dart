@@ -2,14 +2,11 @@ import 'package:flame/components.dart' hide SpriteComponent;
 import 'package:flame/effects.dart';
 import 'package:flutter/material.dart' hide Image;
 import 'package:flame/flame.dart';
-// import 'package:samsara/utils/math.dart';
-import 'package:samsara/samsara.dart';
 // import 'package:flame/effects.dart';
 
-import 'package:samsara/gestures.dart';
-
+import '../gestures/gesture_mixin.dart';
+import '../component/game_component.dart';
 import 'zones/playable_zone.dart';
-
 import '../../paint/paint.dart';
 
 enum CardState {
@@ -27,7 +24,8 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   String? ownedPlayerId;
 
-  final String? id, title, kind;
+  final String? id, kind, title;
+  TextPaint? titlePaint;
   final int cost;
   final Set<String> tags = {};
 
@@ -42,6 +40,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   bool showPreview;
   bool showTitleOnHovering;
+  bool showCount;
   bool showBorder = false;
   Vector2? focusedOffset, focusedPosition, focusedSize;
   bool _isFocused = false;
@@ -60,12 +59,16 @@ class PlayingCard extends GameComponent with HandlesGesture {
   double focusAnimationDuration;
 
   int count;
+  Sprite? countDecorSprite;
+  String? countDecorSpriteId;
+  TextPaint countPaint;
 
   PlayingCard({
     this.data,
     this.id,
-    this.title,
     this.kind,
+    this.title,
+    this.titlePaint,
     this.ownedPlayerId,
     this.frontSpriteId,
     this.frontSprite,
@@ -75,6 +78,9 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.backSprite,
     this.cost = 0,
     this.count = 1,
+    this.countDecorSprite,
+    this.countDecorSpriteId,
+    TextPaint? countPaint,
     Set<String> tags = const {},
     double x = 0,
     double y = 0,
@@ -87,6 +93,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.focusedSize,
     this.showPreview = false,
     this.showTitleOnHovering = false,
+    this.showCount = false,
     this.isFlipped = false,
     this.isRotatable = false,
     super.anchor,
@@ -96,7 +103,14 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.onFocused,
     this.onUnfocused,
     this.focusAnimationDuration = 0.25,
-  })  : illustrationOffset = illustrationOffset ?? Vector2.zero(),
+  })  : countPaint = TextPaint(
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 28.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        illustrationOffset = illustrationOffset ?? Vector2.zero(),
         // focusOffset = focusOffset ?? Vector2.zero(),
         super(
           position: Vector2(x, y),
@@ -117,6 +131,10 @@ class PlayingCard extends GameComponent with HandlesGesture {
     }
     if (backSpriteId != null) {
       backSprite = Sprite(await Flame.images.load('$backSpriteId.png'));
+    }
+    if (countDecorSpriteId != null) {
+      countDecorSprite =
+          Sprite(await Flame.images.load('$countDecorSpriteId.png'));
     }
   }
 
@@ -247,10 +265,26 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
     if ((showTitleOnHovering && isHovering) || _isFocused) {
       if (title != null) {
-        drawScreenText(canvas, title!,
-            rect: border, anchor: Anchor.topCenter, marginTop: 5);
+        drawScreenText(
+          canvas,
+          title!,
+          textPaint: titlePaint,
+          rect: border,
+          anchor: Anchor.topCenter,
+          marginTop: 5,
+        );
       }
-      // renderTextAtPosition(canvas, '费用：$cost', Vector2(10, 25));
+    }
+
+    if (showCount && count > 0) {
+      drawScreenText(
+        canvas,
+        '$count',
+        textPaint: countPaint,
+        rect: border,
+        anchor: Anchor.bottomCenter,
+        background: countDecorSprite,
+      );
     }
   }
 }

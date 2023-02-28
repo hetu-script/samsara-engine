@@ -42,6 +42,7 @@ abstract class GameComponent extends PositionComponent
     generateBorder();
   }
 
+  @mustCallSuper
   void generateBorder() {
     border = Rect.fromLTWH(0, 0, width, height);
     rborder =

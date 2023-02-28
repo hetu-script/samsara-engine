@@ -23,22 +23,10 @@ final borderPaintPressed = Paint()
   ..style = PaintingStyle.stroke
   ..color = Colors.red;
 
-TextPaint screenTextPaintOutline = TextPaint(
-  style: TextStyle(
-    fontSize: 14.0,
-    fontFamily: 'NotoSansMono',
-    foreground: Paint()
-      ..strokeWidth = 2
-      ..color = Colors.black
-      ..style = PaintingStyle.stroke,
-  ),
-);
-
 TextPaint screenTextPaintLight = TextPaint(
   style: const TextStyle(
     color: Colors.white,
     fontSize: 14.0,
-    fontFamily: 'NotoSansMono',
   ),
 );
 
@@ -46,7 +34,6 @@ TextPaint screenTextPaintInfo = TextPaint(
   style: const TextStyle(
     color: Colors.lightBlue,
     fontSize: 14.0,
-    fontFamily: 'NotoSansMono',
   ),
 );
 
@@ -54,7 +41,6 @@ TextPaint screenTextPaintWarning = TextPaint(
   style: const TextStyle(
     color: Colors.yellow,
     fontSize: 14.0,
-    fontFamily: 'NotoSansMono',
   ),
 );
 
@@ -62,7 +48,6 @@ TextPaint screenTextPaintDanger = TextPaint(
   style: const TextStyle(
     color: Colors.red,
     fontSize: 14.0,
-    fontFamily: 'NotoSansMono',
   ),
 );
 
@@ -72,6 +57,8 @@ enum ScreenTextStyle {
   warning,
   danger,
 }
+
+final Map<TextPaint, TextPaint> _cachedOutline = {};
 
 void drawScreenText(
   Canvas canvas,
@@ -83,28 +70,48 @@ void drawScreenText(
   double marginTop = 0.0,
   double marginRight = 0.0,
   double marginBottom = 0.0,
+  TextPaint? textPaint,
+  bool outline = true,
   ScreenTextStyle style = ScreenTextStyle.light,
+  Sprite? background,
 }) {
   assert(position != null || rect != null);
-  if (position != null) {
-    screenTextPaintOutline.render(canvas, text, position);
+  if (textPaint == null) {
     switch (style) {
       case ScreenTextStyle.light:
-        screenTextPaintLight.render(canvas, text, position);
+        textPaint = screenTextPaintLight;
         break;
       case ScreenTextStyle.info:
-        screenTextPaintInfo.render(canvas, text, position);
+        textPaint = screenTextPaintInfo;
         break;
       case ScreenTextStyle.warning:
-        screenTextPaintWarning.render(canvas, text, position);
+        textPaint = screenTextPaintWarning;
         break;
       case ScreenTextStyle.danger:
-        screenTextPaintDanger.render(canvas, text, position);
+        textPaint = screenTextPaintDanger;
         break;
     }
+  }
+  if (position != null) {
+    TextPaint? outlinePaint = _cachedOutline[textPaint];
+    if (outlinePaint == null) {
+      outlinePaint = textPaint.copyWith(
+        (style) => style.copyWith(
+          foreground: Paint()
+            ..strokeWidth = 2.5
+            ..color = Colors.black
+            ..style = PaintingStyle.stroke,
+        ),
+      );
+      _cachedOutline[textPaint] = outlinePaint;
+    }
+    if (outline) {
+      outlinePaint.render(canvas, text, position);
+    }
+    textPaint.render(canvas, text, position);
   } else if (rect != null) {
-    final textWidth = screenTextPaintOutline.measureTextWidth(text);
-    final textHeight = screenTextPaintOutline.measureTextHeight(text);
+    final textWidth = textPaint.measureTextWidth(text);
+    final textHeight = textPaint.measureTextHeight(text);
     Vector2 textPosition;
     if (anchor == Anchor.topLeft) {
       textPosition = Vector2(rect.left + marginLeft, rect.top + marginTop);
@@ -136,7 +143,24 @@ void drawScreenText(
       textPosition = Vector2(
           rect.left + marginLeft + anchor.x, rect.top + marginTop + anchor.y);
     }
-    drawScreenText(canvas, text, position: textPosition, style: style);
+    if (background != null) {
+      final backgroundRect = Rect.fromLTWH(
+        textPosition.x - 10 - rect.left,
+        textPosition.y - 5 - rect.top,
+        textWidth + 20,
+        textHeight + 10,
+      );
+      background.renderRect(canvas, backgroundRect);
+    }
+
+    drawScreenText(
+      canvas,
+      text,
+      textPaint: textPaint,
+      position: textPosition,
+      outline: outline,
+      style: style,
+    );
   }
 }
 
