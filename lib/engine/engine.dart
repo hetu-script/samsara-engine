@@ -245,7 +245,7 @@ class SamsaraEngine with SceneController, EventAggregator {
     logger.i(_stringify(content));
   }
 
-  void warning(dynamic content) {
+  void warn(dynamic content) {
     logger.w(_stringify(content));
   }
 

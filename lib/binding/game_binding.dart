@@ -59,7 +59,7 @@ extension SamsaraEngineBinding on SamsaraEngine {
                 {List<dynamic> positionalArgs = const [],
                 Map<String, dynamic> namedArgs = const {},
                 List<HTType> typeArgs = const []}) =>
-            warning(positionalArgs
+            warn(positionalArgs
                 .map((object) => hetu.lexicon.stringify(object))
                 .join(' '));
       case 'error':

@@ -23,8 +23,9 @@ class ButtonClose extends StatelessWidget {
       onPressed: () {
         if (onPressed != null) {
           onPressed!();
+        } else {
+          Navigator.maybePop(context);
         }
-        Navigator.maybePop(context);
       },
     );
   }
