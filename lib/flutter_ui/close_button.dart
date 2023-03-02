@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class ButtonClose extends StatelessWidget {
-  const ButtonClose({
+class CloseButton2 extends StatelessWidget {
+  const CloseButton2({
     super.key,
     this.color,
     this.onPressed,

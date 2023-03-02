@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
 
@@ -9,6 +10,8 @@ import '../../paint/paint.dart';
 class PiledZone extends GameComponent with HandlesGesture {
   final String? id;
   final String? title;
+
+  late ScreenTextStyle titleStyle;
 
   final List<PlayingCard> cards = [];
   final int piledCardPriority;
@@ -44,6 +47,12 @@ class PiledZone extends GameComponent with HandlesGesture {
           size: Vector2(width, height),
         ) {
     this.cards.addAll(cards);
+
+    titleStyle = ScreenTextStyle(
+      rect: border,
+      anchor: titleAnchor,
+      padding: const EdgeInsets.fromLTRB(10, -10, 10, -10),
+    );
   }
 
   @override
@@ -82,7 +91,7 @@ class PiledZone extends GameComponent with HandlesGesture {
             // card.focusOffset = focusOffset;
             card.showTitleOnHovering = true;
             // card.generateBorder();
-            card.showPreview = true;
+            card.focusOnHovering = true;
 
             if (i == cards.length - 1) {
               completer.complete();
@@ -107,16 +116,7 @@ class PiledZone extends GameComponent with HandlesGesture {
   @override
   void render(Canvas canvas) {
     if (title != null) {
-      drawScreenText(
-        canvas,
-        '$title：${cards.length}',
-        rect: border,
-        anchor: titleAnchor,
-        marginLeft: 10,
-        marginTop: -10,
-        marginRight: 10,
-        marginBottom: -10,
-      );
+      drawScreenText(canvas, '$title：${cards.length}', style: titleStyle);
     }
 
     canvas.drawRRect(rborder, borderPaint);

@@ -17,6 +17,8 @@ class DrawingZone extends GameComponent with HandlesGesture {
 
   Anchor tooltipAnchor;
 
+  late ScreenTextStyle piledNumberStyle;
+
   DrawingZone({
     this.id,
     double x = 0,
@@ -31,7 +33,13 @@ class DrawingZone extends GameComponent with HandlesGesture {
   }) : super(
           position: Vector2(x, y),
           size: Vector2(width, height),
-        );
+        ) {
+    piledNumberStyle = ScreenTextStyle(
+      rect: border,
+      anchor: tooltipAnchor,
+      padding: const EdgeInsets.only(top: -30, bottom: -30),
+    );
+  }
 
   // @override
   // Future<void> onLoad() async {
@@ -83,10 +91,7 @@ class DrawingZone extends GameComponent with HandlesGesture {
       drawScreenText(
         canvas,
         '数量：${cards.length}',
-        rect: border,
-        anchor: tooltipAnchor,
-        marginTop: -30,
-        marginBottom: -30,
+        style: piledNumberStyle,
       );
       // canvas.drawRRect(border, borderPaintFocused);
     }

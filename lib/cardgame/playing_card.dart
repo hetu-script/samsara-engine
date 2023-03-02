@@ -8,6 +8,7 @@ import '../gestures/gesture_mixin.dart';
 import '../component/game_component.dart';
 import 'zones/playable_zone.dart';
 import '../../paint/paint.dart';
+// import '../extensions.dart';
 
 enum CardState {
   deck,
@@ -19,34 +20,64 @@ enum CardState {
 }
 
 class PlayingCard extends GameComponent with HandlesGesture {
+  static ScreenTextStyle defaultTitleStyle = ScreenTextStyle(
+        anchor: Anchor.topCenter,
+        padding: const EdgeInsets.only(top: 8),
+      ),
+      defaultDescriptionStyle = ScreenTextStyle(
+        anchor: Anchor.center,
+        outlined: false,
+        colorTheme: ScreenTextColorTheme.dark,
+      ),
+      defaultStackStyle = ScreenTextStyle(
+        textPaint: TextPaint(
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        anchor: Anchor.bottomCenter,
+        padding: const EdgeInsets.only(bottom: -20),
+        outlined: true,
+      );
+
   int _savedPriority = 0;
   late Vector2 _savedPosition, _savedSize;
 
-  String? ownedPlayerId;
-
-  final String? id, kind, title;
-  TextPaint? titlePaint;
+  final String? id, kind, title, description;
   final int cost;
   final Set<String> tags = {};
+
+  late ScreenTextStyle titleStyle, descriptionStyle, costStyle, stackStyle;
+
+  int stack;
+
+  bool showTitle;
+  bool showTitleOnHovering;
+  bool showDescription;
+  bool descriptionOutlined;
+  bool showStack;
 
   /// 卡牌的原始数据，可能是一个Json，或者一个河图struct对象，
   /// 也可能是 null，例如资源牌这种情况。
   final dynamic data;
+
+  String? ownedPlayerId;
 
   /// the sprite id of this card, should be unique among all cards
   final String? frontSpriteId, backSpriteId, illustrationSpriteId;
   final Vector2 illustrationOffset;
   Sprite? frontSprite, backSprite, illustrationSprite;
 
-  bool showPreview;
-  bool showTitleOnHovering;
-  bool showCount;
-  bool showBorder = false;
   Vector2? focusedOffset, focusedPosition, focusedSize;
-  bool _isFocused = false;
-  bool stayFocused = false;
+
+  bool focusOnHovering;
+  bool showBorder;
+  bool isFocused;
+  bool stayFocused;
   bool isFlipped;
-  bool isRotated = false;
+  bool isRotated;
   bool isRotatable;
 
   Map<CardState, void Function()?> useEventHandlers = {};
@@ -58,17 +89,22 @@ class PlayingCard extends GameComponent with HandlesGesture {
   void Function()? onFocused, onUnfocused;
   double focusAnimationDuration;
 
-  int count;
-  Sprite? countDecorSprite;
-  String? countDecorSpriteId;
-  TextPaint countPaint;
+  late Rect descriptionRect;
+
+  void Function()? onPointerDown, onPointerUp;
 
   PlayingCard({
-    this.data,
     this.id,
     this.kind,
     this.title,
-    this.titlePaint,
+    ScreenTextStyle? titleStyle,
+    this.showTitle = false,
+    this.showTitleOnHovering = false,
+    this.description,
+    ScreenTextStyle? descriptionStyle,
+    this.showDescription = false,
+    this.descriptionOutlined = false,
+    this.data,
     this.ownedPlayerId,
     this.frontSpriteId,
     this.frontSprite,
@@ -77,11 +113,10 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.backSpriteId,
     this.backSprite,
     this.cost = 0,
-    this.count = 1,
-    this.countDecorSprite,
-    this.countDecorSpriteId,
-    TextPaint? countPaint,
     Set<String> tags = const {},
+    this.stack = 1,
+    this.showStack = false,
+    ScreenTextStyle? stackStyle,
     double x = 0,
     double y = 0,
     required double width,
@@ -91,10 +126,12 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.focusedOffset,
     this.focusedPosition,
     this.focusedSize,
-    this.showPreview = false,
-    this.showTitleOnHovering = false,
-    this.showCount = false,
+    this.focusOnHovering = false,
+    this.showBorder = false,
+    this.isFocused = false,
+    this.stayFocused = false,
     this.isFlipped = false,
+    this.isRotated = false,
     this.isRotatable = false,
     super.anchor,
     super.priority,
@@ -103,21 +140,50 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.onFocused,
     this.onUnfocused,
     this.focusAnimationDuration = 0.25,
-  })  : countPaint = TextPaint(
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 28.0,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        illustrationOffset = illustrationOffset ?? Vector2.zero(),
-        // focusOffset = focusOffset ?? Vector2.zero(),
+    this.onPointerDown,
+    this.onPointerUp,
+  })  : illustrationOffset = illustrationOffset ?? Vector2.zero(),
         super(
           position: Vector2(x, y),
           size: Vector2(width, height),
         ) {
     _savedPosition = position.clone();
     _savedSize = position.clone();
+
+    if (titleStyle != null) {
+      this.titleStyle =
+          titleStyle.fillFrom(defaultTitleStyle).fillWith(rect: border);
+    } else {
+      this.titleStyle = defaultTitleStyle.copyWith(rect: border);
+    }
+
+    if (descriptionStyle != null) {
+      this.descriptionStyle =
+          descriptionStyle.fillFrom(defaultTitleStyle).fillWith(
+                rect: Rect.fromLTWH(
+                  (width - width * 0.8) / 2,
+                  height * 0.6,
+                  width * 0.8,
+                  height * 0.3,
+                ),
+              );
+    } else {
+      this.descriptionStyle = defaultDescriptionStyle.copyWith(
+        rect: Rect.fromLTWH(
+          (width - width * 0.8) / 2,
+          height * 0.6,
+          width * 0.8,
+          height * 0.3,
+        ),
+      );
+    }
+
+    if (stackStyle != null) {
+      this.stackStyle =
+          stackStyle.fillFrom(defaultStackStyle).fillWith(rect: border);
+    } else {
+      this.stackStyle = defaultStackStyle.copyWith(rect: border);
+    }
   }
 
   @override
@@ -132,16 +198,16 @@ class PlayingCard extends GameComponent with HandlesGesture {
     if (backSpriteId != null) {
       backSprite = Sprite(await Flame.images.load('$backSpriteId.png'));
     }
-    if (countDecorSpriteId != null) {
-      countDecorSprite =
-          Sprite(await Flame.images.load('$countDecorSpriteId.png'));
-    }
+    // if (countDecorSpriteId != null) {
+    //   countDecorSprite =
+    //       Sprite(await Flame.images.load('$countDecorSpriteId.png'));
+    // }
   }
 
   void setFocused(bool value) {
-    if (_isFocused == value) return;
+    if (isFocused == value) return;
 
-    _isFocused = value;
+    isFocused = value;
     if (value) {
       _savedPriority = priority;
       priority = 1000;
@@ -177,14 +243,14 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   @override
   void onMouseEnter() {
-    if (showPreview) {
+    if (focusOnHovering) {
       setFocused(true);
     }
   }
 
   @override
   void onMouseExit() {
-    if (showPreview && !stayFocused) {
+    if (focusOnHovering && !stayFocused) {
       setFocused(false);
     }
   }
@@ -247,12 +313,22 @@ class PlayingCard extends GameComponent with HandlesGesture {
   }
 
   @override
+  void onTapDown(int pointer, int buttons, TapDownDetails details) {
+    onPointerDown?.call();
+  }
+
+  @override
+  void onTapUp(int pointer, int buttons, TapUpDetails details) {
+    onPointerUp?.call();
+  }
+
+  @override
   void onTap(int pointer, int buttons, TapUpDetails details) {
     use();
   }
 
   @override
-  void render(Canvas canvas) {
+  void render(Canvas canvas, {Vector2? position}) {
     if (isFlipped) {
       backSprite?.renderRect(canvas, border);
     } else {
@@ -263,28 +339,19 @@ class PlayingCard extends GameComponent with HandlesGesture {
       canvas.drawRect(border, borderPaintSelected);
     }
 
-    if ((showTitleOnHovering && isHovering) || _isFocused) {
+    if ((showTitleOnHovering && isHovering) || isFocused || showTitle) {
       if (title != null) {
-        drawScreenText(
-          canvas,
-          title!,
-          textPaint: titlePaint,
-          rect: border,
-          anchor: Anchor.topCenter,
-          marginTop: 5,
-        );
+        drawScreenText(canvas, title!, style: titleStyle);
       }
     }
 
-    if (showCount && count > 0) {
-      drawScreenText(
-        canvas,
-        '$count',
-        textPaint: countPaint,
-        rect: border,
-        anchor: Anchor.bottomCenter,
-        background: countDecorSprite,
-      );
+    // canvas.drawRect(descriptionRect, borderPaintSelected);
+    if (showDescription && description != null) {
+      drawScreenText(canvas, description!, style: descriptionStyle);
+    }
+
+    if (showStack && stack > 0) {
+      drawScreenText(canvas, '×$stack', style: stackStyle);
     }
   }
 }

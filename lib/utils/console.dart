@@ -39,7 +39,7 @@ class _ConsoleState extends State<Console> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text(widget.engine.locale['console']),
-        actions: const [ButtonClose()],
+        actions: const [CloseButton2()],
       ),
       body: Column(
         children: [

@@ -7,7 +7,11 @@ class GameLocalization {
 
   String get missing => missingText;
 
-  Map<String, String> data = {};
+  final Map<String, String> _data = {};
+
+  String get languageId => _data['languageId']!;
+
+  String get languageName => _data['languageName']!;
 
   /// 这里并不一定需要从JSON或者Map读取数据，
   /// 也可以支持任何拥有keys，并且可以用[]运算符取值的对象。
@@ -18,13 +22,13 @@ class GameLocalization {
     }
 
     for (final key in localeData.keys) {
-      data[key] = localeData[key];
+      _data[key] = localeData[key];
     }
   }
 
   /// 无需本地化的字符串可以直接用 [] 操作符快速获取
   String operator [](String key) {
-    final text = data[key];
+    final text = _data[key];
     if (text == null) {
       if (showMissingLocaleStringPlaceHolder) {
         return '$missingText($key)';

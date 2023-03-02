@@ -5,9 +5,9 @@ import '../paint/paint.dart';
 
 class GameButton extends GameComponent with HandlesGesture {
   String text;
+  late ScreenTextStyle textStyle;
   String? tooltip;
-
-  Anchor tooltipAnchor;
+  ScreenTextStyle tooltipStyle;
 
   set isEnabled(bool value) => enableGesture = value;
 
@@ -16,14 +16,26 @@ class GameButton extends GameComponent with HandlesGesture {
   GameButton({
     required this.text,
     this.tooltip,
-    this.tooltipAnchor = Anchor.topLeft,
+    ScreenTextStyle? tooltipStyle,
     required double x,
     required double y,
     double width = 160.0,
     double height = 80.0,
     this.onPressed,
     super.borderRadius,
-  }) : super(position: Vector2(x, y), size: Vector2(width, height));
+  })  : tooltipStyle = tooltipStyle ??
+            ScreenTextStyle(
+              rect: Rect.fromLTWH(0, -50, width, height),
+              anchor: Anchor.bottomCenter,
+              colorTheme: ScreenTextColorTheme.info,
+            ),
+        super(position: Vector2(x, y), size: Vector2(width, height)) {
+    textStyle = ScreenTextStyle(
+      rect: border,
+      anchor: Anchor.center,
+      colorTheme: ScreenTextColorTheme.info,
+    );
+  }
 
   @override
   void render(Canvas canvas) {
@@ -34,17 +46,18 @@ class GameButton extends GameComponent with HandlesGesture {
         drawScreenText(
           canvas,
           tooltip!,
-          rect: Rect.fromLTWH(0, -50, width, height),
-          anchor: Anchor.bottomCenter,
-          style: ScreenTextStyle.info,
+          style: tooltipStyle,
         );
       }
     } else {
       canvas.drawRRect(rborder, borderPaint);
     }
 
-    drawScreenText(canvas, text,
-        rect: border, anchor: Anchor.center, style: ScreenTextStyle.info);
+    drawScreenText(
+      canvas,
+      text,
+      style: textStyle,
+    );
   }
 
   @override

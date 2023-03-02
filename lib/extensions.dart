@@ -60,3 +60,15 @@ extension FormatHHMMSS on DateTime {
     return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}:${second.toString().padLeft(2, '0')}';
   }
 }
+
+extension RectAddingon on Rect {
+  Rect operator +(dynamic other) {
+    if (other is Vector2) {
+      return Rect.fromLTWH(left + other.x, top + other.y, width, height);
+    } else if (other is Offset) {
+      return Rect.fromLTWH(left + other.dx, top + other.dy, width, height);
+    } else {
+      throw 'Rect cannot adding with ${other.runtimeType}';
+    }
+  }
+}

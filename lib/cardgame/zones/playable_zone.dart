@@ -14,6 +14,12 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
   PlayingCard? card;
 
   String? defense1, defense2, attack1, attack2;
+  late ScreenTextStyle titleStyle,
+      cardTitleStyle,
+      defense1Style,
+      defense2Style,
+      attack1Style,
+      attack2Style;
 
   // @override
   // bool get enableGesture => card == null;
@@ -41,7 +47,43 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
   }) : super(
           position: Vector2(x, y),
           size: Vector2(width, height),
-        );
+        ) {
+    titleStyle = ScreenTextStyle(
+      rect: border,
+      anchor: Anchor.bottomCenter,
+      padding: const EdgeInsets.only(bottom: -10),
+    );
+    cardTitleStyle = ScreenTextStyle(
+      rect: border,
+      anchor: Anchor.topCenter,
+      padding: const EdgeInsets.only(top: -10),
+      colorTheme: ScreenTextColorTheme.warning,
+    );
+    attack1Style = ScreenTextStyle(
+      rect: border,
+      anchor: Anchor.bottomLeft,
+      padding: const EdgeInsets.only(left: -30),
+      colorTheme: ScreenTextColorTheme.warning,
+    );
+    attack2Style = ScreenTextStyle(
+      rect: border,
+      anchor: Anchor.bottomLeft,
+      padding: const EdgeInsets.only(left: -30, bottom: 20),
+      colorTheme: ScreenTextColorTheme.warning,
+    );
+    defense1Style = ScreenTextStyle(
+      rect: border,
+      anchor: Anchor.bottomRight,
+      padding: const EdgeInsets.only(right: -30),
+      colorTheme: ScreenTextColorTheme.warning,
+    );
+    defense2Style = ScreenTextStyle(
+      rect: border,
+      anchor: Anchor.bottomRight,
+      padding: const EdgeInsets.only(right: -30, bottom: -10),
+      colorTheme: ScreenTextColorTheme.warning,
+    );
+  }
 
   @override
   void render(Canvas canvas) {
@@ -52,70 +94,27 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
     }
 
     if (title != null) {
-      drawScreenText(
-        canvas,
-        title!,
-        rect: border,
-        anchor: Anchor.bottomCenter,
-        marginBottom: -10,
-      );
+      drawScreenText(canvas, title!, style: titleStyle);
     }
 
     if (card?.title != null) {
-      drawScreenText(
-        canvas,
-        card!.title!,
-        rect: border,
-        anchor: Anchor.topCenter,
-        marginTop: -10,
-        style: ScreenTextStyle.warning,
-      );
+      drawScreenText(canvas, card!.title!, style: cardTitleStyle);
     }
 
     if (attack1 != null) {
-      drawScreenText(
-        canvas,
-        attack1!,
-        rect: border,
-        anchor: Anchor.bottomLeft,
-        marginLeft: -30,
-        style: ScreenTextStyle.warning,
-      );
+      drawScreenText(canvas, attack1!, style: attack1Style);
     }
 
     if (attack2 != null) {
-      drawScreenText(
-        canvas,
-        attack2!,
-        rect: border,
-        anchor: Anchor.bottomLeft,
-        marginLeft: -30,
-        marginBottom: 20,
-        style: ScreenTextStyle.warning,
-      );
+      drawScreenText(canvas, attack2!, style: attack2Style);
     }
 
     if (defense1 != null) {
-      drawScreenText(
-        canvas,
-        defense1!,
-        rect: border,
-        anchor: Anchor.bottomRight,
-        marginRight: -30,
-        style: ScreenTextStyle.warning,
-      );
+      drawScreenText(canvas, defense1!, style: defense1Style);
     }
 
     if (defense2 != null) {
-      drawScreenText(
-        canvas,
-        defense2!,
-        rect: border,
-        anchor: Anchor.bottomRight,
-        marginRight: -30,
-        marginBottom: 20,
-        style: ScreenTextStyle.warning,
-      );
+      drawScreenText(canvas, defense2!, style: defense2Style);
     }
   }
 

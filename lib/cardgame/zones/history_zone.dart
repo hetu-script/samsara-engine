@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
 
@@ -6,6 +7,8 @@ import '../../paint/paint.dart';
 class HistoryZone extends GameComponent with HandlesGesture {
   final String? id;
   final String? title;
+
+  late ScreenTextStyle titleStyle;
 
   final Anchor titleAnchor;
 
@@ -21,21 +24,18 @@ class HistoryZone extends GameComponent with HandlesGesture {
   }) : super(
           position: Vector2(x, y),
           size: Vector2(width, height),
-        );
+        ) {
+    titleStyle = ScreenTextStyle(
+      rect: border,
+      anchor: titleAnchor,
+      padding: const EdgeInsets.fromLTRB(10, -10, 10, -10),
+    );
+  }
 
   @override
   void render(Canvas canvas) {
     if (title != null) {
-      drawScreenText(
-        canvas,
-        title!,
-        rect: border,
-        anchor: titleAnchor,
-        marginLeft: 10,
-        marginTop: -10,
-        marginRight: 10,
-        marginBottom: -10,
-      );
+      drawScreenText(canvas, title!, style: titleStyle);
     }
 
     canvas.drawRRect(rborder, borderPaint);

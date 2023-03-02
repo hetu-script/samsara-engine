@@ -69,7 +69,7 @@ class SamsaraEngine with SceneController, EventAggregator {
     }
   }
 
-  late final Hetu hetu;
+  late Hetu hetu;
   bool isLoaded = false;
 
   // HTStruct createStruct([Map<String, dynamic> jsonData = const {}]) =>
@@ -200,6 +200,8 @@ class SamsaraEngine with SceneController, EventAggregator {
     // hetu.interpreter.bindExternalFunction('print', info, override: true);
 
     hetu.eval(kHetuEngineBindingSource, fileName: 'samsara_engine_binding.ht');
+
+    isLoaded = true;
   }
 
   // @override
