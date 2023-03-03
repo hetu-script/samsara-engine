@@ -12,7 +12,7 @@ class RRectIcon extends StatelessWidget {
 
   final ImageProvider<Object> image;
   final Size size;
-  final BorderRadius borderRadius;
+  final BorderRadiusGeometry borderRadius;
   final Color? borderColor;
   final double borderWidth;
 

@@ -57,7 +57,7 @@ extension CameraExtension on Camera {
 
 extension FormatHHMMSS on DateTime {
   String toHHMMSS() {
-    return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}:${second.toString().padLeft(2, '0')}';
+    return '$month月$day日 ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}:${second.toString().padLeft(2, '0')}';
   }
 }
 
