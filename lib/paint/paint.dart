@@ -4,26 +4,50 @@ import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 
 export 'package:flame/text.dart' show TextPaint;
+export 'dart:ui' show Color, Paint, PaintingStyle;
+export 'package:flutter/material.dart' show Colors;
 
-final borderPaint = Paint()
-  ..strokeWidth = 1
-  ..style = PaintingStyle.stroke
-  ..color = Colors.white30;
+abstract class DefaultBorderPaint {
+  static final light = Paint()
+    ..strokeWidth = 1
+    ..style = PaintingStyle.stroke
+    ..color = Colors.white70;
 
-final borderPaintFocused = Paint()
-  ..strokeWidth = 1.5
-  ..style = PaintingStyle.stroke
-  ..color = Colors.yellow;
+  static final dark = Paint()
+    ..strokeWidth = 1
+    ..style = PaintingStyle.stroke
+    ..color = Colors.black87;
 
-final borderPaintSelected = Paint()
-  ..strokeWidth = 3
-  ..style = PaintingStyle.stroke
-  ..color = Colors.lightBlue;
+  static final primary = Paint()
+    ..strokeWidth = 1
+    ..style = PaintingStyle.stroke
+    ..color = Colors.blue;
 
-final borderPaintPressed = Paint()
-  ..strokeWidth = 2.5
-  ..style = PaintingStyle.stroke
-  ..color = Colors.red;
+  static final secondary = Paint()
+    ..strokeWidth = 1
+    ..style = PaintingStyle.stroke
+    ..color = Colors.grey;
+
+  static final info = Paint()
+    ..strokeWidth = 1
+    ..style = PaintingStyle.stroke
+    ..color = Colors.lightBlue;
+
+  static final success = Paint()
+    ..strokeWidth = 1
+    ..style = PaintingStyle.stroke
+    ..color = Colors.green;
+
+  static final warning = Paint()
+    ..strokeWidth = 1
+    ..style = PaintingStyle.stroke
+    ..color = Colors.yellow;
+
+  static final danger = Paint()
+    ..strokeWidth = 1
+    ..style = PaintingStyle.stroke
+    ..color = Colors.red;
+}
 
 final Map<TextPaint, TextPaint> _cachedOutline = {};
 
@@ -38,22 +62,75 @@ enum ScreenTextColorTheme {
   danger,
 }
 
-class ScreenTextStyle {
-  Vector2? position;
-  Rect? rect;
-  Anchor? anchor;
-  EdgeInsets? padding;
-  TextPaint? textPaint;
-  bool? outlined;
-  ScreenTextColorTheme? colorTheme;
-  Sprite? backgroundSprite;
-  TextStyle? textStyle;
+abstract class DefaultTextPaint {
+  static final TextPaint light = TextPaint(
+    style: const TextStyle(
+      color: Colors.white70,
+      fontSize: 12.0,
+    ),
+  );
+  static final TextPaint dark = TextPaint(
+    style: const TextStyle(
+      color: Colors.black87,
+      fontSize: 12.0,
+    ),
+  );
+  static final TextPaint primary = TextPaint(
+    style: const TextStyle(
+      color: Colors.blue,
+      fontSize: 12.0,
+    ),
+  );
+  static final TextPaint secondary = TextPaint(
+    style: const TextStyle(
+      color: Colors.grey,
+      fontSize: 12.0,
+    ),
+  );
+  static final TextPaint info = TextPaint(
+    style: const TextStyle(
+      color: Colors.lightBlue,
+      fontSize: 12.0,
+    ),
+  );
+  static final TextPaint success = TextPaint(
+    style: const TextStyle(
+      color: Colors.green,
+      fontSize: 12.0,
+    ),
+  );
+  static final TextPaint warning = TextPaint(
+    style: const TextStyle(
+      color: Colors.yellow,
+      fontSize: 12.0,
+    ),
+  );
+  static final TextPaint danger = TextPaint(
+    style: const TextStyle(
+      color: Colors.red,
+      fontSize: 12.0,
+    ),
+  );
+}
 
-  ScreenTextStyle({
+class ScreenTextStyle {
+  final Vector2? position;
+  final Rect? rect;
+  final Anchor? anchor;
+  final EdgeInsets? padding;
+  final double? opacity;
+  final TextPaint? textPaint;
+  final bool? outlined;
+  final ScreenTextColorTheme? colorTheme;
+  final Sprite? backgroundSprite;
+  final TextStyle? textStyle;
+
+  const ScreenTextStyle({
     this.position,
     this.rect,
     this.anchor,
     this.padding,
+    this.opacity,
     this.textPaint,
     this.outlined,
     this.colorTheme,
@@ -67,6 +144,7 @@ class ScreenTextStyle {
     Rect? rect,
     Anchor? anchor,
     EdgeInsets? padding,
+    double? opacity,
     TextPaint? textPaint,
     bool? outlined,
     ScreenTextColorTheme? colorTheme,
@@ -78,6 +156,7 @@ class ScreenTextStyle {
       rect: rect ?? this.rect,
       anchor: anchor ?? this.anchor,
       padding: padding ?? this.padding,
+      opacity: opacity ?? this.opacity,
       textPaint: textPaint ?? this.textPaint,
       outlined: outlined ?? this.outlined,
       colorTheme: colorTheme ?? this.colorTheme,
@@ -92,6 +171,7 @@ class ScreenTextStyle {
     Rect? rect,
     Anchor? anchor,
     EdgeInsets? padding,
+    double? opacity,
     TextPaint? textPaint,
     bool? outlined,
     ScreenTextColorTheme? colorTheme,
@@ -103,6 +183,7 @@ class ScreenTextStyle {
       rect: this.rect ?? rect,
       anchor: this.anchor ?? anchor,
       padding: this.padding ?? padding,
+      opacity: this.opacity ?? opacity,
       textPaint: this.textPaint ?? textPaint,
       outlined: this.outlined ?? outlined,
       colorTheme: this.colorTheme ?? colorTheme,
@@ -118,6 +199,7 @@ class ScreenTextStyle {
       rect: other.rect ?? rect,
       anchor: other.anchor ?? anchor,
       padding: other.padding ?? padding,
+      opacity: other.opacity ?? opacity,
       textPaint: other.textPaint ?? textPaint,
       outlined: other.outlined ?? outlined,
       colorTheme: other.colorTheme ?? colorTheme,
@@ -133,6 +215,7 @@ class ScreenTextStyle {
       rect: rect ?? other.rect,
       anchor: anchor ?? other.anchor,
       padding: padding ?? other.padding,
+      opacity: opacity ?? other.opacity,
       textPaint: textPaint ?? other.textPaint,
       outlined: outlined ?? other.outlined,
       colorTheme: colorTheme ?? other.colorTheme,
@@ -147,11 +230,9 @@ void drawScreenText(
   String text, {
   required ScreenTextStyle style,
 }) {
-  if (style.position == null && style.rect == null) {
-    style.position = Vector2.zero();
-  }
-
   TextPaint? textPaint = style.textPaint;
+
+  final opacity = style.opacity ?? 1.0;
 
   if (textPaint == null) {
     final colorTheme = style.colorTheme ?? ScreenTextColorTheme.light;
@@ -159,8 +240,8 @@ void drawScreenText(
       case ScreenTextColorTheme.light:
         textPaint = TextPaint(
           style: style.textStyle ??
-              const TextStyle(
-                color: Colors.white,
+              TextStyle(
+                color: Colors.white.withOpacity(opacity),
                 fontSize: 12.0,
               ),
         );
@@ -168,8 +249,8 @@ void drawScreenText(
       case ScreenTextColorTheme.dark:
         textPaint = TextPaint(
           style: style.textStyle ??
-              const TextStyle(
-                color: Colors.black,
+              TextStyle(
+                color: Colors.black87.withOpacity(opacity),
                 fontSize: 12.0,
               ),
         );
@@ -177,8 +258,8 @@ void drawScreenText(
       case ScreenTextColorTheme.primary:
         textPaint = TextPaint(
           style: style.textStyle ??
-              const TextStyle(
-                color: Colors.blue,
+              TextStyle(
+                color: Colors.blue.withOpacity(opacity),
                 fontSize: 12.0,
               ),
         );
@@ -186,8 +267,8 @@ void drawScreenText(
       case ScreenTextColorTheme.secondary:
         textPaint = TextPaint(
           style: style.textStyle ??
-              const TextStyle(
-                color: Colors.grey,
+              TextStyle(
+                color: Colors.grey.withOpacity(opacity),
                 fontSize: 12.0,
               ),
         );
@@ -195,8 +276,8 @@ void drawScreenText(
       case ScreenTextColorTheme.success:
         textPaint = TextPaint(
           style: style.textStyle ??
-              const TextStyle(
-                color: Colors.green,
+              TextStyle(
+                color: Colors.green.withOpacity(opacity),
                 fontSize: 12.0,
               ),
         );
@@ -204,8 +285,8 @@ void drawScreenText(
       case ScreenTextColorTheme.info:
         textPaint = TextPaint(
           style: style.textStyle ??
-              const TextStyle(
-                color: Colors.lightBlue,
+              TextStyle(
+                color: Colors.lightBlue.withOpacity(opacity),
                 fontSize: 12.0,
               ),
         );
@@ -213,8 +294,8 @@ void drawScreenText(
       case ScreenTextColorTheme.warning:
         textPaint = TextPaint(
           style: style.textStyle ??
-              const TextStyle(
-                color: Colors.yellow,
+              TextStyle(
+                color: Colors.yellow.withOpacity(opacity),
                 fontSize: 12.0,
               ),
         );
@@ -222,22 +303,31 @@ void drawScreenText(
       case ScreenTextColorTheme.danger:
         textPaint = TextPaint(
           style: style.textStyle ??
-              const TextStyle(
-                color: Colors.red,
+              TextStyle(
+                color: Colors.red.withOpacity(opacity),
                 fontSize: 12.0,
               ),
         );
         break;
     }
+  } else {
+    textPaint = textPaint.copyWith(
+      (textStyle) => textStyle.copyWith(
+        color:
+            (textStyle.color ?? textStyle.foreground?.color ?? Colors.blueGrey)
+                .withOpacity(opacity),
+      ),
+    );
   }
+
   if (style.position != null) {
     TextPaint? outlinePaint = _cachedOutline[textPaint];
     if (outlinePaint == null) {
       outlinePaint = textPaint.copyWith(
         (textStyle) => textStyle.copyWith(
           foreground: Paint()
-            ..strokeWidth = 2.5
-            ..color = Colors.black
+            ..strokeWidth = 2
+            ..color = Colors.black.withOpacity(opacity)
             ..style = PaintingStyle.stroke,
         ),
       );
@@ -248,53 +338,59 @@ void drawScreenText(
       outlinePaint.render(canvas, text, style.position!);
     }
     textPaint.render(canvas, text, style.position!);
-  } else if (style.rect != null) {
-    final rect = style.rect!;
-    final anchor = style.anchor;
-    final textWidth = textPaint.measureTextWidth(text);
-    final textHeight = textPaint.measureTextHeight(text);
-    Vector2 textPosition;
-    final padding = style.padding ?? const EdgeInsets.all(0);
-    final offsetX = padding.left - padding.right;
-    final offsetY = padding.top - padding.bottom;
-    if (anchor == Anchor.topLeft) {
-      textPosition = Vector2(rect.left + offsetX, rect.top + offsetY);
-    } else if (anchor == Anchor.topCenter) {
-      textPosition = Vector2(rect.left + (rect.width - textWidth) / 2 + offsetX,
-          rect.top + offsetY);
-    } else if (anchor == Anchor.topRight) {
-      textPosition =
-          Vector2(rect.right - textWidth + offsetX, rect.top + offsetY);
-    } else if (anchor == Anchor.centerLeft) {
-      textPosition = Vector2(rect.left + offsetX,
-          rect.top + (rect.height - textHeight) / 2 + offsetY);
-    } else if (anchor == Anchor.center) {
-      textPosition = Vector2(rect.left + (rect.width - textWidth) / 2 + offsetX,
-          rect.top + (rect.height - textHeight) / 2 + offsetY);
-    } else if (anchor == Anchor.centerRight) {
-      textPosition = Vector2(rect.right - textWidth + offsetX,
-          rect.top + (rect.height - textHeight) / 2 + offsetY);
-    } else if (anchor == Anchor.bottomLeft) {
-      textPosition =
-          Vector2(rect.left + offsetX, rect.bottom - textHeight + offsetY);
-    } else if (anchor == Anchor.bottomCenter) {
-      textPosition = Vector2(rect.left + (rect.width - textWidth) / 2 + offsetX,
-          rect.bottom - textHeight + offsetY);
-    } else if (anchor == Anchor.bottomRight) {
-      textPosition = Vector2(
-          rect.right - textWidth + offsetX, rect.bottom - textHeight + offsetY);
-    } else {
-      textPosition = Vector2(rect.left + offsetX + (anchor?.x ?? 0),
-          rect.top + offsetY + (anchor?.y ?? 0));
-    }
-    if (style.backgroundSprite != null) {
-      final backgroundRect = Rect.fromLTWH(
-        textPosition.x - 10 - rect.left,
-        textPosition.y - 5 - rect.top,
-        textWidth + 20,
-        textHeight + 10,
-      );
-      style.backgroundSprite?.renderRect(canvas, backgroundRect);
+  } else {
+    Vector2 textPosition = Vector2.zero();
+
+    if (style.rect != null) {
+      final rect = style.rect!;
+      final anchor = style.anchor;
+      final textWidth = textPaint.measureTextWidth(text);
+      final textHeight = textPaint.measureTextHeight(text);
+      final padding = style.padding ?? const EdgeInsets.all(0);
+      final offsetX = padding.left - padding.right;
+      final offsetY = padding.top - padding.bottom;
+      if (anchor == Anchor.topLeft) {
+        textPosition = Vector2(rect.left + offsetX, rect.top + offsetY);
+      } else if (anchor == Anchor.topCenter) {
+        textPosition = Vector2(
+            rect.left + (rect.width - textWidth) / 2 + offsetX,
+            rect.top + offsetY);
+      } else if (anchor == Anchor.topRight) {
+        textPosition =
+            Vector2(rect.right - textWidth + offsetX, rect.top + offsetY);
+      } else if (anchor == Anchor.centerLeft) {
+        textPosition = Vector2(rect.left + offsetX,
+            rect.top + (rect.height - textHeight) / 2 + offsetY);
+      } else if (anchor == Anchor.center) {
+        textPosition = Vector2(
+            rect.left + (rect.width - textWidth) / 2 + offsetX,
+            rect.top + (rect.height - textHeight) / 2 + offsetY);
+      } else if (anchor == Anchor.centerRight) {
+        textPosition = Vector2(rect.right - textWidth + offsetX,
+            rect.top + (rect.height - textHeight) / 2 + offsetY);
+      } else if (anchor == Anchor.bottomLeft) {
+        textPosition =
+            Vector2(rect.left + offsetX, rect.bottom - textHeight + offsetY);
+      } else if (anchor == Anchor.bottomCenter) {
+        textPosition = Vector2(
+            rect.left + (rect.width - textWidth) / 2 + offsetX,
+            rect.bottom - textHeight + offsetY);
+      } else if (anchor == Anchor.bottomRight) {
+        textPosition = Vector2(rect.right - textWidth + offsetX,
+            rect.bottom - textHeight + offsetY);
+      } else {
+        textPosition = Vector2(rect.left + offsetX + (anchor?.x ?? 0),
+            rect.top + offsetY + (anchor?.y ?? 0));
+      }
+      if (style.backgroundSprite != null) {
+        final backgroundRect = Rect.fromLTWH(
+          textPosition.x - 10 - rect.left,
+          textPosition.y - 5 - rect.top,
+          textWidth + 20,
+          textHeight + 10,
+        );
+        style.backgroundSprite?.renderRect(canvas, backgroundRect);
+      }
     }
 
     drawScreenText(

@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:samsara/samsara.dart';
-import 'package:samsara/gestures.dart';
 
+import '../../component/game_component.dart';
+import '../../gestures.dart';
 import '../playing_card.dart';
 import '../action.dart';
 import '../../../paint/paint.dart';
@@ -96,7 +96,7 @@ class DrawingZone extends GameComponent with HandlesGesture {
       // canvas.drawRRect(border, borderPaintFocused);
     }
     //  else {
-    canvas.drawRRect(rborder, borderPaint);
+    canvas.drawRRect(rborder, DefaultBorderPaint.light);
     // }
 
     // for (final card in cards) {

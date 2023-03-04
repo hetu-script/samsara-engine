@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:samsara/flutter_ui/rrect_icon.dart';
+import 'rrect_icon.dart';
 
 enum GridStyle {
   icon,

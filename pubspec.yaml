@@ -21,6 +21,8 @@ dependencies:
   html: ^0.15.1
   flutter_treeview: ^1.0.7+1
   vector_math: ^2.1.4
+  path_provider: ^2.0.13
+  path: ^1.8.2
 
 dev_dependencies:
   flutter_test:

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:hetu_script/hetu_script.dart';
 import 'package:hetu_script_flutter/hetu_script_flutter.dart';
+// import 'package:path_provider/path_provider.dart';
+// import 'package:path/path.dart' as path;
 
 import '../binding/game_binding.dart';
 import '../../event/event.dart';
@@ -28,6 +30,8 @@ class EngineConfig {
 }
 
 class SamsaraEngine with SceneController, EventAggregator {
+  static const modeFileExtension = '.mod';
+
   final EngineConfig config;
 
   String get name => config.name;
@@ -108,7 +112,7 @@ class SamsaraEngine with SceneController, EventAggregator {
           namedArgs: namedArgs,
           typeArgs: typeArgs);
 
-  Future<void> loadModFromAssets(
+  Future<void> loadModFromAssetsString(
     String key, {
     required String moduleName,
     List<dynamic> positionalArgs = const [],
@@ -145,6 +149,32 @@ class SamsaraEngine with SceneController, EventAggregator {
     );
     if (!isMainMod && _mainModName != null) switchMod(_mainModName!);
   }
+
+  // Future<void> loadModFromApplicationDirectory(
+  //   String key, {
+  //   required String moduleName,
+  //   List<dynamic> positionalArgs = const [],
+  //   Map<String, dynamic> namedArgs = const {},
+  //   bool isMainMod = false,
+  // }) async {
+  //   if (isMainMod) _mainModName = moduleName;
+
+  //   final appDirectory = await getApplicationDocumentsDirectory();
+  //   String modsFolder;
+
+  //   if (key.endsWith(''))
+  //     path.join(appDirectory.path, 'Heavenly Tribulation', 'mods', key);
+
+  //   hetu.loadBytecode(
+  //     bytes: bytes,
+  //     moduleName: moduleName,
+  //     globallyImport: isMainMod,
+  //     invokeFunc: 'init',
+  //     positionalArgs: positionalArgs,
+  //     namedArgs: namedArgs,
+  //   );
+  //   if (!isMainMod && _mainModName != null) switchMod(_mainModName!);
+  // }
 
   void switchMod(String id) => hetu.interpreter.switchModule(id);
 

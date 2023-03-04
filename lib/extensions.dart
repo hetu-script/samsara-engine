@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flame/components.dart';
-import 'package:flame/game.dart';
 import 'component/game_component.dart';
 
 export 'utils/color.dart' show HexColor;
@@ -70,5 +69,47 @@ extension RectAddingon on Rect {
     } else {
       throw 'Rect cannot adding with ${other.runtimeType}';
     }
+  }
+}
+
+extension RectClone on Rect {
+  /// 优先使用参数的属性，如果参数为 null，使用自己的属性
+  Rect copyWith({
+    double? left,
+    double? top,
+    double? width,
+    double? height,
+  }) {
+    return Rect.fromLTWH(
+      left ?? this.left,
+      top ?? this.top,
+      width ?? this.width,
+      height ?? this.height,
+    );
+  }
+}
+
+extension RRectClone on RRect {
+  /// 优先使用参数的属性，如果参数为 null，使用自己的属性
+  RRect copyWith({
+    double? left,
+    double? top,
+    double? right,
+    double? bottom,
+    Radius? topLeft,
+    Radius? topRight,
+    Radius? bottomRight,
+    Radius? bottomLeft,
+  }) {
+    return RRect.fromLTRBAndCorners(
+      left ?? this.left,
+      top ?? this.top,
+      right ?? this.right,
+      bottom ?? this.bottom,
+      topLeft: topLeft ?? tlRadius,
+      topRight: topRight ?? trRadius,
+      bottomRight: bottomRight ?? brRadius,
+      bottomLeft: bottomLeft ?? blRadius,
+    );
   }
 }

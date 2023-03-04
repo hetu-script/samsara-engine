@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/components.dart';
 
-import 'package:samsara/components.dart';
+import '../../component/game_component.dart';
 import '../paint/paint.dart';
 
 class Avatar extends GameComponent {
@@ -28,7 +27,7 @@ class Avatar extends GameComponent {
 
   @override
   void render(Canvas canvas) {
-    canvas.drawRRect(rborder, borderPaint);
+    canvas.drawRRect(rborder, DefaultBorderPaint.light);
     avatar.renderRect(canvas, border);
   }
 }

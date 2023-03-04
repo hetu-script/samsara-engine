@@ -1,5 +1,5 @@
-import 'package:samsara/event.dart';
-import 'package:samsara/cardgame/cardgame.dart';
+import '../../event.dart';
+import '../cardgame.dart';
 
 abstract class CardEvents extends Events {
   static const cardFocused = 'card_focused';

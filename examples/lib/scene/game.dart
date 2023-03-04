@@ -4,10 +4,10 @@ import 'package:samsara/utils/uid.dart';
 
 import 'components/playground.dart';
 
-class CardGameScene extends Scene {
-  CardGameScene({
+class GameScene extends Scene {
+  GameScene({
     required super.controller,
-  }) : super(name: 'cardGame', key: 'cardGame${uid(4)}');
+  }) : super(name: 'game', key: 'game${uid(4)}');
 
   @override
   Future<void> onLoad() async {

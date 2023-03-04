@@ -20,11 +20,11 @@ enum CardState {
 }
 
 class PlayingCard extends GameComponent with HandlesGesture {
-  static ScreenTextStyle defaultTitleStyle = ScreenTextStyle(
+  static ScreenTextStyle defaultTitleStyle = const ScreenTextStyle(
         anchor: Anchor.topCenter,
-        padding: const EdgeInsets.only(top: 8),
+        padding: EdgeInsets.only(top: 8),
       ),
-      defaultDescriptionStyle = ScreenTextStyle(
+      defaultDescriptionStyle = const ScreenTextStyle(
         anchor: Anchor.center,
         outlined: false,
         colorTheme: ScreenTextColorTheme.dark,
@@ -336,7 +336,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
     }
 
     if (showBorder) {
-      canvas.drawRect(border, borderPaintSelected);
+      canvas.drawRect(border, DefaultBorderPaint.primary);
     }
 
     if ((showTitleOnHovering && isHovering) || isFocused || showTitle) {

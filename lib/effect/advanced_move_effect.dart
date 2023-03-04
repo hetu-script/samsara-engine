@@ -1,14 +1,12 @@
-import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 
 import '../component/game_component.dart';
 
 export 'package:flutter/animation.dart' show Curve, Curves;
 
-class AdvancedMoveEffect extends Effect {
+class AdvancedMoveEffect extends Effect with EffectTarget<GameComponent> {
   final Vector2? endPosition, endSize;
   final double? endAngle;
-  final GameComponent target;
 
   Vector2? _diffPosition, _diffSize;
   double? _diffAngle;
@@ -19,11 +17,16 @@ class AdvancedMoveEffect extends Effect {
     this.endPosition,
     this.endSize,
     this.endAngle,
-    required this.target,
+    GameComponent? target,
     required EffectController controller,
     this.onChange,
     super.onComplete,
   }) : super(controller) {
+    this.target = target;
+  }
+
+  @override
+  void onStart() {
     if (endPosition != null) {
       final diffX = (target.x - endPosition!.x).abs() *
           (target.x > endPosition!.x ? -1 : 1);

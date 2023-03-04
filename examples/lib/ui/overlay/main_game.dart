@@ -2,13 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 // import 'package:flame_audio/flame_audio.dart';
 import 'package:samsara/flutter_ui/loading_screen.dart';
-import 'package:samsara/event.dart';
-import 'package:samsara/widgets.dart';
-import 'package:samsara/cardgame/cardgame.dart';
 import 'package:samsara/utils/console.dart';
 
 import '../../global.dart';
-import '../../scene/cardgame.dart';
+import '../../scene/game.dart';
 import 'drop_menu.dart';
 
 class MainGameOverlay extends StatefulWidget {
@@ -23,46 +20,9 @@ class _MainGameOverlayState extends State<MainGameOverlay>
   @override
   bool get wantKeepAlive => true;
 
-  late CardGameScene _scene;
+  late GameScene _scene;
 
   bool _isDisposing = false;
-
-  PlayingCard? _currentFocusedCardData;
-
-  Animation<double>? drawingCardAnimation;
-  AnimationController? drawingCardAnimationController;
-
-  @override
-  void initState() {
-    super.initState();
-
-    engine.registerListener(
-      CardEvents.cardFocused,
-      EventHandler(
-        ownerKey: widget.key!,
-        handle: (event) {
-          setState(() {
-            _currentFocusedCardData = (event as CardEvent).component;
-            assert(_currentFocusedCardData != null);
-          });
-        },
-      ),
-    );
-
-    engine.registerListener(
-      CardEvents.cardUnfocused,
-      EventHandler(
-        ownerKey: widget.key!,
-        handle: (event) {
-          setState(() {
-            _currentFocusedCardData = null;
-          });
-        },
-      ),
-    );
-
-    // FlameAudio.bgm.play('music/chinese-oriental-tune-06-12062.mp3');
-  }
 
   @override
   void dispose() {
@@ -71,16 +31,13 @@ class _MainGameOverlayState extends State<MainGameOverlay>
     // FlameAudio.bgm.stop();
     // FlameAudio.bgm.dispose();
 
-    drawingCardAnimationController?.dispose();
-
     _scene.detach();
     super.dispose();
   }
 
   Future<Scene?> _getScene() async {
     if (_isDisposing) return null;
-    final scene =
-        await engine.createScene('cardGame', 'cardGame') as CardGameScene;
+    final scene = await engine.createScene('game', 'game') as GameScene;
     return scene;
   }
 
@@ -91,13 +48,6 @@ class _MainGameOverlayState extends State<MainGameOverlay>
     // final screenSize = MediaQuery.of(context).size;
 
     // ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-
-    late String rules;
-
-    if (_currentFocusedCardData != null) {
-      final data = _currentFocusedCardData!.data;
-      rules = data['rules'] ?? '';
-    }
 
     return _isDisposing
         ? LoadingScreen(text: engine.locale['loading'])
@@ -111,7 +61,7 @@ class _MainGameOverlayState extends State<MainGameOverlay>
               if (!snapshot.hasData) {
                 return LoadingScreen(text: engine.locale['loading']);
               } else {
-                _scene = snapshot.data as CardGameScene;
+                _scene = snapshot.data as GameScene;
                 if (_scene.isAttached) {
                   _scene.detach();
                 }
@@ -125,10 +75,10 @@ class _MainGameOverlayState extends State<MainGameOverlay>
                       Positioned(
                         right: 0,
                         top: 0,
-                        child: CardGameDropMenu(
-                          onSelected: (CardGameDropMenuItems item) async {
+                        child: GameDropMenu(
+                          onSelected: (GameDropMenuItems item) async {
                             switch (item) {
-                              case CardGameDropMenuItems.console:
+                              case GameDropMenuItems.console:
                                 showDialog(
                                   context: context,
                                   builder: (BuildContext context) => Console(
@@ -136,11 +86,10 @@ class _MainGameOverlayState extends State<MainGameOverlay>
                                   ),
                                 ).then((_) => setState(() {}));
                                 break;
-                              case CardGameDropMenuItems.quit:
+                              case GameDropMenuItems.quit:
                                 engine.leaveScene(_scene.name,
                                     clearCache: true);
                                 _isDisposing = true;
-                                gameActions.clear();
                                 Navigator.of(context).pop();
                                 break;
                               default:
@@ -148,45 +97,6 @@ class _MainGameOverlayState extends State<MainGameOverlay>
                           },
                         ),
                       ),
-                      if (_currentFocusedCardData != null) ...[
-                        // Positioned(
-                        //   child: IgnorePointer(
-                        //     child: Container(
-                        //       width: MediaQuery.of(context).size.width,
-                        //       height: MediaQuery.of(context).size.height,
-                        //       color: Colors.black45,
-                        //     ),
-                        //   ),
-                        // ),
-                        Positioned(
-                          right: 40,
-                          top: 40,
-                          child: IgnorePointer(
-                            child: Container(
-                              color: Colors.black45,
-                              padding: const EdgeInsets.all(20),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SpriteWidget(
-                                    sprite:
-                                        _currentFocusedCardData!.frontSprite!,
-                                    anchor: Anchor.center,
-                                    // angle: rotated ? radians(-90) : 0,
-                                    // width: width,
-                                    // height: height,
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.only(left: 40),
-                                    width: 400,
-                                    child: Text(rules),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 );

@@ -1,6 +1,5 @@
-import 'package:samsara/samsara.dart';
-import 'package:samsara/gestures.dart';
-
+import '../../component/game_component.dart';
+import '../../gestures.dart';
 import '../paint/paint.dart';
 
 class GameButton extends GameComponent with HandlesGesture {
@@ -40,7 +39,7 @@ class GameButton extends GameComponent with HandlesGesture {
   @override
   void render(Canvas canvas) {
     if (isHovering) {
-      canvas.drawRRect(rborder, borderPaintSelected);
+      canvas.drawRRect(rborder, DefaultBorderPaint.primary);
 
       if (tooltip != null) {
         drawScreenText(
@@ -50,7 +49,7 @@ class GameButton extends GameComponent with HandlesGesture {
         );
       }
     } else {
-      canvas.drawRRect(rborder, borderPaint);
+      canvas.drawRRect(rborder, DefaultBorderPaint.light);
     }
 
     drawScreenText(

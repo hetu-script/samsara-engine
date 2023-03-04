@@ -2,78 +2,61 @@
 
 import 'dart:ui';
 
-import 'package:flame/components.dart';
-import 'package:flame/src/effects/provider_interfaces.dart';
-import 'package:flame/src/extensions/image.dart';
+import 'package:flame/components.dart' hide SpriteComponent;
+import 'package:flame/flame.dart';
 import 'package:meta/meta.dart';
 
-/// A modified version of [SpriteComponent] of Flame.
-///
-/// A [PositionComponent] that renders a single [Sprite] at the designated
-/// position, scaled to have the designated size and rotated to the specified
-/// angle.
-///
-/// This a commonly used subclass of [Component].
-class SpriteComponent extends PositionComponent
-    with HasPaint
-    implements SizeProvider {
-  /// The [sprite] to be rendered by this component.
+import '../component/game_component.dart';
+
+/// A modified version of [SpriteComponent2] of Flame.
+class SpriteComponent2 extends GameComponent {
   Sprite? sprite;
 
-  /// Creates a component with an empty sprite which can be set later
-  SpriteComponent({
+  String? spriteId;
+
+  SpriteComponent2({
+    Image? image,
+    Vector2? srcPosition,
+    Vector2? srcSize,
     this.sprite,
+    this.spriteId,
     Paint? paint,
     super.position,
     Vector2? size,
     super.scale,
     super.angle,
-    super.nativeAngle,
     super.anchor,
-    super.children,
     super.priority,
+    super.children,
   }) : super(
           size: size ?? sprite?.srcSize,
         ) {
+    assert(image != null || sprite != null || spriteId != null,
+        'sprite component must have either image, sprite or spriteId.');
+    if (image != null) {
+      sprite = Sprite(image, srcPosition: srcPosition, srcSize: srcSize);
+      size = sprite!.srcSize;
+    }
+
     if (paint != null) {
       this.paint = paint;
     }
   }
 
-  SpriteComponent.fromImage(
-    Image image, {
-    Vector2? srcPosition,
-    Vector2? srcSize,
-    Paint? paint,
-    Vector2? position,
-    Vector2? size,
-    Vector2? scale,
-    double? angle,
-    Anchor? anchor,
-    int? priority,
-  }) : this(
-          sprite: Sprite(
-            image,
-            srcPosition: srcPosition,
-            srcSize: srcSize,
-          ),
-          paint: paint,
-          position: position,
-          size: size ?? srcSize ?? image.size,
-          scale: scale,
-          angle: angle,
-          anchor: anchor,
-          priority: priority,
-        );
+  @override
+  void onLoad() async {
+    if (spriteId != null) {
+      sprite = Sprite(await Flame.images.load(spriteId!));
+      size = sprite!.srcSize;
+    }
+  }
 
   @mustCallSuper
   @override
   void render(Canvas canvas) {
-    sprite?.render(
+    sprite?.renderRect(
       canvas,
-      position: position,
-      size: size,
-      anchor: anchor,
+      border,
       overridePaint: paint,
     );
   }

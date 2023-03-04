@@ -134,7 +134,6 @@ class _ConsoleState extends State<Console> {
               },
               autofocus: true,
               controller: _textEditingController,
-              cursorColor: Colors.white70,
               decoration: const InputDecoration(
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.grey, width: 1.0),

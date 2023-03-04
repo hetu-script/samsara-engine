@@ -4,9 +4,7 @@ import 'dart:ui';
 
 import 'package:meta/meta.dart';
 import 'package:flame/components.dart';
-import 'package:flame/src/effects/provider_interfaces.dart';
 import 'package:flame/effects.dart';
-import 'package:flame/palette.dart';
 
 import '../effect/advanced_move_effect.dart';
 import '../scene/scene.dart';
@@ -15,19 +13,15 @@ import '../gestures/gesture_mixin.dart';
 
 export 'package:flame/components.dart' show Anchor;
 export 'package:flame/game.dart' show Camera;
+export 'package:vector_math/vector_math_64.dart' show Vector2;
+export 'dart:ui' show Canvas, Rect;
 
 abstract class GameComponent extends PositionComponent
-    with HasGameRef<Scene>
-    implements SizeProvider, OpacityProvider, PaintProvider {
-  @override
-  Paint paint = BasicPalette.white.paint();
-
+    with HasGameRef<Scene>, HasPaint
+    implements SizeProvider, OpacityProvider {
   late Rect border;
   late RRect rborder;
   final double borderRadius;
-
-  @override
-  double opacity;
 
   GameComponent({
     super.position,
@@ -37,8 +31,11 @@ abstract class GameComponent extends PositionComponent
     super.anchor,
     super.priority,
     this.borderRadius = 5.0,
-    this.opacity = 1.0,
+    double opacity = 1.0,
+    super.children,
   }) {
+    this.opacity = opacity;
+
     generateBorder();
   }
 
@@ -83,6 +80,28 @@ abstract class GameComponent extends PositionComponent
   set size(Vector2 value) {
     super.size = value;
     generateBorder();
+  }
+
+  /// zoom the camera to make
+  void fitScreen() {
+    final gameViewPortSize = gameRef.size;
+    // engine.info('游戏界面可视区域大小：${gameViewPortSize.x}x${gameViewPortSize.y}');
+    final padRatio = width / height;
+    final sizeRatio = gameViewPortSize.x / gameViewPortSize.y;
+    if (sizeRatio > padRatio) {
+      // 可视区域更宽
+      final scaleFactor = gameViewPortSize.y / height;
+      gameRef.camera.zoom = scaleFactor;
+      final newWidth = width * scaleFactor;
+      gameRef.camera.snapTo(Vector2(-(gameViewPortSize.x - newWidth) / 2, 0));
+    } else {
+      // 可视区域更窄
+      final scaleFactor = gameViewPortSize.x / width;
+      gameRef.camera.zoom = scaleFactor;
+      final newHeight = height * scaleFactor;
+      gameRef.camera
+          .snapTo(Vector2(0, y = (gameViewPortSize.y - newHeight) / 2));
+    }
   }
 
   bool _isVisible = true;
@@ -136,15 +155,13 @@ abstract class GameComponent extends PositionComponent
       return;
     }
 
-    final movingAnimation = AdvancedMoveEffect(
-      target: this,
+    add(AdvancedMoveEffect(
       controller: EffectController(duration: duration, curve: curve),
       endPosition: position,
       endSize: size,
       endAngle: angle,
       onChange: onChange,
       onComplete: onComplete,
-    );
-    add(movingAnimation);
+    ));
   }
 }

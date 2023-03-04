@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:samsara/samsara.dart';
-import 'package:samsara/gestures.dart';
 
+import '../../component/game_component.dart';
+import '../../gestures.dart';
 import '../playing_card.dart';
 import '../../paint/paint.dart';
 
@@ -119,6 +119,6 @@ class PiledZone extends GameComponent with HandlesGesture {
       drawScreenText(canvas, '$title：${cards.length}', style: titleStyle);
     }
 
-    canvas.drawRRect(rborder, borderPaint);
+    canvas.drawRRect(rborder, DefaultBorderPaint.light);
   }
 }

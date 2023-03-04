@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:json5/json5.dart';
 
 import '../global.dart';
-import '../scene/cardgame.dart';
+import '../scene/game.dart';
 import 'overlay/main_game.dart';
 
 class MainMenu extends StatefulWidget {
@@ -21,8 +21,8 @@ class _MainMenuState extends State<MainMenu> {
   void initState() {
     super.initState();
 
-    engine.registerSceneConstructor('cardGame', ([dynamic data]) async {
-      return CardGameScene(controller: engine);
+    engine.registerSceneConstructor('game', ([dynamic data]) async {
+      return GameScene(controller: engine);
     });
   }
 

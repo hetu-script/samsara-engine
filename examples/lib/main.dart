@@ -4,11 +4,10 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
-
 import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 
-import 'global.dart';
 import 'ui/main_menu.dart';
+import 'global.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,13 +62,6 @@ void main() async {
           throw ('widget is null');
         },
         home: const MainMenu(),
-        // routes: {
-        //   'worldmap': (context) => MainGameOverlay(key: UniqueKey()),
-        //   'location': (context) => const LocationView(),
-        //   'information': (context) => const InformationPanel(),
-        //   'character': (context) => const CharacterView(),
-        //   // 'editor': (context) => const GameEditor(),
-        // },
       ),
     );
   }, (Object error, StackTrace stack) {

@@ -1,10 +1,11 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
-import 'package:samsara/samsara.dart';
 
+import 'scene_controller.dart';
 import '../widget/pointer_detector.dart';
 import '../gestures/gesture_mixin.dart';
+import 'scene_widget.dart';
 
 abstract class Scene extends FlameGame {
   static const overlayUIBuilderMapKey = 'overlayUI';
@@ -97,21 +98,15 @@ abstract class Scene extends FlameGame {
     }
   }
 
-  Widget get widget {
-    return PointerDetector(
-      child: GameWidget(
-        game: this,
-      ),
-      onTapDown: onTapDown,
-      onTapUp: onTapUp,
-      onDragStart: onDragStart,
-      onDragUpdate: onDragUpdate,
-      onDragEnd: onDragEnd,
-      onScaleStart: onScaleStart,
-      onScaleUpdate: onScaleUpdate,
-      onScaleEnd: onScaleEnd,
-      onLongPress: onLongPress,
-      onMouseHover: onMouseHover,
+  SceneWidget getWidget({
+    Key? key,
+    required Scene scene,
+    Map<String, Widget Function(BuildContext, Scene)>? overlayBuilderMap,
+  }) {
+    return SceneWidget(
+      key: key,
+      scene: this,
+      overlayBuilderMap: overlayBuilderMap,
     );
   }
 }

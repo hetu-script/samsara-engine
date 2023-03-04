@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../global.dart';
 
-enum CardGameDropMenuItems { console, quit }
+enum GameDropMenuItems { console, quit }
 
-class CardGameDropMenu extends StatelessWidget {
-  const CardGameDropMenu({super.key, required this.onSelected});
+class GameDropMenu extends StatelessWidget {
+  const GameDropMenu({super.key, required this.onSelected});
 
-  final void Function(CardGameDropMenuItems)? onSelected;
+  final void Function(GameDropMenuItems)? onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -17,16 +17,16 @@ class CardGameDropMenu extends StatelessWidget {
         borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(5.0)),
         border: Border.all(color: Colors.white),
       ),
-      child: PopupMenuButton<CardGameDropMenuItems>(
+      child: PopupMenuButton<GameDropMenuItems>(
         offset: const Offset(0, 45),
         icon: const Icon(Icons.menu_open),
         tooltip: engine.locale['menu'],
         onSelected: onSelected,
         itemBuilder: (BuildContext context) =>
-            <PopupMenuEntry<CardGameDropMenuItems>>[
-          PopupMenuItem<CardGameDropMenuItems>(
+            <PopupMenuEntry<GameDropMenuItems>>[
+          PopupMenuItem<GameDropMenuItems>(
             height: 24.0,
-            value: CardGameDropMenuItems.console,
+            value: GameDropMenuItems.console,
             child: Container(
               alignment: Alignment.centerLeft,
               width: 100,
@@ -34,9 +34,9 @@ class CardGameDropMenu extends StatelessWidget {
             ),
           ),
           const PopupMenuDivider(),
-          PopupMenuItem<CardGameDropMenuItems>(
+          PopupMenuItem<GameDropMenuItems>(
             height: 24.0,
-            value: CardGameDropMenuItems.quit,
+            value: GameDropMenuItems.quit,
             child: Container(
               alignment: Alignment.centerLeft,
               width: 100,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:samsara/samsara.dart';
-import 'package:samsara/gestures.dart';
 
+import '../../component/game_component.dart';
+import '../../gestures.dart';
 import '../playing_card.dart';
 import '../../paint/paint.dart';
 
@@ -88,9 +88,9 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
   @override
   void render(Canvas canvas) {
     if (isHighlighted) {
-      canvas.drawRRect(rborder, borderPaintFocused);
+      canvas.drawRRect(rborder, DefaultBorderPaint.warning);
     } else {
-      canvas.drawRRect(rborder, borderPaint);
+      canvas.drawRRect(rborder, DefaultBorderPaint.light);
     }
 
     if (title != null) {
