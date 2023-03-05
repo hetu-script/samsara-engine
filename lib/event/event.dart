@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+
+export 'package:flutter/foundation.dart' show Key;
 
 class GameEvent {
   final String name;

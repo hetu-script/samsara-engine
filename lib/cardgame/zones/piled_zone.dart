@@ -22,6 +22,9 @@ class PiledZone extends GameComponent with HandlesGesture {
 
   final Anchor titleAnchor;
 
+  /// [pileMargin] : 堆叠时第一张牌相对区域的x和y的位移
+  ///
+  /// [pileOffset] : 堆叠时每张牌相比上一张牌的位移
   PiledZone({
     this.id,
     this.title,
@@ -46,6 +49,13 @@ class PiledZone extends GameComponent with HandlesGesture {
           position: Vector2(x, y),
           size: Vector2(width, height),
         ) {
+    if (this.pileMargin.x.sign != 0 && this.pileOffset.x.sign != 0) {
+      assert(this.pileMargin.x.sign == this.pileOffset.x.sign, '堆叠位移和方向必须一致！');
+    }
+    if (this.pileMargin.y.sign != 0 && this.pileOffset.y.sign != 0) {
+      assert(this.pileMargin.y.sign == this.pileOffset.y.sign, '堆叠位移和方向必须一致！');
+    }
+
     this.cards.addAll(cards);
 
     titleStyle = ScreenTextStyle(
@@ -63,18 +73,32 @@ class PiledZone extends GameComponent with HandlesGesture {
   }
 
   /// 如果传入 completer 参数，则会用动画过度卡牌整理的过程
-  void sortCards({Completer? completer}) {
+  void sortCards({bool pileUp = true, Completer? completer}) {
     // calculate the new position of each hand cards.
     for (var i = 0; i < cards.length; ++i) {
       final card = cards[i];
-      card.priority = piledCardPriority + i;
+      card.priority = piledCardPriority + (pileUp ? i : -i);
       card.focusedOffset ??= focusedOffset;
       card.focusedPosition ??= focusedPosition;
       card.focusedSize ??= focusedSize;
 
       final endPosition = Vector2(
-        x + card.anchor.x * piledCardSize.x + i * pileOffset.x + pileMargin.x,
-        y + card.anchor.y * piledCardSize.y + i * pileOffset.y + pileMargin.y,
+        // 如果堆叠方向是向右，则从区域右侧开始计算x偏移
+        (pileOffset.x.sign >= 0 ? x : x + width) +
+            // 如果堆叠方向是向右，则卡牌 anchor 算作右侧
+            (pileOffset.x.sign >= 0 ? card.anchor.x : (1 - card.anchor.x)) *
+                piledCardSize.x *
+                pileOffset.x.sign +
+            i * pileOffset.x +
+            pileMargin.x,
+        // 如果堆叠方向是向上，则从区域下侧开始计算y偏移
+        (pileOffset.y.sign >= 0 ? y : y + height) +
+            // 如果堆叠方向是向上，则卡牌 anchor 算作下侧
+            (pileOffset.y.sign >= 0 ? card.anchor.y : (1 - card.anchor.y)) *
+                piledCardSize.y *
+                pileOffset.y.sign +
+            i * pileOffset.y +
+            pileMargin.y,
       );
 
       if (completer == null) {

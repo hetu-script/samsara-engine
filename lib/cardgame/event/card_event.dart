@@ -1,7 +1,7 @@
 import '../../event.dart';
 import '../cardgame.dart';
 
-abstract class CardEvents extends Events {
+abstract class CardEvents extends GameEvents {
   static const cardFocused = 'card_focused';
   static const cardUnfocused = 'card_unfocused';
 }

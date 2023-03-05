@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../component/game_component.dart';
 import '../../gestures.dart';
 import '../playing_card.dart';
-import '../action.dart';
+import '../../action/action.dart';
 import '../../../paint/paint.dart';
 
 class DrawingZone extends GameComponent with HandlesGesture {
