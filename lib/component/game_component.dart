@@ -15,6 +15,7 @@ export 'package:flame/components.dart' show Anchor;
 export 'package:flame/game.dart' show Camera;
 export 'package:vector_math/vector_math_64.dart' show Vector2;
 export 'dart:ui' show Canvas, Rect;
+export 'package:flutter/widgets.dart' show EdgeInsets;
 
 abstract class GameComponent extends PositionComponent
     with HasGameRef<Scene>, HasPaint

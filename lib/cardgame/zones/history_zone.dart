@@ -1,8 +1,6 @@
-import 'package:flutter/material.dart';
-
 import '../../component/game_component.dart';
 import '../../gestures.dart';
-import '../../paint/paint.dart';
+import '../../paint.dart';
 
 class HistoryZone extends GameComponent with HandlesGesture {
   final String? id;

@@ -7,7 +7,7 @@ import 'package:flame/flame.dart';
 import '../gestures/gesture_mixin.dart';
 import '../component/game_component.dart';
 import 'zones/playable_zone.dart';
-import '../../paint/paint.dart';
+import '../paint.dart';
 // import '../extensions.dart';
 
 enum CardState {

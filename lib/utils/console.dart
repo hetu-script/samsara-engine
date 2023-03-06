@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 
-import '../engine/engine.dart';
+import '../engine.dart';
 import '../flutter_ui/close_button.dart';
 import '../flutter_ui/responsive_window.dart';
 

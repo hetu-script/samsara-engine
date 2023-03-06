@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../component/game_component.dart';
 import '../../gestures.dart';
 import '../playing_card.dart';
-import '../../paint/paint.dart';
+import '../../paint.dart';
 
 class PiledZone extends GameComponent with HandlesGesture {
   final String? id;

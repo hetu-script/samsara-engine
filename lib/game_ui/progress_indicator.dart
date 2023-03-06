@@ -1,4 +1,4 @@
-import '../paint/paint.dart';
+import '../paint.dart';
 import '../component/game_component.dart';
 import '../utils/color.dart';
 import '../extensions.dart';

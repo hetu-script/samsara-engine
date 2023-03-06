@@ -7,13 +7,13 @@ import 'package:hetu_script_flutter/hetu_script_flutter.dart';
 // import 'package:path_provider/path_provider.dart';
 // import 'package:path/path.dart' as path;
 
-import '../binding/game_binding.dart';
-import '../../event/event.dart';
-import '../localization/localization.dart';
-import '../utils/color.dart';
-import '../scene/scene_controller.dart';
-import '../logger/printer.dart';
-import '../logger/output.dart';
+import 'binding/game_binding.dart';
+import '../event/event.dart';
+import 'localization/localization.dart';
+import 'utils/color.dart';
+import 'scene/scene_controller.dart';
+import 'logger/printer.dart';
+import 'logger/output.dart';
 
 class EngineConfig {
   final String name;
@@ -193,7 +193,7 @@ class SamsaraEngine with SceneController, EventAggregator {
       );
       hetu = Hetu(
         config: HetuConfig(
-          printPerformanceStatistics: config.debugMode,
+          // printPerformanceStatistics: config.debugMode,
           showDartStackTrace: config.debugMode,
           showHetuStackTrace: true,
           allowVariableShadowing: false,

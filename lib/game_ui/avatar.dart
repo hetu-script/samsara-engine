@@ -2,7 +2,7 @@ import 'package:flame/flame.dart';
 import 'package:flame/components.dart';
 
 import '../../component/game_component.dart';
-import '../paint/paint.dart';
+import '../paint.dart';
 
 class Avatar extends GameComponent {
   final String imagePath;

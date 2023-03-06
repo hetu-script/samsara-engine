@@ -13,7 +13,7 @@ import 'tile.dart';
 import 'object.dart';
 import 'cloud.dart';
 import '../utils/color.dart';
-import '../engine/engine.dart';
+import '../engine.dart';
 import '../../event/events.dart';
 import 'terrain.dart';
 

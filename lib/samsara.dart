@@ -1,4 +1,4 @@
-export 'engine/engine.dart';
+export 'engine.dart';
 export 'localization/localization.dart';
 export 'scene/scene_widget.dart';
 export 'scene/scene.dart';
@@ -6,4 +6,4 @@ export 'scene/scene_controller.dart';
 export 'component/game_component.dart';
 export 'effect/advanced_move_effect.dart';
 export 'extensions.dart';
-export 'paint/paint.dart';
+export 'paint.dart';
