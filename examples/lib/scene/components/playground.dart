@@ -11,7 +11,7 @@ class PlayGround extends GameComponent with HandlesGesture {
   Future<void> onLoad() async {
     super.onLoad();
 
-    fitScreen();
+    gameRef.fitScreen(size);
   }
 
   @override

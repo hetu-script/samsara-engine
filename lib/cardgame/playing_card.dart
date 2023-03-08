@@ -11,6 +11,7 @@ import '../paint.dart';
 // import '../extensions.dart';
 
 enum CardState {
+  none,
   deck,
   hand,
   placed,
@@ -53,6 +54,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   int stack;
 
+  bool enablePreview;
   bool showTitle;
   bool showTitleOnHovering;
   bool showDescription;
@@ -86,7 +88,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
   CardState state;
   PlayableZone? zone;
 
-  void Function()? onFocused, onUnfocused;
+  void Function()? onFocused, onUnfocused, onPreviewed, onUnpreviewed;
   double focusAnimationDuration;
 
   late Rect descriptionRect;
@@ -98,6 +100,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.kind,
     this.title,
     ScreenTextStyle? titleStyle,
+    this.enablePreview = false,
     this.showTitle = false,
     this.showTitleOnHovering = false,
     this.description,
@@ -136,9 +139,11 @@ class PlayingCard extends GameComponent with HandlesGesture {
     super.anchor,
     super.priority,
     bool enableGesture = true,
-    this.state = CardState.deck,
+    this.state = CardState.none,
     this.onFocused,
     this.onUnfocused,
+    this.onPreviewed,
+    this.onUnpreviewed,
     this.focusAnimationDuration = 0.25,
     this.onPointerDown,
     this.onPointerUp,
@@ -243,6 +248,9 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   @override
   void onMouseEnter() {
+    if (enablePreview) {
+      onPreviewed?.call();
+    }
     if (focusOnHovering) {
       setFocused(true);
     }
@@ -250,6 +258,9 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   @override
   void onMouseExit() {
+    if (enablePreview) {
+      onUnpreviewed?.call();
+    }
     if (focusOnHovering && !stayFocused) {
       setFocused(false);
     }

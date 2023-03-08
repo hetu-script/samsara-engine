@@ -37,7 +37,7 @@ class SceneController {
 
   void leaveScene(String sceneId, {bool clearCache = false}) {
     assert(_cachedScenes.containsKey(sceneId));
-    if (_currentScene?.key == _cachedScenes[sceneId]!.key) {
+    if (_currentScene?.id == _cachedScenes[sceneId]!.id) {
       _currentScene = null;
     }
     if (clearCache) {
@@ -48,7 +48,7 @@ class SceneController {
   /// 删除某个之前缓存的场景，这里允许接收一个不存在的id
   void clearCache(String sceneId) {
     if (_cachedScenes.containsKey(sceneId)) {
-      if (_currentScene?.key == _cachedScenes[sceneId]!.key) {
+      if (_currentScene?.id == _cachedScenes[sceneId]!.id) {
         _currentScene = null;
       }
       _cachedScenes.remove(sceneId);

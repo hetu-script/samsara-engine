@@ -10,23 +10,42 @@ import 'scene_widget.dart';
 abstract class Scene extends FlameGame {
   static const overlayUIBuilderMapKey = 'overlayUI';
 
-  final String name, key;
+  final String id;
   final SceneController controller;
 
   Scene({
-    required this.name,
-    required this.key,
+    required this.id,
     required this.controller,
   });
 
   void end() {
-    controller.leaveScene(name);
+    controller.leaveScene(id);
   }
 
   Vector2 get screenCenter => size / 2;
 
   Iterable<HandlesGesture> get gestureComponents =>
       children.whereType<HandlesGesture>().cast<HandlesGesture>();
+
+  /// zoom the camera to a certain size
+  void fitScreen(Vector2 toSize) {
+    // engine.info('游戏界面可视区域大小：${size.x}x${size.y}');
+    final toSizeRatio = toSize.x / toSize.y;
+    final gameViewPortRatio = size.x / size.y;
+    if (gameViewPortRatio > toSizeRatio) {
+      // 可视区域更宽
+      final scaleFactor = size.y / toSize.y;
+      camera.zoom = scaleFactor;
+      final newWidth = toSize.x * scaleFactor;
+      camera.snapTo(Vector2(-(size.x - newWidth) / 2, 0));
+    } else {
+      // 可视区域更窄
+      final scaleFactor = size.x / toSize.x;
+      camera.zoom = scaleFactor;
+      final newHeight = toSize.y * scaleFactor;
+      camera.snapTo(Vector2(0, -(size.y - newHeight) / 2));
+    }
+  }
 
   @mustCallSuper
   void onTapDown(int pointer, int buttons, TapDownDetails details) {

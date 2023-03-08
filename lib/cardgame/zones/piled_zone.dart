@@ -83,20 +83,18 @@ class PiledZone extends GameComponent with HandlesGesture {
       card.focusedSize ??= focusedSize;
 
       final endPosition = Vector2(
-        // 如果堆叠方向是向右，则从区域右侧开始计算x偏移
+        // 如果堆叠方向是向右，则从区域左侧开始计算x偏移
         (pileOffset.x.sign >= 0 ? x : x + width) +
             // 如果堆叠方向是向右，则卡牌 anchor 算作右侧
             (pileOffset.x.sign >= 0 ? card.anchor.x : (1 - card.anchor.x)) *
-                piledCardSize.x *
-                pileOffset.x.sign +
+                piledCardSize.x +
             i * pileOffset.x +
             pileMargin.x,
         // 如果堆叠方向是向上，则从区域下侧开始计算y偏移
         (pileOffset.y.sign >= 0 ? y : y + height) +
             // 如果堆叠方向是向上，则卡牌 anchor 算作下侧
             (pileOffset.y.sign >= 0 ? card.anchor.y : (1 - card.anchor.y)) *
-                piledCardSize.y *
-                pileOffset.y.sign +
+                piledCardSize.y +
             i * pileOffset.y +
             pileMargin.y,
       );
