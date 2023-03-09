@@ -403,7 +403,7 @@ void drawScreenText(
 
 void drawDottedLine(
   Canvas canvas,
-  Offset start,
+  Vector2 start,
   double width,
   Paint paint,
   double gap,
@@ -413,12 +413,12 @@ void drawDottedLine(
   double jointSize = pointSize + gap;
   double leapSize = (width + gap) % jointSize;
 
-  double position = start.dx + strokeVerticalOverflow + leapSize / 2;
+  double position = start.x + strokeVerticalOverflow + leapSize / 2;
   List<Offset> points = [];
 
   // position + pointSize <= width + pointSize
   do {
-    points.add(Offset(position, start.dy + strokeVerticalOverflow));
+    points.add(Offset(position, start.y + strokeVerticalOverflow));
   } while ((position += jointSize) <= width);
 
   canvas.drawPoints(PointMode.points, points, paint);

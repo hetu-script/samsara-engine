@@ -58,7 +58,7 @@ class EntityGrid extends StatelessWidget {
                   ? BoxDecoration(
                       color: backgroundColor,
                       border: Border.all(
-                        color: borderColor.withOpacity(0.75),
+                        color: borderColor,
                       ),
                       image: backgroundImage != null
                           ? DecorationImage(
@@ -100,7 +100,7 @@ class EntityGrid extends StatelessWidget {
               ? BoxDecoration(
                   color: backgroundColor,
                   border: Border.all(
-                    color: borderColor.withOpacity(0.75),
+                    color: borderColor,
                   ),
                   image: backgroundImage != null
                       ? DecorationImage(
@@ -127,7 +127,7 @@ class EntityGrid extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: backgroundColor,
                         border: Border.all(
-                          color: borderColor.withOpacity(0.5),
+                          color: borderColor,
                         ),
                         image: backgroundImage != null
                             ? DecorationImage(

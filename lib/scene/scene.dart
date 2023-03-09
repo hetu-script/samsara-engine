@@ -13,6 +13,16 @@ abstract class Scene extends FlameGame {
   final String id;
   final SceneController controller;
 
+  Vector2 topLeft = Vector2.zero(),
+      topCenter = Vector2.zero(),
+      topRight = Vector2.zero(),
+      centerLeft = Vector2.zero(),
+      center = Vector2.zero(),
+      centerRight = Vector2.zero(),
+      bottomLeft = Vector2.zero(),
+      bottomCenter = Vector2.zero(),
+      bottomRight = Vector2.zero();
+
   Scene({
     required this.id,
     required this.controller,
@@ -22,7 +32,15 @@ abstract class Scene extends FlameGame {
     controller.leaveScene(id);
   }
 
-  Vector2 get screenCenter => size / 2;
+  @override
+  void onGameResize(Vector2 canvasSize) {
+    super.onGameResize(canvasSize);
+
+    topCenter.x = center.x = bottomCenter.x = size.x / 2;
+    topRight.x = centerRight.x = bottomRight.x = size.x;
+    centerLeft.y = center.y = centerRight.y = size.y / 2;
+    bottomLeft.y = bottomCenter.y = bottomRight.y = size.y;
+  }
 
   Iterable<HandlesGesture> get gestureComponents =>
       children.whereType<HandlesGesture>().cast<HandlesGesture>();
@@ -32,19 +50,19 @@ abstract class Scene extends FlameGame {
     // engine.info('游戏界面可视区域大小：${size.x}x${size.y}');
     final toSizeRatio = toSize.x / toSize.y;
     final gameViewPortRatio = size.x / size.y;
+    double scaleFactor;
     if (gameViewPortRatio > toSizeRatio) {
       // 可视区域更宽
-      final scaleFactor = size.y / toSize.y;
-      camera.zoom = scaleFactor;
+      scaleFactor = size.y / toSize.y;
       final newWidth = toSize.x * scaleFactor;
       camera.snapTo(Vector2(-(size.x - newWidth) / 2, 0));
     } else {
       // 可视区域更窄
-      final scaleFactor = size.x / toSize.x;
-      camera.zoom = scaleFactor;
+      scaleFactor = size.x / toSize.x;
       final newHeight = toSize.y * scaleFactor;
       camera.snapTo(Vector2(0, -(size.y - newHeight) / 2));
     }
+    camera.zoom = scaleFactor;
   }
 
   @mustCallSuper

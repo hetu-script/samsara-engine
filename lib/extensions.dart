@@ -32,9 +32,14 @@ extension Vector2Ex on Vector2 {
 }
 
 extension CornerPosition on PositionComponent {
-  Vector2 get topRightPosition => positionOfAnchor(Anchor.topRight);
-  Vector2 get bottomLeftPosition => positionOfAnchor(Anchor.bottomLeft);
-  Vector2 get bottomRightPosition => positionOfAnchor(Anchor.bottomRight);
+  Vector2 get topLeft => positionOfAnchor(Anchor.topLeft);
+  Vector2 get topCenter => positionOfAnchor(Anchor.topCenter);
+  Vector2 get topRight => positionOfAnchor(Anchor.topRight);
+  Vector2 get centerLeft => positionOfAnchor(Anchor.centerLeft);
+  Vector2 get centerRight => positionOfAnchor(Anchor.centerRight);
+  Vector2 get bottomLeft => positionOfAnchor(Anchor.bottomLeft);
+  Vector2 get bottomCenter => positionOfAnchor(Anchor.bottomCenter);
+  Vector2 get bottomRight => positionOfAnchor(Anchor.bottomRight);
 }
 
 extension CameraExtension on Camera {
@@ -47,10 +52,10 @@ extension CameraExtension on Camera {
       return false;
     }
 
-    return gameSize.contains(c.topLeftPosition) ||
-        gameSize.contains(c.topRightPosition) ||
-        gameSize.contains(c.bottomLeftPosition) ||
-        gameSize.contains(c.bottomRightPosition);
+    return gameSize.contains(c.topLeft) ||
+        gameSize.contains(c.topRight) ||
+        gameSize.contains(c.bottomLeft) ||
+        gameSize.contains(c.bottomRight);
   }
 }
 
