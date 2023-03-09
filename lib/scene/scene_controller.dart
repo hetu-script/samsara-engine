@@ -11,7 +11,7 @@ class SceneController {
   final _sceneConstructors = <String, Future<Scene> Function([dynamic arg])>{};
 
   void registerSceneConstructor<T extends Scene>(
-      String name, Future<T> Function([dynamic args]) constructor) {
+      String name, Future<T> Function([dynamic arg]) constructor) {
     _sceneConstructors[name] = constructor;
   }
 
@@ -19,7 +19,7 @@ class SceneController {
   Future<Scene> createScene(
     String contructorKey,
     String sceneId, [
-    dynamic args,
+    dynamic arg,
   ]) async {
     final _cached = _cachedScenes[sceneId];
     if (_cached != null) {
@@ -28,7 +28,7 @@ class SceneController {
     } else {
       final constructor = _sceneConstructors[contructorKey];
       assert(constructor != null);
-      final Scene scene = await constructor!(args);
+      final Scene scene = await constructor!(arg);
       _cachedScenes[sceneId] = scene;
       _currentScene = scene;
       return scene;

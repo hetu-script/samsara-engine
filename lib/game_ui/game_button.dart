@@ -10,7 +10,7 @@ class GameButton extends GameComponent with HandlesGesture {
 
   set isEnabled(bool value) => enableGesture = value;
 
-  final void Function()? onPressed;
+  void Function()? onPressed;
 
   GameButton({
     required this.text,
