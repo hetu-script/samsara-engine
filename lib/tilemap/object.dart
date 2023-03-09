@@ -19,7 +19,7 @@ enum AnimationDirection {
 class TileMapObject extends GameComponent with TileInfo {
   static const defaultAnimationStepTime = 0.2;
 
-  final String sceneKey;
+  final String sceneId;
   final bool isHero;
   final double velocityFactor;
 
@@ -55,7 +55,7 @@ class TileMapObject extends GameComponent with TileInfo {
 
   TileMapObject({
     required this.engine,
-    required this.sceneKey,
+    required this.sceneId,
     this.isHero = false,
     int? left,
     int? top,
@@ -128,7 +128,7 @@ class TileMapObject extends GameComponent with TileInfo {
     // 只有玩家自己主动经过某个entity，才触发事件
     if (isHero && !_isBackward) {
       engine.broadcast(HeroEvent.heroMoved(
-        scene: sceneKey,
+        sceneId: sceneId,
         tilePosition: tilePosition,
       ));
     }

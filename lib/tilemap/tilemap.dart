@@ -75,7 +75,7 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   Future<void> updateData(dynamic mapData) async {
-    sceneKey = mapData['id'];
+    sceneId = mapData['id'];
     TileShape dataTileShape = TileShape.orthogonal;
     final tileShapeData = mapData['tileShape'];
     if (tileShapeData == 'isometric') {
@@ -191,7 +191,7 @@ class TileMap extends GameComponent with HandlesGesture {
   final TextStyle captionStyle;
 
   final SamsaraEngine engine;
-  late String sceneKey;
+  late String sceneId;
   TileShape tileShape;
 
   final double gridWidth,
@@ -234,7 +234,7 @@ class TileMap extends GameComponent with HandlesGesture {
     final objectId = data['id'];
     final object = TileMapObject(
       engine: engine,
-      sceneKey: sceneKey,
+      sceneId: sceneId,
       left: left,
       top: top,
       sprite: sprite,

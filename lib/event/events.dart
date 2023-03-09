@@ -54,9 +54,9 @@ class HeroEvent extends GameEvent {
   final TilePosition tilePosition;
 
   const HeroEvent.heroMoved({
-    required String scene,
+    required String sceneId,
     required this.tilePosition,
-  }) : super(name: GameEvents.heroMoved, scene: scene);
+  }) : super(name: GameEvents.heroMoved, scene: sceneId);
 }
 
 class MazeLoadedEvent extends GameEvent {
