@@ -28,10 +28,8 @@ class PiledZone extends GameComponent with HandlesGesture {
   PiledZone({
     this.id,
     this.title,
-    required double x,
-    required double y,
-    required double width,
-    required double height,
+    super.position,
+    super.size,
     super.borderRadius = 5.0,
     List<PlayingCard> cards = const [],
     this.piledCardPriority = 0,
@@ -43,12 +41,9 @@ class PiledZone extends GameComponent with HandlesGesture {
     Vector2? pileOffset,
     this.titleAnchor = Anchor.topLeft,
   })  : pileMargin = pileMargin ?? Vector2(10.0, 10.0),
-        pileOffset = pileOffset ?? Vector2(50.0, 0.0),
-        // focusOffset = focusOffset ?? Vector2.zero(),
-        super(
-          position: Vector2(x, y),
-          size: Vector2(width, height),
-        ) {
+        pileOffset = pileOffset ?? Vector2(50.0, 0.0)
+  // focusOffset = focusOffset ?? Vector2.zero(),
+  {
     if (this.pileMargin.x.sign != 0 && this.pileOffset.x.sign != 0) {
       assert(this.pileMargin.x.sign == this.pileOffset.x.sign, '堆叠位移和方向必须一致！');
     }
@@ -78,9 +73,9 @@ class PiledZone extends GameComponent with HandlesGesture {
     for (var i = 0; i < cards.length; ++i) {
       final card = cards[i];
       card.priority = piledCardPriority + (pileUp ? i : -i);
-      card.focusedOffset ??= focusedOffset;
-      card.focusedPosition ??= focusedPosition;
-      card.focusedSize ??= focusedSize;
+      if (focusedOffset != null) card.focusedOffset = focusedOffset;
+      if (focusedPosition != null) card.focusedPosition ??= focusedPosition;
+      if (focusedSize != null) card.focusedSize ??= focusedSize;
 
       final endPosition = Vector2(
         // 如果堆叠方向是向右，则从区域左侧开始计算x偏移

@@ -48,7 +48,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   final String? id, kind, title, description;
   final int cost;
-  final Set<String> tags = {};
+  final Set<String> tags;
 
   late ScreenTextStyle titleStyle, descriptionStyle, costStyle, stackStyle;
 
@@ -93,7 +93,9 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   late Rect descriptionRect;
 
-  void Function()? onPointerDown, onPointerUp;
+  void Function(TapDownDetails details)? onPointerDown;
+  void Function(TapUpDetails details)? onPointerUp;
+  void Function(DragUpdateDetails details)? onDragging;
 
   PlayingCard({
     this.id,
@@ -116,14 +118,12 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.backSpriteId,
     this.backSprite,
     this.cost = 0,
-    Set<String> tags = const {},
+    Set<String>? tags,
     this.stack = 1,
     this.showStack = false,
     ScreenTextStyle? stackStyle,
-    double x = 0,
-    double y = 0,
-    required double width,
-    required double height,
+    super.position,
+    super.size,
     super.borderRadius,
     Vector2? illustrationOffset,
     this.focusedOffset,
@@ -147,13 +147,10 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.focusAnimationDuration = 0.25,
     this.onPointerDown,
     this.onPointerUp,
-  })  : illustrationOffset = illustrationOffset ?? Vector2.zero(),
-        super(
-          position: Vector2(x, y),
-          size: Vector2(width, height),
-        ) {
+  })  : tags = tags ?? {},
+        illustrationOffset = illustrationOffset ?? Vector2.zero() {
     _savedPosition = position.clone();
-    _savedSize = position.clone();
+    _savedSize = size.clone();
 
     if (titleStyle != null) {
       this.titleStyle =
@@ -189,6 +186,63 @@ class PlayingCard extends GameComponent with HandlesGesture {
     } else {
       this.stackStyle = defaultStackStyle.copyWith(rect: border);
     }
+
+    this.enableGesture = enableGesture;
+  }
+
+  PlayingCard clone() {
+    return PlayingCard(
+      id: id,
+      kind: kind,
+      title: title,
+      titleStyle: titleStyle,
+      enablePreview: enablePreview,
+      showTitle: showTitle,
+      showTitleOnHovering: showTitleOnHovering,
+      description: description,
+      descriptionStyle: descriptionStyle,
+      showDescription: showDescription,
+      descriptionOutlined: descriptionOutlined,
+      data: data,
+      ownedPlayerId: ownedPlayerId,
+      frontSpriteId: frontSprite == null ? frontSpriteId : null,
+      frontSprite: frontSprite,
+      illustrationSpriteId:
+          illustrationSprite == null ? illustrationSpriteId : null,
+      illustrationSprite: illustrationSprite,
+      backSpriteId: backSprite == null ? backSpriteId : null,
+      backSprite: backSprite,
+      cost: cost,
+      tags: tags,
+      stack: stack,
+      showStack: showStack,
+      stackStyle: stackStyle,
+      position: position,
+      size: size,
+      borderRadius: borderRadius,
+      illustrationOffset: illustrationOffset,
+      focusedOffset: focusedOffset,
+      focusedPosition: focusedPosition,
+      focusedSize: focusedSize,
+      focusOnHovering: focusOnHovering,
+      showBorder: showBorder,
+      isFocused: isFocused,
+      stayFocused: stayFocused,
+      isFlipped: isFlipped,
+      isRotated: isRotated,
+      isRotatable: isRotatable,
+      anchor: anchor,
+      priority: priority,
+      enableGesture: enableGesture,
+      state: state,
+      onFocused: onFocused,
+      onUnfocused: onUnfocused,
+      onPreviewed: onPreviewed,
+      onUnpreviewed: onUnpreviewed,
+      focusAnimationDuration: focusAnimationDuration,
+      onPointerDown: onPointerDown,
+      onPointerUp: onPointerUp,
+    );
   }
 
   @override
@@ -325,12 +379,14 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   @override
   void onTapDown(int pointer, int buttons, TapDownDetails details) {
-    onPointerDown?.call();
+    onPointerDown?.call(details);
   }
+
+  void onDragUpdate(int pointer, int buttons, DragUpdateDetails details) {}
 
   @override
   void onTapUp(int pointer, int buttons, TapUpDetails details) {
-    onPointerUp?.call();
+    onPointerUp?.call(details);
   }
 
   @override
