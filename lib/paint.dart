@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 
 export 'package:flame/text.dart' show TextPaint;
-export 'dart:ui' show Canvas, Color, Paint, PaintingStyle;
+export 'dart:ui' show Offset, Canvas, Color, Paint, PaintingStyle;
 export 'package:flutter/material.dart' show Colors;
 
 abstract class DefaultBorderPaint {

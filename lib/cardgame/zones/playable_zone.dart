@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 import '../../component/game_component.dart';
 import '../../gestures.dart';
 import '../playing_card.dart';
@@ -119,7 +117,7 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
   }
 
   @override
-  void onTap(int pointer, int buttons, TapUpDetails details) {
+  void onTap(int buttons, Vector2 position) {
     onInteract?.call();
   }
 }

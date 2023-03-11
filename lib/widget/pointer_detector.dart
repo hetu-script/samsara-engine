@@ -122,7 +122,8 @@ class PointerDetector extends StatefulWidget {
   /// A pointer that was previously in contact with the screen with a primary
   /// button and moving is no longer in contact with the screen and was moving
   /// at a specific velocity when it stopped contacting the screen.
-  final void Function(int pointer, int buttons)? onDragEnd;
+  final void Function(int pointer, int buttons, TapUpDetails details)?
+      onDragEnd;
 
   /// The pointers in contact with the screen have established a focal point and
   /// initial scale of 1.0.
@@ -348,21 +349,20 @@ class _PointerDetectorState extends State<PointerDetector> {
     // because this information will be lost in the pointerUp event.
     final originalDetail =
         _touchDetails.singleWhere((detail) => detail.pointer == event.pointer);
-    if (_gestureState == _GestureState.pointerDown) {
-      widget.onTapUp?.call(
-          event.pointer,
-          originalDetail.buttons,
-          TapUpDetails(
-              globalPosition: event.position,
-              localPosition: event.localPosition,
-              kind: event.kind));
+    final tapUpDetail = TapUpDetails(
+        globalPosition: event.position,
+        localPosition: event.localPosition,
+        kind: event.kind);
+    if (_gestureState == _GestureState.pointerDown ||
+        _gestureState == _GestureState.longPress) {
+      widget.onTapUp?.call(event.pointer, originalDetail.buttons, tapUpDetail);
     } else if (_gestureState == _GestureState.scaleStart ||
         _gestureState == _GestureState.scalling) {
       _gestureState = _GestureState.none;
       widget.onScaleEnd?.call();
     } else if (_gestureState == _GestureState.dragStart) {
       _gestureState = _GestureState.none;
-      widget.onDragEnd?.call(event.pointer, event.buttons);
+      widget.onDragEnd?.call(event.pointer, event.buttons, tapUpDetail);
     } else if (_gestureState == _GestureState.none && touchCount == 2) {
       _gestureState = _GestureState.scaleStart;
     } else {

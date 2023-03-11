@@ -20,9 +20,9 @@ class PlayGround extends GameComponent with HandlesGesture {
   }
 
   @override
-  void onDragUpdate(int pointer, int buttons, DragUpdateDetails details) {
-    gameRef.camera.snapTo(gameRef.camera.position - details.delta.toVector2());
+  void onDragUpdate(int buttons, Vector2 worldPosition) {
+    gameRef.camera.snapTo(gameRef.camera.position - worldPosition);
 
-    super.onDragUpdate(pointer, buttons, details);
+    super.onDragUpdate(buttons, worldPosition);
   }
 }

@@ -61,7 +61,7 @@ void main() async {
       MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-          key: scafoldKey,
+          key: mainKey,
           body: const MainMenu(),
         ),
       ),

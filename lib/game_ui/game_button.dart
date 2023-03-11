@@ -60,7 +60,7 @@ class GameButton extends GameComponent with HandlesGesture {
   }
 
   @override
-  void onTap(int pointer, int buttons, TapUpDetails details) {
+  void onTap(int buttons, Vector2 position) {
     onPressed?.call();
   }
 }

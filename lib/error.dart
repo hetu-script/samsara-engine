@@ -2,14 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-GlobalKey scafoldKey = GlobalKey();
+GlobalKey mainKey = GlobalKey();
 
 // 根据自己情况上报异常
-void onError(FlutterErrorDetails details) {
+void onError(FlutterErrorDetails details, [BuildContext? context]) {
   WidgetsBinding.instance.addPostFrameCallback(
     (timeStamp) {
       showDialog(
-        context: scafoldKey.currentContext!,
+        context: context ?? mainKey.currentContext!,
         builder: (b) {
           return Padding(
             padding: const EdgeInsets.all(50.0),

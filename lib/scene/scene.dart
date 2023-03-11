@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
+import 'package:samsara/component/game_component.dart';
 
 import 'scene_controller.dart';
 import '../widget/pointer_detector.dart';
@@ -12,6 +13,8 @@ abstract class Scene extends FlameGame {
 
   final String id;
   final SceneController controller;
+
+  GameComponent? draggingComponent;
 
   Vector2 topLeft = Vector2.zero(),
       topCenter = Vector2.zero(),
@@ -42,8 +45,10 @@ abstract class Scene extends FlameGame {
     bottomLeft.y = bottomCenter.y = bottomRight.y = size.y;
   }
 
+  /// get all components within this scene which handles gesture,
+  /// order is from highest priority to lowest.
   Iterable<HandlesGesture> get gestureComponents =>
-      children.whereType<HandlesGesture>().cast<HandlesGesture>();
+      children.reversed().whereType<HandlesGesture>().cast<HandlesGesture>();
 
   /// zoom the camera to a certain size
   void fitScreen(Vector2 toSize) {
@@ -82,7 +87,10 @@ abstract class Scene extends FlameGame {
   @mustCallSuper
   void onDragStart(int pointer, int buttons, DragStartDetails details) {
     for (final c in gestureComponents) {
-      c.handleDragStart(pointer, buttons, details);
+      if (c.handleDragStart(pointer, buttons, details)) {
+        draggingComponent = c;
+        return;
+      }
     }
   }
 
@@ -94,9 +102,10 @@ abstract class Scene extends FlameGame {
   }
 
   @mustCallSuper
-  void onDragEnd(int pointer, int buttons) {
+  void onDragEnd(int pointer, int buttons, TapUpDetails details) {
+    assert(draggingComponent != null);
     for (final c in gestureComponents) {
-      c.handleDragEnd(pointer, buttons);
+      c.handleDragEnd(pointer, buttons, details, draggingComponent!);
     }
   }
 

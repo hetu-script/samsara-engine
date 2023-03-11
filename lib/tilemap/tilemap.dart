@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/components.dart';
@@ -8,7 +7,6 @@ import 'package:flame/sprite.dart';
 
 import '../component/game_component.dart';
 import '../gestures/gesture_mixin.dart';
-import '../extensions.dart';
 import 'tile.dart';
 import 'object.dart';
 import 'cloud.dart';
@@ -427,8 +425,7 @@ class TileMap extends GameComponent with HandlesGesture {
     return scaled - gameRef.camera.position;
   }
 
-  TilePosition screenPosition2Tile(Vector2 position) {
-    final worldPos = screenPosition2World(position);
+  TilePosition worldPosition2Tile(Vector2 worldPos) {
     late final int left, top;
     switch (tileShape) {
       case TileShape.orthogonal:
@@ -546,8 +543,8 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   @override
-  void onDragUpdate(int pointer, int buttons, DragUpdateDetails details) {
-    gameRef.camera.snapTo(gameRef.camera.position - details.delta.toVector2());
+  void onDragUpdate(int buttons, Vector2 worldPosition) {
+    gameRef.camera.snapTo(gameRef.camera.position - worldPosition);
   }
 
   void _selectTile(int left, int top) {
@@ -560,39 +557,37 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   @override
-  void onTap(int pointer, int buttons, TapUpDetails details) {
-    final screenPosition = details.globalPosition.toVector2();
-    final tilePosition = screenPosition2Tile(screenPosition);
+  void onTap(int buttons, Vector2 position) {
+    final tilePosition = worldPosition2Tile(position);
     _selectTile(tilePosition.left, tilePosition.top);
 
     // if (kDebugMode) {
     //   print('tilemap tapped at: $tilePosition');
     // }
     engine.broadcast(MapInteractionEvent.mapTapped(
-        globalPosition: details.globalPosition,
+        globalPosition: position.toOffset(),
         buttons: buttons,
         tilePosition: tilePosition));
   }
 
   @override
-  void onDoubleTap(int pointer, int buttons, TapUpDetails details) {
-    final screenPosition = details.globalPosition.toVector2();
-    final tilePosition = screenPosition2Tile(screenPosition);
+  void onDoubleTap(int buttons, Vector2 position) {
+    final tilePosition = worldPosition2Tile(position);
     _selectTile(tilePosition.left, tilePosition.top);
 
     // if (kDebugMode) {
     // print('tilemap double tapped at: $tilePosition');
     // }
     engine.broadcast(MapInteractionEvent.mapDoubleTapped(
-        globalPosition: details.globalPosition,
+        globalPosition: position.toOffset(),
         buttons: buttons,
         tilePosition: tilePosition));
   }
 
-  @override
-  void onMouseHover(PointerHoverEvent details) {
-    engine.info(details.position);
-  }
+  // @override
+  // void onMouseHover(Vector2 position) {
+  //   engine.info(details.position);
+  // }
 
   @override
   Future<void> onLoad() async {

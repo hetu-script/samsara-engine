@@ -93,9 +93,10 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   late Rect descriptionRect;
 
-  void Function(TapDownDetails details)? onPointerDown;
-  void Function(TapUpDetails details)? onPointerUp;
-  void Function(DragUpdateDetails details)? onDragging;
+  void Function(Vector2 position)? onPressed;
+  void Function(Vector2 position)? onReleased;
+  void Function(Vector2 worldPosition)? onDragging;
+  void Function(Vector2 worldPosition)? onDragReleased;
 
   PlayingCard({
     this.id,
@@ -145,8 +146,9 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.onPreviewed,
     this.onUnpreviewed,
     this.focusAnimationDuration = 0.25,
-    this.onPointerDown,
-    this.onPointerUp,
+    this.onPressed,
+    this.onReleased,
+    this.onDragging,
   })  : tags = tags ?? {},
         illustrationOffset = illustrationOffset ?? Vector2.zero() {
     _savedPosition = position.clone();
@@ -240,8 +242,9 @@ class PlayingCard extends GameComponent with HandlesGesture {
       onPreviewed: onPreviewed,
       onUnpreviewed: onUnpreviewed,
       focusAnimationDuration: focusAnimationDuration,
-      onPointerDown: onPointerDown,
-      onPointerUp: onPointerUp,
+      onPressed: onPressed,
+      onReleased: onReleased,
+      onDragging: onDragging,
     );
   }
 
@@ -378,20 +381,28 @@ class PlayingCard extends GameComponent with HandlesGesture {
   }
 
   @override
-  void onTapDown(int pointer, int buttons, TapDownDetails details) {
-    onPointerDown?.call(details);
-  }
-
-  void onDragUpdate(int pointer, int buttons, DragUpdateDetails details) {}
-
-  @override
-  void onTapUp(int pointer, int buttons, TapUpDetails details) {
-    onPointerUp?.call(details);
+  void onTapDown(int buttons, Vector2 position) {
+    onPressed?.call(position);
   }
 
   @override
-  void onTap(int pointer, int buttons, TapUpDetails details) {
+  void onTapUp(int buttons, Vector2 position) {
+    onReleased?.call(position);
+  }
+
+  @override
+  void onTap(int buttons, Vector2 position) {
     use();
+  }
+
+  @override
+  void onDragUpdate(int buttons, Vector2 worldPosition) {
+    onDragging?.call(worldPosition);
+  }
+
+  @override
+  void onDragEnd(int buttons, Vector2 worldPosition) {
+    onDragReleased?.call(worldPosition);
   }
 
   @override

@@ -23,28 +23,31 @@ export '../../widget/pointer_detector.dart'
 mixin HandlesGesture on GameComponent {
   bool enableGesture = true;
 
-  int? tapPointer;
+  Map<int, Vector2> tapPositions = {};
+  bool get isPressing => tapPositions.isNotEmpty;
   bool isDragging = false, isScalling = false, isHovering = false;
 
   /// A specific duration to detect double tap
   int doubleTapTimeConsider = 400;
   Timer? doubleTapTimer;
 
-  void onTap(int pointer, int buttons, TapUpDetails details) {}
+  void onTap(int buttons, Vector2 position) {}
 
-  void onTapDown(int pointer, int buttons, TapDownDetails details) {}
+  void onTapDown(int buttons, Vector2 position) {}
 
-  void onTapUp(int pointer, int buttons, TapUpDetails details) {}
+  void onTapUp(int buttons, Vector2 position) {}
 
-  void onDoubleTap(int pointer, int buttons, TapUpDetails details) {}
+  void onDoubleTap(int buttons, Vector2 position) {}
 
   void onTapCancel() {}
 
-  void onDragStart(int pointer, int buttons, DragStartDetails details) {}
+  void onDragStart(int buttons) {}
 
-  void onDragUpdate(int pointer, int buttons, DragUpdateDetails details) {}
+  void onDragUpdate(int buttons, Vector2 worldPosition) {}
 
-  void onDragEnd(int pointer, int buttons) {}
+  void onDragEnd(int buttons, Vector2 worldPosition) {}
+
+  void onDragIn(int buttons, Vector2 position, GameComponent component) {}
 
   void onScaleStart(List<TouchDetails> touches, ScaleStartDetails details) {}
 
@@ -52,33 +55,33 @@ mixin HandlesGesture on GameComponent {
 
   void onScaleEnd() {}
 
-  void onLongPress(int buttons, LongPressStartDetails details) {}
+  void onLongPress(Vector2 position) {}
 
   void onMouseEnter() {}
 
-  void onMouseHover(PointerHoverEvent details) {}
+  void onMouseHover(Vector2 position) {}
 
   void onMouseExit() {}
 
   @mustCallSuper
   bool handleTapDown(int pointer, int buttons, TapDownDetails details) {
     for (final c in gestureComponents.toList().reversed) {
-      if (c.handleTapDown(pointer, buttons, details) && tapPointer != pointer) {
+      if (c.handleTapDown(pointer, buttons, details) &&
+          !tapPositions.containsKey(pointer)) {
         return true;
       }
     }
 
-    if (!enableGesture || (tapPointer != null)) {
-      return false;
-    }
+    if (!enableGesture) return false;
 
     final pointerPosition = details.globalPosition.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
+    final positionWithinComponent = convertedPointerPosition - position;
     if (containsPoint(convertedPointerPosition)) {
-      tapPointer = pointer;
-      onTapDown(pointer, buttons, details);
+      tapPositions[pointer] = positionWithinComponent;
+      onTapDown(buttons, positionWithinComponent);
       return true;
     }
 
@@ -86,56 +89,9 @@ mixin HandlesGesture on GameComponent {
   }
 
   @mustCallSuper
-  bool handleTapUp(int pointer, int buttons, TapUpDetails details) {
+  void handleTapUp(int pointer, int buttons, TapUpDetails details) {
     for (final c in gestureComponents.toList().reversed) {
-      if (c.handleTapUp(pointer, buttons, details) && tapPointer != pointer) {
-        return true;
-      }
-    }
-
-    if (!enableGesture || (tapPointer != pointer)) {
-      tapPointer = null;
-      return false;
-    }
-
-    final pointerPosition = details.globalPosition.toVector2();
-    final convertedPointerPosition = positionType != PositionType.game
-        ? pointerPosition
-        : gameRef.camera.screenToWorld(pointerPosition);
-    if (containsPoint(convertedPointerPosition)) {
-      if (doubleTapTimer?.isActive ?? false) {
-        doubleTapTimer?.cancel();
-        if (tapPointer == pointer) {
-          onTap(pointer, buttons, details);
-          onDoubleTap(pointer, buttons, details);
-        } else {
-          doubleTapTimer =
-              Timer(Duration(milliseconds: doubleTapTimeConsider), () {
-            doubleTapTimer?.cancel();
-          });
-        }
-      } else {
-        onTap(pointer, buttons, details);
-        doubleTapTimer =
-            Timer(Duration(milliseconds: doubleTapTimeConsider), () {
-          doubleTapTimer?.cancel();
-        });
-      }
-      onTapUp(pointer, buttons, details);
-      tapPointer = null;
-      return true;
-    } else {
-      onTapCancel();
-    }
-
-    tapPointer = null;
-    return false;
-  }
-
-  @mustCallSuper
-  void handleDragStart(int pointer, int buttons, DragStartDetails details) {
-    for (final c in gestureComponents.toList().reversed) {
-      c.handleDragStart(pointer, buttons, details);
+      c.handleTapUp(pointer, buttons, details);
     }
 
     if (!enableGesture) return;
@@ -144,10 +100,55 @@ mixin HandlesGesture on GameComponent {
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
+    final positionWithinComponent = convertedPointerPosition - position;
+    if (containsPoint(convertedPointerPosition)) {
+      if (doubleTapTimer?.isActive ?? false) {
+        doubleTapTimer?.cancel();
+        if (tapPositions.containsKey(pointer)) {
+          onTap(buttons, positionWithinComponent);
+          onDoubleTap(buttons, positionWithinComponent);
+        } else {
+          doubleTapTimer =
+              Timer(Duration(milliseconds: doubleTapTimeConsider), () {
+            doubleTapTimer?.cancel();
+          });
+        }
+      } else {
+        onTap(buttons, positionWithinComponent);
+        doubleTapTimer =
+            Timer(Duration(milliseconds: doubleTapTimeConsider), () {
+          doubleTapTimer?.cancel();
+        });
+      }
+      onTapUp(buttons, positionWithinComponent);
+    } else {
+      onTapCancel();
+    }
+
+    tapPositions.remove(pointer);
+  }
+
+  @mustCallSuper
+  bool handleDragStart(int pointer, int buttons, DragStartDetails details) {
+    for (final c in gestureComponents.toList().reversed) {
+      if (c.handleDragStart(pointer, buttons, details)) {
+        return true;
+      }
+    }
+
+    if (!enableGesture) return false;
+
+    final pointerPosition = details.globalPosition.toVector2();
+    final convertedPointerPosition = positionType != PositionType.game
+        ? pointerPosition
+        : gameRef.camera.screenToWorld(pointerPosition);
     if (containsPoint(convertedPointerPosition)) {
       isDragging = true;
-      onDragStart(pointer, buttons, details);
+      onDragStart(buttons);
+      return true;
     }
+
+    return false;
   }
 
   @mustCallSuper
@@ -162,30 +163,32 @@ mixin HandlesGesture on GameComponent {
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
-    if (containsPoint(convertedPointerPosition)) {
-      onDragUpdate(pointer, buttons, details);
-    } else {
-      handleDragEnd(pointer, buttons);
-      if ((tapPointer != null) && (tapPointer == pointer)) {
-        onTapCancel();
-        tapPointer = null;
-      }
-    }
+    onDragUpdate(buttons, convertedPointerPosition);
   }
 
   @mustCallSuper
-  void handleDragEnd(int pointer, int buttons) {
+  void handleDragEnd(int pointer, int buttons, TapUpDetails details,
+      GameComponent draggingComponent) {
     for (final c in gestureComponents.toList().reversed) {
-      c.handleDragEnd(pointer, buttons);
+      c.handleDragEnd(pointer, buttons, details, draggingComponent);
     }
 
     if (!enableGesture) return;
 
-    if (isDragging && (tapPointer == pointer)) {
+    final pointerPosition = details.globalPosition.toVector2();
+    final convertedPointerPosition = positionType != PositionType.game
+        ? pointerPosition
+        : gameRef.camera.screenToWorld(pointerPosition);
+    if (isDragging && (tapPositions.containsKey(pointer))) {
       isDragging = false;
-      onDragEnd(pointer, buttons);
+      tapPositions.remove(pointer);
+      onDragEnd(buttons, convertedPointerPosition);
     }
-    tapPointer = null;
+
+    if (containsPoint(convertedPointerPosition)) {
+      final positionWithinComponent = convertedPointerPosition - position;
+      onDragIn(buttons, positionWithinComponent, draggingComponent);
+    }
   }
 
   @mustCallSuper
@@ -254,7 +257,7 @@ mixin HandlesGesture on GameComponent {
       onScaleEnd();
       isScalling = false;
     }
-    tapPointer = null;
+    tapPositions.clear();
   }
 
   @mustCallSuper
@@ -262,19 +265,20 @@ mixin HandlesGesture on GameComponent {
       int pointer, int buttons, LongPressStartDetails details) {
     for (final c in gestureComponents.toList().reversed) {
       if (c.handleLongPress(pointer, buttons, details) &&
-          tapPointer != pointer) {
+          !tapPositions.containsKey(pointer)) {
         return true;
       }
     }
 
-    if (!enableGesture || tapPointer != pointer) return false;
+    if (!enableGesture) return false;
 
     final pointerPosition = details.globalPosition.toVector2();
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
+    final positionWithinComponent = convertedPointerPosition - position;
     if (containsPoint(convertedPointerPosition)) {
-      onLongPress(buttons, details);
+      onLongPress(positionWithinComponent);
       return true;
     }
 
@@ -295,12 +299,13 @@ mixin HandlesGesture on GameComponent {
     final convertedPointerPosition = positionType != PositionType.game
         ? pointerPosition
         : gameRef.camera.screenToWorld(pointerPosition);
+    final positionWithinComponent = convertedPointerPosition - position;
     if (containsPoint(convertedPointerPosition)) {
       if (!isHovering) {
         isHovering = true;
         onMouseEnter();
       }
-      onMouseHover(details);
+      onMouseHover(positionWithinComponent);
       return true;
     } else {
       if (isHovering) {
