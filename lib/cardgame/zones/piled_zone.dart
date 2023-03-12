@@ -3,17 +3,23 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../component/game_component.dart';
-import '../../gestures.dart';
 import '../playing_card.dart';
 import '../../paint.dart';
 
-class PiledZone extends GameComponent with HandlesGesture {
+class PiledZone extends GameComponent {
   final String? id;
   final String? title;
 
   late ScreenTextStyle titleStyle;
 
   final List<PlayingCard> cards = [];
+
+  /// 按照卡牌ID统计此区域中同名卡牌的数量
+  Map<String, int> count = {};
+
+  /// 按照卡牌ID生成的列表，可能出现重复的ID
+  List<String> pile = [];
+
   final int piledCardPriority;
   final Vector2 piledCardSize;
   Vector2? focusedOffset, focusedPosition, focusedSize;
@@ -21,6 +27,8 @@ class PiledZone extends GameComponent with HandlesGesture {
   final Vector2 pileMargin, pileOffset; //, focusOffset;
 
   final Anchor titleAnchor;
+
+  final CardState? state;
 
   /// [pileMargin] : 堆叠时第一张牌相对区域的x和y的位移
   ///
@@ -40,10 +48,9 @@ class PiledZone extends GameComponent with HandlesGesture {
     Vector2? pileMargin,
     Vector2? pileOffset,
     this.titleAnchor = Anchor.topLeft,
+    this.state,
   })  : pileMargin = pileMargin ?? Vector2(10.0, 10.0),
-        pileOffset = pileOffset ?? Vector2(50.0, 0.0)
-  // focusOffset = focusOffset ?? Vector2.zero(),
-  {
+        pileOffset = pileOffset ?? Vector2(50.0, 0.0) {
     if (this.pileMargin.x.sign != 0 && this.pileOffset.x.sign != 0) {
       assert(this.pileMargin.x.sign == this.pileOffset.x.sign, '堆叠位移和方向必须一致！');
     }
@@ -67,11 +74,40 @@ class PiledZone extends GameComponent with HandlesGesture {
     }
   }
 
+  void addCard(PlayingCard card, {int? index, Completer? completer}) {
+    if (cards.contains(card)) return;
+
+    final ec = count[card.id];
+    if (ec != null) {
+      count[card.id] = ec + 1;
+    } else {
+      count[card.id] = 1;
+    }
+
+    if (index == null) {
+      index = cards.length;
+    } else {
+      assert(index >= 0);
+      if (index > cards.length) {
+        index = cards.length;
+      }
+    }
+
+    card.index = index;
+    cards.insert(index, card);
+    if (state != null) card.state = state!;
+
+    sortCards(completer: completer);
+  }
+
   /// 如果传入 completer 参数，则会用动画过度卡牌整理的过程
   void sortCards({bool pileUp = true, Completer? completer}) {
+    cards.sort((c1, c2) => c1.index.compareTo(c2.index));
+    pile.clear();
     // calculate the new position of each hand cards.
     for (var i = 0; i < cards.length; ++i) {
       final card = cards[i];
+      pile.add(card.id);
       card.priority = piledCardPriority + (pileUp ? i : -i);
       if (focusedOffset != null) card.focusedOffset = focusedOffset;
       if (focusedPosition != null) card.focusedPosition ??= focusedPosition;
@@ -82,14 +118,16 @@ class PiledZone extends GameComponent with HandlesGesture {
         (pileOffset.x.sign >= 0 ? x : x + width) +
             // 如果堆叠方向是向右，则卡牌 anchor 算作右侧
             (pileOffset.x.sign >= 0 ? card.anchor.x : (1 - card.anchor.x)) *
-                piledCardSize.x +
+                piledCardSize.x *
+                pileOffset.x.sign +
             i * pileOffset.x +
             pileMargin.x,
         // 如果堆叠方向是向上，则从区域下侧开始计算y偏移
         (pileOffset.y.sign >= 0 ? y : y + height) +
             // 如果堆叠方向是向上，则卡牌 anchor 算作下侧
             (pileOffset.y.sign >= 0 ? card.anchor.y : (1 - card.anchor.y)) *
-                piledCardSize.y +
+                piledCardSize.y *
+                pileOffset.y.sign +
             i * pileOffset.y +
             pileMargin.y,
       );
@@ -117,13 +155,6 @@ class PiledZone extends GameComponent with HandlesGesture {
         );
       }
     }
-  }
-
-  void addCard(PlayingCard card, Completer completer) {
-    card.state = CardState.hand;
-    cards.add(card);
-
-    sortCards(completer: completer);
   }
 
   void removeCard(String id) {

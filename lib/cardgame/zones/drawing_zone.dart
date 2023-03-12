@@ -104,10 +104,10 @@ class DrawingZone extends GameComponent with HandlesGesture {
     // }
   }
 
-  @override
-  void onTap(int buttons, Vector2 position) {
-    // drawOneCard();
-  }
+  // @override
+  // void onTap(int buttons, Vector2 position) {
+  //   // drawOneCard();
+  // }
 
   @override
   void update(double dt) {

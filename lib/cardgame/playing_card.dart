@@ -46,13 +46,18 @@ class PlayingCard extends GameComponent with HandlesGesture {
   int _savedPriority = 0;
   late Vector2 _savedPosition, _savedSize;
 
-  final String? id, kind, title, description;
+  final String id;
+  final String? kind, title, description;
   final int cost;
   final Set<String> tags;
 
   late ScreenTextStyle titleStyle, descriptionStyle, costStyle, stackStyle;
 
+  /// 堆叠数量，一张卡牌可以代表一叠同名卡牌。
   int stack;
+
+  /// 卡牌位置索引，一般由父组件管理。
+  int index = 0;
 
   bool enablePreview;
   bool showTitle;
@@ -93,13 +98,8 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   late Rect descriptionRect;
 
-  void Function(Vector2 position)? onPressed;
-  void Function(Vector2 position)? onReleased;
-  void Function(Vector2 worldPosition)? onDragging;
-  void Function(Vector2 worldPosition)? onDragReleased;
-
   PlayingCard({
-    this.id,
+    required this.id,
     this.kind,
     this.title,
     ScreenTextStyle? titleStyle,
@@ -146,9 +146,6 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.onPreviewed,
     this.onUnpreviewed,
     this.focusAnimationDuration = 0.25,
-    this.onPressed,
-    this.onReleased,
-    this.onDragging,
   })  : tags = tags ?? {},
         illustrationOffset = illustrationOffset ?? Vector2.zero() {
     _savedPosition = position.clone();
@@ -190,8 +187,27 @@ class PlayingCard extends GameComponent with HandlesGesture {
     }
 
     this.enableGesture = enableGesture;
+
+    onMouseEnter = () {
+      if (enablePreview) {
+        onPreviewed?.call();
+      }
+      if (focusOnHovering) {
+        setFocused(true);
+      }
+    };
+
+    onMouseExit = () {
+      if (enablePreview) {
+        onUnpreviewed?.call();
+      }
+      if (focusOnHovering && !stayFocused) {
+        setFocused(false);
+      }
+    };
   }
 
+  /// 复制这个卡牌对象，但不会复制onTap之类的交互事件，也不会复制index属性
   PlayingCard clone() {
     return PlayingCard(
       id: id,
@@ -242,9 +258,6 @@ class PlayingCard extends GameComponent with HandlesGesture {
       onPreviewed: onPreviewed,
       onUnpreviewed: onUnpreviewed,
       focusAnimationDuration: focusAnimationDuration,
-      onPressed: onPressed,
-      onReleased: onReleased,
-      onDragging: onDragging,
     );
   }
 
@@ -303,26 +316,6 @@ class PlayingCard extends GameComponent with HandlesGesture {
     }
   }
 
-  @override
-  void onMouseEnter() {
-    if (enablePreview) {
-      onPreviewed?.call();
-    }
-    if (focusOnHovering) {
-      setFocused(true);
-    }
-  }
-
-  @override
-  void onMouseExit() {
-    if (enablePreview) {
-      onUnpreviewed?.call();
-    }
-    if (focusOnHovering && !stayFocused) {
-      setFocused(false);
-    }
-  }
-
   /// 只能向逆时针方向旋转 90°，或者恢复正常状态
   ///
   /// 返回值代表是否成功旋转
@@ -378,31 +371,6 @@ class PlayingCard extends GameComponent with HandlesGesture {
   void cancel() {
     final handler = cancelEventHandlers[state];
     handler?.call();
-  }
-
-  @override
-  void onTapDown(int buttons, Vector2 position) {
-    onPressed?.call(position);
-  }
-
-  @override
-  void onTapUp(int buttons, Vector2 position) {
-    onReleased?.call(position);
-  }
-
-  @override
-  void onTap(int buttons, Vector2 position) {
-    use();
-  }
-
-  @override
-  void onDragUpdate(int buttons, Vector2 worldPosition) {
-    onDragging?.call(worldPosition);
-  }
-
-  @override
-  void onDragEnd(int buttons, Vector2 worldPosition) {
-    onDragReleased?.call(worldPosition);
   }
 
   @override

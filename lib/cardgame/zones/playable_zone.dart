@@ -22,7 +22,7 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
   // @override
   // bool get enableGesture => card == null;
 
-  final void Function()? onInteract, onRemoveCard;
+  final void Function()? onPlayCard, onRemoveCard;
 
   final bool mustRotateCard;
 
@@ -39,7 +39,7 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
     this.card,
     super.priority,
     required this.kind,
-    this.onInteract,
+    this.onPlayCard,
     this.onRemoveCard,
     this.mustRotateCard = false,
   }) : super(
@@ -114,10 +114,5 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
     if (defense2 != null) {
       drawScreenText(canvas, defense2!, style: defense2Style);
     }
-  }
-
-  @override
-  void onTap(int buttons, Vector2 position) {
-    onInteract?.call();
   }
 }

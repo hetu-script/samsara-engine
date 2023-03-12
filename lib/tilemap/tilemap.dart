@@ -184,6 +184,36 @@ class TileMap extends GameComponent with HandlesGesture {
         addObject(data);
       }
     }
+
+    onDragUpdate = (int buttons, Vector2 dragPosition, Vector2 worldPosition) {
+      gameRef.camera.snapTo(gameRef.camera.position - worldPosition);
+    };
+
+    onTap = (int buttons, Vector2 position) {
+      final tilePosition = worldPosition2Tile(position);
+      _selectTile(tilePosition.left, tilePosition.top);
+
+      // if (kDebugMode) {
+      //   print('tilemap tapped at: $tilePosition');
+      // }
+      engine.broadcast(MapInteractionEvent.mapTapped(
+          globalPosition: position.toOffset(),
+          buttons: buttons,
+          tilePosition: tilePosition));
+    };
+
+    onDoubleTap = (int buttons, Vector2 position) {
+      final tilePosition = worldPosition2Tile(position);
+      _selectTile(tilePosition.left, tilePosition.top);
+
+      // if (kDebugMode) {
+      // print('tilemap double tapped at: $tilePosition');
+      // }
+      engine.broadcast(MapInteractionEvent.mapDoubleTapped(
+          globalPosition: position.toOffset(),
+          buttons: buttons,
+          tilePosition: tilePosition));
+    };
   }
 
   final TextStyle captionStyle;
@@ -542,11 +572,6 @@ class TileMap extends GameComponent with HandlesGesture {
     _lastRouteNode = null;
   }
 
-  @override
-  void onDragUpdate(int buttons, Vector2 worldPosition) {
-    gameRef.camera.snapTo(gameRef.camera.position - worldPosition);
-  }
-
   void _selectTile(int left, int top) {
     final terrain = getTerrain(left, top);
     if (terrain != null) {
@@ -554,34 +579,6 @@ class TileMap extends GameComponent with HandlesGesture {
     } else {
       selectedTerrain = null;
     }
-  }
-
-  @override
-  void onTap(int buttons, Vector2 position) {
-    final tilePosition = worldPosition2Tile(position);
-    _selectTile(tilePosition.left, tilePosition.top);
-
-    // if (kDebugMode) {
-    //   print('tilemap tapped at: $tilePosition');
-    // }
-    engine.broadcast(MapInteractionEvent.mapTapped(
-        globalPosition: position.toOffset(),
-        buttons: buttons,
-        tilePosition: tilePosition));
-  }
-
-  @override
-  void onDoubleTap(int buttons, Vector2 position) {
-    final tilePosition = worldPosition2Tile(position);
-    _selectTile(tilePosition.left, tilePosition.top);
-
-    // if (kDebugMode) {
-    // print('tilemap double tapped at: $tilePosition');
-    // }
-    engine.broadcast(MapInteractionEvent.mapDoubleTapped(
-        globalPosition: position.toOffset(),
-        buttons: buttons,
-        tilePosition: tilePosition));
   }
 
   // @override

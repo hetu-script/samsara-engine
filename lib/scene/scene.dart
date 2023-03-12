@@ -87,8 +87,9 @@ abstract class Scene extends FlameGame {
   @mustCallSuper
   void onDragStart(int pointer, int buttons, DragStartDetails details) {
     for (final c in gestureComponents) {
-      if (c.handleDragStart(pointer, buttons, details)) {
-        draggingComponent = c;
+      final r = c.handleDragStart(pointer, buttons, details);
+      if (r != null) {
+        draggingComponent = r;
         return;
       }
     }
@@ -103,9 +104,8 @@ abstract class Scene extends FlameGame {
 
   @mustCallSuper
   void onDragEnd(int pointer, int buttons, TapUpDetails details) {
-    assert(draggingComponent != null);
     for (final c in gestureComponents) {
-      c.handleDragEnd(pointer, buttons, details, draggingComponent!);
+      c.handleDragEnd(pointer, buttons, details, draggingComponent);
     }
   }
 

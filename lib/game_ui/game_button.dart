@@ -10,8 +10,6 @@ class GameButton extends GameComponent with HandlesGesture {
 
   set isEnabled(bool value) => enableGesture = value;
 
-  void Function()? onPressed;
-
   GameButton({
     required this.text,
     this.tooltip,
@@ -20,7 +18,7 @@ class GameButton extends GameComponent with HandlesGesture {
     required double y,
     double width = 160.0,
     double height = 80.0,
-    this.onPressed,
+    void Function()? onPressed,
     super.borderRadius,
   })  : tooltipStyle = tooltipStyle ??
             ScreenTextStyle(
@@ -34,6 +32,10 @@ class GameButton extends GameComponent with HandlesGesture {
       anchor: Anchor.center,
       colorTheme: ScreenTextColorTheme.info,
     );
+
+    onTap = (buttons, position) {
+      onPressed?.call();
+    };
   }
 
   @override
@@ -57,10 +59,5 @@ class GameButton extends GameComponent with HandlesGesture {
       text,
       style: textStyle,
     );
-  }
-
-  @override
-  void onTap(int buttons, Vector2 position) {
-    onPressed?.call();
   }
 }
