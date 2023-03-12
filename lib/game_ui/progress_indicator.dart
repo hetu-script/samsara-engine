@@ -36,6 +36,7 @@ class DynamicColorProgressIndicator extends GameComponent {
         super(
           position: Vector2(x, y),
           size: Vector2(width, height),
+          anchor: Anchor.center,
         ) {
     textStyle = ScreenTextStyle(
       rect: border,

@@ -20,11 +20,14 @@ export 'package:flutter/widgets.dart' show EdgeInsets;
 abstract class GameComponent extends PositionComponent
     with HasGameRef<Scene>, HasPaint
     implements SizeProvider, OpacityProvider {
+  final String? id;
+
   late Rect border;
   late RRect rborder;
   final double borderRadius;
 
   GameComponent({
+    this.id,
     super.position,
     super.size,
     super.scale,
