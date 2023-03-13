@@ -1,4 +1,5 @@
 // ignore_for_file: implementation_imports
+import 'dart:async';
 
 import 'dart:ui';
 
@@ -123,7 +124,7 @@ abstract class GameComponent extends PositionComponent
     }
   }
 
-  void moveTo({
+  Future<void> moveTo({
     Vector2? position,
     Vector2? size,
     double? angle,
@@ -131,11 +132,17 @@ abstract class GameComponent extends PositionComponent
     curve = Curves.linear,
     Function? onChange,
     void Function()? onComplete,
-  }) {
-    if ((position == null || this.position == position) &&
-        (size == null || this.size == size)) {
-      return;
-    }
+  }) async {
+    assert(position != null || size != null || angle != null);
+
+    bool diffPos = position != null && this.position != position;
+    bool diffSize = size != null && this.size != position;
+    bool diffAngle = angle != null && this.angle != angle;
+
+    /// nothing need to be done withi this component.
+    if (!(diffPos || diffSize || diffAngle)) return;
+
+    final completer = Completer();
 
     add(AdvancedMoveEffect(
       controller: EffectController(duration: duration, curve: curve),
@@ -143,7 +150,12 @@ abstract class GameComponent extends PositionComponent
       endSize: size,
       endAngle: angle,
       onChange: onChange,
-      onComplete: onComplete,
+      onComplete: () {
+        onComplete?.call();
+        completer.complete();
+      },
     ));
+
+    return completer.future;
   }
 }

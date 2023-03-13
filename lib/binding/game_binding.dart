@@ -80,9 +80,9 @@ class SamsaraEngineClassBinding extends HTExternalClass {
   SamsaraEngineClassBinding() : super(r'SamsaraEngine');
 
   @override
-  dynamic instanceMemberGet(dynamic object, String varName) {
+  dynamic instanceMemberGet(dynamic object, String id) {
     var i = object as SamsaraEngine;
-    return i.htFetch(varName);
+    return i.htFetch(id);
   }
 }
 

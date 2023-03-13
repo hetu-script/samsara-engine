@@ -1,17 +1,18 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:samsara/task/task.dart';
 
 import '../../component/game_component.dart';
 import '../../gestures.dart';
 import '../playing_card.dart';
-import '../../action/action.dart';
 import '../../paint.dart';
 
 class DrawingZone extends GameComponent with HandlesGesture {
-  final String? id;
-
   final Vector2 drawedCardPosition, drawedCardSize;
+
+  /// the duration of the drawed card reveal time.
+  double revealDuration;
 
   final List<PlayingCard> cards;
 
@@ -20,20 +21,16 @@ class DrawingZone extends GameComponent with HandlesGesture {
   late ScreenTextStyle piledNumberStyle;
 
   DrawingZone({
-    this.id,
-    double x = 0,
-    double y = 0,
-    required double width,
-    required double height,
+    super.id,
+    super.position,
+    super.size,
     super.borderRadius = 5.0,
     required this.cards,
     required this.drawedCardPosition,
     required this.drawedCardSize,
+    this.revealDuration = 0.4,
     this.tooltipAnchor = Anchor.topCenter,
-  }) : super(
-          position: Vector2(x, y),
-          size: Vector2(width, height),
-        ) {
+  }) {
     piledNumberStyle = ScreenTextStyle(
       rect: border,
       anchor: tooltipAnchor,
@@ -46,25 +43,22 @@ class DrawingZone extends GameComponent with HandlesGesture {
   //   super.onLoad();
   // }
 
-  Future<void> drawOneCard({
-    void Function(PlayingCard card, Completer completer)? onFinish,
-    bool flip = true,
-  }) async {
-    if (cards.isEmpty) {
-      return;
-    }
+  Future<PlayingCard> drawOneCard({bool flip = true}) async {
+    assert(cards.isNotEmpty);
 
-    final drawingAction = Completer();
+    // final drawingAction = Completer();
     // 不知道为什么，不能将下面的操作提取到 action.dart文件中，
     // 而只能以 inline 形式复制到这里使用才可以
     // await waitAllActions();
-    bool check(GameAction action) =>
-        action.completer != null ? !action.completer!.isCompleted : false;
-    while (gameActions.any(check)) {
-      await gameActions.firstWhere(check).completer!.future;
-    }
+    // bool check(GameAction action) =>
+    //     action.completer != null ? !action.completer!.isCompleted : false;
+    // while (gameActions.any(check)) {
+    //   await gameActions.firstWhere(check).completer!.future;
+    // }
 
-    gameActions.add(GameAction(completer: drawingAction));
+    // gameActions.add(GameAction(completer: drawingAction));
+
+    final completer = Completer<PlayingCard>();
     final card = cards.last;
     cards.removeLast();
     card.moveTo(
@@ -76,13 +70,14 @@ class DrawingZone extends GameComponent with HandlesGesture {
         if (flip) {
           card.isFlipped = false;
         }
-        Future.delayed(const Duration(milliseconds: 400)).then((value) {
-          // drawingAction.complete();
-          onFinish?.call(card, drawingAction);
-        });
+        // Future.delayed(Duration(milliseconds: (revealDuration * 1000).toInt()))
+        //     .then((value) {
+        completer.complete(card);
+        // });
       },
     );
-    return drawingAction.future;
+
+    return completer.future;
   }
 
   @override

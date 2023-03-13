@@ -1,23 +1,23 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:samsara/task/task.dart';
 
 import '../../component/game_component.dart';
 import '../playing_card.dart';
 import '../../paint.dart';
 
 class PiledZone extends GameComponent {
-  final String? id;
   final String? title;
 
   late ScreenTextStyle titleStyle;
 
   final List<PlayingCard> cards = [];
 
-  /// 按照卡牌ID统计此区域中同名卡牌的数量
+  /// 按照卡牌 deckId 统计此区域中卡牌的数量
   Map<String, int> count = {};
 
-  /// 按照卡牌ID生成的列表，可能出现重复的ID
+  /// 按照卡牌 ID 生成的列表，可能出现重复的ID
   List<String> pile = [];
 
   final int piledCardPriority;
@@ -34,7 +34,7 @@ class PiledZone extends GameComponent {
   ///
   /// [pileOffset] : 堆叠时每张牌相比上一张牌的位移
   PiledZone({
-    this.id,
+    super.id,
     this.title,
     super.position,
     super.size,
@@ -74,14 +74,14 @@ class PiledZone extends GameComponent {
     }
   }
 
-  void addCard(PlayingCard card, {int? index, Completer? completer}) {
-    if (cards.contains(card)) return;
+  Future<void> addCard(PlayingCard card, {int? index}) {
+    assert(!cards.contains(card));
 
-    final ec = count[card.id];
+    final ec = count[card.deckId];
     if (ec != null) {
-      count[card.id] = ec + 1;
+      count[card.deckId] = ec + 1;
     } else {
-      count[card.id] = 1;
+      count[card.deckId] = 1;
     }
 
     if (index == null) {
@@ -97,11 +97,18 @@ class PiledZone extends GameComponent {
     cards.insert(index, card);
     if (state != null) card.state = state!;
 
-    sortCards(completer: completer);
+    return sortCards(schedule: true);
   }
 
-  /// 如果传入 completer 参数，则会用动画过度卡牌整理的过程
-  void sortCards({bool pileUp = true, Completer? completer}) {
+  /// 整理卡牌
+  ///
+  /// 如果 animated 为 true，则会用动画过度卡牌整理的过程
+  ///
+  /// 如果 schedule 为 true，则整理卡牌时会等待上一个动画完成
+  Future<void> sortCards(
+      {bool pileUp = true, bool animated = true, bool schedule = false}) async {
+    final completer = Completer();
+
     cards.sort((c1, c2) => c1.index.compareTo(c2.index));
     pile.clear();
     // calculate the new position of each hand cards.
@@ -132,33 +139,56 @@ class PiledZone extends GameComponent {
             pileMargin.y,
       );
 
-      if (completer == null) {
+      if (animated) {
+        Future<void> animation() {
+          return card.moveTo(
+            position: endPosition,
+            size: piledCardSize,
+            duration: 0.5,
+            curve: Curves.decelerate,
+            onComplete: () {
+              card.enableGesture = true;
+              card.showTitleOnHovering = true;
+              card.focusOnHovering = true;
+              if (i == cards.length - 1) {
+                completer.complete();
+              }
+            },
+          );
+        }
+
+        if (schedule) {
+          scheduleTask(animation);
+        } else {
+          animation();
+        }
+      } else {
         card.position = endPosition;
         card.size = piledCardSize;
-      } else {
-        card.moveTo(
-          position: endPosition,
-          size: piledCardSize,
-          duration: 0.4,
-          curve: Curves.decelerate,
-          onComplete: () {
-            card.enableGesture = true;
-            // card.focusOffset = focusOffset;
-            card.showTitleOnHovering = true;
-            // card.generateBorder();
-            card.focusOnHovering = true;
-
-            if (i == cards.length - 1) {
-              completer.complete();
-            }
-          },
-        );
       }
     }
+
+    if (!animated) {
+      completer.complete();
+    }
+
+    return completer.future;
   }
 
   void removeCard(String id) {
-    cards.removeWhere((card) => card.id == id);
+    final i = cards.indexWhere((card) => card.id == id);
+    if (i == -1) return;
+
+    final card = cards[i];
+
+    final ec = count[card.deckId]!;
+    if (ec == 1) {
+      count.remove(card.deckId);
+    } else {
+      count[card.deckId] = ec - 1;
+    }
+
+    pile.remove(card.id);
   }
 
   @override

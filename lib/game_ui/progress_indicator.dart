@@ -17,10 +17,9 @@ class DynamicColorProgressIndicator extends GameComponent {
   final Paint borderPaint;
 
   DynamicColorProgressIndicator({
-    required double x,
-    required double y,
-    required double width,
-    required double height,
+    super.position,
+    super.size,
+    super.anchor = Anchor.center,
     super.borderRadius = 3.5,
     required this.value,
     required this.max,
@@ -29,15 +28,10 @@ class DynamicColorProgressIndicator extends GameComponent {
     required this.colors,
     List<double>? stops,
     Paint? borderPaint,
-  })  : borderPaint = borderPaint ?? Paint()
+  }) : borderPaint = borderPaint ?? Paint()
           ..strokeWidth = 1.5
           ..style = PaintingStyle.stroke
-          ..color = Colors.grey,
-        super(
-          position: Vector2(x, y),
-          size: Vector2(width, height),
-          anchor: Anchor.center,
-        ) {
+          ..color = Colors.grey {
     textStyle = ScreenTextStyle(
       rect: border,
       anchor: Anchor.center,

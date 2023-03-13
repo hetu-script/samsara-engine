@@ -79,52 +79,38 @@ class SamsaraEngine with SceneController, EventAggregator {
   // HTStruct createStruct([Map<String, dynamic> jsonData = const {}]) =>
   //     hetu.interpreter.createStructfromJson(jsonData);
 
-  dynamic fetch(
-    String varName, {
-    String? moduleName,
-  }) =>
-      hetu.interpreter.fetch(
-        varName,
-        moduleName: moduleName,
-      );
+  dynamic fetch(String id, {String? moduleName}) =>
+      hetu.interpreter.fetch(id, module: moduleName);
 
-  dynamic assign(
-    String varName,
-    dynamic value, {
-    String? moduleName,
-  }) =>
-      hetu.interpreter.assign(
-        varName,
-        value,
-        moduleName: moduleName,
-      );
+  dynamic assign(String id, dynamic value, {String? module}) =>
+      hetu.interpreter.assign(id, value, module: module);
 
-  invoke(String funcName,
-          {String? namespaceName,
-          String? moduleName,
+  invoke(String func,
+          {String? namespace,
+          String? module,
           List<dynamic> positionalArgs = const [],
           Map<String, dynamic> namedArgs = const {},
           List<HTType> typeArgs = const []}) =>
-      hetu.interpreter.invoke(funcName,
-          namespaceName: namespaceName,
-          moduleName: moduleName,
+      hetu.interpreter.invoke(func,
+          namespace: namespace,
+          module: module,
           positionalArgs: positionalArgs,
           namedArgs: namedArgs,
           typeArgs: typeArgs);
 
   Future<void> loadModFromAssetsString(
     String key, {
-    required String moduleName,
+    required String module,
     List<dynamic> positionalArgs = const [],
     Map<String, dynamic> namedArgs = const {},
     bool isMainMod = false,
   }) async {
-    if (isMainMod) _mainModName = moduleName;
+    if (isMainMod) _mainModName = module;
     hetu.evalFile(
       key,
-      moduleName: moduleName,
+      module: module,
       globallyImport: isMainMod,
-      invokeFunc: 'init',
+      invocation: 'init',
       positionalArgs: positionalArgs,
       namedArgs: namedArgs,
     );
@@ -141,9 +127,9 @@ class SamsaraEngine with SceneController, EventAggregator {
     if (isMainMod) _mainModName = moduleName;
     hetu.loadBytecode(
       bytes: bytes,
-      moduleName: moduleName,
+      module: moduleName,
       globallyImport: isMainMod,
-      invokeFunc: 'init',
+      invocation: 'init',
       positionalArgs: positionalArgs,
       namedArgs: namedArgs,
     );
@@ -229,7 +215,12 @@ class SamsaraEngine with SceneController, EventAggregator {
 
     // hetu.interpreter.bindExternalFunction('print', info, override: true);
 
-    hetu.eval(kHetuEngineBindingSource, fileName: 'samsara_engine_binding.ht');
+    hetu.eval(
+      kHetuEngineBindingSource,
+      filename: 'samsara.ht',
+      globallyImport: true,
+      type: HTResourceType.hetuModule,
+    );
 
     isLoaded = true;
   }

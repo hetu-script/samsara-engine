@@ -3,7 +3,6 @@ import '../../gestures.dart';
 import '../../paint.dart';
 
 class HistoryZone extends GameComponent with HandlesGesture {
-  final String? id;
   final String? title;
 
   late ScreenTextStyle titleStyle;
@@ -11,7 +10,7 @@ class HistoryZone extends GameComponent with HandlesGesture {
   final Anchor titleAnchor;
 
   HistoryZone({
-    this.id,
+    super.id,
     this.title,
     required double x,
     required double y,

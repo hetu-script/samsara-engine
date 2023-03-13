@@ -3,35 +3,48 @@ import '../../gestures.dart';
 import '../paint.dart';
 
 class GameButton extends GameComponent with HandlesGesture {
+  static const defaultTitleStyle = ScreenTextStyle(
+    anchor: Anchor.center,
+    colorTheme: ScreenTextColorTheme.info,
+  );
+
+  static const defaultTooltipStyle = ScreenTextStyle(
+    anchor: Anchor.bottomCenter,
+    colorTheme: ScreenTextColorTheme.info,
+  );
+
   String text;
   late ScreenTextStyle textStyle;
   String? tooltip;
-  ScreenTextStyle tooltipStyle;
+  late ScreenTextStyle tooltipStyle;
 
   set isEnabled(bool value) => enableGesture = value;
 
   GameButton({
     required this.text,
+    ScreenTextStyle? textStyle,
     this.tooltip,
     ScreenTextStyle? tooltipStyle,
-    required double x,
-    required double y,
-    double width = 160.0,
-    double height = 80.0,
+    super.position,
+    super.size,
     void Function()? onPressed,
     super.borderRadius,
-  })  : tooltipStyle = tooltipStyle ??
-            ScreenTextStyle(
-              rect: Rect.fromLTWH(0, -50, width, height),
-              anchor: Anchor.bottomCenter,
-              colorTheme: ScreenTextColorTheme.info,
-            ),
-        super(position: Vector2(x, y), size: Vector2(width, height)) {
-    textStyle = ScreenTextStyle(
-      rect: border,
-      anchor: Anchor.center,
-      colorTheme: ScreenTextColorTheme.info,
-    );
+  }) {
+    if (textStyle != null) {
+      this.textStyle =
+          textStyle.fillFrom(defaultTitleStyle).fillWith(rect: border);
+    } else {
+      this.textStyle = defaultTitleStyle.copyWith(rect: border);
+    }
+    if (tooltipStyle != null) {
+      this.tooltipStyle = tooltipStyle.fillFrom(defaultTooltipStyle).fillWith(
+            rect: Rect.fromLTWH(0, -50, width, height),
+          );
+    } else {
+      this.tooltipStyle = defaultTooltipStyle.copyWith(
+        rect: Rect.fromLTWH(0, -50, width, height),
+      );
+    }
 
     onTap = (buttons, position) {
       onPressed?.call();

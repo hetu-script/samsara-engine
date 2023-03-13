@@ -46,7 +46,15 @@ class PlayingCard extends GameComponent with HandlesGesture {
   int _savedPriority = 0;
   late Vector2 _savedPosition, _savedSize;
 
-  final String id;
+  /// 卡牌id，每个图案、标题相同的卡牌视为同一张卡牌，卡组中可能有多个id相同的卡牌。
+  @override
+  String get id => super.id!;
+
+  /// 组牌id，有可能同一张牌有不同的编号和图案，但他们的规则效果完全相同，
+  ///
+  /// 此时尽管它们的id可能不同，但它们在组牌时共享同一个上限，视作同一张牌。
+  final String deckId;
+
   final String? kind, title, description;
   final int cost;
   final Set<String> tags;
@@ -99,7 +107,8 @@ class PlayingCard extends GameComponent with HandlesGesture {
   late Rect descriptionRect;
 
   PlayingCard({
-    required this.id,
+    required String id,
+    required this.deckId,
     this.kind,
     this.title,
     ScreenTextStyle? titleStyle,
@@ -147,7 +156,8 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.onUnpreviewed,
     this.focusAnimationDuration = 0.25,
   })  : tags = tags ?? {},
-        illustrationOffset = illustrationOffset ?? Vector2.zero() {
+        illustrationOffset = illustrationOffset ?? Vector2.zero(),
+        super(id: id) {
     _savedPosition = position.clone();
     _savedSize = size.clone();
 
@@ -211,6 +221,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
   PlayingCard clone() {
     return PlayingCard(
       id: id,
+      deckId: deckId,
       kind: kind,
       title: title,
       titleStyle: titleStyle,
