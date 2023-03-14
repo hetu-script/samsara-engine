@@ -1,38 +1,36 @@
 import 'dart:async';
 
-/// A schedule task system.
+/// Runs a function asynchronously.
 ///
-/// In dart, if you call multiple async function within a sync function
-/// without await keyword, they will be running parallelly.
-///
-/// The code in this file make sure a task is executed after the previous
-/// tasks are fully resolved.
+/// Callbacks registered through this function are always executed in order and
+/// are guaranteed to run after the previous registered function is completed.
 
 abstract class Task {
-  static final List<Completer> _sheduleTasks = [];
+  static final List<Completer> _scheduleTasks = [];
 
   static void clearAll() {
-    _sheduleTasks.clear();
+    _scheduleTasks.clear();
   }
 
   /// add a task to be executed after all previous task is completed.
-  static Future<T?> schedule<T>(FutureOr<T?> Function() task) async {
-    final completer = Completer<T?>();
-    final index = _sheduleTasks.length;
-    _sheduleTasks.add(completer);
+  static Future<T?> schedule<T>(FutureOr<T?> Function() task) {
+    final previousTask = _scheduleTasks.isNotEmpty ? _scheduleTasks.last : null;
 
-    Future<void> waitPreviousTasks() async {
-      for (var i = 0; i < index; ++i) {
-        final c = _sheduleTasks[i];
-        if (!c.isCompleted) {
-          await c.future;
-        }
-      }
+    final completer = Completer<T?>();
+    _scheduleTasks.add(completer);
+
+    Future<void> handleTask() async {
       final r = await task();
       completer.complete(r);
     }
 
-    waitPreviousTasks();
+    if (previousTask != null && !previousTask.isCompleted) {
+      previousTask.future.then((value) {
+        handleTask();
+      });
+    } else {
+      handleTask();
+    }
 
     return completer.future;
   }
