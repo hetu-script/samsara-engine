@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:samsara/task/task.dart';
+import 'package:samsara/task.dart';
 
 import '../../component/game_component.dart';
 import '../playing_card.dart';
@@ -158,7 +158,7 @@ class PiledZone extends GameComponent {
         }
 
         if (schedule) {
-          scheduleTask(animation);
+          Task.schedule(animation);
         } else {
           animation();
         }

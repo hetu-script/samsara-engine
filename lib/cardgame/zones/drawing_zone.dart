@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:samsara/task/task.dart';
 
 import '../../component/game_component.dart';
 import '../../gestures.dart';
@@ -70,10 +69,10 @@ class DrawingZone extends GameComponent with HandlesGesture {
         if (flip) {
           card.isFlipped = false;
         }
-        // Future.delayed(Duration(milliseconds: (revealDuration * 1000).toInt()))
-        //     .then((value) {
-        completer.complete(card);
-        // });
+        Future.delayed(Duration(milliseconds: (revealDuration * 1000).toInt()))
+            .then((value) {
+          completer.complete(card);
+        });
       },
     );
 
