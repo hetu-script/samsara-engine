@@ -49,14 +49,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.17.2"
-  cupertino_icons:
-    dependency: "direct main"
-    description:
-      name: cupertino_icons
-      sha256: e35129dc44c9118cee2a5603506d823bab99c68393879edb440e0090d07586be
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.0.5"
   fake_async:
     dependency: transitive
     description:
@@ -66,7 +58,7 @@ packages:
     source: hosted
     version: "1.3.1"
   fast_noise:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: fast_noise
       sha256: "271031cebf1602fc064472970e658fa7ff2f3b55a979bb430337b715bd55690b"
@@ -114,25 +106,17 @@ packages:
     dependency: "direct dev"
     description:
       name: flutter_lints
-      sha256: aeb0b80a8b3709709c9cc496cdc027c5b3216796bc0af0ce1007eaf24464fd4c
+      sha256: b543301ad291598523947dc534aaddc5aaad597b709d2426d3a0e0d44c5cb493
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.0.1"
-  flutter_platform_alert:
-    dependency: "direct main"
-    description:
-      name: flutter_platform_alert
-      sha256: "49175cf8f5d2bd3bced84465046aeadb031c74b9cb50820bf5c7e9db5c35a1a9"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.3.0"
+    version: "1.0.4"
   flutter_test:
     dependency: "direct dev"
     description: flutter
     source: sdk
     version: "0.0.0"
   flutter_treeview:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_treeview
       sha256: ce7a66452e02877700890cb674773ea0af28d914192acfb5bf55a50ce35b5819
@@ -140,27 +124,27 @@ packages:
     source: hosted
     version: "1.0.7+1"
   hetu_script:
-    dependency: transitive
+    dependency: "direct main"
     description:
-      path: "../../hetu-script/packages/hetu_script"
+      path: "../hetu-script/packages/hetu_script"
       relative: true
     source: path
     version: "0.5.0"
   hetu_script_flutter:
-    dependency: transitive
+    dependency: "direct main"
     description:
-      path: "../../hetu-script/packages/hetu_script_flutter"
+      path: "../hetu-script/packages/hetu_script_flutter"
       relative: true
     source: path
     version: "0.1.0+2"
   html:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: html
-      sha256: "79d498e6d6761925a34ee5ea8fa6dfef38607781d2fa91e37523474282af55cb"
+      sha256: d9793e10dbe0e6c364f4c59bf3e01fb33a9b2a674bc7a1081693dba0614b6269
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.15.2"
+    version: "0.15.1"
   intl:
     dependency: transitive
     description:
@@ -177,30 +161,22 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.6.5"
-  json5:
-    dependency: "direct main"
-    description:
-      name: json5
-      sha256: dc7d77b2a84a801e14f76d23c26332d4a3c3e34d7fe086e08b7204c6af2499fc
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.8.0"
   lints:
     dependency: transitive
     description:
       name: lints
-      sha256: "5e4a9cd06d447758280a8ac2405101e0e2094d2a1dbdd3756aec3fe7775ba593"
+      sha256: a2c3d198cb5ea2e179926622d433331d8b58374ab8f29cdda6e863bd62fd369c
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.0.1"
+    version: "1.0.1"
   logger:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: logger
-      sha256: db2ff852ed77090ba9f62d3611e4208a3d11dfa35991a81ae724c113fcb3e3f7
+      sha256: "5076f09225f91dc49289a4ccb92df2eeea9ea01cf7c26d49b3a1f04c6a49eec1"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "1.3.0"
+    version: "1.1.0"
   matcher:
     dependency: transitive
     description:
@@ -234,7 +210,7 @@ packages:
     source: hosted
     version: "5.0.0"
   path:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path
       sha256: db9d4f58c908a4ba5953fcee2ae317c94889433e5024c27ce74a37f94267945b
@@ -242,7 +218,7 @@ packages:
     source: hosted
     version: "1.8.2"
   path_provider:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path_provider
       sha256: "04890b994ee89bfa80bf3080bfec40d5a92c5c7a785ebb02c13084a099d2b6f9"
@@ -253,26 +229,26 @@ packages:
     dependency: transitive
     description:
       name: path_provider_android
-      sha256: "019f18c9c10ae370b08dce1f3e3b73bc9f58e7f087bb5e921f06529438ac0ae7"
+      sha256: "7623b7d4be0f0f7d9a8b5ee6879fc13e4522d4c875ab86801dee4af32b54b83e"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.0.24"
+    version: "2.0.23"
   path_provider_foundation:
     dependency: transitive
     description:
       name: path_provider_foundation
-      sha256: "026b97a6c29da75181a37aae2eba9227f5fe13cb2838c6b975ce209328b8ab4e"
+      sha256: eec003594f19fe2456ea965ae36b3fc967bc5005f508890aafe31fa75e41d972
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.1.3"
+    version: "2.1.2"
   path_provider_linux:
     dependency: transitive
     description:
       name: path_provider_linux
-      sha256: "2ae08f2216225427e64ad224a24354221c2c7907e448e6e0e8b57b1eb9f10ad1"
+      sha256: "525ad5e07622d19447ad740b1ed5070031f7a5437f44355ae915ff56e986429a"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.1.10"
+    version: "2.1.9"
   path_provider_platform_interface:
     dependency: transitive
     description:
@@ -285,10 +261,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_windows
-      sha256: f53720498d5a543f9607db4b0e997c4b5438884de25b0f73098cc2671a51b130
+      sha256: "642ddf65fde5404f83267e8459ddb4556316d3ee6d511ed193357e25caa3632d"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.1.5"
+    version: "2.1.4"
   platform:
     dependency: transitive
     description:
@@ -337,21 +313,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "4.1.0"
-  samsara:
-    dependency: "direct main"
-    description:
-      path: ".."
-      relative: true
-    source: path
-    version: "0.0.1"
-  screen_retriever:
-    dependency: transitive
-    description:
-      name: screen_retriever
-      sha256: "4931f226ca158123ccd765325e9fbf360bfed0af9b460a10f960f9bb13d58323"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.1.6"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -421,14 +382,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.1.3"
-  window_manager:
-    dependency: "direct main"
-    description:
-      name: window_manager
-      sha256: "492806c69879f0d28e95472bbe5e8d5940ac8c6e99cc07052fe14946974555ba"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.3.1"
   xdg_directories:
     dependency: transitive
     description:
