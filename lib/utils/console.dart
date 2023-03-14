@@ -4,8 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 
 import '../engine.dart';
-import '../flutter_ui/close_button.dart';
-import '../flutter_ui/responsive_window.dart';
+import '../ui/flutter/close_button.dart';
+import '../ui/flutter/responsive_window.dart';
 
 class Console extends StatefulWidget {
   const Console({

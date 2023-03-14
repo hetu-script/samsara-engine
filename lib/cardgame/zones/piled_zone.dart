@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:samsara/task.dart';
 
 import '../../component/game_component.dart';
@@ -74,8 +73,14 @@ class PiledZone extends GameComponent {
     }
   }
 
-  Future<void> addCard(PlayingCard card, {int? index, bool schedule = false}) {
-    assert(!cards.contains(card));
+  Future<void> addCard(
+    PlayingCard card, {
+    int? index,
+    bool animated = true,
+    bool schedule = false,
+    void Function()? onComplete,
+  }) async {
+    if (cards.contains(card)) return;
 
     final ec = count[card.deckId];
     if (ec != null) {
@@ -97,7 +102,8 @@ class PiledZone extends GameComponent {
     cards.insert(index, card);
     if (state != null) card.state = state!;
 
-    return sortCards(schedule: schedule);
+    return sortCards(
+        animated: animated, schedule: schedule, onComplete: onComplete);
   }
 
   /// 整理卡牌
@@ -105,8 +111,12 @@ class PiledZone extends GameComponent {
   /// 如果 animated 为 true，则会用动画过度卡牌整理的过程
   ///
   /// 如果 schedule 为 true，则整理卡牌时会等待上一个动画完成
-  Future<void> sortCards(
-      {bool pileUp = true, bool animated = true, bool schedule = false}) async {
+  Future<void> sortCards({
+    bool pileUp = true,
+    bool animated = true,
+    bool schedule = false,
+    void Function()? onComplete,
+  }) async {
     final completer = Completer();
 
     cards.sort((c1, c2) => c1.index.compareTo(c2.index));
@@ -120,12 +130,16 @@ class PiledZone extends GameComponent {
       final endPosition = Vector2(
         // 如果堆叠方向是向右，则从区域左侧开始计算x偏移
         (pileOffset.x.sign >= 0 ? x : x + width) +
-            piledCardSize.x * card.anchor.x +
+            piledCardSize.x *
+                (pileOffset.x.sign >= 0 ? card.anchor.x : (1 - card.anchor.x)) *
+                (pileOffset.x.sign >= 0 ? 1 : -1) +
             i * pileOffset.x +
             pileMargin.x,
         // 如果堆叠方向是向上，则从区域下侧开始计算y偏移
         (pileOffset.y.sign >= 0 ? y : y + height) +
-            piledCardSize.y * card.anchor.y +
+            piledCardSize.y *
+                (pileOffset.y.sign >= 0 ? card.anchor.y : (1 - card.anchor.y)) *
+                (pileOffset.y.sign >= 0 ? 1 : -1) +
             i * pileOffset.y +
             pileMargin.y,
       );
@@ -144,9 +158,10 @@ class PiledZone extends GameComponent {
             duration: 0.5,
             curve: Curves.decelerate,
             onComplete: () {
-              card.enableGesture = true;
-              card.showTitleOnHovering = true;
-              card.focusOnHovering = true;
+              // card.enableGesture = true;
+              // card.showTitleOnHovering = true;
+              // card.focusOnHovering = true;
+              onComplete?.call();
               if (i == cards.length - 1) {
                 completer.complete();
               }

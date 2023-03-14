@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'outlined_text.dart';
-import '../extensions.dart';
-import '../utils/color.dart';
+import '../../extensions.dart';
+import '../../utils/color.dart';
 
 class DynamicColorProgressBar extends StatelessWidget {
   DynamicColorProgressBar({

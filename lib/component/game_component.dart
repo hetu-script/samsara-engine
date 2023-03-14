@@ -1,4 +1,3 @@
-// ignore_for_file: implementation_imports
 import 'dart:async';
 
 import 'dart:ui';
@@ -11,12 +10,15 @@ import '../effect/advanced_move_effect.dart';
 import '../scene/scene.dart';
 import '../extensions.dart';
 import '../gestures/gesture_mixin.dart';
+import 'package:flutter/animation.dart' show Curve, Curves;
 
 export 'package:flame/components.dart' show Anchor;
 export 'package:flame/game.dart' show Camera;
 export 'package:vector_math/vector_math_64.dart' show Vector2;
 export 'dart:ui' show Canvas, Rect;
 export 'package:flutter/widgets.dart' show EdgeInsets;
+export 'package:flutter/material.dart' show Colors;
+export 'package:flutter/animation.dart' show Curve, Curves;
 
 abstract class GameComponent extends PositionComponent
     with HasGameRef<Scene>, HasPaint
@@ -123,7 +125,7 @@ abstract class GameComponent extends PositionComponent
     Vector2? size,
     double? angle,
     required double duration,
-    curve = Curves.linear,
+    Curve curve = Curves.linear,
     Function? onChange,
     void Function()? onComplete,
   }) async {

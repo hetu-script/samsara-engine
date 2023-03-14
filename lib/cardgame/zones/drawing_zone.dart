@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-
 import '../../component/game_component.dart';
 import '../../gestures.dart';
 import '../playing_card.dart';

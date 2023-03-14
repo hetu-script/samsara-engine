@@ -2,8 +2,6 @@ import 'package:flame/effects.dart';
 
 import '../component/game_component.dart';
 
-export 'package:flutter/animation.dart' show Curve, Curves;
-
 class FadeEffect extends Effect with EffectTarget<GameComponent> {
   FadeEffect({
     GameComponent? target,

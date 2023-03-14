@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flame/components.dart' hide Timer;
 import 'package:flame/effects.dart';
 import 'package:flame/flame.dart';
-import 'package:flutter/animation.dart' show Curves;
 
 import '../component/game_component.dart';
 import '../scene/scene.dart';

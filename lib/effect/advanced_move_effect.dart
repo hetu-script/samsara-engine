@@ -2,8 +2,6 @@ import 'package:flame/effects.dart';
 
 import '../component/game_component.dart';
 
-export 'package:flutter/animation.dart' show Curve, Curves;
-
 class AdvancedMoveEffect extends Effect with EffectTarget<GameComponent> {
   final Vector2? endPosition, endSize;
   final double? endAngle;

@@ -1,7 +1,7 @@
-import '../paint.dart';
-import '../component/game_component.dart';
-import '../utils/color.dart';
-import '../extensions.dart';
+import '../../paint.dart';
+import '../../component/game_component.dart';
+import '../../utils/color.dart';
+import '../../extensions.dart';
 
 class DynamicColorProgressIndicator extends GameComponent {
   late final ScreenTextStyle textStyle;
@@ -19,7 +19,7 @@ class DynamicColorProgressIndicator extends GameComponent {
   DynamicColorProgressIndicator({
     super.position,
     super.size,
-    super.anchor = Anchor.center,
+    super.anchor,
     super.borderRadius = 3.5,
     required this.value,
     required this.max,
@@ -71,10 +71,6 @@ class DynamicColorProgressIndicator extends GameComponent {
 
     final text = value.truncate().toString();
 
-    drawScreenText(
-      canvas,
-      text,
-      style: textStyle,
-    );
+    drawScreenText(canvas, text, style: textStyle);
   }
 }

@@ -3,9 +3,11 @@ import 'package:samsara/gestures.dart';
 // import 'package:samsara/component/sprite_component.dart';
 // import 'package:samsara/effect/fade_effect.dart';
 // import 'package:flame/effects.dart';
-import 'package:samsara/component/in_and_out_sprite.dart';
+// import 'package:samsara/component/in_and_out_sprite.dart';
 
 class PlayGround extends GameComponent with HandlesGesture {
+  // late final StatusBar status;
+
   PlayGround({
     required double width,
     required double height,
@@ -28,14 +30,16 @@ class PlayGround extends GameComponent with HandlesGesture {
       // c2.position = position;
       // add(c2);
 
-      add(InAndOutSprite('pepe',
-          flyInDuration: 0.4, stayDuration: 0.4, flyOutDuration: 0.4));
+      // add(InAndOutSprite('pepe',
+      //     flyInDuration: 0.4, stayDuration: 0.4, flyOutDuration: 0.4));
     };
   }
 
   @override
   Future<void> onLoad() async {
-    super.onLoad();
+    // status = StatusBar(size: Vector2(100, 20));
+    // status.position = center;
+    // add(status);
   }
 
   @override

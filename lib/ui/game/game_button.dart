@@ -1,6 +1,6 @@
-import '../../component/game_component.dart';
-import '../../gestures.dart';
-import '../paint.dart';
+import '../../../component/game_component.dart';
+import '../../../gestures.dart';
+import '../../paint.dart';
 
 class GameButton extends GameComponent with HandlesGesture {
   static const defaultTitleStyle = ScreenTextStyle(
