@@ -13,10 +13,10 @@ abstract class Task {
   }
 
   /// add a task to be executed after all previous task is completed.
-  static Future<T?> schedule<T>(FutureOr<T?> Function() task) {
+  static Future<T> schedule<T>(FutureOr<T> Function() task) {
     final previousTask = _scheduleTasks.isNotEmpty ? _scheduleTasks.last : null;
 
-    final completer = Completer<T?>();
+    final completer = Completer<T>();
     _scheduleTasks.add(completer);
 
     Future<void> handleTask() async {

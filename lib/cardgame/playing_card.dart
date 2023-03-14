@@ -200,6 +200,8 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
     onMouseEnter = () {
       if (enablePreview) {
+        _savedPriority = priority;
+        priority = 1000;
         onPreviewed?.call();
       }
       if (focusOnHovering) {
@@ -209,11 +211,16 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
     onMouseExit = () {
       if (enablePreview) {
+        priority = _savedPriority;
         onUnpreviewed?.call();
       }
       if (focusOnHovering && !stayFocused) {
         setFocused(false);
       }
+    };
+
+    onTap = (buttons, position) {
+      use();
     };
   }
 
@@ -295,8 +302,6 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
     isFocused = value;
     if (value) {
-      _savedPriority = priority;
-      priority = 1000;
       _savedPosition = position.clone();
       _savedSize = size.clone();
 
@@ -306,24 +311,23 @@ class PlayingCard extends GameComponent with HandlesGesture {
       } else if (focusedPosition != null) {
         endPosition = focusedPosition!;
       }
-      if (endPosition != null) {
-        moveTo(
-          position: endPosition,
-          size: focusedSize,
-          duration: focusAnimationDuration,
-        );
-      }
+      moveTo(
+        position: endPosition,
+        size: focusedSize,
+        duration: focusAnimationDuration,
+      );
 
       onFocused?.call();
     } else {
-      if (stayFocused) return;
-      priority = _savedPriority;
-      moveTo(
-        position: _savedPosition,
-        size: _savedSize,
-        duration: focusAnimationDuration,
-      );
-      onUnfocused?.call();
+      if (!stayFocused) {
+        moveTo(
+          position: _savedPosition,
+          size: _savedSize,
+          duration: focusAnimationDuration,
+        );
+
+        onUnfocused?.call();
+      }
     }
   }
 

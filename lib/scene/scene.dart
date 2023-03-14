@@ -140,7 +140,8 @@ abstract class Scene extends FlameGame {
   @mustCallSuper
   void onMouseHover(PointerHoverEvent details) {
     for (final c in gestureComponents) {
-      c.handleMouseHover(details);
+      final r = c.handleMouseHover(details);
+      if (r) return;
     }
   }
 

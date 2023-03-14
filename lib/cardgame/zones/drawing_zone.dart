@@ -6,6 +6,7 @@ import '../../component/game_component.dart';
 import '../../gestures.dart';
 import '../playing_card.dart';
 import '../../paint.dart';
+import '../../task.dart';
 
 class DrawingZone extends GameComponent with HandlesGesture {
   final Vector2 drawedCardPosition, drawedCardSize;
@@ -27,7 +28,7 @@ class DrawingZone extends GameComponent with HandlesGesture {
     required this.cards,
     required this.drawedCardPosition,
     required this.drawedCardSize,
-    this.revealDuration = 0.4,
+    this.revealDuration = 0.5,
     this.tooltipAnchor = Anchor.topCenter,
   }) {
     piledNumberStyle = ScreenTextStyle(
@@ -42,7 +43,8 @@ class DrawingZone extends GameComponent with HandlesGesture {
   //   super.onLoad();
   // }
 
-  Future<PlayingCard> drawOneCard({bool flip = true}) async {
+  Future<PlayingCard> drawOneCard(
+      {bool flip = true, bool schedule = false}) async {
     assert(cards.isNotEmpty);
 
     // final drawingAction = Completer();
@@ -60,21 +62,29 @@ class DrawingZone extends GameComponent with HandlesGesture {
     final completer = Completer<PlayingCard>();
     final card = cards.last;
     cards.removeLast();
-    card.moveTo(
-      position: drawedCardPosition,
-      size: drawedCardSize,
-      duration: 0.6,
-      curve: Curves.easeIn,
-      onComplete: () {
-        if (flip) {
-          card.isFlipped = false;
-        }
-        Future.delayed(Duration(milliseconds: (revealDuration * 1000).toInt()))
-            .then((value) {
-          completer.complete(card);
-        });
-      },
-    );
+
+    Future<void> animation() {
+      return card.moveTo(
+        position: drawedCardPosition,
+        size: drawedCardSize,
+        duration: 0.6,
+        curve: Curves.easeIn,
+        onComplete: () {
+          if (flip) {
+            card.isFlipped = false;
+          }
+          Timer(Duration(milliseconds: (revealDuration * 1000).toInt()), () {
+            completer.complete(card);
+          });
+        },
+      );
+    }
+
+    if (schedule) {
+      Task.schedule(animation);
+    } else {
+      animation();
+    }
 
     return completer.future;
   }

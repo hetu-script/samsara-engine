@@ -25,7 +25,9 @@ abstract class GameComponent extends PositionComponent
 
   late Rect border;
   late RRect rborder;
-  final double borderRadius;
+  double _borderRadius;
+
+  double get borderRadius => _borderRadius;
 
   GameComponent({
     this.id,
@@ -35,10 +37,10 @@ abstract class GameComponent extends PositionComponent
     super.angle,
     super.anchor,
     super.priority,
-    this.borderRadius = 5.0,
+    double borderRadius = 5.0,
     double opacity = 1.0,
     super.children,
-  }) {
+  }) : _borderRadius = borderRadius {
     this.opacity = opacity;
 
     generateBorder();
@@ -48,25 +50,13 @@ abstract class GameComponent extends PositionComponent
   void generateBorder() {
     border = Rect.fromLTWH(0, 0, width, height);
     rborder =
-        RRect.fromLTRBR(0, 0, width, height, Radius.circular(borderRadius));
+        RRect.fromLTRBR(0, 0, width, height, Radius.circular(_borderRadius));
   }
 
-  @override
-  set x(double value) {
-    super.x = value;
-    generateBorder();
-  }
-
-  @override
-  set y(double value) {
-    super.y = value;
-    generateBorder();
-  }
-
-  @override
-  set position(Vector2 value) {
-    super.position = value;
-    generateBorder();
+  set borderRadius(double value) {
+    _borderRadius = value;
+    rborder =
+        RRect.fromLTRBR(0, 0, width, height, Radius.circular(_borderRadius));
   }
 
   @override
@@ -104,23 +94,27 @@ abstract class GameComponent extends PositionComponent
   }
 
   Iterable<HandlesGesture> get gestureComponents =>
-      children.whereType<HandlesGesture>().cast<HandlesGesture>();
+      children.reversed().whereType<HandlesGesture>().cast<HandlesGesture>();
 
-  void snapTo({Vector2? position, Vector2? size}) {
+  void snapTo({
+    Vector2? position,
+    Vector2? size,
+    double? angle,
+  }) {
     if ((position == null || this.position == position) &&
-        (size == null || this.size == size)) {
+        (size == null || this.size == size) &&
+        (angle == null || this.angle == angle)) {
       return;
     }
 
     if (position != null) {
-      super.position = position;
+      this.position = position;
     }
     if (size != null) {
-      super.size = size;
+      this.size = size;
     }
-
-    if (position != null || size != null) {
-      generateBorder();
+    if (angle != null) {
+      this.angle = angle;
     }
   }
 
@@ -133,7 +127,7 @@ abstract class GameComponent extends PositionComponent
     Function? onChange,
     void Function()? onComplete,
   }) async {
-    assert(position != null || size != null || angle != null);
+    if (position == null && size == null && angle == null) return;
 
     bool diffPos = position != null && this.position != position;
     bool diffSize = size != null && this.size != position;
@@ -143,7 +137,6 @@ abstract class GameComponent extends PositionComponent
     if (!(diffPos || diffSize || diffAngle)) return;
 
     final completer = Completer();
-
     add(AdvancedMoveEffect(
       controller: EffectController(duration: duration, curve: curve),
       endPosition: position,
@@ -155,7 +148,6 @@ abstract class GameComponent extends PositionComponent
         completer.complete();
       },
     ));
-
     return completer.future;
   }
 }

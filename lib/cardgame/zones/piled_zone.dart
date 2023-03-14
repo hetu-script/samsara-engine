@@ -74,7 +74,7 @@ class PiledZone extends GameComponent {
     }
   }
 
-  Future<void> addCard(PlayingCard card, {int? index}) {
+  Future<void> addCard(PlayingCard card, {int? index, bool schedule = false}) {
     assert(!cards.contains(card));
 
     final ec = count[card.deckId];
@@ -97,7 +97,7 @@ class PiledZone extends GameComponent {
     cards.insert(index, card);
     if (state != null) card.state = state!;
 
-    return sortCards(schedule: true);
+    return sortCards(schedule: schedule);
   }
 
   /// 整理卡牌
@@ -116,28 +116,25 @@ class PiledZone extends GameComponent {
       final card = cards[i];
       pile.add(card.id);
       card.priority = piledCardPriority + (pileUp ? i : -i);
-      if (focusedOffset != null) card.focusedOffset = focusedOffset;
-      if (focusedPosition != null) card.focusedPosition ??= focusedPosition;
-      if (focusedSize != null) card.focusedSize ??= focusedSize;
 
       final endPosition = Vector2(
         // 如果堆叠方向是向右，则从区域左侧开始计算x偏移
         (pileOffset.x.sign >= 0 ? x : x + width) +
-            // 如果堆叠方向是向右，则卡牌 anchor 算作右侧
-            (pileOffset.x.sign >= 0 ? card.anchor.x : (1 - card.anchor.x)) *
-                piledCardSize.x *
-                pileOffset.x.sign +
+            piledCardSize.x * card.anchor.x +
             i * pileOffset.x +
             pileMargin.x,
         // 如果堆叠方向是向上，则从区域下侧开始计算y偏移
         (pileOffset.y.sign >= 0 ? y : y + height) +
-            // 如果堆叠方向是向上，则卡牌 anchor 算作下侧
-            (pileOffset.y.sign >= 0 ? card.anchor.y : (1 - card.anchor.y)) *
-                piledCardSize.y *
-                pileOffset.y.sign +
+            piledCardSize.y * card.anchor.y +
             i * pileOffset.y +
             pileMargin.y,
       );
+
+      if (card.position == endPosition && card.size == piledCardSize) continue;
+
+      if (focusedOffset != null) card.focusedOffset = focusedOffset;
+      if (focusedPosition != null) card.focusedPosition ??= focusedPosition;
+      if (focusedSize != null) card.focusedSize ??= focusedSize;
 
       if (animated) {
         Future<void> animation() {

@@ -57,7 +57,7 @@ mixin HandlesGesture on GameComponent {
 
   @mustCallSuper
   bool handleTapDown(int pointer, int buttons, TapDownDetails details) {
-    for (final c in gestureComponents.toList().reversed) {
+    for (final c in gestureComponents) {
       if (c.handleTapDown(pointer, buttons, details) &&
           !tapPositions.containsKey(pointer)) {
         return true;
@@ -82,7 +82,7 @@ mixin HandlesGesture on GameComponent {
 
   @mustCallSuper
   void handleTapUp(int pointer, int buttons, TapUpDetails details) {
-    for (final c in gestureComponents.toList().reversed) {
+    for (final c in gestureComponents) {
       c.handleTapUp(pointer, buttons, details);
     }
 
@@ -123,7 +123,7 @@ mixin HandlesGesture on GameComponent {
   @mustCallSuper
   HandlesGesture? handleDragStart(
       int pointer, int buttons, DragStartDetails details) {
-    for (final c in gestureComponents.toList().reversed) {
+    for (final c in gestureComponents) {
       final r = c.handleDragStart(pointer, buttons, details);
       if (r != null) {
         return r;
@@ -153,7 +153,7 @@ mixin HandlesGesture on GameComponent {
 
   @mustCallSuper
   void handleDragUpdate(int pointer, int buttons, DragUpdateDetails details) {
-    for (final c in gestureComponents.toList().reversed) {
+    for (final c in gestureComponents) {
       c.handleDragUpdate(pointer, buttons, details);
     }
 
@@ -172,7 +172,7 @@ mixin HandlesGesture on GameComponent {
   @mustCallSuper
   void handleDragEnd(int pointer, int buttons, TapUpDetails details,
       GameComponent? draggingComponent) {
-    for (final c in gestureComponents.toList().reversed) {
+    for (final c in gestureComponents) {
       c.handleDragEnd(pointer, buttons, details, draggingComponent);
     }
 
@@ -202,7 +202,7 @@ mixin HandlesGesture on GameComponent {
   void handleScaleStart(List<TouchDetails> touches, ScaleStartDetails details) {
     assert(touches.length == 2);
 
-    for (final c in gestureComponents.toList().reversed) {
+    for (final c in gestureComponents) {
       c.handleScaleStart(touches, details);
     }
 
@@ -230,7 +230,7 @@ mixin HandlesGesture on GameComponent {
       List<TouchDetails> touches, ScaleUpdateDetails details) {
     assert(touches.length == 2);
 
-    for (final c in gestureComponents.toList().reversed) {
+    for (final c in gestureComponents) {
       c.handleScaleUpdate(touches, details);
     }
 
@@ -254,7 +254,7 @@ mixin HandlesGesture on GameComponent {
 
   @mustCallSuper
   void handleScaleEnd() {
-    for (final c in gestureComponents.toList().reversed) {
+    for (final c in gestureComponents) {
       c.handleScaleEnd();
     }
 
@@ -270,7 +270,7 @@ mixin HandlesGesture on GameComponent {
   @mustCallSuper
   bool handleLongPress(
       int pointer, int buttons, LongPressStartDetails details) {
-    for (final c in gestureComponents.toList().reversed) {
+    for (final c in gestureComponents) {
       if (c.handleLongPress(pointer, buttons, details) &&
           !tapPositions.containsKey(pointer)) {
         return true;
@@ -294,7 +294,7 @@ mixin HandlesGesture on GameComponent {
 
   @mustCallSuper
   bool handleMouseHover(PointerHoverEvent details) {
-    for (final c in gestureComponents.toList().reversed) {
+    for (final c in gestureComponents) {
       if (c.handleMouseHover(details)) {
         return true;
       }
