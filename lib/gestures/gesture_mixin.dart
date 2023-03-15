@@ -94,10 +94,10 @@ mixin HandlesGesture on GameComponent {
         : gameRef.camera.screenToWorld(pointerPosition);
     final positionWithinComponent = convertedPointerPosition - position;
     if (containsPoint(convertedPointerPosition)) {
-      if (doubleTapTimer?.isActive ?? false) {
-        doubleTapTimer?.cancel();
-        if (tapPositions.containsKey(pointer)) {
-          onTap?.call(buttons, positionWithinComponent);
+      if (tapPositions.containsKey(pointer)) {
+        onTap?.call(buttons, positionWithinComponent);
+        if (doubleTapTimer?.isActive ?? false) {
+          doubleTapTimer?.cancel();
           onDoubleTap?.call(buttons, positionWithinComponent);
         } else {
           doubleTapTimer =
@@ -105,12 +105,6 @@ mixin HandlesGesture on GameComponent {
             doubleTapTimer?.cancel();
           });
         }
-      } else {
-        onTap?.call(buttons, positionWithinComponent);
-        doubleTapTimer =
-            Timer(Duration(milliseconds: doubleTapTimeConsider), () {
-          doubleTapTimer?.cancel();
-        });
       }
       onTapUp?.call(buttons, positionWithinComponent);
     } else {
@@ -199,14 +193,14 @@ mixin HandlesGesture on GameComponent {
   }
 
   @mustCallSuper
-  void handleScaleStart(List<TouchDetails> touches, ScaleStartDetails details) {
+  bool handleScaleStart(List<TouchDetails> touches, ScaleStartDetails details) {
     assert(touches.length == 2);
 
     for (final c in gestureComponents) {
       c.handleScaleStart(touches, details);
     }
 
-    if (!enableGesture) return;
+    if (!enableGesture) return false;
 
     final pointerPosition1 = touches[0].currentGlobalPosition.toVector2();
     final convertedPointerPosition1 = positionType != PositionType.game
@@ -220,9 +214,12 @@ mixin HandlesGesture on GameComponent {
         containsPoint(convertedPointerPosition2)) {
       isScalling = true;
       onScaleStart?.call(touches, details);
+      return true;
     } else {
       handleScaleEnd();
     }
+
+    return false;
   }
 
   @mustCallSuper

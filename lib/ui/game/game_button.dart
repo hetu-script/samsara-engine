@@ -19,6 +19,9 @@ class GameButton extends GameComponent with HandlesGesture {
   late ScreenTextStyle tooltipStyle;
 
   set isEnabled(bool value) => enableGesture = value;
+  bool get isEnabled => enableGesture;
+
+  void Function()? onPressed;
 
   GameButton({
     required this.text,
@@ -27,9 +30,12 @@ class GameButton extends GameComponent with HandlesGesture {
     ScreenTextStyle? tooltipStyle,
     super.position,
     super.size,
-    void Function()? onPressed,
+    this.onPressed,
     super.borderRadius,
+    bool? isEnabled,
   }) {
+    enableGesture = isEnabled ?? true;
+
     if (textStyle != null) {
       this.textStyle =
           textStyle.fillFrom(defaultTitleStyle).fillWith(rect: border);
@@ -53,7 +59,7 @@ class GameButton extends GameComponent with HandlesGesture {
 
   @override
   void render(Canvas canvas) {
-    if (isHovering) {
+    if (isHovering && isEnabled) {
       canvas.drawRRect(rborder, DefaultBorderPaint.primary);
 
       if (tooltip != null) {

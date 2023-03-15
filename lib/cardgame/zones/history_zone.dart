@@ -5,9 +5,10 @@ import '../../paint.dart';
 class HistoryZone extends GameComponent with HandlesGesture {
   final String? title;
 
-  late ScreenTextStyle titleStyle;
+  ScreenTextStyle? titleStyle;
 
   final Anchor titleAnchor;
+  final EdgeInsets titlePadding;
 
   HistoryZone({
     super.id,
@@ -18,6 +19,7 @@ class HistoryZone extends GameComponent with HandlesGesture {
     required double height,
     super.borderRadius = 5.0,
     this.titleAnchor = Anchor.topLeft,
+    this.titlePadding = EdgeInsets.zero,
   }) : super(
           position: Vector2(x, y),
           size: Vector2(width, height),
@@ -25,8 +27,15 @@ class HistoryZone extends GameComponent with HandlesGesture {
     titleStyle = ScreenTextStyle(
       rect: border,
       anchor: titleAnchor,
-      padding: const EdgeInsets.fromLTRB(10, -10, 10, -10),
+      padding: titlePadding,
     );
+  }
+
+  @override
+  void generateBorder() {
+    super.generateBorder();
+
+    titleStyle = titleStyle?.copyWith(rect: border);
   }
 
   @override

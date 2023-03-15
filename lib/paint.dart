@@ -228,18 +228,18 @@ class ScreenTextStyle {
 void drawScreenText(
   Canvas canvas,
   String text, {
-  required ScreenTextStyle style,
+  ScreenTextStyle? style,
 }) {
-  TextPaint? textPaint = style.textPaint;
+  TextPaint? textPaint = style?.textPaint;
 
-  final opacity = style.opacity ?? 1.0;
+  final opacity = style?.opacity ?? 1.0;
 
   if (textPaint == null) {
-    final colorTheme = style.colorTheme ?? ScreenTextColorTheme.light;
+    final colorTheme = style?.colorTheme ?? ScreenTextColorTheme.light;
     switch (colorTheme) {
       case ScreenTextColorTheme.light:
         textPaint = TextPaint(
-          style: style.textStyle ??
+          style: style?.textStyle ??
               TextStyle(
                 color: Colors.white.withOpacity(opacity),
                 fontSize: 12.0,
@@ -248,7 +248,7 @@ void drawScreenText(
         break;
       case ScreenTextColorTheme.dark:
         textPaint = TextPaint(
-          style: style.textStyle ??
+          style: style?.textStyle ??
               TextStyle(
                 color: Colors.black87.withOpacity(opacity),
                 fontSize: 12.0,
@@ -257,7 +257,7 @@ void drawScreenText(
         break;
       case ScreenTextColorTheme.primary:
         textPaint = TextPaint(
-          style: style.textStyle ??
+          style: style?.textStyle ??
               TextStyle(
                 color: Colors.blue.withOpacity(opacity),
                 fontSize: 12.0,
@@ -266,7 +266,7 @@ void drawScreenText(
         break;
       case ScreenTextColorTheme.secondary:
         textPaint = TextPaint(
-          style: style.textStyle ??
+          style: style?.textStyle ??
               TextStyle(
                 color: Colors.grey.withOpacity(opacity),
                 fontSize: 12.0,
@@ -275,7 +275,7 @@ void drawScreenText(
         break;
       case ScreenTextColorTheme.success:
         textPaint = TextPaint(
-          style: style.textStyle ??
+          style: style?.textStyle ??
               TextStyle(
                 color: Colors.green.withOpacity(opacity),
                 fontSize: 12.0,
@@ -284,7 +284,7 @@ void drawScreenText(
         break;
       case ScreenTextColorTheme.info:
         textPaint = TextPaint(
-          style: style.textStyle ??
+          style: style?.textStyle ??
               TextStyle(
                 color: Colors.lightBlue.withOpacity(opacity),
                 fontSize: 12.0,
@@ -293,7 +293,7 @@ void drawScreenText(
         break;
       case ScreenTextColorTheme.warning:
         textPaint = TextPaint(
-          style: style.textStyle ??
+          style: style?.textStyle ??
               TextStyle(
                 color: Colors.yellow.withOpacity(opacity),
                 fontSize: 12.0,
@@ -302,7 +302,7 @@ void drawScreenText(
         break;
       case ScreenTextColorTheme.danger:
         textPaint = TextPaint(
-          style: style.textStyle ??
+          style: style?.textStyle ??
               TextStyle(
                 color: Colors.red.withOpacity(opacity),
                 fontSize: 12.0,
@@ -320,29 +320,30 @@ void drawScreenText(
     );
   }
 
-  if (style.position != null) {
-    TextPaint? outlinePaint = _cachedOutline[textPaint];
-    if (outlinePaint == null) {
-      outlinePaint = textPaint.copyWith(
-        (textStyle) => textStyle.copyWith(
-          foreground: Paint()
-            ..strokeWidth = 2
-            ..color = Colors.black.withOpacity(opacity)
-            ..style = PaintingStyle.stroke,
-        ),
-      );
-      _cachedOutline[textPaint] = outlinePaint;
+  if (style?.position != null) {
+    if ((style?.outlined ?? false) &&
+        style?.colorTheme != ScreenTextColorTheme.dark) {
+      TextPaint? outlinePaint = _cachedOutline[textPaint];
+      if (outlinePaint == null) {
+        outlinePaint = textPaint.copyWith(
+          (textStyle) => textStyle.copyWith(
+            foreground: Paint()
+              ..strokeWidth = 2
+              ..color = Colors.black.withOpacity(opacity)
+              ..style = PaintingStyle.stroke,
+          ),
+        );
+        _cachedOutline[textPaint] = outlinePaint;
+      }
+
+      outlinePaint.render(canvas, text, style!.position!);
     }
-    if ((style.outlined ?? false) &&
-        style.colorTheme != ScreenTextColorTheme.dark) {
-      outlinePaint.render(canvas, text, style.position!);
-    }
-    textPaint.render(canvas, text, style.position!);
+    textPaint.render(canvas, text, style!.position!);
   } else {
     Vector2 textPosition = Vector2.zero();
 
-    if (style.rect != null) {
-      final rect = style.rect!;
+    if (style?.rect != null) {
+      final rect = style!.rect!;
       final anchor = style.anchor;
       final textWidth = textPaint.measureTextWidth(text);
       final textHeight = textPaint.measureTextHeight(text);
@@ -396,7 +397,8 @@ void drawScreenText(
     drawScreenText(
       canvas,
       text,
-      style: style.copyWith(position: textPosition),
+      style: style?.copyWith(textPaint: textPaint, position: textPosition) ??
+          ScreenTextStyle(textPaint: textPaint, position: textPosition),
     );
   }
 }

@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:samsara/task.dart';
-
 import '../../component/game_component.dart';
 import '../playing_card.dart';
 import '../../paint.dart';
@@ -9,7 +7,7 @@ import '../../paint.dart';
 class PiledZone extends GameComponent {
   final String? title;
 
-  late ScreenTextStyle titleStyle;
+  ScreenTextStyle? titleStyle;
 
   final List<PlayingCard> cards = [];
 
@@ -26,6 +24,7 @@ class PiledZone extends GameComponent {
   final Vector2 pileMargin, pileOffset; //, focusOffset;
 
   final Anchor titleAnchor;
+  final EdgeInsets titlePadding;
 
   final CardState? state;
 
@@ -47,6 +46,7 @@ class PiledZone extends GameComponent {
     Vector2? pileMargin,
     Vector2? pileOffset,
     this.titleAnchor = Anchor.topLeft,
+    this.titlePadding = EdgeInsets.zero,
     this.state,
   })  : pileMargin = pileMargin ?? Vector2(10.0, 10.0),
         pileOffset = pileOffset ?? Vector2(50.0, 0.0) {
@@ -62,8 +62,15 @@ class PiledZone extends GameComponent {
     titleStyle = ScreenTextStyle(
       rect: border,
       anchor: titleAnchor,
-      padding: const EdgeInsets.fromLTRB(10, -10, 10, -10),
+      padding: titlePadding,
     );
+  }
+
+  @override
+  void generateBorder() {
+    super.generateBorder();
+
+    titleStyle = titleStyle?.copyWith(rect: border);
   }
 
   @override
@@ -77,7 +84,6 @@ class PiledZone extends GameComponent {
     PlayingCard card, {
     int? index,
     bool animated = true,
-    bool schedule = false,
     void Function()? onComplete,
   }) async {
     if (cards.contains(card)) return;
@@ -102,19 +108,13 @@ class PiledZone extends GameComponent {
     cards.insert(index, card);
     if (state != null) card.state = state!;
 
-    return sortCards(
-        animated: animated, schedule: schedule, onComplete: onComplete);
+    return sortCards(animated: animated, onComplete: onComplete);
   }
 
-  /// 整理卡牌
-  ///
-  /// 如果 animated 为 true，则会用动画过度卡牌整理的过程
-  ///
-  /// 如果 schedule 为 true，则整理卡牌时会等待上一个动画完成
+  /// 整理卡牌。如果 animated 为 true，则会用动画过度卡牌整理的过程
   Future<void> sortCards({
     bool pileUp = true,
     bool animated = true,
-    bool schedule = false,
     void Function()? onComplete,
   }) async {
     final completer = Completer();
@@ -151,29 +151,18 @@ class PiledZone extends GameComponent {
       if (focusedSize != null) card.focusedSize ??= focusedSize;
 
       if (animated) {
-        Future<void> animation() {
-          return card.moveTo(
-            position: endPosition,
-            size: piledCardSize,
-            duration: 0.5,
-            curve: Curves.decelerate,
-            onComplete: () {
-              // card.enableGesture = true;
-              // card.showTitleOnHovering = true;
-              // card.focusOnHovering = true;
-              onComplete?.call();
-              if (i == cards.length - 1) {
-                completer.complete();
-              }
-            },
-          );
-        }
-
-        if (schedule) {
-          Task.schedule(animation);
-        } else {
-          animation();
-        }
+        card.moveTo(
+          position: endPosition,
+          size: piledCardSize,
+          duration: 0.5,
+          curve: Curves.decelerate,
+          onComplete: () {
+            onComplete?.call();
+            if (i == cards.length - 1) {
+              completer.complete();
+            }
+          },
+        );
       } else {
         card.position = endPosition;
         card.size = piledCardSize;
@@ -187,11 +176,14 @@ class PiledZone extends GameComponent {
     return completer.future;
   }
 
-  void removeCard(String id) {
+  bool removeCard(String id) {
     final i = cards.indexWhere((card) => card.id == id);
-    if (i == -1) return;
+    if (i == -1) return false;
 
     final card = cards[i];
+
+    cards.removeAt(i);
+    pile.removeAt(i);
 
     final ec = count[card.deckId]!;
     if (ec == 1) {
@@ -199,8 +191,7 @@ class PiledZone extends GameComponent {
     } else {
       count[card.deckId] = ec - 1;
     }
-
-    pile.remove(card.id);
+    return true;
   }
 
   @override

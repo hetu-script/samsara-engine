@@ -4,7 +4,6 @@ import '../../component/game_component.dart';
 import '../../gestures.dart';
 import '../playing_card.dart';
 import '../../paint.dart';
-import '../../task.dart';
 
 class DrawingZone extends GameComponent with HandlesGesture {
   final Vector2 drawedCardPosition, drawedCardSize;
@@ -14,9 +13,10 @@ class DrawingZone extends GameComponent with HandlesGesture {
 
   final List<PlayingCard> cards;
 
-  Anchor tooltipAnchor;
+  final Anchor tooltipAnchor;
+  final EdgeInsets tooltipPadding;
 
-  late ScreenTextStyle piledNumberStyle;
+  ScreenTextStyle? piledNumberStyle;
 
   DrawingZone({
     super.id,
@@ -28,12 +28,20 @@ class DrawingZone extends GameComponent with HandlesGesture {
     required this.drawedCardSize,
     this.revealDuration = 0.5,
     this.tooltipAnchor = Anchor.topCenter,
+    this.tooltipPadding = EdgeInsets.zero,
   }) {
     piledNumberStyle = ScreenTextStyle(
       rect: border,
       anchor: tooltipAnchor,
-      padding: const EdgeInsets.only(top: -30, bottom: -30),
+      padding: tooltipPadding,
     );
+  }
+
+  @override
+  void generateBorder() {
+    super.generateBorder();
+
+    piledNumberStyle = piledNumberStyle?.copyWith(rect: border);
   }
 
   // @override
@@ -41,8 +49,7 @@ class DrawingZone extends GameComponent with HandlesGesture {
   //   super.onLoad();
   // }
 
-  Future<PlayingCard> drawOneCard(
-      {bool flip = true, bool schedule = false}) async {
+  Future<PlayingCard> drawOneCard({bool flip = true}) async {
     assert(cards.isNotEmpty);
 
     // final drawingAction = Completer();
@@ -61,28 +68,20 @@ class DrawingZone extends GameComponent with HandlesGesture {
     final card = cards.last;
     cards.removeLast();
 
-    Future<void> animation() {
-      return card.moveTo(
-        position: drawedCardPosition,
-        size: drawedCardSize,
-        duration: 0.6,
-        curve: Curves.easeIn,
-        onComplete: () {
-          if (flip) {
-            card.isFlipped = false;
-          }
-          Timer(Duration(milliseconds: (revealDuration * 1000).toInt()), () {
-            completer.complete(card);
-          });
-        },
-      );
-    }
-
-    if (schedule) {
-      Task.schedule(animation);
-    } else {
-      animation();
-    }
+    card.moveTo(
+      position: drawedCardPosition,
+      size: drawedCardSize,
+      duration: 0.6,
+      curve: Curves.easeIn,
+      onComplete: () {
+        if (flip) {
+          card.isFlipped = false;
+        }
+        Timer(Duration(milliseconds: (revealDuration * 1000).toInt()), () {
+          completer.complete(card);
+        });
+      },
+    );
 
     return completer.future;
   }
@@ -90,11 +89,7 @@ class DrawingZone extends GameComponent with HandlesGesture {
   @override
   void render(Canvas canvas) {
     if (isHovering) {
-      drawScreenText(
-        canvas,
-        '数量：${cards.length}',
-        style: piledNumberStyle,
-      );
+      drawScreenText(canvas, '数量：${cards.length}', style: piledNumberStyle);
       // canvas.drawRRect(border, borderPaintFocused);
     }
     //  else {

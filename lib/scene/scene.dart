@@ -73,7 +73,9 @@ abstract class Scene extends FlameGame {
   @mustCallSuper
   void onTapDown(int pointer, int buttons, TapDownDetails details) {
     for (final c in gestureComponents) {
-      c.handleTapDown(pointer, buttons, details);
+      if (c.handleTapDown(pointer, buttons, details)) {
+        return;
+      }
     }
   }
 
@@ -112,7 +114,9 @@ abstract class Scene extends FlameGame {
   @mustCallSuper
   void onScaleStart(List<TouchDetails> touches, ScaleStartDetails details) {
     for (final c in gestureComponents) {
-      c.handleScaleStart(touches, details);
+      if (c.handleScaleStart(touches, details)) {
+        return;
+      }
     }
   }
 
@@ -133,15 +137,18 @@ abstract class Scene extends FlameGame {
   @mustCallSuper
   void onLongPress(int pointer, int buttons, LongPressStartDetails details) {
     for (final c in gestureComponents) {
-      c.handleLongPress(pointer, buttons, details);
+      if (c.handleLongPress(pointer, buttons, details)) {
+        return;
+      }
     }
   }
 
   @mustCallSuper
   void onMouseHover(PointerHoverEvent details) {
     for (final c in gestureComponents) {
-      final r = c.handleMouseHover(details);
-      if (r) return;
+      if (c.handleMouseHover(details)) {
+        return;
+      }
     }
   }
 

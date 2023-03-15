@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flame/components.dart' hide SpriteComponent;
 import 'package:flame/effects.dart';
 import 'package:flutter/material.dart' hide Image;
@@ -24,11 +26,12 @@ class PlayingCard extends GameComponent with HandlesGesture {
   static ScreenTextStyle defaultTitleStyle = const ScreenTextStyle(
         anchor: Anchor.topCenter,
         padding: EdgeInsets.only(top: 8),
+        outlined: true,
       ),
       defaultDescriptionStyle = const ScreenTextStyle(
         anchor: Anchor.center,
-        outlined: false,
         colorTheme: ScreenTextColorTheme.dark,
+        outlined: true,
       ),
       defaultStackStyle = ScreenTextStyle(
         textPaint: TextPaint(
@@ -59,7 +62,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
   final int cost;
   final Set<String> tags;
 
-  late ScreenTextStyle titleStyle, descriptionStyle, costStyle, stackStyle;
+  ScreenTextStyle? titleStyle, descriptionStyle, costStyle, stackStyle;
 
   /// 堆叠数量，一张卡牌可以代表一叠同名卡牌。
   int stack;
@@ -104,7 +107,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
   void Function()? onFocused, onUnfocused, onPreviewed, onUnpreviewed;
   double focusAnimationDuration;
 
-  late Rect descriptionRect;
+  Rect? descriptionPadding;
 
   PlayingCard({
     required String id,
@@ -119,6 +122,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
     ScreenTextStyle? descriptionStyle,
     this.showDescription = false,
     this.descriptionOutlined = false,
+    this.descriptionPadding,
     this.data,
     this.ownedPlayerId,
     this.frontSpriteId,
@@ -161,42 +165,44 @@ class PlayingCard extends GameComponent with HandlesGesture {
     _savedPosition = position.clone();
     _savedSize = size.clone();
 
+    this.enableGesture = enableGesture;
+
     if (titleStyle != null) {
       this.titleStyle =
-          titleStyle.fillFrom(defaultTitleStyle).fillWith(rect: border);
+          titleStyle.fillFrom(defaultTitleStyle).copyWith(rect: border);
     } else {
       this.titleStyle = defaultTitleStyle.copyWith(rect: border);
     }
 
-    if (descriptionStyle != null) {
-      this.descriptionStyle =
-          descriptionStyle.fillFrom(defaultTitleStyle).fillWith(
-                rect: Rect.fromLTWH(
-                  (width - width * 0.8) / 2,
-                  height * 0.6,
-                  width * 0.8,
-                  height * 0.3,
-                ),
-              );
-    } else {
-      this.descriptionStyle = defaultDescriptionStyle.copyWith(
-        rect: Rect.fromLTWH(
-          (width - width * 0.8) / 2,
-          height * 0.6,
-          width * 0.8,
-          height * 0.3,
-        ),
-      );
-    }
-
     if (stackStyle != null) {
       this.stackStyle =
-          stackStyle.fillFrom(defaultStackStyle).fillWith(rect: border);
+          stackStyle.fillFrom(defaultStackStyle).copyWith(rect: border);
     } else {
       this.stackStyle = defaultStackStyle.copyWith(rect: border);
     }
 
-    this.enableGesture = enableGesture;
+    if (descriptionStyle != null) {
+      this.descriptionStyle = descriptionStyle
+          .fillFrom(defaultTitleStyle)
+          .copyWith(
+            rect: descriptionPadding != null
+                ? Rect.fromLTWH(
+                    descriptionPadding!.left,
+                    descriptionPadding!.top,
+                    width -
+                        (descriptionPadding!.right - descriptionPadding!.left),
+                    height -
+                        (descriptionPadding!.bottom - descriptionPadding!.top))
+                : Rect.fromLTWH(
+                    (width - width * 0.8) / 2,
+                    height * 0.6,
+                    width * 0.8,
+                    height * 0.3,
+                  ),
+          );
+    } else {
+      this.descriptionStyle = defaultDescriptionStyle.copyWith(rect: border);
+    }
 
     onMouseEnter = () {
       if (enablePreview) {
@@ -218,10 +224,28 @@ class PlayingCard extends GameComponent with HandlesGesture {
         setFocused(false);
       }
     };
+  }
 
-    onTap = (buttons, position) {
-      use();
-    };
+  @override
+  void generateBorder() {
+    super.generateBorder();
+
+    titleStyle = titleStyle?.copyWith(rect: border);
+    stackStyle = stackStyle?.copyWith(rect: border);
+    descriptionStyle = descriptionStyle?.copyWith(
+      rect: descriptionPadding != null
+          ? Rect.fromLTWH(
+              descriptionPadding!.left,
+              descriptionPadding!.top,
+              width - (descriptionPadding!.right - descriptionPadding!.left),
+              height - (descriptionPadding!.bottom - descriptionPadding!.top))
+          : Rect.fromLTWH(
+              (width - width * 0.8) / 2,
+              height * 0.6,
+              width * 0.8,
+              height * 0.3,
+            ),
+    );
   }
 
   /// 复制这个卡牌对象，但不会复制onTap之类的交互事件，也不会复制index属性
@@ -280,7 +304,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
   }
 
   @override
-  Future<void> onLoad() async {
+  FutureOr<void> onLoad() async {
     if (frontSpriteId != null) {
       frontSprite = Sprite(await Flame.images.load('cards/$frontSpriteId.png'));
     }
@@ -297,7 +321,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
     // }
   }
 
-  void setFocused(bool value) {
+  Future<void> setFocused(bool value) async {
     if (isFocused == value) return;
 
     isFocused = value;
@@ -311,7 +335,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
       } else if (focusedPosition != null) {
         endPosition = focusedPosition!;
       }
-      moveTo(
+      await moveTo(
         position: endPosition,
         size: focusedSize,
         duration: focusAnimationDuration,
@@ -320,7 +344,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
       onFocused?.call();
     } else {
       if (!stayFocused) {
-        moveTo(
+        await moveTo(
           position: _savedPosition,
           size: _savedSize,
           duration: focusAnimationDuration,
@@ -336,34 +360,54 @@ class PlayingCard extends GameComponent with HandlesGesture {
   /// 返回值代表是否成功旋转
   ///
   /// 参数不为 null 时，true 代表进行旋转，false 代表恢复正常
-  bool rotate([bool? value, double degree = -90]) {
+  Future<void> rotate([bool? value, double degree = -90]) {
+    final completer = Completer();
     if (value == null) {
       if (isRotated) {
         isRotated = false;
-        final effect = RotateEffect.to(0, EffectController(duration: 0.2));
+        final effect = RotateEffect.to(
+          0,
+          EffectController(duration: 0.2),
+          onComplete: () {
+            completer.complete();
+          },
+        );
         add(effect);
       } else {
         isRotated = true;
-        final effect =
-            RotateEffect.to(radians(degree), EffectController(duration: 0.2));
+        final effect = RotateEffect.to(
+          radians(degree),
+          EffectController(duration: 0.2),
+          onComplete: () {
+            completer.complete();
+          },
+        );
         add(effect);
       }
-      return true;
     } else {
       if (isRotated && !value) {
         isRotated = false;
-        final effect = RotateEffect.to(0, EffectController(duration: 0.2));
+        final effect = RotateEffect.to(
+          0,
+          EffectController(duration: 0.2),
+          onComplete: () {
+            completer.complete();
+          },
+        );
         add(effect);
-        return true;
       } else if (!isRotated && value) {
         isRotated = true;
-        final effect =
-            RotateEffect.to(radians(degree), EffectController(duration: 0.2));
+        final effect = RotateEffect.to(
+          radians(degree),
+          EffectController(duration: 0.2),
+          onComplete: () {
+            completer.complete();
+          },
+        );
         add(effect);
-        return true;
       }
     }
-    return false;
+    return completer.future;
   }
 
   /// 注册一个使用卡牌的处理函数
@@ -408,7 +452,11 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
     // canvas.drawRect(descriptionRect, borderPaintSelected);
     if (showDescription && description != null) {
-      drawScreenText(canvas, description!, style: descriptionStyle);
+      drawScreenText(
+        canvas,
+        description!,
+        style: descriptionStyle,
+      );
     }
 
     if (showStack && stack > 0) {
