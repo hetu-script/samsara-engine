@@ -4,6 +4,10 @@ import '../playing_card.dart';
 import '../../paint.dart';
 
 abstract class PlayableZone extends GameComponent with HandlesGesture {
+  @override
+  String get id => super.id!;
+  String? ownedByRole;
+
   final String? title;
 
   bool isHighlighted = false;
@@ -23,12 +27,14 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
 
   final void Function()? onInteract;
 
-  final bool mustRotateCard;
+  final bool needRotate;
+  final bool needFlip;
 
   final String kind;
 
   PlayableZone({
-    super.id,
+    required String id,
+    this.ownedByRole,
     this.title,
     super.position,
     super.size,
@@ -37,8 +43,9 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
     super.priority,
     required this.kind,
     this.onInteract,
-    this.mustRotateCard = false,
-  }) {
+    this.needRotate = false,
+    this.needFlip = false,
+  }) : super(id: id) {
     titleStyle = ScreenTextStyle(
       rect: border,
       anchor: Anchor.bottomCenter,

@@ -17,14 +17,14 @@ class StatusEffect extends GameComponent {
   int count;
 
   StatusEffect({
-    required super.id,
+    required String id,
     required this.title,
     required this.description,
     required this.spriteId,
     this.count = 0,
     super.position,
     super.size,
-  });
+  }) : super(id: id);
 
   @override
   void render(Canvas canvas) {

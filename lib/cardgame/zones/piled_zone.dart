@@ -5,6 +5,8 @@ import '../playing_card.dart';
 import '../../paint.dart';
 
 class PiledZone extends GameComponent {
+  String? ownedByRole;
+
   final String? title;
 
   ScreenTextStyle? titleStyle;
@@ -33,6 +35,7 @@ class PiledZone extends GameComponent {
   /// [pileOffset] : 堆叠时每张牌相比上一张牌的位移
   PiledZone({
     super.id,
+    this.ownedByRole,
     this.title,
     super.position,
     super.size,

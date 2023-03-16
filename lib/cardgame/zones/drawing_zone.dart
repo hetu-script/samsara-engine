@@ -6,6 +6,8 @@ import '../playing_card.dart';
 import '../../paint.dart';
 
 class DrawingZone extends GameComponent with HandlesGesture {
+  String? ownedByRole;
+
   final Vector2 drawedCardPosition, drawedCardSize;
 
   /// the duration of the drawed card reveal time.
@@ -20,6 +22,7 @@ class DrawingZone extends GameComponent with HandlesGesture {
 
   DrawingZone({
     super.id,
+    this.ownedByRole,
     super.position,
     super.size,
     super.borderRadius = 5.0,

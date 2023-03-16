@@ -8,8 +8,6 @@ import 'package:json5/json5.dart';
 import '../global.dart';
 import '../scene/game.dart';
 import 'overlay/main_game.dart';
-import '../noise_test.dart';
-import '../explore.dart';
 
 class MainMenu extends StatefulWidget {
   const MainMenu({super.key});
@@ -82,30 +80,6 @@ class _MainMenuState extends State<MainMenu> {
                             Navigator.of(context).pushNamed('wiki');
                           },
                           child: const Text('markdown_wiki'),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 20.0, bottom: 20.0),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => const NoiseTest(),
-                            );
-                          },
-                          child: const Text('perlin noise'),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 20.0, bottom: 20.0),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => const ExploreDialog(),
-                            );
-                          },
-                          child: const Text('progress indicator'),
                         ),
                       ),
                       Padding(

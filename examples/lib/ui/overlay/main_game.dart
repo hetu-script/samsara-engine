@@ -69,9 +69,9 @@ class _MainGameOverlayState extends State<MainGameOverlay>
                   color: Colors.transparent,
                   child: Stack(
                     children: [
+                      SceneWidget(scene: _scene),
                       if (_scene.isLoading)
                         LoadingScreen(text: engine.locale['loading']),
-                      SceneWidget(scene: _scene),
                       Positioned(
                         right: 0,
                         top: 0,

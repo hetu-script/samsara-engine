@@ -52,6 +52,12 @@ class PlayingCard extends GameComponent with HandlesGesture {
   /// 卡牌id，每个图案、标题相同的卡牌视为同一张卡牌，卡组中可能有多个id相同的卡牌。
   @override
   String get id => super.id!;
+  String? ownedByRole;
+
+  bool ownedBy(String? player) {
+    if (player == null) return false;
+    return ownedByRole == player;
+  }
 
   /// 组牌id，有可能同一张牌有不同的编号和图案，但他们的规则效果完全相同，
   ///
@@ -80,8 +86,6 @@ class PlayingCard extends GameComponent with HandlesGesture {
   /// 卡牌的原始数据，可能是一个Json，或者一个河图struct对象，
   /// 也可能是 null，例如资源牌这种情况。
   final dynamic data;
-
-  String? ownedPlayerId;
 
   /// the sprite id of this card, should be unique among all cards
   final String? frontSpriteId, backSpriteId, illustrationSpriteId;
@@ -124,7 +128,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.descriptionOutlined = false,
     this.descriptionPadding,
     this.data,
-    this.ownedPlayerId,
+    this.ownedByRole,
     this.frontSpriteId,
     this.frontSprite,
     this.illustrationSpriteId,
@@ -264,7 +268,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
       showDescription: showDescription,
       descriptionOutlined: descriptionOutlined,
       data: data,
-      ownedPlayerId: ownedPlayerId,
+      ownedByRole: ownedByRole,
       frontSpriteId: frontSprite == null ? frontSpriteId : null,
       frontSprite: frontSprite,
       illustrationSpriteId:
