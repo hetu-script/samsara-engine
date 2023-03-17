@@ -7,6 +7,11 @@ import '../../paint.dart';
 class PiledZone extends GameComponent {
   String? ownedByRole;
 
+  bool ownedBy(String? player) {
+    if (player == null) return false;
+    return ownedByRole == player;
+  }
+
   final String? title;
 
   ScreenTextStyle? titleStyle;
@@ -28,7 +33,7 @@ class PiledZone extends GameComponent {
   final Anchor titleAnchor;
   final EdgeInsets titlePadding;
 
-  final CardState? state;
+  final String? cardState;
 
   /// [pileMargin] : 堆叠时第一张牌相对区域的x和y的位移
   ///
@@ -50,7 +55,7 @@ class PiledZone extends GameComponent {
     Vector2? pileOffset,
     this.titleAnchor = Anchor.topLeft,
     this.titlePadding = EdgeInsets.zero,
-    this.state,
+    this.cardState,
   })  : pileMargin = pileMargin ?? Vector2(10.0, 10.0),
         pileOffset = pileOffset ?? Vector2(50.0, 0.0) {
     if (this.pileMargin.x.sign != 0 && this.pileOffset.x.sign != 0) {
@@ -109,7 +114,7 @@ class PiledZone extends GameComponent {
 
     card.index = index;
     cards.insert(index, card);
-    if (state != null) card.state = state!;
+    if (cardState != null) card.state = cardState!;
 
     return sortCards(animated: animated, onComplete: onComplete);
   }
@@ -160,8 +165,8 @@ class PiledZone extends GameComponent {
           duration: 0.5,
           curve: Curves.decelerate,
           onComplete: () {
-            onComplete?.call();
             if (i == cards.length - 1) {
+              onComplete?.call();
               completer.complete();
             }
           },

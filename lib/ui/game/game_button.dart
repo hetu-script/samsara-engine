@@ -1,3 +1,5 @@
+import 'package:flutter/widgets.dart';
+
 import '../../../component/game_component.dart';
 import '../../../gestures.dart';
 import '../../paint.dart';
@@ -32,9 +34,9 @@ class GameButton extends GameComponent with HandlesGesture {
     super.size,
     this.onPressed,
     super.borderRadius,
-    bool? isEnabled,
+    bool isEnabled = true,
   }) {
-    enableGesture = isEnabled ?? true;
+    enableGesture = isEnabled;
 
     if (textStyle != null) {
       this.textStyle =
@@ -73,10 +75,26 @@ class GameButton extends GameComponent with HandlesGesture {
       canvas.drawRRect(rborder, DefaultBorderPaint.light);
     }
 
-    drawScreenText(
-      canvas,
-      text,
-      style: textStyle,
-    );
+    if (isEnabled) {
+      drawScreenText(
+        canvas,
+        text,
+        style: textStyle,
+      );
+    } else {
+      drawScreenText(
+        canvas,
+        text,
+        style: textStyle.copyWith(
+          textStyle: textStyle.textStyle?.copyWith(
+                color: Colors.grey.withOpacity(opacity),
+              ) ??
+              TextStyle(
+                color: Colors.grey.withOpacity(opacity),
+                fontSize: 12.0,
+              ),
+        ),
+      );
+    }
   }
 }

@@ -8,6 +8,11 @@ import '../../paint.dart';
 class DrawingZone extends GameComponent with HandlesGesture {
   String? ownedByRole;
 
+  bool ownedBy(String? player) {
+    if (player == null) return false;
+    return ownedByRole == player;
+  }
+
   final Vector2 drawedCardPosition, drawedCardSize;
 
   /// the duration of the drawed card reveal time.
@@ -67,26 +72,24 @@ class DrawingZone extends GameComponent with HandlesGesture {
 
     // gameActions.add(GameAction(completer: drawingAction));
 
-    final completer = Completer<PlayingCard>();
     final card = cards.last;
     cards.removeLast();
 
-    card.moveTo(
+    await card.moveTo(
       position: drawedCardPosition,
       size: drawedCardSize,
       duration: 0.6,
       curve: Curves.easeIn,
-      onComplete: () {
-        if (flip) {
-          card.isFlipped = false;
-        }
-        Timer(Duration(milliseconds: (revealDuration * 1000).toInt()), () {
-          completer.complete(card);
-        });
-      },
     );
 
-    return completer.future;
+    if (flip) {
+      card.isFlipped = false;
+    }
+
+    return Future<PlayingCard>.delayed(
+      Duration(milliseconds: (revealDuration * 1000).toInt()),
+      () => card,
+    );
   }
 
   @override

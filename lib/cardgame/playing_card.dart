@@ -12,16 +12,6 @@ import 'zones/playable_zone.dart';
 import '../paint.dart';
 // import '../extensions.dart';
 
-enum CardState {
-  none,
-  deck,
-  hand,
-  placed,
-  ready,
-  discarded,
-  destroyed,
-}
-
 class PlayingCard extends GameComponent with HandlesGesture {
   static ScreenTextStyle defaultTitleStyle = const ScreenTextStyle(
         anchor: Anchor.topCenter,
@@ -102,10 +92,14 @@ class PlayingCard extends GameComponent with HandlesGesture {
   bool isRotated;
   bool isRotatable;
 
-  Map<CardState, void Function()?> useEventHandlers = {};
-  Map<CardState, void Function()?> cancelEventHandlers = {};
+  // Map<String, void Function()?> useEventHandlers = {};
+  // Map<String, void Function()?> cancelEventHandlers = {};
 
-  CardState state;
+  String? state;
+
+  /// 该卡牌在某种卡牌状态，以及某个游戏阶段，是否可以使用
+  final Map<String, Map<String, bool>> _usableState = {};
+
   PlayableZone? zone;
 
   void Function()? onFocused, onUnfocused, onPreviewed, onUnpreviewed;
@@ -157,7 +151,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
     super.anchor,
     super.priority,
     bool enableGesture = true,
-    this.state = CardState.none,
+    this.state,
     this.onFocused,
     this.onUnfocused,
     this.onPreviewed,
@@ -307,6 +301,12 @@ class PlayingCard extends GameComponent with HandlesGesture {
     );
   }
 
+  void setUsable(String state, String phase) {
+    Map<String, bool>? p = _usableState[state];
+    p ??= _usableState[state] = <String, bool>{};
+    p[phase] = true;
+  }
+
   @override
   FutureOr<void> onLoad() async {
     if (frontSpriteId != null) {
@@ -409,32 +409,34 @@ class PlayingCard extends GameComponent with HandlesGesture {
           },
         );
         add(effect);
+      } else {
+        throw 'rotated card cannot rotated again!';
       }
     }
     return completer.future;
   }
 
-  /// 注册一个使用卡牌的处理函数
-  void onUse(CardState state, void Function()? handler) {
-    useEventHandlers[state] = handler;
-  }
+  // /// 注册一个使用卡牌的处理函数
+  // void onUse(String state, void Function()? handler) {
+  //   useEventHandlers[state] = handler;
+  // }
 
-  /// 注册一个取消使用的处理函数
-  void onCancel(CardState state, void Function()? handler) {
-    cancelEventHandlers[state] = handler;
-  }
+  // /// 注册一个取消使用的处理函数
+  // void onCancel(String state, void Function()? handler) {
+  //   cancelEventHandlers[state] = handler;
+  // }
 
-  /// 使用卡牌，在不同的状态下有不同的处理函数
-  void use() {
-    final handler = useEventHandlers[state];
-    handler?.call();
-  }
+  // /// 使用卡牌，在不同的状态下有不同的处理函数
+  // void use() {
+  //   final handler = useEventHandlers[state];
+  //   handler?.call();
+  // }
 
-  /// 取消使用，在不同的状态下有不同的处理函数
-  void cancel() {
-    final handler = cancelEventHandlers[state];
-    handler?.call();
-  }
+  // /// 取消使用，在不同的状态下有不同的处理函数
+  // void cancel() {
+  //   final handler = cancelEventHandlers[state];
+  //   handler?.call();
+  // }
 
   @override
   void render(Canvas canvas, {Vector2? position}) {

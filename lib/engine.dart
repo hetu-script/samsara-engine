@@ -14,6 +14,7 @@ import 'utils/color.dart';
 import 'scene/scene_controller.dart';
 import 'logger/printer.dart';
 import 'logger/output.dart';
+import 'binding/playingcard_binding.dart';
 
 class EngineConfig {
   final String name;
@@ -192,9 +193,6 @@ class SamsaraEngine with SceneController, EventAggregator {
       await hetu.initFlutter(
         locale: HTLocaleSimplifiedChinese(),
         externalFunctions: externalFunctions,
-        externalClasses: [
-          SamsaraEngineClassBinding(),
-        ],
       );
     } else {
       hetu = Hetu(
@@ -207,22 +205,33 @@ class SamsaraEngine with SceneController, EventAggregator {
       hetu.init(
         locale: HTLocaleSimplifiedChinese(),
         externalFunctions: externalFunctions,
-        externalClasses: [
-          SamsaraEngineClassBinding(),
-        ],
       );
     }
 
     // hetu.interpreter.bindExternalFunction('print', info, override: true);
 
+    isLoaded = true;
+  }
+
+  /// add engine class binding into script.
+  void useGame() {
+    hetu.interpreter.bindExternalClass(SamsaraEngineClassBinding());
     hetu.eval(
       kHetuEngineBindingSource,
-      filename: 'samsara.ht',
+      filename: 'binding:game',
       globallyImport: true,
       type: HTResourceType.hetuModule,
     );
+  }
 
-    isLoaded = true;
+  /// add playing card class binding into script.
+  void useScript() {
+    hetu.interpreter.bindExternalClass(PlayingCardClassBinding());
+    hetu.eval(
+      kHetuPlayingCardBindingSource,
+      filename: 'binding:playing_card.ht',
+      type: HTResourceType.hetuModule,
+    );
   }
 
   // @override

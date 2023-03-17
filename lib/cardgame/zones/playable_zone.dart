@@ -7,6 +7,12 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
   @override
   String get id => super.id!;
   String? ownedByRole;
+  String? gameView;
+
+  bool ownedBy(String? player) {
+    if (player == null) return false;
+    return ownedByRole == player;
+  }
 
   final String? title;
 
@@ -25,7 +31,7 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
   // @override
   // bool get enableGesture => card == null;
 
-  final void Function()? onInteract;
+  final void Function(PlayableZone zone)? onInteract;
 
   final bool needRotate;
   final bool needFlip;
@@ -35,6 +41,7 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
   PlayableZone({
     required String id,
     this.ownedByRole,
+    this.gameView,
     this.title,
     super.position,
     super.size,
@@ -83,7 +90,7 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
     );
 
     onTap = (buttons, position) {
-      onInteract?.call();
+      onInteract?.call(this);
     };
   }
 
@@ -111,8 +118,10 @@ abstract class PlayableZone extends GameComponent with HandlesGesture {
       drawScreenText(canvas, title!, style: titleStyle);
     }
 
-    if (card?.title != null) {
-      drawScreenText(canvas, card!.title!, style: cardTitleStyle);
+    if (card != null) {
+      if (gameView == ownedByRole || !card!.isFlipped) {
+        drawScreenText(canvas, card!.title!, style: cardTitleStyle);
+      }
     }
 
     if (attack1 != null) {
