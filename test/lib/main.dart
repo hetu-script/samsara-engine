@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:flutter_platform_alert/flutter_platform_alert.dart';
-import 'package:samsara/widget/markdown_wiki.dart';
 import 'package:samsara/error.dart';
 
 import 'ui/main_menu.dart';
@@ -60,16 +59,12 @@ void main() async {
   runZonedGuarded(() {
     runApp(
       MaterialApp(
-        key: mainKey,
         debugShowCheckedModeBanner: false,
         title: 'Heavenly Tribulation Tests',
-        initialRoute: '/',
-        routes: {
-          '/': (context) => const MainMenu(),
-          'wiki': (context) => MarkdownWiki(
-                resourceManager: AssetManager(),
-              ),
-        },
+        home: Scaffold(
+          key: mainKey,
+          body: const MainMenu(),
+        ),
       ),
     );
   }, (Object error, StackTrace stack) {

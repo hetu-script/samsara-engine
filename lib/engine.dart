@@ -111,7 +111,7 @@ class SamsaraEngine with SceneController, EventAggregator {
       key,
       module: module,
       globallyImport: isMainMod,
-      invocation: 'init',
+      invoke: 'init',
       positionalArgs: positionalArgs,
       namedArgs: namedArgs,
     );
@@ -130,7 +130,7 @@ class SamsaraEngine with SceneController, EventAggregator {
       bytes: bytes,
       module: moduleName,
       globallyImport: isMainMod,
-      invocation: 'init',
+      invoke: 'init',
       positionalArgs: positionalArgs,
       namedArgs: namedArgs,
     );
@@ -218,7 +218,7 @@ class SamsaraEngine with SceneController, EventAggregator {
     hetu.interpreter.bindExternalClass(SamsaraEngineClassBinding());
     hetu.eval(
       kHetuEngineBindingSource,
-      filename: 'binding:game',
+      filename: 'game_binding.ht',
       globallyImport: true,
       type: HTResourceType.hetuModule,
     );
@@ -227,10 +227,13 @@ class SamsaraEngine with SceneController, EventAggregator {
   /// add playing card class binding into script.
   void useScript() {
     hetu.interpreter.bindExternalClass(PlayingCardClassBinding());
-    hetu.eval(
-      kHetuPlayingCardBindingSource,
-      filename: 'binding:playing_card.ht',
-      type: HTResourceType.hetuModule,
+    hetu.sourceContext.addResource(
+      'playing_card_binding.ht',
+      HTSource(
+        kHetuPlayingCardBindingSource,
+        filename: 'playing_card_binding.ht',
+        type: HTResourceType.hetuModule,
+      ),
     );
   }
 

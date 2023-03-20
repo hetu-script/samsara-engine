@@ -1,12 +1,19 @@
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
+import 'package:flame/sprite.dart';
+import 'package:flame/flame.dart';
 // import 'package:samsara/component/sprite_component.dart';
 // import 'package:samsara/effect/fade_effect.dart';
 // import 'package:flame/effects.dart';
 // import 'package:samsara/component/in_and_out_sprite.dart';
+import 'package:samsara/component/arrow.dart';
 
 class PlayGround extends GameComponent with HandlesGesture {
   // late final StatusBar status;
+
+  late Arrow arrow;
+
+  Vector2 mousePos = Vector2.zero();
 
   PlayGround({
     required double width,
@@ -33,6 +40,18 @@ class PlayGround extends GameComponent with HandlesGesture {
       // add(InAndOutSprite('pepe',
       //     flyInDuration: 0.4, stayDuration: 0.4, flyOutDuration: 0.4));
     };
+
+    onMouseHover = (position) {
+      arrow.setPath(center, position);
+
+      // sprite.position = position;
+      // // mousePos = position;
+      // sprite.lookAt(center);
+
+      // mousePos = position.moveAlongAngle(radians(90) + sprite.angle, -20);
+      // final dist = center.distanceTo(mousePos);
+      // sprite.scale = Vector2(1, dist / 90);
+    };
   }
 
   @override
@@ -40,10 +59,17 @@ class PlayGround extends GameComponent with HandlesGesture {
     // status = StatusBar(size: Vector2(100, 20));
     // status.position = center;
     // add(status);
+    arrow = Arrow(sprite: Sprite(await Flame.images.load('arrow.png')));
+    add(arrow);
+
+    // arrow.isVisible = false;
   }
 
   @override
   void render(Canvas canvas) {
     canvas.drawRect(border, DefaultBorderPaint.light);
   }
+
+  @override
+  void update(double dt) {}
 }

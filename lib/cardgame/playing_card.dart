@@ -8,7 +8,6 @@ import 'package:flame/flame.dart';
 
 import '../gestures/gesture_mixin.dart';
 import '../component/game_component.dart';
-import 'zones/playable_zone.dart';
 import '../paint.dart';
 // import '../extensions.dart';
 
@@ -100,7 +99,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
   /// 该卡牌在某种卡牌状态，以及某个游戏阶段，是否可以使用
   final Map<String, Map<String, bool>> _usableState = {};
 
-  PlayableZone? zone;
+  GameComponent? zone;
 
   void Function()? onFocused, onUnfocused, onPreviewed, onUnpreviewed;
   double focusAnimationDuration;

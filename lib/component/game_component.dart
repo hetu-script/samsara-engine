@@ -15,6 +15,8 @@ import 'package:flutter/animation.dart' show Curve, Curves;
 export 'package:flame/components.dart' show Anchor;
 export 'package:flame/game.dart' show Camera;
 export 'package:vector_math/vector_math_64.dart' show Vector2;
+export '../extensions.dart' show Vector2Ex;
+export 'package:flame/extensions.dart' show Vector2Extension;
 export 'dart:ui' show Canvas, Rect;
 export 'package:flutter/widgets.dart' show EdgeInsets;
 export 'package:flutter/material.dart' show Colors;

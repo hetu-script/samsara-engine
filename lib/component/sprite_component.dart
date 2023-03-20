@@ -28,14 +28,20 @@ class SpriteComponent2 extends GameComponent {
     super.anchor,
     super.priority,
     super.children,
-  }) : super(
-          size: size ?? sprite?.srcSize,
-        ) {
+  }) {
     assert(image != null || sprite != null || spriteId != null,
         'sprite component must have either image, sprite or spriteId.');
     if (image != null) {
       sprite = Sprite(image, srcPosition: srcPosition, srcSize: srcSize);
-      size = sprite!.srcSize;
+      if (size == null) {
+        this.size = sprite!.srcSize;
+      }
+    }
+
+    if (sprite != null) {
+      if (size == null) {
+        this.size = sprite!.srcSize;
+      }
     }
 
     if (paint != null) {

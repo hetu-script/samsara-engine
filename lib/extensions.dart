@@ -1,9 +1,11 @@
 import 'dart:ui';
+import 'dart:math' as math;
 
 import 'package:flame/components.dart';
 import 'component/game_component.dart';
 
 export 'utils/color.dart' show HexColor;
+export 'package:flame/extensions.dart';
 
 extension PercentageString on num {
   String toPercentageString([int fractionDigits = 0]) {
@@ -17,10 +19,6 @@ extension DoubleFixed on double {
   }
 }
 
-extension Offset2Vector2 on Offset {
-  Vector2 toVector2() => Vector2(dx, dy);
-}
-
 extension Vector2Ex on Vector2 {
   bool contains(Vector2 position) {
     return position.x > 0 && position.y > 0 && position.x < x && position.y < y;
@@ -28,6 +26,12 @@ extension Vector2Ex on Vector2 {
 
   Vector2 operator *(Vector2 other) {
     return Vector2(x * other.x, y * other.y);
+  }
+
+  Vector2 moveAlongAngle(double angle, double distance) {
+    final x1 = x + math.cos(angle) * distance;
+    final y1 = y + math.sin(angle) * distance;
+    return Vector2(x1, y1);
   }
 }
 
