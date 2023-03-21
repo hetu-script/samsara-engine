@@ -6,7 +6,7 @@ import 'package:samsara/component/sprite_component.dart';
 
 class Arrow extends GameComponent {
   Sprite sprite;
-  late final SpriteComponent2 arrow;
+  late final SpriteComponent2 sc;
 
   Offset fromPoint = Offset.zero;
   Offset toPoint = Offset.zero;
@@ -15,27 +15,30 @@ class Arrow extends GameComponent {
     ..color = const Color.fromARGB(255, 255, 0, 0)
     ..strokeWidth = 5.0;
 
-  Arrow({required this.sprite});
+  Arrow({
+    required this.sprite,
+    super.priority,
+  });
 
   @override
   FutureOr<void> onLoad() {
-    assert(parent is PositionComponent);
+    assert(parent is Scene);
 
-    size = (parent as PositionComponent).size;
+    size = (parent as Scene).size;
 
-    arrow = SpriteComponent2(
+    sc = SpriteComponent2(
       sprite: sprite,
       anchor: Anchor.bottomCenter,
     );
-    add(arrow);
+    add(sc);
   }
 
   void setPath(Vector2 fromPoint, Vector2 toPoint) {
-    arrow.position = toPoint;
-    arrow.lookAt(fromPoint);
+    sc.position = toPoint;
+    sc.lookAt(fromPoint);
 
     final offsetToPos =
-        toPoint.moveAlongAngle(radians(90) + arrow.angle, -arrow.height);
+        toPoint.moveAlongAngle(radians(90) + sc.angle, -sc.height);
     this.toPoint = offsetToPos.toOffset();
 
     this.fromPoint = fromPoint.toOffset();
@@ -44,12 +47,5 @@ class Arrow extends GameComponent {
   @override
   void render(Canvas canvas) {
     canvas.drawLine(fromPoint, toPoint, linePaint);
-  }
-
-  @override
-  void renderTree(Canvas canvas) {
-    if (isVisible) {
-      super.renderTree(canvas);
-    }
   }
 }

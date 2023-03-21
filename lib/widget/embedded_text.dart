@@ -10,15 +10,18 @@ class EmbeddedText extends StatelessWidget {
 
   final void Function(String route, String? arg)? onRoute;
 
+  final TextStyle? style;
+
   const EmbeddedText(
     this.text, {
     super.key,
     this.onRoute,
+    this.style,
   });
 
   @override
   Widget build(BuildContext context) {
-    final defaultStyle = DefaultTextStyle.of(context).style;
+    final defaultStyle = style ?? DefaultTextStyle.of(context).style;
     final List<TextSpan> spanList = [];
 
     RegExp regExp = RegExp(
@@ -29,7 +32,7 @@ class EmbeddedText extends StatelessWidget {
     );
 
     RegExp contentRegExp = RegExp(
-      r'\S+',
+      r'(\S+="([^"]*)")|(\S+)',
       multiLine: false,
       unicode: true,
     );
@@ -61,12 +64,13 @@ class EmbeddedText extends StatelessWidget {
           final currentTag = tag.group(0)!;
           if (currentTag == 'bold') {
             isBold = true;
-          } else if (currentTag.startsWith('color=')) {
-            textColor = HexColor.fromHex(currentTag.substring(6));
-          } else if (currentTag.startsWith('route=')) {
+          } else if (currentTag.startsWith('color="')) {
+            textColor = HexColor.fromHex(
+                currentTag.substring(7, currentTag.length - 1));
+          } else if (currentTag.startsWith('route="')) {
             // route 的参数会直接放在问号后面
             // 例如：route=character?wendy3233
-            final routeString = currentTag.substring(6);
+            final routeString = currentTag.substring(7, currentTag.length - 1);
             final separaterIndex = routeString.indexOf('?');
             if (separaterIndex != -1) {
               route = routeString.substring(0, separaterIndex);

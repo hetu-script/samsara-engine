@@ -363,7 +363,9 @@ class PlayingCard extends GameComponent with HandlesGesture {
   /// 返回值代表是否成功旋转
   ///
   /// 参数不为 null 时，true 代表进行旋转，false 代表恢复正常
-  Future<void> rotate([bool? value, double degree = -90]) {
+  Future<void> rotate([bool? value, double degree = -90]) async {
+    if (isRotated == value) return;
+
     final completer = Completer();
     if (value == null) {
       if (isRotated) {
@@ -408,8 +410,6 @@ class PlayingCard extends GameComponent with HandlesGesture {
           },
         );
         add(effect);
-      } else {
-        throw 'rotated card cannot rotated again!';
       }
     }
     return completer.future;

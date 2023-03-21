@@ -6,6 +6,7 @@ import '../tilemap/tile.dart';
 abstract class GameEvents {
   static const createdScene = 'created_scene';
   static const loadingScene = 'loading_scene';
+  static const loadedScene = 'loaded_scene';
   static const endedScene = 'ended_scene';
   static const loadedMap = 'loaded_map';
   static const loadedMaze = 'loaded_maze';
@@ -15,6 +16,13 @@ abstract class GameEvents {
   static const heroMoved = 'hero_moved_on_worldmap';
   static const battleStarted = 'battle_started';
   static const battleEnded = 'battle_ended';
+}
+
+class SceneEvent extends GameEvent {
+  String get sceneId => super.scene!;
+
+  const SceneEvent.loaded({required super.scene})
+      : super(name: GameEvents.loadedScene);
 }
 
 class MapLoadedEvent extends GameEvent {

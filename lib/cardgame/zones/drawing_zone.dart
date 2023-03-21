@@ -6,11 +6,11 @@ import '../playing_card.dart';
 import '../../paint.dart';
 
 class DrawingZone extends GameComponent with HandlesGesture {
-  String? ownedByRole;
+  String? ownedBy;
 
-  bool ownedBy(String? player) {
+  bool isOwnedBy(String? player) {
     if (player == null) return false;
-    return ownedByRole == player;
+    return ownedBy == player;
   }
 
   final Vector2 drawedCardPosition, drawedCardSize;
@@ -27,7 +27,7 @@ class DrawingZone extends GameComponent with HandlesGesture {
 
   DrawingZone({
     super.id,
-    this.ownedByRole,
+    this.ownedBy,
     super.position,
     super.size,
     super.borderRadius = 5.0,

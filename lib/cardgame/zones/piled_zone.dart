@@ -5,11 +5,11 @@ import '../playing_card.dart';
 import '../../paint.dart';
 
 class PiledZone extends GameComponent {
-  String? ownedByRole;
+  String? ownedBy;
 
-  bool ownedBy(String? player) {
+  bool isOwnedBy(String? player) {
     if (player == null) return false;
-    return ownedByRole == player;
+    return ownedBy == player;
   }
 
   final String? title;
@@ -40,7 +40,7 @@ class PiledZone extends GameComponent {
   /// [pileOffset] : 堆叠时每张牌相比上一张牌的位移
   PiledZone({
     super.id,
-    this.ownedByRole,
+    this.ownedBy,
     this.title,
     super.position,
     super.size,

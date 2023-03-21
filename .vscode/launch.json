@@ -11,5 +11,12 @@
       "type": "dart",
       "program": "lib/main.dart"
     },
+    {
+      "name": "test",
+      "cwd": "test",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart"
+    }
   ]
 }

@@ -5,6 +5,7 @@ import 'package:samsara/ui/flutter/label.dart';
 import 'package:flutter/services.dart';
 import 'package:json5/json5.dart';
 import 'package:samsara/widget/markdown_wiki.dart';
+import 'package:samsara/widget/embedded_text.dart';
 
 import '../global.dart';
 import '../scene/game.dart';
@@ -72,6 +73,38 @@ class _MainMenuState extends State<MainMenu> {
                             width: 100.0,
                             textAlign: TextAlign.center,
                           ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 20.0, bottom: 20.0),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return Scaffold(
+                                  appBar: AppBar(actions: const []),
+                                  body: Center(
+                                    child: Container(
+                                      color: Colors.blueGrey,
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 5.0, horizontal: 10.0),
+                                      child: EmbeddedText(
+                                        'test <bold color="#ff0000">text</>',
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                        onRoute: (route, arg) {
+                                          print(route);
+                                          print(arg);
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          child: const Text('embeded text'),
                         ),
                       ),
                       Padding(

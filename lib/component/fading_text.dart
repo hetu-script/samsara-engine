@@ -26,12 +26,12 @@ class FadingText extends GameComponent {
     super.position,
     super.size,
     super.angle,
-    super.anchor,
     super.priority,
     super.opacity,
     bool outlined = true,
     required TextPaint textPaint,
-  }) : style = ScreenTextStyle(textPaint: textPaint, outlined: outlined) {
+  })  : style = ScreenTextStyle(textPaint: textPaint, outlined: outlined),
+        super(anchor: Anchor.center) {
     width = style.textPaint!.measureTextWidth(text);
     height = style.textPaint!.measureTextHeight(text);
 

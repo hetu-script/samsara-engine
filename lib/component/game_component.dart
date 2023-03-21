@@ -97,6 +97,13 @@ abstract class GameComponent extends PositionComponent
     return gameRef.camera.isComponentOnCamera(this);
   }
 
+  @mustCallSuper
+  @override
+  void renderTree(Canvas canvas) {
+    if (!isVisible) return;
+    super.renderTree(canvas);
+  }
+
   Iterable<HandlesGesture> get gestureComponents =>
       children.reversed().whereType<HandlesGesture>().cast<HandlesGesture>();
 
