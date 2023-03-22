@@ -122,6 +122,27 @@ class _MainMenuState extends State<MainMenu> {
                         ),
                       ),
                       Padding(
+                        padding: const EdgeInsets.only(top: 20.0, bottom: 20.0),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return Scaffold(
+                                  appBar: AppBar(),
+                                  body: Column(
+                                    children: <Widget>[
+                                      Positioned(child: Container())
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          child: const Text('error test'),
+                        ),
+                      ),
+                      Padding(
                         padding:
                             const EdgeInsets.only(top: 20.0, bottom: 100.0),
                         child: ElevatedButton(
