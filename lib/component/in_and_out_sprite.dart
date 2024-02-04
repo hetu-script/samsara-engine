@@ -5,7 +5,6 @@ import 'package:flame/effects.dart';
 import 'package:flame/flame.dart';
 
 import '../component/game_component.dart';
-import '../scene/scene.dart';
 import 'timer.dart';
 
 class InAndOutSprite extends GameComponent {

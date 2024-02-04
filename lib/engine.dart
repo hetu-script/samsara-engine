@@ -168,8 +168,10 @@ class SamsaraEngine with SceneController, EventAggregator {
   /// Initialize the engine, must be called within
   /// the initState() of Flutter widget,
   /// for accessing the assets bundle resources.
-  Future<void> init(
-      {Map<String, Function> externalFunctions = const {}}) async {
+  Future<void> init({
+    Map<String, Function> externalFunctions = const {},
+    bool loadCardGameBindings = false,
+  }) async {
     if (isLoaded) return;
     if (config.debugMode) {
       const root = 'scripts/';
@@ -208,33 +210,31 @@ class SamsaraEngine with SceneController, EventAggregator {
       );
     }
 
-    // hetu.interpreter.bindExternalFunction('print', info, override: true);
-
-    isLoaded = true;
-  }
-
-  /// add engine class binding into script.
-  void useGame() {
+    /// add engine class binding into script.
     hetu.interpreter.bindExternalClass(SamsaraEngineClassBinding());
     hetu.eval(
       kHetuEngineBindingSource,
-      filename: 'game_binding.ht',
+      // filename: 'engine.ht',
       globallyImport: true,
       type: HTResourceType.hetuModule,
     );
-  }
 
-  /// add playing card class binding into script.
-  void useScript() {
-    hetu.interpreter.bindExternalClass(PlayingCardClassBinding());
-    hetu.sourceContext.addResource(
-      'playing_card_binding.ht',
-      HTSource(
-        kHetuPlayingCardBindingSource,
-        filename: 'playing_card_binding.ht',
-        type: HTResourceType.hetuModule,
-      ),
-    );
+    if (loadCardGameBindings) {
+      /// add playing card class binding into script.
+      hetu.interpreter.bindExternalClass(PlayingCardClassBinding());
+      hetu.sourceContext.addResource(
+        'playing_card.ht',
+        HTSource(
+          kHetuPlayingCardBindingSource,
+          filename: 'playing_card_binding.ht',
+          type: HTResourceType.hetuModule,
+        ),
+      );
+    }
+
+    // hetu.interpreter.bindExternalFunction('print', info, override: true);
+
+    isLoaded = true;
   }
 
   // @override

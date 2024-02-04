@@ -25,10 +25,10 @@ class TileMapObject extends GameComponent with TileInfo {
   final double velocityFactor;
 
   Sprite? sprite;
-  SpriteAnimationHandler? animation;
+  SpriteAnimationWithTicker? animation;
   bool _isMovingObject = false;
   bool _hasMoveOnWaterAnimation = false;
-  late final SpriteAnimationHandler? moveAnimationSouth,
+  late final SpriteAnimationWithTicker? moveAnimationSouth,
       moveAnimationEast,
       moveAnimationNorth,
       moveAnimationWest,
@@ -76,25 +76,25 @@ class TileMapObject extends GameComponent with TileInfo {
   }) {
     if (moveAnimationSpriteSheet != null) {
       _isMovingObject = true;
-      moveAnimationSouth = SpriteAnimationHandler(moveAnimationSpriteSheet
+      moveAnimationSouth = SpriteAnimationWithTicker(moveAnimationSpriteSheet
           .createAnimation(row: 0, stepTime: defaultAnimationStepTime));
-      moveAnimationEast = SpriteAnimationHandler(moveAnimationSpriteSheet
+      moveAnimationEast = SpriteAnimationWithTicker(moveAnimationSpriteSheet
           .createAnimation(row: 1, stepTime: defaultAnimationStepTime));
-      moveAnimationNorth = SpriteAnimationHandler(moveAnimationSpriteSheet
+      moveAnimationNorth = SpriteAnimationWithTicker(moveAnimationSpriteSheet
           .createAnimation(row: 2, stepTime: defaultAnimationStepTime));
-      moveAnimationWest = SpriteAnimationHandler(moveAnimationSpriteSheet
+      moveAnimationWest = SpriteAnimationWithTicker(moveAnimationSpriteSheet
           .createAnimation(row: 3, stepTime: defaultAnimationStepTime));
 
       if (swimAnimationSpriteSheet != null) {
         _hasMoveOnWaterAnimation = true;
 
-        swimAnimationSouth = SpriteAnimationHandler(swimAnimationSpriteSheet
+        swimAnimationSouth = SpriteAnimationWithTicker(swimAnimationSpriteSheet
             .createAnimation(row: 0, stepTime: defaultAnimationStepTime));
-        swimAnimationEast = SpriteAnimationHandler(swimAnimationSpriteSheet
+        swimAnimationEast = SpriteAnimationWithTicker(swimAnimationSpriteSheet
             .createAnimation(row: 1, stepTime: defaultAnimationStepTime));
-        swimAnimationNorth = SpriteAnimationHandler(swimAnimationSpriteSheet
+        swimAnimationNorth = SpriteAnimationWithTicker(swimAnimationSpriteSheet
             .createAnimation(row: 2, stepTime: defaultAnimationStepTime));
-        swimAnimationWest = SpriteAnimationHandler(swimAnimationSpriteSheet
+        swimAnimationWest = SpriteAnimationWithTicker(swimAnimationSpriteSheet
             .createAnimation(row: 3, stepTime: defaultAnimationStepTime));
       }
     } else {
@@ -102,7 +102,7 @@ class TileMapObject extends GameComponent with TileInfo {
       if (sprite != null) {
         this.sprite = sprite;
       } else if (animation != null) {
-        this.animation = SpriteAnimationHandler(animation);
+        this.animation = SpriteAnimationWithTicker(animation);
       }
     }
 
@@ -161,7 +161,7 @@ class TileMapObject extends GameComponent with TileInfo {
     _velocity = Vector2(tx * sx.sign, ty * sy.sign);
   }
 
-  SpriteAnimationHandler? get currentAnimation {
+  SpriteAnimationWithTicker? get currentAnimation {
     if (_hasMoveOnWaterAnimation && isOnWater) {
       switch (direction) {
         case OrthogonalDirection.south:

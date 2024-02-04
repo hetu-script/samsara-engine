@@ -47,6 +47,20 @@ extension CornerPosition on PositionComponent {
 }
 
 extension CameraExtension on CameraComponent {
+  void snapTo(Vector2 position) {
+    viewfinder.position = position;
+  }
+
+  void snapBy(Vector2 position) {
+    viewfinder.position += position;
+  }
+
+  Vector2 get position => viewfinder.position;
+  set position(Vector2 newPos) => viewfinder.position = newPos;
+
+  double get zoom => viewfinder.zoom;
+  set zoom(double newZoom) => viewfinder.zoom = newZoom;
+
   // Rect toRect() {
   //   return Rect.fromLTWH(
   //       viewport.position.x, viewport.position.y, gameSize.x, gameSize.y);

@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:samsara/component/game_component.dart';
+import 'package:samsara/extensions.dart';
 
 import 'scene_controller.dart';
 import '../widget/pointer_detector.dart';
@@ -29,7 +30,9 @@ abstract class Scene extends FlameGame {
   Scene({
     required this.id,
     required this.controller,
-  });
+  }) {
+    // camera.viewfinder.anchor = Anchor.topLeft;
+  }
 
   void end() {
     controller.leaveScene(id);
@@ -47,25 +50,30 @@ abstract class Scene extends FlameGame {
 
   /// get all components within this scene which handles gesture,
   /// order is from highest priority to lowest.
-  Iterable<HandlesGesture> get gestureComponents =>
-      children.reversed().whereType<HandlesGesture>().cast<HandlesGesture>();
+  Iterable<HandlesGesture> get gestureComponents => world.children
+      .reversed()
+      .whereType<HandlesGesture>()
+      .cast<HandlesGesture>();
 
   /// zoom the camera to a certain size
-  void fitScreen(Vector2 toSize) {
-    // engine.info('游戏界面可视区域大小：${size.x}x${size.y}');
+  void fitScreen([Vector2? fitSize]) {
+    Vector2 toSize = fitSize ?? size;
+
+    camera.snapTo(toSize / 2);
+
     final toSizeRatio = toSize.x / toSize.y;
     final gameViewPortRatio = size.x / size.y;
     double scaleFactor;
     if (gameViewPortRatio > toSizeRatio) {
       // 可视区域更宽
       scaleFactor = size.y / toSize.y;
-      final newWidth = toSize.x * scaleFactor;
-      camera.moveTo(Vector2(-(size.x - newWidth) / 2, 0));
+      // final newWidth = toSize.x * scaleFactor;
+      // camera.moveTo(Vector2(-(size.x - newWidth) / 2, 0));
     } else {
       // 可视区域更窄
       scaleFactor = size.x / toSize.x;
-      final newHeight = toSize.y * scaleFactor;
-      camera.moveTo(Vector2(0, -(size.y - newHeight) / 2));
+      // final newHeight = toSize.y * scaleFactor;
+      // camera.moveTo(Vector2(0, -(size.y - newHeight) / 2));
     }
     camera.viewfinder.zoom = scaleFactor;
 

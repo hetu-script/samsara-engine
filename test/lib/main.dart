@@ -16,7 +16,7 @@ void main() async {
     // 对于Flutter没有捕捉到的错误，弹出系统原生对话框
     PlatformDispatcher.instance.onError = (error, stackTrace) {
       alertNativeError(error, stackTrace);
-      return true;
+      return false;
     };
 
     // 对于Flutter捕捉到的错误，弹出Flutter绘制的自定义对话框

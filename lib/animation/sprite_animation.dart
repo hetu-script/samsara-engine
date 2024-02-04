@@ -1,9 +1,14 @@
 import 'package:flame/sprite.dart';
 
-class SpriteAnimationHandler {
+class SpriteAnimationWithTicker {
   SpriteAnimation animation;
 
   SpriteAnimationTicker ticker;
 
-  SpriteAnimationHandler(this.animation) : ticker = animation.createTicker();
+  SpriteAnimationWithTicker(this.animation) : ticker = animation.createTicker();
+
+  Sprite get currentSprite => ticker.getSprite();
+
+  SpriteAnimationWithTicker clone() =>
+      SpriteAnimationWithTicker(animation.clone());
 }

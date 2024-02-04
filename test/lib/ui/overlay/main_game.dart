@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 // import 'package:flame_audio/flame_audio.dart';
 import 'package:samsara/ui/flutter/loading_screen.dart';
-import 'package:samsara/utils/console.dart';
+import 'package:samsara/console.dart';
 
 import '../../global.dart';
 import '../../scene/game.dart';
@@ -55,6 +55,10 @@ class _MainGameOverlayState extends State<MainGameOverlay>
               () => _getScene(),
             ),
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                throw (snapshot.error!);
+              }
+
               if (!snapshot.hasData) {
                 return LoadingScreen(text: engine.locale['loading']);
               } else {
@@ -72,10 +76,10 @@ class _MainGameOverlayState extends State<MainGameOverlay>
                       Positioned(
                         right: 0,
                         top: 0,
-                        child: CardGameDropMenu(
-                          onSelected: (CardGameDropMenuItems item) async {
+                        child: MainGameDropMenu(
+                          onSelected: (MainGameDropMenuItems item) async {
                             switch (item) {
-                              case CardGameDropMenuItems.console:
+                              case MainGameDropMenuItems.console:
                                 showDialog(
                                   context: context,
                                   builder: (BuildContext context) => Console(
@@ -83,7 +87,7 @@ class _MainGameOverlayState extends State<MainGameOverlay>
                                   ),
                                 ).then((_) => setState(() {}));
                                 break;
-                              case CardGameDropMenuItems.quit:
+                              case MainGameDropMenuItems.quit:
                                 engine.leaveScene(_scene.id, clearCache: true);
                                 _isDisposing = true;
                                 Navigator.of(context).pop();

@@ -3,9 +3,10 @@ import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 
-import '../engine.dart';
-import '../ui/flutter/close_button.dart';
-import '../ui/flutter/responsive_window.dart';
+import 'engine.dart';
+import 'ui/flutter/close_button.dart';
+import 'ui/flutter/responsive_window.dart';
+import 'package:hetu_script/errors.dart';
 
 class Console extends StatefulWidget {
   const Console({
@@ -124,7 +125,11 @@ class _ConsoleState extends State<Console> {
                           .info(widget.engine.hetu.lexicon.stringify(r));
                     }
                   } catch (e) {
-                    widget.engine.error(e.toString());
+                    if (e is HTError) {
+                      widget.engine.error(e.message);
+                    } else {
+                      widget.engine.error(e.toString());
+                    }
                   }
                   _textEditingController.text = '';
                   _textFieldFocusNode.requestFocus();

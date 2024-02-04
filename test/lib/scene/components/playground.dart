@@ -1,10 +1,8 @@
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
-import 'package:flame/sprite.dart';
-import 'package:flame/flame.dart';
-// import 'package:samsara/component/sprite_component.dart';
-// import 'package:samsara/effect/fade_effect.dart';
-// import 'package:flame/effects.dart';
+import 'package:samsara/component/sprite_component.dart';
+import 'package:samsara/effect/fade_effect.dart';
+import 'package:flame/effects.dart';
 // import 'package:samsara/component/in_and_out_sprite.dart';
 import 'package:samsara/component/arrow.dart';
 
@@ -20,10 +18,10 @@ class PlayGround extends GameComponent with HandlesGesture {
     required double height,
   }) : super(size: Vector2(width, height)) {
     onTapDown = (int buttons, Vector2 position) {
-      // final c = SpriteComponent2(spriteId: 'pepe.png', anchor: Anchor.center);
-      // c.position = details.globalPosition.toVector2();
-      // c.add(FadeEffect(target: c, controller: EffectController(duration: 1.0)));
-      // add(c);
+      final c = SpriteComponent2(spriteId: 'pepe.png', anchor: Anchor.center);
+      c.position = position;
+      c.add(FadeEffect(target: c, controller: EffectController(duration: 1.0)));
+      add(c);
 
       // final c2 = FadingText(
       //   'hit!\n100',
@@ -59,8 +57,8 @@ class PlayGround extends GameComponent with HandlesGesture {
     // status = StatusBar(size: Vector2(100, 20));
     // status.position = center;
     // add(status);
-    arrow = Arrow(sprite: Sprite(await Flame.images.load('arrow.png')));
-    add(arrow);
+    // arrow = Arrow(sprite: Sprite(await Flame.images.load('arrow.png')));
+    // add(arrow);
 
     // arrow.isVisible = false;
   }

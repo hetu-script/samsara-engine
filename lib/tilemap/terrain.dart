@@ -46,7 +46,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
   String? objectId;
   // 显示贴图
   Sprite? sprite, overlaySprite;
-  SpriteAnimationHandler? animation, overlayAnimation;
+  SpriteAnimationWithTicker? animation, overlayAnimation;
 
   // 随机数，用来让多个 tile 的贴图动画错开播放
   late final double _overlayAnimationOffset;
@@ -70,10 +70,10 @@ class TileMapTerrain extends GameComponent with TileInfo {
     return sprite;
   }
 
-  Future<SpriteAnimationHandler?> _loadAnimation(
+  Future<SpriteAnimationWithTicker?> _loadAnimation(
       dynamic data, SpriteSheet terrainSpriteSheet,
       {bool loop = true}) async {
-    SpriteAnimationHandler? animation;
+    SpriteAnimationWithTicker? animation;
     if (data != null) {
       final String? animationPath = data['animation'];
       final int? animationFrameCount = data['animationFrameCount'];
@@ -87,14 +87,15 @@ class TileMapTerrain extends GameComponent with TileInfo {
               srcWidth,
               srcHeight,
             ));
-        animation = SpriteAnimationHandler(sheet.createAnimation(
+        animation = SpriteAnimationWithTicker(sheet.createAnimation(
             row: 0,
             stepTime: defaultAnimationStepTime,
             loop: loop,
             from: 0,
             to: animationFrameCount ?? sheet.columns));
       } else if (animationRow != null) {
-        animation = SpriteAnimationHandler(terrainSpriteSheet.createAnimation(
+        animation =
+            SpriteAnimationWithTicker(terrainSpriteSheet.createAnimation(
           row: animationRow,
           stepTime: defaultAnimationStepTime,
           loop: loop,
