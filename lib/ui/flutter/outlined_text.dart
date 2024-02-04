@@ -26,12 +26,12 @@ class OutlinedText extends StatelessWidget {
   /// Adapted from https://stackoverflow.com/a/55559435/11846040
   const OutlinedText(
     this.text, {
-    Key? key,
+    super.key,
     this.style = const TextStyle(),
     required this.textColor,
     this.strokeColor = Colors.black,
     this.strokeWidth = 2,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

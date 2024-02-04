@@ -345,8 +345,9 @@ void drawScreenText(
     if (style?.rect != null) {
       final rect = style!.rect!;
       final anchor = style.anchor;
-      final textWidth = textPaint.measureTextWidth(text);
-      final textHeight = textPaint.measureTextHeight(text);
+      final metric = textPaint.getLineMetrics(text);
+      final textWidth = metric.width;
+      final textHeight = metric.height;
       final padding = style.padding ?? const EdgeInsets.all(0);
       final offsetX = padding.left - padding.right;
       final offsetY = padding.top - padding.bottom;

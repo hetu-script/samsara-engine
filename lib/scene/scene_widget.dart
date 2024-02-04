@@ -20,10 +20,6 @@ class SceneWidget<T extends Scene> extends StatelessWidget {
       height: MediaQuery.of(context).size.height,
       width: MediaQuery.of(context).size.width,
       child: PointerDetector(
-        child: GameWidget(
-          game: scene,
-          overlayBuilderMap: overlayBuilderMap,
-        ),
         onTapDown: scene.onTapDown,
         onTapUp: scene.onTapUp,
         onDragStart: scene.onDragStart,
@@ -34,6 +30,10 @@ class SceneWidget<T extends Scene> extends StatelessWidget {
         onScaleEnd: scene.onScaleEnd,
         onLongPress: scene.onLongPress,
         onMouseHover: scene.onMouseHover,
+        child: GameWidget(
+          game: scene,
+          overlayBuilderMap: overlayBuilderMap,
+        ),
       ),
     );
   }

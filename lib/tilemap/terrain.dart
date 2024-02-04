@@ -7,6 +7,7 @@ import 'package:flame/flame.dart';
 
 import '../component/game_component.dart';
 import 'tile.dart';
+import '../animation/sprite_animation.dart';
 
 class TileMapTerrain extends GameComponent with TileInfo {
   static const defaultAnimationStepTime = 0.2;
@@ -45,7 +46,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
   String? objectId;
   // 显示贴图
   Sprite? sprite, overlaySprite;
-  SpriteAnimation? animation, overlayAnimation;
+  SpriteAnimationHandler? animation, overlayAnimation;
 
   // 随机数，用来让多个 tile 的贴图动画错开播放
   late final double _overlayAnimationOffset;
@@ -69,10 +70,10 @@ class TileMapTerrain extends GameComponent with TileInfo {
     return sprite;
   }
 
-  Future<SpriteAnimation?> _loadAnimation(
+  Future<SpriteAnimationHandler?> _loadAnimation(
       dynamic data, SpriteSheet terrainSpriteSheet,
       {bool loop = true}) async {
-    SpriteAnimation? animation;
+    SpriteAnimationHandler? animation;
     if (data != null) {
       final String? animationPath = data['animation'];
       final int? animationFrameCount = data['animationFrameCount'];
@@ -86,20 +87,20 @@ class TileMapTerrain extends GameComponent with TileInfo {
               srcWidth,
               srcHeight,
             ));
-        animation = sheet.createAnimation(
+        animation = SpriteAnimationHandler(sheet.createAnimation(
             row: 0,
             stepTime: defaultAnimationStepTime,
             loop: loop,
             from: 0,
-            to: animationFrameCount ?? sheet.columns);
+            to: animationFrameCount ?? sheet.columns));
       } else if (animationRow != null) {
-        animation = terrainSpriteSheet.createAnimation(
+        animation = SpriteAnimationHandler(terrainSpriteSheet.createAnimation(
           row: animationRow,
           stepTime: defaultAnimationStepTime,
           loop: loop,
           from: animationStart ?? 0,
           to: animationEnd ?? terrainSpriteSheet.columns,
-        );
+        ));
       }
     }
     return animation;
@@ -259,9 +260,9 @@ class TileMapTerrain extends GameComponent with TileInfo {
   void render(Canvas canvas, [bool showGrids = false]) {
     if (isVoid) return;
     sprite?.renderRect(canvas, rect);
-    animation?.getSprite().renderRect(canvas, rect);
+    animation?.ticker.currentFrame.sprite.renderRect(canvas, rect);
     overlaySprite?.renderRect(canvas, rect);
-    overlayAnimation?.getSprite().renderRect(canvas, rect);
+    overlayAnimation?.ticker.currentFrame.sprite.renderRect(canvas, rect);
     if (showGrids) {
       canvas.drawPath(borderPath, borderPaint);
     }
@@ -284,14 +285,14 @@ class TileMapTerrain extends GameComponent with TileInfo {
   @override
   void update(double dt) {
     super.update(dt);
-    animation?.update(dt);
+    animation?.ticker.update(dt);
     if (overlayAnimation != null) {
-      overlayAnimation?.update(dt);
-      if (overlayAnimation!.done()) {
+      overlayAnimation?.ticker.update(dt);
+      if (overlayAnimation!.ticker.done()) {
         _overlayAnimationOffsetValue += dt;
         if (_overlayAnimationOffsetValue >= _overlayAnimationOffset) {
           _overlayAnimationOffsetValue = 0;
-          overlayAnimation!.reset();
+          overlayAnimation!.ticker.reset();
         }
       }
     }

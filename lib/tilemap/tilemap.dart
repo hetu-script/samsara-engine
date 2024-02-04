@@ -186,7 +186,7 @@ class TileMap extends GameComponent with HandlesGesture {
     }
 
     onDragUpdate = (int buttons, Vector2 dragPosition, Vector2 worldPosition) {
-      gameRef.camera.snapTo(gameRef.camera.position - worldPosition);
+      gameRef.camera.moveTo(gameRef.camera.viewfinder.position - worldPosition);
     };
 
     onTap = (int buttons, Vector2 position) {
@@ -421,11 +421,11 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   Vector2 worldPosition2Screen(Vector2 position) {
-    return position - gameRef.camera.position;
+    return position - gameRef.camera.viewfinder.position;
   }
 
   Vector2 screenPosition2World(Vector2 position) {
-    return position + gameRef.camera.position;
+    return position + gameRef.camera.viewfinder.position;
   }
 
   Vector2 tilePosition2TileCenterInWorld(int left, int top) {
@@ -452,7 +452,7 @@ class TileMap extends GameComponent with HandlesGesture {
   Vector2 tilePosition2TileCenterInScreen(int left, int top) {
     final worldPos = tilePosition2TileCenterInWorld(left, top);
     final scaled = Vector2(worldPos.x * scale.x, worldPos.y * scale.y);
-    return scaled - gameRef.camera.position;
+    return scaled - gameRef.camera.viewfinder.position;
   }
 
   TilePosition worldPosition2Tile(Vector2 worldPos) {
@@ -528,15 +528,16 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   void moveCameraToTilePosition(int left, int top,
-      {bool animated = true, double speed = 500.0}) {
+      {
+      // bool animated = true,
+      double speed = 500.0}) {
     final worldPos = tilePosition2TileCenterInWorld(left, top);
     final dest =
         Vector2(worldPos.x * scale.x, worldPos.y * scale.y) - gameRef.size / 2;
-    gameRef.camera.speed = speed;
-    gameRef.camera.moveTo(dest);
-    if (!animated) {
-      gameRef.camera.snap();
-    }
+    gameRef.camera.moveTo(dest, speed: speed);
+    // if (!animated) {
+    //   gameRef.camera.snap();
+    // }
   }
 
   void moveHeroToTilePositionByRoute(List<int> route,

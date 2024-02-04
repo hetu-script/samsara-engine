@@ -14,7 +14,7 @@ class PlayGround extends GameComponent with HandlesGesture {
     gameRef.fitScreen(size);
 
     onDragUpdate = (buttons, dragPosition, worldPosition) {
-      gameRef.camera.snapTo(gameRef.camera.position - worldPosition);
+      gameRef.camera.moveTo(gameRef.camera.viewfinder.position - worldPosition);
     };
   }
 

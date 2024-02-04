@@ -36,7 +36,7 @@ class InAndOutSprite extends GameComponent {
 
     Vector2 startPos, stayPos, endPos;
 
-    if (parent is Scene) {
+    if (parent is World) {
       final middleLine = game.size.y / 2;
       startPos = Vector2(game.size.x + width / 2, middleLine);
       stayPos = game.center;

@@ -32,8 +32,9 @@ class FadingText extends GameComponent {
     required TextPaint textPaint,
   })  : style = ScreenTextStyle(textPaint: textPaint, outlined: outlined),
         super(anchor: Anchor.center) {
-    width = style.textPaint!.measureTextWidth(text);
-    height = style.textPaint!.measureTextHeight(text);
+    final metric = textPaint.getLineMetrics(text);
+    width = metric.width;
+    height = metric.height;
 
     assert(fadeOutAfterDuration < duration);
   }

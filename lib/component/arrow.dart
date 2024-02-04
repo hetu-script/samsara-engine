@@ -22,10 +22,6 @@ class Arrow extends GameComponent {
 
   @override
   FutureOr<void> onLoad() {
-    assert(parent is Scene);
-
-    size = (parent as Scene).size;
-
     sc = SpriteComponent2(
       sprite: sprite,
       anchor: Anchor.bottomCenter,

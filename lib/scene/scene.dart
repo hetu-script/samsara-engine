@@ -36,8 +36,8 @@ abstract class Scene extends FlameGame {
   }
 
   @override
-  void onGameResize(Vector2 canvasSize) {
-    super.onGameResize(canvasSize);
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
 
     topCenter.x = center.x = bottomCenter.x = size.x / 2;
     topRight.x = centerRight.x = bottomRight.x = size.x;
@@ -60,14 +60,19 @@ abstract class Scene extends FlameGame {
       // 可视区域更宽
       scaleFactor = size.y / toSize.y;
       final newWidth = toSize.x * scaleFactor;
-      camera.snapTo(Vector2(-(size.x - newWidth) / 2, 0));
+      camera.moveTo(Vector2(-(size.x - newWidth) / 2, 0));
     } else {
       // 可视区域更窄
       scaleFactor = size.x / toSize.x;
       final newHeight = toSize.y * scaleFactor;
-      camera.snapTo(Vector2(0, -(size.y - newHeight) / 2));
+      camera.moveTo(Vector2(0, -(size.y - newHeight) / 2));
     }
-    camera.zoom = scaleFactor;
+    camera.viewfinder.zoom = scaleFactor;
+
+    // camera = CameraComponent.withFixedResolution(
+    //   width: toSize.x,
+    //   height: toSize.y,
+    // );
   }
 
   @mustCallSuper

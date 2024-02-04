@@ -46,21 +46,22 @@ extension CornerPosition on PositionComponent {
   Vector2 get bottomRight => positionOfAnchor(Anchor.bottomRight);
 }
 
-extension CameraExtension on Camera {
-  Rect toRect() {
-    return Rect.fromLTWH(position.x, position.y, gameSize.x, gameSize.y);
-  }
+extension CameraExtension on CameraComponent {
+  // Rect toRect() {
+  //   return Rect.fromLTWH(
+  //       viewport.position.x, viewport.position.y, gameSize.x, gameSize.y);
+  // }
 
-  bool isComponentOnCamera(GameComponent c) {
-    if (!c.isVisible) {
-      return false;
-    }
+  // bool isComponentOnCamera(GameComponent c) {
+  //   if (!c.isVisible) {
+  //     return false;
+  //   }
 
-    return gameSize.contains(c.topLeft) ||
-        gameSize.contains(c.topRight) ||
-        gameSize.contains(c.bottomLeft) ||
-        gameSize.contains(c.bottomRight);
-  }
+  //   return gameSize.contains(c.topLeft) ||
+  //       gameSize.contains(c.topRight) ||
+  //       gameSize.contains(c.bottomLeft) ||
+  //       gameSize.contains(c.bottomRight);
+  // }
 }
 
 extension FormatHHMMSS on DateTime {

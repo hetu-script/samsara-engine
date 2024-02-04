@@ -172,7 +172,7 @@ class HtmlContainer {
     try {
       if (color != '') {
         var tmp = color.replaceAll('#', '').trim();
-        return Color(int.parse('0xFF' + tmp));
+        return Color(int.parse('0xFF$tmp'));
       } else {
         return const Color(0xFF000000);
       }

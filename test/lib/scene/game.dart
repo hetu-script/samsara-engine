@@ -14,14 +14,14 @@ class GameScene extends Scene {
     super.onLoad();
 
     final p = PlayGround(width: 800.0, height: 640.0);
-    add(p);
+    world.add(p);
 
     fitScreen(Vector2(800.0, 640.0));
   }
 
   @override
   void onDragUpdate(int pointer, int buttons, DragUpdateDetails details) {
-    camera.snapTo(camera.position - details.delta.toVector2());
+    camera.moveTo(camera.viewfinder.position - details.delta.toVector2());
 
     super.onDragUpdate(pointer, buttons, details);
   }

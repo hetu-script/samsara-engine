@@ -158,7 +158,7 @@ class PointerDetector extends StatefulWidget {
   final void Function(PointerHoverEvent details)? onMouseHover;
 
   @override
-  _PointerDetectorState createState() => _PointerDetectorState();
+  PointerDetectorState createState() => PointerDetectorState();
 }
 
 enum _GestureState {
@@ -170,7 +170,7 @@ enum _GestureState {
   none,
 }
 
-class _PointerDetectorState extends State<PointerDetector> {
+class PointerDetectorState extends State<PointerDetector> {
   final _touchDetails = <TouchDetails>[];
   double _initialScaleDistance = 0;
   _GestureState _gestureState = _GestureState.none;
@@ -180,14 +180,14 @@ class _PointerDetectorState extends State<PointerDetector> {
   @override
   Widget build(BuildContext context) {
     return Listener(
-      child: MouseRegion(
-        child: widget.child,
-        onHover: onMouseHover,
-      ),
       onPointerDown: onPointerDown,
       onPointerUp: onPointerUp,
       onPointerMove: onPointerMove,
       onPointerCancel: onPointerUp,
+      child: MouseRegion(
+        onHover: onMouseHover,
+        child: widget.child,
+      ),
     );
   }
 

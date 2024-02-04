@@ -16,7 +16,7 @@ class IntegerInputField extends StatefulWidget {
   final bool readOnly;
 
   const IntegerInputField({
-    Key? key,
+    super.key,
     this.controller,
     this.focusNode,
     this.initValue,
@@ -29,7 +29,7 @@ class IntegerInputField extends StatefulWidget {
     this.borderWidth = 2,
     this.onChanged,
     this.readOnly = false,
-  }) : super(key: key);
+  });
 
   @override
   State<StatefulWidget> createState() => _IntegerInputFieldState();

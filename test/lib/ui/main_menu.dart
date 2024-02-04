@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:samsara/ui/flutter/loading_screen.dart';
@@ -94,8 +95,10 @@ class _MainMenuState extends State<MainMenu> {
                                         style: const TextStyle(
                                             color: Colors.white),
                                         onRoute: (route, arg) {
-                                          print(route);
-                                          print(arg);
+                                          if (kDebugMode) {
+                                            print(route);
+                                            print(arg);
+                                          }
                                         },
                                       ),
                                     ),

@@ -12,8 +12,7 @@ import '../extensions.dart';
 import '../gestures/gesture_mixin.dart';
 import 'package:flutter/animation.dart' show Curve, Curves;
 
-export 'package:flame/components.dart' show Anchor;
-export 'package:flame/game.dart' show Camera;
+export 'package:flame/components.dart' show Anchor, CameraComponent;
 export 'package:vector_math/vector_math_64.dart' show Vector2;
 export '../extensions.dart' show Vector2Ex;
 export 'package:flame/extensions.dart' show Vector2Extension;
@@ -31,6 +30,8 @@ abstract class GameComponent extends PositionComponent
   late RRect rborder;
   double _borderRadius;
 
+  final bool isHud;
+
   double get borderRadius => _borderRadius;
 
   GameComponent({
@@ -44,7 +45,9 @@ abstract class GameComponent extends PositionComponent
     double borderRadius = 5.0,
     double opacity = 1.0,
     super.children,
-  }) : _borderRadius = borderRadius {
+    bool? isHud,
+  })  : _borderRadius = borderRadius,
+        isHud = isHud ?? false {
     this.opacity = opacity;
 
     generateBorder();
@@ -93,9 +96,9 @@ abstract class GameComponent extends PositionComponent
     return true;
   }
 
-  bool isVisibleInCamera() {
-    return gameRef.camera.isComponentOnCamera(this);
-  }
+  // bool isVisibleInCamera() {
+  //   return gameRef.camera.isComponentOnCamera(this);
+  // }
 
   @mustCallSuper
   @override

@@ -21,10 +21,10 @@ class SceneController {
     String sceneId, [
     dynamic arg,
   ]) async {
-    final _cached = _cachedScenes[sceneId];
-    if (_cached != null) {
-      _currentScene = _cached;
-      return _cached;
+    final cached = _cachedScenes[sceneId];
+    if (cached != null) {
+      _currentScene = cached;
+      return cached;
     } else {
       final constructor = _sceneConstructors[contructorKey];
       assert(constructor != null);

@@ -15,12 +15,12 @@ class GameScene extends Scene {
 
     final p = PlayGround(width: 1280.0, height: 720.0);
 
-    add(p);
+    world.add(p);
   }
 
   @override
   void onDragUpdate(int pointer, int buttons, DragUpdateDetails details) {
-    camera.snapTo(camera.position - details.delta.toVector2());
+    camera.moveTo(camera.viewfinder.position - details.delta.toVector2());
 
     super.onDragUpdate(pointer, buttons, details);
   }

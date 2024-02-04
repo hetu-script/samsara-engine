@@ -6,7 +6,7 @@ import '../../utils/color.dart';
 
 class DynamicColorProgressBar extends StatelessWidget {
   DynamicColorProgressBar({
-    Key? key,
+    super.key,
     this.title,
     required this.width,
     this.height = 18.0,
@@ -17,8 +17,7 @@ class DynamicColorProgressBar extends StatelessWidget {
     required this.colors,
     List<double>? stops,
     this.borderRadius = 2.5,
-  })  : assert(colors.length > 1),
-        super(key: key) {
+  }) : assert(colors.length > 1) {
     if (stops == null || stops.isEmpty) {
       this.stops = [];
       final d = 1.0 / (colors.length - 1);

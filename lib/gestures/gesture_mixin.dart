@@ -2,7 +2,6 @@ import 'dart:async' show Timer;
 
 import 'package:meta/meta.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flame/components.dart' show PositionType;
 
 import '../extensions.dart';
 import '../../widget/pointer_detector.dart' show TouchDetails;
@@ -67,9 +66,8 @@ mixin HandlesGesture on GameComponent {
     if (!enableGesture) return false;
 
     final pointerPosition = details.globalPosition.toVector2();
-    final convertedPointerPosition = positionType != PositionType.game
-        ? pointerPosition
-        : gameRef.camera.screenToWorld(pointerPosition);
+    final convertedPointerPosition =
+        isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
     final positionWithinComponent = convertedPointerPosition - position;
     if (containsPoint(convertedPointerPosition)) {
       tapPositions[pointer] = positionWithinComponent;
@@ -89,9 +87,8 @@ mixin HandlesGesture on GameComponent {
     if (!enableGesture) return;
 
     final pointerPosition = details.globalPosition.toVector2();
-    final convertedPointerPosition = positionType != PositionType.game
-        ? pointerPosition
-        : gameRef.camera.screenToWorld(pointerPosition);
+    final convertedPointerPosition =
+        isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
     final positionWithinComponent = convertedPointerPosition - position;
     if (containsPoint(convertedPointerPosition)) {
       if (tapPositions.containsKey(pointer)) {
@@ -127,9 +124,8 @@ mixin HandlesGesture on GameComponent {
     if (!enableGesture) return null;
 
     final pointerPosition = details.globalPosition.toVector2();
-    final convertedPointerPosition = positionType != PositionType.game
-        ? pointerPosition
-        : gameRef.camera.screenToWorld(pointerPosition);
+    final convertedPointerPosition =
+        isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
     if (containsPoint(convertedPointerPosition)) {
       isDragging = true;
       assert(tapPositions.containsKey(pointer));
@@ -156,9 +152,8 @@ mixin HandlesGesture on GameComponent {
     }
 
     final pointerPosition = details.globalPosition.toVector2();
-    final convertedPointerPosition = positionType != PositionType.game
-        ? pointerPosition
-        : gameRef.camera.screenToWorld(pointerPosition);
+    final convertedPointerPosition =
+        isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
     final dragPosition = tapPositions[pointer]!;
     onDragUpdate?.call(buttons, dragPosition, convertedPointerPosition);
   }
@@ -173,9 +168,8 @@ mixin HandlesGesture on GameComponent {
     if (!enableGesture) return;
 
     final pointerPosition = details.globalPosition.toVector2();
-    final convertedPointerPosition = positionType != PositionType.game
-        ? pointerPosition
-        : gameRef.camera.screenToWorld(pointerPosition);
+    final convertedPointerPosition =
+        isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
     if (isDragging && (tapPositions.containsKey(pointer))) {
       isDragging = false;
       assert(tapPositions.containsKey(pointer));
@@ -203,13 +197,13 @@ mixin HandlesGesture on GameComponent {
     if (!enableGesture) return false;
 
     final pointerPosition1 = touches[0].currentGlobalPosition.toVector2();
-    final convertedPointerPosition1 = positionType != PositionType.game
+    final convertedPointerPosition1 = isHud
         ? pointerPosition1
-        : gameRef.camera.screenToWorld(pointerPosition1);
+        : gameRef.camera.globalToLocal(pointerPosition1);
     final pointerPosition2 = touches[1].currentGlobalPosition.toVector2();
-    final convertedPointerPosition2 = positionType != PositionType.game
+    final convertedPointerPosition2 = isHud
         ? pointerPosition2
-        : gameRef.camera.screenToWorld(pointerPosition2);
+        : gameRef.camera.globalToLocal(pointerPosition2);
     if (containsPoint(convertedPointerPosition1) &&
         containsPoint(convertedPointerPosition2)) {
       isScalling = true;
@@ -234,13 +228,13 @@ mixin HandlesGesture on GameComponent {
     if (!enableGesture || !isScalling) return;
 
     final pointerPosition1 = touches[0].currentGlobalPosition.toVector2();
-    final convertedPointerPosition1 = positionType != PositionType.game
+    final convertedPointerPosition1 = isHud
         ? pointerPosition1
-        : gameRef.camera.screenToWorld(pointerPosition1);
+        : gameRef.camera.globalToLocal(pointerPosition1);
     final pointerPosition2 = touches[1].currentGlobalPosition.toVector2();
-    final convertedPointerPosition2 = positionType != PositionType.game
+    final convertedPointerPosition2 = isHud
         ? pointerPosition2
-        : gameRef.camera.screenToWorld(pointerPosition2);
+        : gameRef.camera.globalToLocal(pointerPosition2);
     if (containsPoint(convertedPointerPosition1) &&
         containsPoint(convertedPointerPosition2)) {
       onScaleUpdate?.call(touches, details);
@@ -277,9 +271,8 @@ mixin HandlesGesture on GameComponent {
     if (!enableGesture) return false;
 
     final pointerPosition = details.globalPosition.toVector2();
-    final convertedPointerPosition = positionType != PositionType.game
-        ? pointerPosition
-        : gameRef.camera.screenToWorld(pointerPosition);
+    final convertedPointerPosition =
+        isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
     final positionWithinComponent = convertedPointerPosition - position;
     if (containsPoint(convertedPointerPosition)) {
       onLongPress?.call(positionWithinComponent);
@@ -300,9 +293,8 @@ mixin HandlesGesture on GameComponent {
     if (!enableGesture) return false;
 
     final pointerPosition = details.position.toVector2();
-    final convertedPointerPosition = positionType != PositionType.game
-        ? pointerPosition
-        : gameRef.camera.screenToWorld(pointerPosition);
+    final convertedPointerPosition =
+        isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
     final positionWithinComponent = convertedPointerPosition - position;
     if (containsPoint(convertedPointerPosition)) {
       if (!isHovering) {
