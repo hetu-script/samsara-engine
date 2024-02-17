@@ -2,7 +2,7 @@ import 'package:meta/meta.dart';
 
 import 'scene.dart';
 
-class SceneController {
+mixin SceneController {
   Scene? _currentScene;
   Scene? get currentScene => _currentScene;
 
@@ -16,11 +16,11 @@ class SceneController {
   }
 
   @mustCallSuper
-  Future<Scene> createScene(
-    String contructorKey,
-    String sceneId, [
+  Future<Scene> createScene({
+    required String contructorKey,
+    required String sceneId,
     dynamic arg,
-  ]) async {
+  }) async {
     final cached = _cachedScenes[sceneId];
     if (cached != null) {
       _currentScene = cached;

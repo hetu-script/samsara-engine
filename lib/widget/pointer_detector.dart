@@ -79,6 +79,27 @@ class PointerMoveUpdateDetails {
   final Offset localPosition;
 }
 
+class MouseScrollDetails {
+  /// Creates a [MouseScrollDetails] data object.
+  MouseScrollDetails({
+    required this.kind,
+    required this.scrollDelta,
+    this.position = Offset.zero,
+    Offset? localPosition,
+  }) : localPosition = localPosition ?? position;
+
+  final Offset scrollDelta;
+
+  /// The global position at which the pointer contacted the screen.
+  final Offset position;
+
+  /// The local position at which the pointer contacted the screen.
+  final Offset localPosition;
+
+  /// The kind of the device that initiated the event.
+  final PointerDeviceKind kind;
+}
+
 ///  A widget that detects gestures.
 /// * Supports Tap, Drag(start, update, end), Scale(start, update, end) and Long Press
 /// * All callbacks be used simultaneously
@@ -100,6 +121,7 @@ class PointerDetector extends StatefulWidget {
     this.onLongPress,
     this.longPressTickTimeConsider = 400,
     this.onMouseHover,
+    this.onMouseScroll,
   });
 
   /// The widget below this widget in the tree.
@@ -157,6 +179,8 @@ class PointerDetector extends StatefulWidget {
 
   final void Function(PointerHoverEvent details)? onMouseHover;
 
+  final void Function(MouseScrollDetails details)? onMouseScroll;
+
   @override
   PointerDetectorState createState() => PointerDetectorState();
 }
@@ -184,6 +208,7 @@ class PointerDetectorState extends State<PointerDetector> {
       onPointerUp: onPointerUp,
       onPointerMove: onPointerMove,
       onPointerCancel: onPointerUp,
+      onPointerSignal: onPointerSignal,
       child: MouseRegion(
         onHover: onMouseHover,
         child: widget.child,
@@ -371,6 +396,17 @@ class PointerDetectorState extends State<PointerDetector> {
 
     _touchDetails.removeWhere((detail) => detail.pointer == event.pointer);
     // _lastTouchUpPos = event.localPosition;
+  }
+
+  void onPointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent) return;
+
+    final mouseScrollDetail = MouseScrollDetails(
+        scrollDelta: event.scrollDelta,
+        position: event.position,
+        localPosition: event.localPosition,
+        kind: event.kind);
+    widget.onMouseScroll?.call(mouseScrollDetail);
   }
 
   void onMouseHover(PointerHoverEvent event) {

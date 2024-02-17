@@ -76,8 +76,8 @@ class DrawingZone extends GameComponent with HandlesGesture {
     cards.removeLast();
 
     await card.moveTo(
-      position: drawedCardPosition,
-      size: drawedCardSize,
+      toPosition: drawedCardPosition,
+      toSize: drawedCardSize,
       duration: 0.6,
       curve: Curves.easeIn,
     );

@@ -5,13 +5,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "card_game",
-      "cwd": "examples",
-      "request": "launch",
-      "type": "dart",
-      "program": "lib/main.dart"
-    },
-    {
       "name": "test",
       "cwd": "test",
       "request": "launch",

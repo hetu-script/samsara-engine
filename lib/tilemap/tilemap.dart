@@ -12,7 +12,7 @@ import 'object.dart';
 import 'cloud.dart';
 import '../utils/color.dart';
 import '../engine.dart';
-import '../../event/events.dart';
+import '../../event/tilemap.dart';
 import 'terrain.dart';
 
 class TileMapRouteNode {
@@ -185,18 +185,17 @@ class TileMap extends GameComponent with HandlesGesture {
       }
     }
 
-    onDragUpdate = (int buttons, Vector2 dragPosition, Vector2 worldPosition) {
-      gameRef.camera.moveTo(gameRef.camera.viewfinder.position - worldPosition);
+    onDragUpdate = (int buttons, Vector2 dragPosition, Vector2 dragOffset) {
+      gameRef.camera.moveBy(-dragOffset / gameRef.camera.viewfinder.zoom);
     };
 
     onTap = (int buttons, Vector2 position) {
       final tilePosition = worldPosition2Tile(position);
-      _selectTile(tilePosition.left, tilePosition.top);
 
       // if (kDebugMode) {
       //   print('tilemap tapped at: $tilePosition');
       // }
-      engine.broadcast(MapInteractionEvent.mapTapped(
+      engine.emit(MapInteractionEvent.mapTapped(
           globalPosition: position.toOffset(),
           buttons: buttons,
           tilePosition: tilePosition));
@@ -204,12 +203,11 @@ class TileMap extends GameComponent with HandlesGesture {
 
     onDoubleTap = (int buttons, Vector2 position) {
       final tilePosition = worldPosition2Tile(position);
-      _selectTile(tilePosition.left, tilePosition.top);
 
       // if (kDebugMode) {
       // print('tilemap double tapped at: $tilePosition');
       // }
-      engine.broadcast(MapInteractionEvent.mapDoubleTapped(
+      engine.emit(MapInteractionEvent.mapDoubleTapped(
           globalPosition: position.toOffset(),
           buttons: buttons,
           tilePosition: tilePosition));
@@ -452,7 +450,9 @@ class TileMap extends GameComponent with HandlesGesture {
   Vector2 tilePosition2TileCenterInScreen(int left, int top) {
     final worldPos = tilePosition2TileCenterInWorld(left, top);
     final scaled = Vector2(worldPos.x * scale.x, worldPos.y * scale.y);
-    return scaled - gameRef.camera.viewfinder.position;
+    final result =
+        scaled - (gameRef.camera.viewfinder.position - gameRef.size / 2);
+    return result;
   }
 
   TilePosition worldPosition2Tile(Vector2 worldPos) {
@@ -532,8 +532,7 @@ class TileMap extends GameComponent with HandlesGesture {
       // bool animated = true,
       double speed = 500.0}) {
     final worldPos = tilePosition2TileCenterInWorld(left, top);
-    final dest =
-        Vector2(worldPos.x * scale.x, worldPos.y * scale.y) - gameRef.size / 2;
+    final dest = Vector2(worldPos.x * scale.x, worldPos.y * scale.y);
     gameRef.camera.moveTo(dest, speed: speed);
     // if (!animated) {
     //   gameRef.camera.snap();
@@ -573,7 +572,7 @@ class TileMap extends GameComponent with HandlesGesture {
     _lastRouteNode = null;
   }
 
-  void _selectTile(int left, int top) {
+  void selectTile(int left, int top) {
     final terrain = getTerrain(left, top);
     if (terrain != null) {
       if (terrain.isSelectable) selectedTerrain = terrain;

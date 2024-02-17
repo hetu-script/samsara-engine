@@ -7,7 +7,7 @@ import '../component/game_component.dart';
 import 'tile.dart';
 import '../utils/direction.dart';
 import '../engine.dart';
-import '../../event/events.dart';
+import '../../event/tilemap.dart';
 import '../animation/sprite_animation.dart';
 
 enum AnimationDirection {
@@ -127,7 +127,7 @@ class TileMapObject extends GameComponent with TileInfo {
     // 检查isBackward的目的，是为了在英雄倒退到entity上时，不触发
     // 只有玩家自己主动经过某个entity，才触发事件
     if (isHero && !_isBackward) {
-      engine.broadcast(HeroEvent.heroMoved(
+      engine.emit(HeroEvent.heroMoved(
         sceneId: sceneId,
         tilePosition: tilePosition,
       ));

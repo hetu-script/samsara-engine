@@ -239,74 +239,74 @@ void drawScreenText(
     switch (colorTheme) {
       case ScreenTextColorTheme.light:
         textPaint = TextPaint(
-          style: style?.textStyle ??
-              TextStyle(
-                color: Colors.white.withOpacity(opacity),
-                fontSize: 12.0,
-              ),
+          style: TextStyle(
+            color: Colors.white.withOpacity(opacity),
+            fontSize: 12.0,
+            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
+          ).merge(style?.textStyle),
         );
         break;
       case ScreenTextColorTheme.dark:
         textPaint = TextPaint(
-          style: style?.textStyle ??
-              TextStyle(
-                color: Colors.black87.withOpacity(opacity),
-                fontSize: 12.0,
-              ),
+          style: TextStyle(
+            color: Colors.black87.withOpacity(opacity),
+            fontSize: 12.0,
+            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
+          ).merge(style?.textStyle),
         );
         break;
       case ScreenTextColorTheme.primary:
         textPaint = TextPaint(
-          style: style?.textStyle ??
-              TextStyle(
-                color: Colors.blue.withOpacity(opacity),
-                fontSize: 12.0,
-              ),
+          style: TextStyle(
+            color: Colors.blue.withOpacity(opacity),
+            fontSize: 12.0,
+            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
+          ).merge(style?.textStyle),
         );
         break;
       case ScreenTextColorTheme.secondary:
         textPaint = TextPaint(
-          style: style?.textStyle ??
-              TextStyle(
-                color: Colors.grey.withOpacity(opacity),
-                fontSize: 12.0,
-              ),
+          style: TextStyle(
+            color: Colors.grey.withOpacity(opacity),
+            fontSize: 12.0,
+            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
+          ).merge(style?.textStyle),
         );
         break;
       case ScreenTextColorTheme.success:
         textPaint = TextPaint(
-          style: style?.textStyle ??
-              TextStyle(
-                color: Colors.green.withOpacity(opacity),
-                fontSize: 12.0,
-              ),
+          style: TextStyle(
+            color: Colors.green.withOpacity(opacity),
+            fontSize: 12.0,
+            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
+          ).merge(style?.textStyle),
         );
         break;
       case ScreenTextColorTheme.info:
         textPaint = TextPaint(
-          style: style?.textStyle ??
-              TextStyle(
-                color: Colors.lightBlue.withOpacity(opacity),
-                fontSize: 12.0,
-              ),
+          style: TextStyle(
+            color: Colors.lightBlue.withOpacity(opacity),
+            fontSize: 12.0,
+            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
+          ).merge(style?.textStyle),
         );
         break;
       case ScreenTextColorTheme.warning:
         textPaint = TextPaint(
-          style: style?.textStyle ??
-              TextStyle(
-                color: Colors.yellow.withOpacity(opacity),
-                fontSize: 12.0,
-              ),
+          style: TextStyle(
+            color: Colors.yellow.withOpacity(opacity),
+            fontSize: 12.0,
+            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
+          ).merge(style?.textStyle),
         );
         break;
       case ScreenTextColorTheme.danger:
         textPaint = TextPaint(
-          style: style?.textStyle ??
-              TextStyle(
-                color: Colors.red.withOpacity(opacity),
-                fontSize: 12.0,
-              ),
+          style: TextStyle(
+            color: Colors.red.withOpacity(opacity),
+            fontSize: 12.0,
+            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
+          ).merge(style?.textStyle),
         );
         break;
     }
@@ -381,8 +381,9 @@ void drawScreenText(
         textPosition = Vector2(rect.right - textWidth + offsetX,
             rect.bottom - textHeight + offsetY);
       } else {
-        textPosition = Vector2(rect.left + offsetX + (anchor?.x ?? 0),
-            rect.top + offsetY + (anchor?.y ?? 0));
+        textPosition = Vector2(
+            rect.left + offsetX + (anchor?.x ?? 0) * rect.width,
+            rect.top + offsetY + (anchor?.y ?? 0) * rect.height);
       }
       if (style.backgroundSprite != null) {
         final backgroundRect = Rect.fromLTWH(

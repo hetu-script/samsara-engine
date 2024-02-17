@@ -40,7 +40,7 @@ class PlayGround extends GameComponent with HandlesGesture {
     };
 
     onMouseHover = (position) {
-      arrow.setPath(center, position);
+      // arrow.setPath(center, position);
 
       // sprite.position = position;
       // // mousePos = position;

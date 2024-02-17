@@ -17,23 +17,23 @@ class EventHandler {
   EventHandler({required this.ownerKey, required this.handle});
 }
 
-abstract class EventAggregator {
+mixin EventAggregator {
   final _eventHandlers = <String, List<EventHandler>>{};
 
-  void registerListener(String eventId, EventHandler eventHandler) {
+  void addEventListener(String eventId, EventHandler eventHandler) {
     if (_eventHandlers[eventId] == null) {
       _eventHandlers[eventId] = [];
     }
     _eventHandlers[eventId]!.add(eventHandler);
   }
 
-  void disposeListenders(Key key) {
+  void removeEventListener(Key key) {
     for (final list in _eventHandlers.values) {
       list.removeWhere((handler) => handler.ownerKey == key);
     }
   }
 
-  void broadcast(GameEvent event) {
+  void emit(GameEvent event) {
     final listeners = _eventHandlers[event.name];
     if (listeners != null) {
       for (final listener in listeners) {

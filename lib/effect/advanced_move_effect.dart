@@ -9,7 +9,7 @@ class AdvancedMoveEffect extends Effect with EffectTarget<GameComponent> {
   Vector2? _diffPosition, _diffSize;
   double? _diffAngle;
 
-  Function? onChange;
+  void Function()? onChange;
 
   AdvancedMoveEffect({
     this.endPosition,
@@ -56,7 +56,7 @@ class AdvancedMoveEffect extends Effect with EffectTarget<GameComponent> {
       target.position += _diffPosition! * dProgress;
     }
 
-    if (_diffSize != null) {
+    if (_diffSize != null && !_diffSize!.isZero()) {
       target.size += _diffSize! * dProgress;
     }
 

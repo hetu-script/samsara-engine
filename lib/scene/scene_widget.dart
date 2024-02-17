@@ -30,6 +30,7 @@ class SceneWidget<T extends Scene> extends StatelessWidget {
         onScaleEnd: scene.onScaleEnd,
         onLongPress: scene.onLongPress,
         onMouseHover: scene.onMouseHover,
+        onMouseScroll: scene.onMouseScroll,
         child: GameWidget(
           game: scene,
           overlayBuilderMap: overlayBuilderMap,

@@ -21,6 +21,8 @@ class PiledZone extends GameComponent {
   /// 按照卡牌 deckId 统计此区域中卡牌的数量
   Map<String, int> count = {};
 
+  bool containsCard(String deckId) => count.containsKey(deckId);
+
   /// 按照卡牌 ID 生成的列表，可能出现重复的ID
   List<String> pile = [];
 
@@ -88,7 +90,7 @@ class PiledZone extends GameComponent {
     }
   }
 
-  Future<void> addCard(
+  Future<void> placeCard(
     PlayingCard card, {
     int? index,
     bool animated = true,
@@ -113,19 +115,49 @@ class PiledZone extends GameComponent {
     }
 
     card.index = index;
+    card.pile = this;
     cards.insert(index, card);
     if (cardState != null) card.state = cardState!;
 
-    return sortCards(animated: animated, onComplete: onComplete);
+    // card.onAddedToPileZone?.call(this);
+
+    return sortCards(animated: animated, onSortComplete: onComplete);
+  }
+
+  void reorderCard(int oldIndex, int newIndex) {
+    assert(oldIndex >= 0 && oldIndex < cards.length);
+
+    if (newIndex < 0) newIndex = 0;
+    if (newIndex >= cards.length) newIndex = cards.length - 1;
+
+    cards[oldIndex].index = newIndex;
+    if (oldIndex < newIndex) {
+      for (var i = oldIndex + 1; i <= newIndex; ++i) {
+        final card = cards[i];
+        --card.index;
+      }
+    } else {
+      for (var i = newIndex; i < oldIndex; ++i) {
+        final card = cards[i];
+        ++card.index;
+      }
+    }
+
+    sortCards();
   }
 
   /// 整理卡牌。如果 animated 为 true，则会用动画过度卡牌整理的过程
   Future<void> sortCards({
     bool pileUp = true,
     bool animated = true,
-    void Function()? onComplete,
+    void Function()? onSortComplete,
   }) async {
     final completer = Completer();
+
+    void onComplete() {
+      onSortComplete?.call();
+      completer.complete();
+    }
 
     cards.sort((c1, c2) => c1.index.compareTo(c2.index));
     pile.clear();
@@ -159,15 +191,16 @@ class PiledZone extends GameComponent {
       if (focusedSize != null) card.focusedSize ??= focusedSize;
 
       if (animated) {
+        card.enableGesture = false;
         card.moveTo(
-          position: endPosition,
-          size: piledCardSize,
+          toPosition: endPosition,
+          toSize: piledCardSize,
           duration: 0.5,
           curve: Curves.decelerate,
           onComplete: () {
+            card.enableGesture = true;
             if (i == cards.length - 1) {
-              onComplete?.call();
-              completer.complete();
+              onComplete();
             }
           },
         );
@@ -178,20 +211,23 @@ class PiledZone extends GameComponent {
     }
 
     if (!animated) {
-      completer.complete();
+      onComplete();
     }
 
     return completer.future;
   }
 
   bool removeCard(String id) {
-    final i = cards.indexWhere((card) => card.id == id);
-    if (i == -1) return false;
+    final cardIndex = cards.indexWhere((card) => card.id == id);
+    if (cardIndex == -1) return false;
 
-    final card = cards[i];
+    final card = cards[cardIndex];
 
-    cards.removeAt(i);
-    pile.removeAt(i);
+    cards.removeAt(cardIndex);
+    for (var i = cardIndex; i < cards.length; ++i) {
+      cards[i].index = i;
+    }
+    pile.removeAt(cardIndex);
 
     final ec = count[card.deckId]!;
     if (ec == 1) {
@@ -199,6 +235,8 @@ class PiledZone extends GameComponent {
     } else {
       count[card.deckId] = ec - 1;
     }
+
+    sortCards();
     return true;
   }
 

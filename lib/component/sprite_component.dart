@@ -10,6 +10,10 @@ import '../component/game_component.dart';
 
 /// A modified version of [SpriteComponent2] of Flame.
 class SpriteComponent2 extends GameComponent {
+  static Paint defaultPaint = Paint()
+    ..filterQuality = FilterQuality.medium
+    ..color = Colors.white;
+
   Sprite? sprite;
 
   String? spriteId;
@@ -33,15 +37,14 @@ class SpriteComponent2 extends GameComponent {
         'sprite component must have either image, sprite or spriteId.');
     if (image != null) {
       sprite = Sprite(image, srcPosition: srcPosition, srcSize: srcSize);
-      if (size == null) {
-        this.size = sprite!.srcSize;
-      }
     }
 
-    if (sprite != null) {
-      if (size == null) {
+    if (size == null) {
+      if (sprite != null) {
         this.size = sprite!.srcSize;
       }
+    } else {
+      this.size = size;
     }
 
     if (paint != null) {
@@ -63,7 +66,7 @@ class SpriteComponent2 extends GameComponent {
     sprite?.renderRect(
       canvas,
       border,
-      overridePaint: paint,
+      overridePaint: defaultPaint,
     );
   }
 }

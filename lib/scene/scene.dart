@@ -165,6 +165,13 @@ abstract class Scene extends FlameGame {
     }
   }
 
+  @mustCallSuper
+  void onMouseScroll(MouseScrollDetails details) {
+    for (final c in gestureComponents) {
+      c.handleMouseScroll(details);
+    }
+  }
+
   SceneWidget getWidget({
     Key? key,
     required Scene scene,

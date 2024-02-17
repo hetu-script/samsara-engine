@@ -34,6 +34,10 @@ abstract class GameComponent extends PositionComponent
 
   double get borderRadius => _borderRadius;
 
+  Vector2? moving2Position;
+  Vector2? moving2Size;
+  double? moving2Angle;
+
   GameComponent({
     this.id,
     super.position,
@@ -111,41 +115,45 @@ abstract class GameComponent extends PositionComponent
       children.reversed().whereType<HandlesGesture>().cast<HandlesGesture>();
 
   void snapTo({
-    Vector2? position,
-    Vector2? size,
-    double? angle,
+    Vector2? toPosition,
+    Vector2? toSize,
+    double? toAngle,
   }) {
-    if ((position == null || this.position == position) &&
-        (size == null || this.size == size) &&
-        (angle == null || this.angle == angle)) {
+    if ((toPosition == null || position == toPosition) &&
+        (toSize == null || size == toSize) &&
+        (toAngle == null || angle == toAngle)) {
       return;
     }
 
-    if (position != null) {
-      this.position = position;
+    if (toPosition != null) {
+      position = toPosition;
     }
-    if (size != null) {
-      this.size = size;
+    if (toSize != null) {
+      size = toSize;
     }
-    if (angle != null) {
-      this.angle = angle;
+    if (toAngle != null) {
+      angle = toAngle;
     }
   }
 
   Future<void> moveTo({
-    Vector2? position,
-    Vector2? size,
-    double? angle,
+    Vector2? toPosition,
+    Vector2? toSize,
+    double? toAngle,
     required double duration,
     Curve curve = Curves.linear,
-    Function? onChange,
+    void Function()? onChange,
     void Function()? onComplete,
   }) async {
-    if (position == null && size == null && angle == null) return;
+    if (toPosition == null && toSize == null && toAngle == null) return;
+    if (position == toPosition && size == toSize && angle == toAngle) return;
+    if (moving2Position == toPosition &&
+        moving2Size == toSize &&
+        moving2Angle == toAngle) return;
 
-    bool diffPos = position != null && this.position != position;
-    bool diffSize = size != null && this.size != position;
-    bool diffAngle = angle != null && this.angle != angle;
+    bool diffPos = toPosition != null && position != toPosition;
+    bool diffSize = toSize != null && size != toPosition;
+    bool diffAngle = toAngle != null && angle != toAngle;
 
     /// nothing need to be done withi this component.
     if (!(diffPos || diffSize || diffAngle)) return;
@@ -153,15 +161,21 @@ abstract class GameComponent extends PositionComponent
     final completer = Completer();
     add(AdvancedMoveEffect(
       controller: EffectController(duration: duration, curve: curve),
-      endPosition: position,
-      endSize: size,
-      endAngle: angle,
+      endPosition: toPosition,
+      endSize: toSize,
+      endAngle: toAngle,
       onChange: onChange,
       onComplete: () {
         onComplete?.call();
         completer.complete();
+        moving2Position = null;
+        moving2Size = null;
+        moving2Angle = null;
       },
     ));
+    moving2Position = toPosition;
+    moving2Size = toSize;
+    moving2Angle = toAngle;
     return completer.future;
   }
 }

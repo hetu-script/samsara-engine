@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
@@ -185,15 +185,16 @@ class SamsaraEngine with SceneController, EventAggregator {
           // printPerformanceStatistics: config.debugMode,
           showDartStackTrace: config.debugMode,
           showHetuStackTrace: true,
+          stackTraceDisplayCountLimit: 10,
           allowVariableShadowing: false,
           allowImplicitNullToZeroConversion: true,
           allowImplicitEmptyValueToFalseConversion: true,
           resolveExternalFunctionsDynamically: true,
         ),
         sourceContext: sourceContext,
+        locale: HTLocaleSimplifiedChinese(),
       );
       await hetu.initFlutter(
-        locale: HTLocaleSimplifiedChinese(),
         externalFunctions: externalFunctions,
       );
     } else {
@@ -203,21 +204,25 @@ class SamsaraEngine with SceneController, EventAggregator {
           allowImplicitNullToZeroConversion: true,
           allowImplicitEmptyValueToFalseConversion: true,
         ),
+        locale: HTLocaleSimplifiedChinese(),
       );
       hetu.init(
-        locale: HTLocaleSimplifiedChinese(),
         externalFunctions: externalFunctions,
       );
     }
 
     /// add engine class binding into script.
     hetu.interpreter.bindExternalClass(SamsaraEngineClassBinding());
-    hetu.eval(
-      kHetuEngineBindingSource,
-      // filename: 'engine.ht',
-      globallyImport: true,
-      type: HTResourceType.hetuModule,
-    );
+    try {
+      hetu.eval(
+        kHetuEngineBindingSource,
+        // filename: 'engine.ht',
+        globallyImport: true,
+        type: HTResourceType.hetuModule,
+      );
+    } catch (e) {
+      if (kDebugMode) print(e);
+    }
 
     if (loadCardGameBindings) {
       /// add playing card class binding into script.
