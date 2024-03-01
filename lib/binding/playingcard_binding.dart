@@ -6,10 +6,7 @@ extension PlayingCardBinding on PlayingCard {
   dynamic htFetch(String varName) {
     switch (varName) {
       case 'setUsable':
-        return (HTEntity object,
-                {List<dynamic> positionalArgs = const [],
-                Map<String, dynamic> namedArgs = const {},
-                List<HTType> typeArgs = const []}) =>
+        return ({positionalArgs, namedArgs}) =>
             setUsable(positionalArgs[0], positionalArgs[1]);
       default:
         throw HTError.undefined(varName);
@@ -21,8 +18,8 @@ class PlayingCardClassBinding extends HTExternalClass {
   PlayingCardClassBinding() : super(r'PlayingCard');
 
   @override
-  dynamic instanceMemberGet(dynamic object, String id) {
-    var i = object as PlayingCard;
+  dynamic instanceMemberGet(dynamic instance, String id) {
+    var i = instance as PlayingCard;
     return i.htFetch(id);
   }
 }

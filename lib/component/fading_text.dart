@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flame/effects.dart';
 
 import '../../component/game_component.dart';
@@ -17,6 +15,8 @@ class FadingText extends GameComponent {
 
   final Curve moveUpCurve;
 
+  final void Function()? onComplete;
+
   FadingText(
     this.text, {
     this.movingUpOffset = 0,
@@ -30,6 +30,7 @@ class FadingText extends GameComponent {
     super.opacity,
     bool outlined = true,
     required TextPaint textPaint,
+    this.onComplete,
   })  : style = ScreenTextStyle(textPaint: textPaint, outlined: outlined),
         super(anchor: Anchor.center) {
     final metric = textPaint.getLineMetrics(text);
@@ -40,10 +41,11 @@ class FadingText extends GameComponent {
   }
 
   @override
-  FutureOr<void> onLoad() {
+  void onLoad() {
     void addEffect() {
       add(FadeEffect(
         controller: EffectController(duration: duration),
+        onComplete: onComplete,
       ));
     }
 

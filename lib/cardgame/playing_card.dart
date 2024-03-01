@@ -1,16 +1,16 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flame/components.dart' hide SpriteComponent;
 import 'package:flame/effects.dart';
 import 'package:flutter/material.dart' hide Image;
 import 'package:flame/flame.dart';
-import 'package:samsara/extensions.dart';
 // import 'package:flame/effects.dart';
 
 import '../gestures/gesture_mixin.dart';
 import '../component/game_component.dart';
 import '../paint.dart';
-// import '../extensions.dart';
+import '../extensions.dart';
 import 'zones/piled_zone.dart';
 
 class PlayingCard extends GameComponent with HandlesGesture {
@@ -43,14 +43,17 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   static double darkenedOpacity = 0.3;
   static Paint darkenedPaint = Paint()
-    ..color = Colors.white.withOpacity(darkenedOpacity);
+    ..color = Colors.black.withOpacity(darkenedOpacity)
+    ..blendMode = BlendMode.luminosity;
+
+  static Paint shadowPaint = Paint()
+    ..imageFilter = ImageFilter.blur(sigmaX: 0.3, sigmaY: 0.3);
 
   int _savedPriority = 0;
   late Vector2 _savedPosition, _savedSize;
 
-  /// 卡牌id，每个图案、标题相同的卡牌视为同一张卡牌，卡组中可能有多个id相同的卡牌。
-  @override
-  String get id => super.id!;
+  /// 卡牌id，不同的id对应不同的插画和标题。
+  final String id;
   String? ownedByRole;
 
   bool ownedBy(String? player) {
@@ -60,14 +63,15 @@ class PlayingCard extends GameComponent with HandlesGesture {
 
   PiledZone? pile;
   void removeFromPile() {
-    pile?.removeCard(id);
+    pile?.removeCardByIndex(index);
     pile = null;
   }
 
-  /// 组牌id，有可能同一张牌有不同的编号和图案，但他们的规则效果完全相同，
-  ///
-  /// 此时尽管它们的id可能不同，但它们在组牌时共享同一个上限，视作同一张牌。
-  final String deckId;
+  /// 组牌id，有可能不同id的卡牌具有相同的名字和规则效果，组牌时他们被视作同一张牌，共享数量上限
+  final String deckbuildingId;
+
+  /// 卡牌脚本函数名
+  final String? script;
 
   final String? kind, title, description;
   final int cost;
@@ -93,12 +97,13 @@ class PlayingCard extends GameComponent with HandlesGesture {
   final dynamic data;
 
   /// the sprite id of this card, should be unique among all cards
-  final String? frameSpriteId, backSpriteId, illustrationSpriteId;
+  final String? spriteId, backSpriteId, illustrationSpriteId;
   final double illustrationHeightRatio;
   late Rect _illustrationRect;
-  Sprite? frameSprite, backSprite, illustrationSprite;
+  Sprite? sprite, backSprite, illustrationSprite;
 
   Vector2? focusedOffset, focusedPosition, focusedSize;
+  int? focusedPriority;
 
   bool focusOnHovering;
   bool showBorder;
@@ -125,8 +130,9 @@ class PlayingCard extends GameComponent with HandlesGesture {
   Rect? descriptionPadding;
 
   PlayingCard({
-    required String id,
-    required this.deckId,
+    required this.id,
+    required this.deckbuildingId,
+    this.script,
     this.kind,
     this.title,
     ScreenTextStyle? titleStyle,
@@ -140,8 +146,8 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.descriptionPadding,
     this.data,
     this.ownedByRole,
-    this.frameSpriteId,
-    this.frameSprite,
+    this.spriteId,
+    this.sprite,
     this.illustrationSpriteId,
     this.illustrationSprite,
     this.backSpriteId,
@@ -151,6 +157,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.stack = 1,
     this.showStack = false,
     ScreenTextStyle? stackStyle,
+    super.priority,
     super.position,
     super.size,
     super.borderRadius,
@@ -158,6 +165,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.focusedOffset,
     this.focusedPosition,
     this.focusedSize,
+    this.focusedPriority,
     this.focusOnHovering = false,
     this.showBorder = false,
     this.isFocused = false,
@@ -167,18 +175,17 @@ class PlayingCard extends GameComponent with HandlesGesture {
     this.isRotatable = false,
     this.isDarkened = false,
     super.anchor,
-    super.priority,
     bool enableGesture = true,
     this.state,
+    this.focusAnimationDuration = 0.25,
     this.onFocused,
     this.onUnfocused,
     this.onPreviewed,
     this.onUnpreviewed,
-    this.focusAnimationDuration = 0.25,
-  })  : tags = tags ?? {},
-        super(id: id) {
+  }) : tags = tags ?? {} {
     _savedPosition = position.clone();
     _savedSize = size.clone();
+    _savedPriority = priority;
 
     this.enableGesture = enableGesture;
 
@@ -270,7 +277,8 @@ class PlayingCard extends GameComponent with HandlesGesture {
   PlayingCard clone() {
     return PlayingCard(
       id: id,
-      deckId: deckId,
+      deckbuildingId: deckbuildingId,
+      script: script,
       kind: kind,
       title: title,
       titleStyle: titleStyle,
@@ -281,9 +289,10 @@ class PlayingCard extends GameComponent with HandlesGesture {
       descriptionStyle: descriptionStyle,
       showDescription: showDescription,
       descriptionOutlined: descriptionOutlined,
+      descriptionPadding: descriptionPadding,
       data: data,
       ownedByRole: ownedByRole,
-      frameSprite: frameSprite,
+      sprite: sprite,
       illustrationSprite: illustrationSprite,
       backSprite: backSprite,
       cost: cost,
@@ -291,6 +300,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
       stack: stack,
       showStack: showStack,
       stackStyle: stackStyle,
+      priority: priority,
       position: position,
       size: size,
       borderRadius: borderRadius,
@@ -298,6 +308,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
       focusedOffset: focusedOffset,
       focusedPosition: focusedPosition,
       focusedSize: focusedSize,
+      focusedPriority: focusedPriority,
       focusOnHovering: focusOnHovering,
       showBorder: showBorder,
       isFocused: isFocused,
@@ -305,8 +316,8 @@ class PlayingCard extends GameComponent with HandlesGesture {
       isFlipped: isFlipped,
       isRotated: isRotated,
       isRotatable: isRotatable,
+      isDarkened: isDarkened,
       anchor: anchor,
-      priority: priority,
       enableGesture: enableGesture,
       state: state,
       focusAnimationDuration: focusAnimationDuration,
@@ -320,9 +331,9 @@ class PlayingCard extends GameComponent with HandlesGesture {
   }
 
   @override
-  FutureOr<void> onLoad() async {
-    if (frameSpriteId != null) {
-      frameSprite = Sprite(await Flame.images.load(frameSpriteId!));
+  void onLoad() async {
+    if (spriteId != null) {
+      sprite = Sprite(await Flame.images.load(spriteId!));
     }
     if (illustrationSpriteId != null) {
       illustrationSprite =
@@ -344,6 +355,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
     if (value) {
       _savedPosition = position.clone();
       _savedSize = size.clone();
+      _savedPriority = priority;
 
       Vector2? endPosition;
       if (focusedOffset != null) {
@@ -357,17 +369,21 @@ class PlayingCard extends GameComponent with HandlesGesture {
         duration: focusAnimationDuration,
       );
 
+      if (focusedPriority != null) {
+        priority = focusedPriority!;
+      }
       onFocused?.call();
     } else {
-      if (!stayFocused) {
-        await moveTo(
-          toPosition: _savedPosition,
-          toSize: _savedSize,
-          duration: focusAnimationDuration,
-        );
+      // if (!stayFocused) {
+      await moveTo(
+        toPosition: _savedPosition,
+        toSize: _savedSize,
+        duration: focusAnimationDuration,
+      );
 
-        onUnfocused?.call();
-      }
+      priority = _savedPriority;
+      onUnfocused?.call();
+      // }
     }
   }
 
@@ -457,7 +473,7 @@ class PlayingCard extends GameComponent with HandlesGesture {
     } else {
       illustrationSprite?.renderRect(canvas, _illustrationRect,
           overridePaint: isDarkened ? darkenedPaint : defaultPaint);
-      frameSprite?.renderRect(canvas, border,
+      sprite?.renderRect(canvas, border,
           overridePaint: isDarkened ? darkenedPaint : defaultPaint);
     }
 

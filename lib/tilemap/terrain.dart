@@ -12,11 +12,6 @@ import '../animation/sprite_animation.dart';
 class TileMapTerrain extends GameComponent with TileInfo {
   static const defaultAnimationStepTime = 0.2;
 
-  static final borderPaint = Paint()
-    ..strokeWidth = 0.5
-    ..style = PaintingStyle.stroke
-    ..color = Colors.blue;
-
   /// internal data of this tile, possible json or other user-defined data form.
   final dynamic data;
 
@@ -87,15 +82,16 @@ class TileMapTerrain extends GameComponent with TileInfo {
               srcWidth,
               srcHeight,
             ));
-        animation = SpriteAnimationWithTicker(sheet.createAnimation(
-            row: 0,
-            stepTime: defaultAnimationStepTime,
-            loop: loop,
-            from: 0,
-            to: animationFrameCount ?? sheet.columns));
+        animation = SpriteAnimationWithTicker(
+            animation: sheet.createAnimation(
+                row: 0,
+                stepTime: defaultAnimationStepTime,
+                loop: loop,
+                from: 0,
+                to: animationFrameCount ?? sheet.columns));
       } else if (animationRow != null) {
-        animation =
-            SpriteAnimationWithTicker(terrainSpriteSheet.createAnimation(
+        animation = SpriteAnimationWithTicker(
+            animation: terrainSpriteSheet.createAnimation(
           row: animationRow,
           stepTime: defaultAnimationStepTime,
           loop: loop,

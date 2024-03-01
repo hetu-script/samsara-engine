@@ -6,31 +6,30 @@ import 'package:hetu_script/hetu_script.dart';
 import 'package:hetu_script_flutter/hetu_script_flutter.dart';
 // import 'package:path_provider/path_provider.dart';
 // import 'package:path/path.dart' as path;
+import 'package:flame_audio/flame_audio.dart';
+import 'package:flame_audio/bgm.dart';
 
-import 'binding/game_binding.dart';
+import 'binding/engine_binding.dart';
 import '../event/event.dart';
 import 'localization/localization.dart';
 import 'utils/color.dart';
 import 'scene/scene_controller.dart';
 import 'logger/printer.dart';
 import 'logger/output.dart';
-import 'binding/playingcard_binding.dart';
 
 class EngineConfig {
   final String name;
   final bool debugMode;
   final bool isOnDesktop;
-  final bool showMissingLocaleStringPlaceHolder;
 
   const EngineConfig({
     this.name = 'A Samsara Engine Game',
     this.debugMode = false,
     this.isOnDesktop = false,
-    this.showMissingLocaleStringPlaceHolder = true,
   });
 }
 
-class SamsaraEngine with SceneController, EventAggregator {
+class SamsaraEngine with SceneController, EventAggregator implements HTLogger {
   static const modeFileExtension = '.mod';
 
   final EngineConfig config;
@@ -45,10 +44,7 @@ class SamsaraEngine with SceneController, EventAggregator {
       printer: _loggerPrinter,
       output: _loggerOutput,
     );
-    locale = GameLocalization(
-      showMissingLocaleStringPlaceHolder:
-          config.showMissingLocaleStringPlaceHolder,
-    );
+    locale = GameLocalization();
   }
 
   final CustomLoggerPrinter _loggerPrinter = CustomLoggerPrinter();
@@ -60,8 +56,15 @@ class SamsaraEngine with SceneController, EventAggregator {
 
   late final String? _mainModName;
 
-  void loadLocale(dynamic localeData) {
+  void loadLocale(Map localeData) {
+    info('载入本地化字符串……');
     locale.loadData(localeData);
+  }
+
+  void setLocale(String localeId) {
+    assert(locale.hasLanguage(localeId));
+    info('设置当前语言为 [${locale.getLanguageName(localeId)}]');
+    locale.languageId = localeId;
   }
 
   List<Map<int, Color>> colors = [];
@@ -75,29 +78,17 @@ class SamsaraEngine with SceneController, EventAggregator {
   }
 
   late Hetu hetu;
-  bool isLoaded = false;
+  bool _isInitted = false;
+  bool get isInitted => _isInitted;
 
   // HTStruct createStruct([Map<String, dynamic> jsonData = const {}]) =>
   //     hetu.interpreter.createStructfromJson(jsonData);
 
-  dynamic fetch(String id, {String? moduleName}) =>
-      hetu.interpreter.fetch(id, module: moduleName);
+  // dynamic fetch(String id, {String? moduleName}) =>
+  //     hetu.interpreter.fetch(id, module: moduleName);
 
-  dynamic assign(String id, dynamic value, {String? module}) =>
-      hetu.interpreter.assign(id, value, module: module);
-
-  invoke(String func,
-          {String? namespace,
-          String? module,
-          List<dynamic> positionalArgs = const [],
-          Map<String, dynamic> namedArgs = const {},
-          List<HTType> typeArgs = const []}) =>
-      hetu.interpreter.invoke(func,
-          namespace: namespace,
-          module: module,
-          positionalArgs: positionalArgs,
-          namedArgs: namedArgs,
-          typeArgs: typeArgs);
+  // dynamic assign(String id, dynamic value, {String? module}) =>
+  //     hetu.interpreter.assign(id, value, module: module);
 
   Future<void> loadModFromAssetsString(
     String key, {
@@ -170,9 +161,9 @@ class SamsaraEngine with SceneController, EventAggregator {
   /// for accessing the assets bundle resources.
   Future<void> init({
     Map<String, Function> externalFunctions = const {},
-    bool loadCardGameBindings = false,
+    Set<String> modules = const {'cardGame'},
   }) async {
-    if (isLoaded) return;
+    if (_isInitted) return;
     if (config.debugMode) {
       const root = 'scripts/';
       final filterConfig = HTFilterConfig(root);
@@ -205,6 +196,7 @@ class SamsaraEngine with SceneController, EventAggregator {
           allowImplicitEmptyValueToFalseConversion: true,
         ),
         locale: HTLocaleSimplifiedChinese(),
+        logger: this,
       );
       hetu.init(
         externalFunctions: externalFunctions,
@@ -224,22 +216,26 @@ class SamsaraEngine with SceneController, EventAggregator {
       if (kDebugMode) print(e);
     }
 
-    if (loadCardGameBindings) {
-      /// add playing card class binding into script.
-      hetu.interpreter.bindExternalClass(PlayingCardClassBinding());
-      hetu.sourceContext.addResource(
-        'playing_card.ht',
-        HTSource(
-          kHetuPlayingCardBindingSource,
-          filename: 'playing_card_binding.ht',
-          type: HTResourceType.hetuModule,
-        ),
-      );
-    }
+    // if (modules.contains('cardGame')) {
+    //   /// add playing card class binding into script.
+    //   hetu.interpreter.bindExternalClass(PlayingCardClassBinding());
+    //   hetu.sourceContext.addResource(
+    //     'playing_card.ht',
+    //     HTSource(
+    //       kHetuPlayingCardBindingSource,
+    //       filename: 'playing_card_binding.ht',
+    //       type: HTResourceType.hetuModule,
+    //     ),
+    //   );
+    // }
 
     // hetu.interpreter.bindExternalFunction('print', info, override: true);
 
-    isLoaded = true;
+    hetu.assign('engine', this);
+
+    await locale.init();
+
+    _isInitted = true;
   }
 
   // @override
@@ -257,15 +253,15 @@ class SamsaraEngine with SceneController, EventAggregator {
 
   List<String> getLog() => _loggerOutput.log;
 
-  String _stringify(dynamic args) {
+  String stringify(dynamic args) {
     if (args is List) {
-      if (isLoaded) {
+      if (isInitted) {
         return args.map((e) => hetu.lexicon.stringify(e)).join(' ');
       } else {
         return args.map((e) => e.toString()).join(' ');
       }
     } else {
-      if (isLoaded) {
+      if (isInitted) {
         return hetu.lexicon.stringify(args);
       } else {
         return args.toString();
@@ -273,23 +269,62 @@ class SamsaraEngine with SceneController, EventAggregator {
     }
   }
 
-  void log(dynamic content) {
-    _loggerOutput.log.add(_stringify(content));
+  Level getLogLevel(MessageSeverity severity) {
+    switch (severity.weight) {
+      case 1:
+        return Level.debug;
+      case 2:
+        return Level.info;
+      case 3:
+        return Level.warning;
+      case 4:
+        return Level.error;
+      default:
+        return Level.all;
+    }
   }
 
-  void debug(dynamic content) {
-    logger.d(_stringify(content));
+  @override
+  void log(String message, {MessageSeverity severity = MessageSeverity.none}) {
+    logger.log(getLogLevel(severity), message);
   }
 
-  void info(dynamic content) {
-    logger.i(_stringify(content));
+  @override
+  void debug(String message) => log(message, severity: MessageSeverity.debug);
+
+  @override
+  void info(String message) => log(message, severity: MessageSeverity.info);
+
+  @override
+  void warn(String message) => log(message, severity: MessageSeverity.warn);
+
+  @override
+  void error(String message) => log(message, severity: MessageSeverity.error);
+
+  Future<AudioPlayer?> playSound(String fileName, {double volume = 1}) async {
+    try {
+      return FlameAudio.play(fileName, volume: volume);
+    } catch (e) {
+      if (kDebugMode) {
+        error(e.toString());
+        return null;
+      } else {
+        rethrow;
+      }
+    }
   }
 
-  void warn(dynamic content) {
-    logger.w(_stringify(content));
+  void playBGM(String fileName, {double volume = 1}) async {
+    try {
+      await FlameAudio.bgm.play(fileName, volume: volume);
+    } catch (e) {
+      if (kDebugMode) {
+        error(e.toString());
+      } else {
+        rethrow;
+      }
+    }
   }
 
-  void error(dynamic content) {
-    logger.e(_stringify(content));
-  }
+  Bgm get bgm => FlameAudio.bgm;
 }

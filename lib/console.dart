@@ -67,47 +67,42 @@ class _ConsoleState extends State<Console> {
               ),
             ),
           ),
-          RawKeyboardListener(
+          KeyboardListener(
             focusNode: _textFieldFocusNode,
             key: UniqueKey(),
-            onKey: (RawKeyEvent key) {
-              if (key is RawKeyUpEvent) {
-                if (key.data is RawKeyEventDataWindows ||
-                    key.data is RawKeyEventDataMacOs ||
-                    key.data is RawKeyEventDataLinux) {
-                  final int code = (key.data as dynamic).keyCode;
-                  switch (code) {
-                    case 36: // home
-                      _textEditingController.selection =
-                          TextSelection.fromPosition(
-                              const TextPosition(offset: 0));
-                      break;
-                    case 35: // end
-                      _textEditingController.selection =
-                          TextSelection.fromPosition(TextPosition(
-                              offset: _textEditingController.text.length));
-                      break;
-                    case 38: // up
-                      if (_commandHistoryIndex > 0) {
-                        --_commandHistoryIndex;
-                      }
-                      if (_commandHistory.isNotEmpty) {
-                        _textEditingController.text =
-                            _commandHistory[_commandHistoryIndex];
-                      } else {
-                        _textEditingController.text = '';
-                      }
-                      break;
-                    case 40: // down
-                      if (_commandHistoryIndex < _commandHistory.length - 1) {
-                        ++_commandHistoryIndex;
-                        _textEditingController.text =
-                            _commandHistory[_commandHistoryIndex];
-                      } else {
-                        _textEditingController.text = '';
-                      }
-                      break;
-                  }
+            onKeyEvent: (KeyEvent key) {
+              if (key is KeyUpEvent) {
+                switch (key.logicalKey) {
+                  case LogicalKeyboardKey.home: // home
+                    _textEditingController.selection =
+                        TextSelection.fromPosition(
+                            const TextPosition(offset: 0));
+                    break;
+                  case LogicalKeyboardKey.end: // end
+                    _textEditingController.selection =
+                        TextSelection.fromPosition(TextPosition(
+                            offset: _textEditingController.text.length));
+                    break;
+                  case LogicalKeyboardKey.arrowUp: // up
+                    if (_commandHistoryIndex > 0) {
+                      --_commandHistoryIndex;
+                    }
+                    if (_commandHistory.isNotEmpty) {
+                      _textEditingController.text =
+                          _commandHistory[_commandHistoryIndex];
+                    } else {
+                      _textEditingController.text = '';
+                    }
+                    break;
+                  case LogicalKeyboardKey.arrowDown: // down
+                    if (_commandHistoryIndex < _commandHistory.length - 1) {
+                      ++_commandHistoryIndex;
+                      _textEditingController.text =
+                          _commandHistory[_commandHistoryIndex];
+                    } else {
+                      _textEditingController.text = '';
+                    }
+                    break;
                 }
               }
             },

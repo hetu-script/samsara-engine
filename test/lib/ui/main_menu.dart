@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:samsara/ui/flutter/loading_screen.dart';
 import 'package:samsara/ui/flutter/label.dart';
-import 'package:flutter/services.dart';
-import 'package:json5/json5.dart';
+// import 'package:json5/json5.dart';
 import 'package:samsara/widget/markdown_wiki.dart';
 import 'package:samsara/widget/embedded_text.dart';
 
@@ -30,17 +29,16 @@ class _MainMenuState extends State<MainMenu> {
   }
 
   Future<bool> _prepareData() async {
-    if (engine.isLoaded) return true;
+    if (engine.isInitted) return true;
     await engine.init();
 
-    final localeStrings =
-        await rootBundle.loadString('assets/locales/chs.json5');
-    final localeData = JSON5.parse(localeStrings);
-    engine.loadLocale(localeData);
+    // final localeStrings =
+    //     await rootBundle.loadString('assets/locales/chs.json5');
+    // final localeData = JSON5.parse(localeStrings);
+    // engine.loadLocale(localeData);
 
     engine.hetu.evalFile('main.ht', globallyImport: true);
 
-    engine.isLoaded = true;
     return true;
   }
 
@@ -53,9 +51,9 @@ class _MainMenuState extends State<MainMenu> {
           throw (snapshot.error!);
         }
 
-        if (!snapshot.hasData) {
+        if (!snapshot.hasData || snapshot.data == false) {
           return LoadingScreen(
-              text: engine.isLoaded ? engine.locale['loading'] : 'Loading...');
+              text: engine.isInitted ? engine.locale['loading'] : 'Loading...');
         } else {
           return Scaffold(
             body: Stack(

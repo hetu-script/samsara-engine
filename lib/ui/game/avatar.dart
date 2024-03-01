@@ -27,7 +27,7 @@ class Avatar extends GameComponent {
 
   @override
   void render(Canvas canvas) {
-    canvas.drawRRect(rborder, DefaultBorderPaint.light);
+    canvas.drawRRect(rBorder, DefaultBorderPaint.light);
     avatar.renderRect(canvas, border);
   }
 }

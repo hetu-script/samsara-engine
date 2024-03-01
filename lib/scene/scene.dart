@@ -39,6 +39,7 @@ abstract class Scene extends FlameGame {
   }
 
   @override
+  @mustCallSuper
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
 

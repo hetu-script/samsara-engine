@@ -76,33 +76,41 @@ class TileMapObject extends GameComponent with TileInfo {
   }) {
     if (moveAnimationSpriteSheet != null) {
       _isMovingObject = true;
-      moveAnimationSouth = SpriteAnimationWithTicker(moveAnimationSpriteSheet
-          .createAnimation(row: 0, stepTime: defaultAnimationStepTime));
-      moveAnimationEast = SpriteAnimationWithTicker(moveAnimationSpriteSheet
-          .createAnimation(row: 1, stepTime: defaultAnimationStepTime));
-      moveAnimationNorth = SpriteAnimationWithTicker(moveAnimationSpriteSheet
-          .createAnimation(row: 2, stepTime: defaultAnimationStepTime));
-      moveAnimationWest = SpriteAnimationWithTicker(moveAnimationSpriteSheet
-          .createAnimation(row: 3, stepTime: defaultAnimationStepTime));
+      moveAnimationSouth = SpriteAnimationWithTicker(
+          animation: moveAnimationSpriteSheet.createAnimation(
+              row: 0, stepTime: defaultAnimationStepTime));
+      moveAnimationEast = SpriteAnimationWithTicker(
+          animation: moveAnimationSpriteSheet.createAnimation(
+              row: 1, stepTime: defaultAnimationStepTime));
+      moveAnimationNorth = SpriteAnimationWithTicker(
+          animation: moveAnimationSpriteSheet.createAnimation(
+              row: 2, stepTime: defaultAnimationStepTime));
+      moveAnimationWest = SpriteAnimationWithTicker(
+          animation: moveAnimationSpriteSheet.createAnimation(
+              row: 3, stepTime: defaultAnimationStepTime));
 
       if (swimAnimationSpriteSheet != null) {
         _hasMoveOnWaterAnimation = true;
 
-        swimAnimationSouth = SpriteAnimationWithTicker(swimAnimationSpriteSheet
-            .createAnimation(row: 0, stepTime: defaultAnimationStepTime));
-        swimAnimationEast = SpriteAnimationWithTicker(swimAnimationSpriteSheet
-            .createAnimation(row: 1, stepTime: defaultAnimationStepTime));
-        swimAnimationNorth = SpriteAnimationWithTicker(swimAnimationSpriteSheet
-            .createAnimation(row: 2, stepTime: defaultAnimationStepTime));
-        swimAnimationWest = SpriteAnimationWithTicker(swimAnimationSpriteSheet
-            .createAnimation(row: 3, stepTime: defaultAnimationStepTime));
+        swimAnimationSouth = SpriteAnimationWithTicker(
+            animation: swimAnimationSpriteSheet.createAnimation(
+                row: 0, stepTime: defaultAnimationStepTime));
+        swimAnimationEast = SpriteAnimationWithTicker(
+            animation: swimAnimationSpriteSheet.createAnimation(
+                row: 1, stepTime: defaultAnimationStepTime));
+        swimAnimationNorth = SpriteAnimationWithTicker(
+            animation: swimAnimationSpriteSheet.createAnimation(
+                row: 2, stepTime: defaultAnimationStepTime));
+        swimAnimationWest = SpriteAnimationWithTicker(
+            animation: swimAnimationSpriteSheet.createAnimation(
+                row: 3, stepTime: defaultAnimationStepTime));
       }
     } else {
       _isMovingObject = false;
       if (sprite != null) {
         this.sprite = sprite;
       } else if (animation != null) {
-        this.animation = SpriteAnimationWithTicker(animation);
+        this.animation = SpriteAnimationWithTicker(animation: animation);
       }
     }
 
@@ -187,7 +195,7 @@ class TileMapObject extends GameComponent with TileInfo {
     }
   }
 
-  Sprite getSprite() {
+  Sprite get currentSprite {
     if (_isMovingObject) {
       return currentAnimation!.ticker.currentFrame.sprite;
     } else {
@@ -212,7 +220,7 @@ class TileMapObject extends GameComponent with TileInfo {
       rpos += _movingOffset;
     }
 
-    getSprite().render(canvas, position: rpos);
+    currentSprite.render(canvas, position: rpos);
   }
 
   @override

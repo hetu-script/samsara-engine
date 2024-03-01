@@ -26,8 +26,8 @@ class DrawingZone extends GameComponent with HandlesGesture {
   ScreenTextStyle? piledNumberStyle;
 
   DrawingZone({
-    super.id,
     this.ownedBy,
+    super.priority,
     super.position,
     super.size,
     super.borderRadius = 5.0,
@@ -99,7 +99,7 @@ class DrawingZone extends GameComponent with HandlesGesture {
       // canvas.drawRRect(border, borderPaintFocused);
     }
     //  else {
-    canvas.drawRRect(rborder, DefaultBorderPaint.light);
+    canvas.drawRRect(rBorder, DefaultBorderPaint.light);
     // }
 
     // for (final card in cards) {

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flame/components.dart' hide Timer;
 import 'package:flame/effects.dart';
 import 'package:flame/flame.dart';
@@ -26,7 +24,7 @@ class InAndOutSprite extends GameComponent {
   }) : super(anchor: Anchor.center);
 
   @override
-  FutureOr<void> onLoad() async {
+  void onLoad() async {
     sprite = Sprite(await Flame.images.load('$spriteId.png'));
 
     if (size == Vector2.zero()) {

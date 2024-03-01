@@ -62,7 +62,7 @@ class GameButton extends GameComponent with HandlesGesture {
   @override
   void render(Canvas canvas) {
     if (isHovering && isEnabled) {
-      canvas.drawRRect(rborder, DefaultBorderPaint.primary);
+      canvas.drawRRect(rBorder, DefaultBorderPaint.primary);
 
       if (tooltip != null) {
         drawScreenText(
@@ -72,7 +72,7 @@ class GameButton extends GameComponent with HandlesGesture {
         );
       }
     } else {
-      canvas.drawRRect(rborder, DefaultBorderPaint.light);
+      canvas.drawRRect(rBorder, DefaultBorderPaint.light);
     }
 
     if (isEnabled) {

@@ -44,6 +44,18 @@ extension CornerPosition on PositionComponent {
   Vector2 get bottomLeft => positionOfAnchor(Anchor.bottomLeft);
   Vector2 get bottomCenter => positionOfAnchor(Anchor.bottomCenter);
   Vector2 get bottomRight => positionOfAnchor(Anchor.bottomRight);
+
+  Vector2 get absoluteTopLeft => absolutePositionOfAnchor(Anchor.topLeft);
+  Vector2 get absoluteTopCenter => absolutePositionOfAnchor(Anchor.topCenter);
+  Vector2 get absoluteTopRight => absolutePositionOfAnchor(Anchor.topRight);
+  Vector2 get absoluteCenterLeft => absolutePositionOfAnchor(Anchor.centerLeft);
+  Vector2 get absoluteCenterRight =>
+      absolutePositionOfAnchor(Anchor.centerRight);
+  Vector2 get absoluteBottomLeft => absolutePositionOfAnchor(Anchor.bottomLeft);
+  Vector2 get absoluteBottomCenter =>
+      absolutePositionOfAnchor(Anchor.bottomCenter);
+  Vector2 get absoluteBottomRight =>
+      absolutePositionOfAnchor(Anchor.bottomRight);
 }
 
 extension CameraExtension on CameraComponent {

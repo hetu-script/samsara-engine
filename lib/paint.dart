@@ -5,7 +5,7 @@ import 'package:flame/components.dart';
 
 export 'package:flame/text.dart' show TextPaint;
 export 'dart:ui' show Offset, Canvas, Color, Paint, PaintingStyle;
-export 'package:flutter/material.dart' show Colors;
+export 'package:flutter/material.dart' show Colors, TextStyle, FontWeight;
 
 abstract class DefaultBorderPaint {
   static final light = Paint()

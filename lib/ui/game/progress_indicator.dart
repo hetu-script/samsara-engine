@@ -14,8 +14,6 @@ class DynamicColorProgressIndicator extends GameComponent {
 
   late final List<double> stops;
 
-  final Paint borderPaint;
-
   DynamicColorProgressIndicator({
     super.position,
     super.size,
@@ -28,10 +26,12 @@ class DynamicColorProgressIndicator extends GameComponent {
     required this.colors,
     List<double>? stops,
     Paint? borderPaint,
-  }) : borderPaint = borderPaint ?? Paint()
-          ..strokeWidth = 1.5
-          ..style = PaintingStyle.stroke
-          ..color = Colors.grey {
+  }) {
+    borderPaint = Paint()
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke
+      ..color = const Color.fromARGB(255, 156, 138, 138);
+
     textStyle = ScreenTextStyle(
       rect: border,
       anchor: Anchor.center,
@@ -63,11 +63,11 @@ class DynamicColorProgressIndicator extends GameComponent {
       );
 
     final progressBorder =
-        rborder.copyWith(right: rborder.left + value / max * rborder.width);
+        rBorder.copyWith(right: rBorder.left + value / max * rBorder.width);
 
     canvas.drawRRect(progressBorder, progressPaint);
 
-    canvas.drawRRect(rborder, borderPaint);
+    canvas.drawRRect(rBorder, borderPaint);
 
     final text = value.truncate().toString();
 

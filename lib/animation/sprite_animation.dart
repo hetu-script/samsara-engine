@@ -1,50 +1,113 @@
+import 'dart:ui';
+
+import 'package:flame/flame.dart';
 import 'package:flame/sprite.dart';
+import 'package:flame/components.dart';
+
+const kDefaultAnimationStepTime = 0.7;
 
 extension AnimationWithTicker on SpriteSheet {
-  List<Sprite> generateSpriteList({
-    required int row,
-    int from = 0,
-    int? to,
-  }) {
-    to ??= columns;
-
-    return List<int>.generate(to - from, (i) => from + i)
-        .map((e) => getSprite(row, e))
-        .toList();
+  List<Sprite> generateSpriteList({int? row}) {
+    if (row != null) {
+      return List<int>.generate(columns, (i) => i)
+          .map((e) => getSprite(row, e))
+          .toList();
+    } else {
+      final List<Sprite> spriteList = [];
+      for (var i = 0; i < rows; ++i) {
+        for (var j = 0; j < columns; ++j) {
+          spriteList.add(getSprite(i, j));
+        }
+      }
+      return spriteList;
+    }
   }
 
   SpriteAnimationWithTicker createAnimationWithTicker({
-    required int row,
+    int? row,
     required double stepTime,
     bool loop = true,
-    int from = 0,
-    int? to,
+    Rect? renderRect,
   }) {
-    final spriteList = generateSpriteList(
-      row: row,
-      to: to,
-      from: from,
-    );
+    final spriteList = generateSpriteList(row: row);
 
     return SpriteAnimationWithTicker(
-      SpriteAnimation.spriteList(
+      animation: SpriteAnimation.spriteList(
         spriteList,
         stepTime: stepTime,
         loop: loop,
       ),
+      renderRect: renderRect,
     );
   }
 }
 
 class SpriteAnimationWithTicker {
-  SpriteAnimation animation;
+  late final SpriteAnimation animation;
 
-  SpriteAnimationTicker ticker;
+  late final SpriteAnimationTicker ticker;
 
-  SpriteAnimationWithTicker(this.animation) : ticker = animation.createTicker();
+  bool _isLoaded = false;
+
+  String? animationId;
+  Vector2? srcSize;
+  double stepTime;
+  bool loop;
+
+  Rect? renderRect;
+
+  SpriteAnimationWithTicker({
+    this.animationId,
+    this.srcSize,
+    this.stepTime = kDefaultAnimationStepTime,
+    this.loop = true,
+    SpriteAnimation? animation,
+    this.renderRect,
+  }) {
+    if (animation != null) {
+      this.animation = animation;
+      ticker = this.animation.createTicker();
+      _isLoaded = true;
+    } else {
+      assert(animationId != null);
+      assert(srcSize != null);
+    }
+  }
+
+  Future<void> load() async {
+    if (animationId != null && srcSize != null) {
+      final SpriteSheet spriteList = SpriteSheet(
+        image: await Flame.images.load('animation/$animationId.png'),
+        srcSize: srcSize!,
+      );
+      animation = SpriteAnimation.spriteList(
+        spriteList.generateSpriteList(),
+        stepTime: stepTime,
+        loop: loop,
+      );
+      ticker = animation.createTicker();
+      _isLoaded = true;
+    }
+  }
 
   Sprite get currentSprite => ticker.getSprite();
 
   SpriteAnimationWithTicker clone() =>
-      SpriteAnimationWithTicker(animation.clone());
+      SpriteAnimationWithTicker(animation: animation, renderRect: renderRect);
+
+  void update(double dt) {
+    if (_isLoaded) {
+      ticker.update(dt);
+    }
+  }
+
+  void render(Canvas canvas, {Vector2? position}) {
+    if (!_isLoaded) return;
+
+    if (renderRect != null) {
+      currentSprite.renderRect(canvas, renderRect!);
+    } else {
+      currentSprite.render(canvas, position: position);
+    }
+  }
 }

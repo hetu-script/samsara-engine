@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flame/components.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/component/sprite_component.dart';
@@ -21,7 +19,7 @@ class Arrow extends GameComponent {
   });
 
   @override
-  FutureOr<void> onLoad() {
+  void onLoad() {
     sc = SpriteComponent2(
       sprite: sprite,
       anchor: Anchor.bottomCenter,

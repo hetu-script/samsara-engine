@@ -4,6 +4,17 @@ import '../../component/game_component.dart';
 import '../playing_card.dart';
 import '../../paint.dart';
 
+const kQueueTopPriority = 2000;
+
+enum PileStructure {
+  // new cards put to bottom of pile
+  queue,
+  // new cards put on top of pile
+  stack,
+  // new cards put in random place in pile
+  // shuffle,
+}
+
 class PiledZone extends GameComponent {
   String? ownedBy;
 
@@ -16,58 +27,101 @@ class PiledZone extends GameComponent {
 
   ScreenTextStyle? titleStyle;
 
-  final List<PlayingCard> cards = [];
+  /// 是否允许堆叠
+  final bool allowStack;
 
-  /// 按照卡牌 deckId 统计此区域中卡牌的数量
+  /// 不允许堆叠时，可设置卡牌数量上限
+  int limit;
+
+  /// 是否达到了卡牌数量上限
+  bool get reachedLimit => !allowStack && limit >= 0 && cards.length >= limit;
+
+  /// 不允许堆叠时，可设置是否为非紧凑型牌堆
+  /// 即卡牌摆放时允许中间有空位
+  // final bool allowEmptySlots;
+
+  /// 按照卡牌 deckId 保存
+  // Map<String, PlayingCard> cards = {};
+
   Map<String, int> count = {};
+  List<PlayingCard> cards = [];
 
   bool containsCard(String deckId) => count.containsKey(deckId);
 
   /// 按照卡牌 ID 生成的列表，可能出现重复的ID
-  List<String> pile = [];
+  // List<String> pile = [];
 
-  final int piledCardPriority;
   final Vector2 piledCardSize;
   Vector2? focusedOffset, focusedPosition, focusedSize;
 
-  final Vector2 pileMargin, pileOffset; //, focusOffset;
+  /// [pileMargin] : 堆叠时第一张牌相对区域的x和y的位移
+  late final Vector2 pileMargin;
+
+  /// [pileOffset] : 堆叠时每张牌相比上一张牌的位移
+  late final Vector2 pileOffset; //, focusOffset;
+
+  final PileStructure pileStructure;
+  final bool reverseX, reverseY;
 
   final Anchor titleAnchor;
   final EdgeInsets titlePadding;
 
   final String? cardState;
 
+  // int _largestIndex = 0;
+
   /// [pileMargin] : 堆叠时第一张牌相对区域的x和y的位移
   ///
   /// [pileOffset] : 堆叠时每张牌相比上一张牌的位移
   PiledZone({
-    super.id,
     this.ownedBy,
     this.title,
+    super.priority,
     super.position,
     super.size,
     super.borderRadius = 5.0,
+    this.allowStack = false,
+    this.limit = -1,
+    // this.allowEmptySlots = false,
     List<PlayingCard> cards = const [],
-    this.piledCardPriority = 0,
     required this.piledCardSize,
     this.focusedOffset,
     this.focusedPosition,
     this.focusedSize,
     Vector2? pileMargin,
     Vector2? pileOffset,
+    this.pileStructure = PileStructure.stack,
+    this.reverseX = false,
+    this.reverseY = false,
     this.titleAnchor = Anchor.topLeft,
     this.titlePadding = EdgeInsets.zero,
     this.cardState,
-  })  : pileMargin = pileMargin ?? Vector2(10.0, 10.0),
-        pileOffset = pileOffset ?? Vector2(50.0, 0.0) {
+  }) {
+    pileMargin ??= Vector2(10.0, 10.0);
+    pileOffset ??= Vector2(50.0, 0.0);
+
+    this.pileMargin = Vector2(
+        pileMargin.x * (reverseX ? -1 : 1), pileMargin.y * (reverseY ? -1 : 1));
+    this.pileOffset = Vector2(
+        pileOffset.x * (reverseX ? -1 : 1), pileOffset.y * (reverseY ? -1 : 1));
+
     if (this.pileMargin.x.sign != 0 && this.pileOffset.x.sign != 0) {
       assert(this.pileMargin.x.sign == this.pileOffset.x.sign, '堆叠位移和方向必须一致！');
     }
     if (this.pileMargin.y.sign != 0 && this.pileOffset.y.sign != 0) {
       assert(this.pileMargin.y.sign == this.pileOffset.y.sign, '堆叠位移和方向必须一致！');
     }
+    if (limit < -1) limit = -1;
 
-    this.cards.addAll(cards);
+    // _largestIndex = cards.length - 1;
+    if (cards.isNotEmpty) {
+      for (var i = 0; i <= cards.length - 1; ++i) {
+        final card = cards[i];
+        card.index = i;
+      }
+      this.cards.addAll(cards);
+      sortCards(animated: false);
+    }
 
     titleStyle = ScreenTextStyle(
       rect: border,
@@ -90,82 +144,145 @@ class PiledZone extends GameComponent {
     }
   }
 
+  /// TODO: [insertAndRearrangeAll]如果为真，并且[allowEmptySlots]为真。并且目前有空位，则在向已经有卡牌的位置插入新卡牌时，会将已有的卡牌向后移动让出位置
   Future<void> placeCard(
     PlayingCard card, {
     int? index,
+    // bool insertAndRearrangeAll = false,
     bool animated = true,
     void Function()? onComplete,
   }) async {
     if (cards.contains(card)) return;
 
-    final ec = count[card.deckId];
-    if (ec != null) {
-      count[card.deckId] = ec + 1;
-    } else {
-      count[card.deckId] = 1;
+    final existedNumber = count[card.deckbuildingId];
+    if (allowStack && existedNumber != null) {
+      count[card.deckbuildingId] = existedNumber + 1;
+      final existedCard =
+          cards.singleWhere((c) => c.deckbuildingId == card.deckbuildingId);
+      existedCard.stack += 1;
+      return;
     }
 
     if (index == null) {
+      if (reachedLimit) return;
+
       index = cards.length;
     } else {
       assert(index >= 0);
-      if (index > cards.length) {
+      // if (allowEmptySlots) {
+      // PlayingCard? existedCard;
+      // for (final c in cards) {
+      //   if (c.index == index) {
+      //     existedCard = c;
+      //   }
+      // }
+      // if (existedCard != null) {
+      //   // existedCard.index =
+      // }
+      // } else {
+      if (index >= cards.length) {
+        if (reachedLimit) return;
         index = cards.length;
+      } else {
+        for (var i = index; i < cards.length; ++i) {
+          final existedCard = cards[i];
+          ++existedCard.index;
+        }
       }
+      // }
+      // if (index > _largestIndex) {
+      //   _largestIndex = index;
+      // }
+    }
+
+    if (existedNumber == null) {
+      count[card.deckbuildingId] = 1;
+    } else {
+      count[card.deckbuildingId] = existedNumber + 1;
     }
 
     card.index = index;
+    cards.add(card);
     card.pile = this;
-    cards.insert(index, card);
     if (cardState != null) card.state = cardState!;
 
     // card.onAddedToPileZone?.call(this);
 
-    return sortCards(animated: animated, onSortComplete: onComplete);
+    return sortCards(animated: animated, onComplete: onComplete);
   }
 
-  void reorderCard(int oldIndex, int newIndex) {
-    assert(oldIndex >= 0 && oldIndex < cards.length);
+  Future<void> reorderCard(
+    int oldIndex,
+    int newIndex, {
+    bool insertAndRearrangeAll = false,
+  }) async {
+    PlayingCard? cardOnOldIndex;
+    // PlayingCard? cardOnNewIndex;
 
-    if (newIndex < 0) newIndex = 0;
-    if (newIndex >= cards.length) newIndex = cards.length - 1;
+    if (oldIndex != newIndex) {
+      // if (allowEmptySlots) {
+      //   for (final card in cards) {
+      //     if (card.index == oldIndex) {
+      //       cardOnOldIndex = card;
+      //     } else if (card.index == newIndex) {
+      //       cardOnNewIndex = card;
+      //     }
+      //   }
 
-    cards[oldIndex].index = newIndex;
-    if (oldIndex < newIndex) {
-      for (var i = oldIndex + 1; i <= newIndex; ++i) {
-        final card = cards[i];
-        --card.index;
+      //   cardOnOldIndex?.index = newIndex;
+      //   cardOnNewIndex?.index = oldIndex;
+      // } else {
+      assert(oldIndex >= 0 && oldIndex < cards.length);
+      cardOnOldIndex = cards[oldIndex];
+
+      if (newIndex < 0) newIndex = 0;
+      if (newIndex >= cards.length) newIndex = cards.length - 1;
+      // cardOnNewIndex = cards[newIndex];
+
+      cardOnOldIndex.index = newIndex;
+      if (oldIndex < newIndex) {
+        for (var i = oldIndex + 1; i <= newIndex; ++i) {
+          final card = cards[i];
+          --card.index;
+        }
+      } else {
+        for (var i = newIndex; i < oldIndex; ++i) {
+          final card = cards[i];
+          ++card.index;
+        }
       }
-    } else {
-      for (var i = newIndex; i < oldIndex; ++i) {
-        final card = cards[i];
-        ++card.index;
-      }
+      // }
     }
 
-    sortCards();
+    return sortCards();
   }
 
   /// 整理卡牌。如果 animated 为 true，则会用动画过度卡牌整理的过程
   Future<void> sortCards({
-    bool pileUp = true,
     bool animated = true,
-    void Function()? onSortComplete,
+    void Function()? onComplete,
   }) async {
     final completer = Completer();
 
-    void onComplete() {
-      onSortComplete?.call();
+    void onSortComplete() {
+      onComplete?.call();
       completer.complete();
     }
 
     cards.sort((c1, c2) => c1.index.compareTo(c2.index));
-    pile.clear();
+    // pile.clear();
     // calculate the new position of each hand cards.
     for (var i = 0; i < cards.length; ++i) {
       final card = cards[i];
-      pile.add(card.id);
-      card.priority = piledCardPriority + (pileUp ? i : -i);
+      // pile.add(card.id);
+      if (pileStructure == PileStructure.queue) {
+        card.priority = priority + kQueueTopPriority - i;
+      } else if (pileStructure == PileStructure.stack) {
+        card.priority = priority + 1 + i;
+      }
+
+      // TODO: 有empty slots时，不重新赋值index
+      card.index = i;
 
       final endPosition = Vector2(
         // 如果堆叠方向是向右，则从区域左侧开始计算x偏移
@@ -173,14 +290,14 @@ class PiledZone extends GameComponent {
             piledCardSize.x *
                 (pileOffset.x.sign >= 0 ? card.anchor.x : (1 - card.anchor.x)) *
                 (pileOffset.x.sign >= 0 ? 1 : -1) +
-            i * pileOffset.x +
+            card.index * pileOffset.x +
             pileMargin.x,
         // 如果堆叠方向是向上，则从区域下侧开始计算y偏移
         (pileOffset.y.sign >= 0 ? y : y + height) +
             piledCardSize.y *
                 (pileOffset.y.sign >= 0 ? card.anchor.y : (1 - card.anchor.y)) *
                 (pileOffset.y.sign >= 0 ? 1 : -1) +
-            i * pileOffset.y +
+            card.index * pileOffset.y +
             pileMargin.y,
       );
 
@@ -200,7 +317,7 @@ class PiledZone extends GameComponent {
           onComplete: () {
             card.enableGesture = true;
             if (i == cards.length - 1) {
-              onComplete();
+              onSortComplete();
             }
           },
         );
@@ -211,33 +328,41 @@ class PiledZone extends GameComponent {
     }
 
     if (!animated) {
-      onComplete();
+      onSortComplete();
     }
 
     return completer.future;
   }
 
-  bool removeCard(String id) {
-    final cardIndex = cards.indexWhere((card) => card.id == id);
-    if (cardIndex == -1) return false;
+  bool removeCardByIndex(int index, {bool sort = true}) {
+    if (index < 0 || index >= cards.length) return false;
 
-    final card = cards[cardIndex];
-
-    cards.removeAt(cardIndex);
-    for (var i = cardIndex; i < cards.length; ++i) {
-      cards[i].index = i;
-    }
-    pile.removeAt(cardIndex);
-
-    final ec = count[card.deckId]!;
-    if (ec == 1) {
-      count.remove(card.deckId);
+    final card = cards[index];
+    if (allowStack && card.stack > 1) {
+      --card.stack;
     } else {
-      count[card.deckId] = ec - 1;
+      cards.removeAt(index);
+      // pile.removeAt(cardIndex);
     }
 
-    sortCards();
+    final ec = count[card.deckbuildingId]!;
+    if (ec == 1) {
+      count.remove(card.deckbuildingId);
+    } else {
+      count[card.deckbuildingId] = ec - 1;
+    }
+
+    card.removeFromParent();
+    if (sort) {
+      sortCards();
+    }
     return true;
+  }
+
+  bool removeCardById(String id, {bool sort = true}) {
+    final index = cards.indexWhere((card) => card.id == id);
+
+    return removeCardByIndex(index, sort: sort);
   }
 
   @override
@@ -246,6 +371,6 @@ class PiledZone extends GameComponent {
       drawScreenText(canvas, '$title：${cards.length}', style: titleStyle);
     }
 
-    canvas.drawRRect(rborder, DefaultBorderPaint.light);
+    // canvas.drawRRect(rborder, DefaultBorderPaint.light);
   }
 }

@@ -1,16 +1,15 @@
 import 'dart:async';
 
-import 'dart:ui';
-
-import 'package:meta/meta.dart';
+import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
+import 'package:samsara/effect/fade_effect.dart';
+// import 'package:flame/experimental.dart';
 
 import '../effect/advanced_move_effect.dart';
 import '../scene/scene.dart';
 import '../extensions.dart';
 import '../gestures/gesture_mixin.dart';
-import 'package:flutter/animation.dart' show Curve, Curves;
 
 export 'package:flame/components.dart' show Anchor, CameraComponent;
 export 'package:vector_math/vector_math_64.dart' show Vector2;
@@ -24,69 +23,25 @@ export 'package:flutter/animation.dart' show Curve, Curves;
 abstract class GameComponent extends PositionComponent
     with HasGameRef<Scene>, HasPaint
     implements SizeProvider, OpacityProvider {
-  final String? id;
-
-  late Rect border;
-  late RRect rborder;
-  double _borderRadius;
+  Paint borderPaint = Paint()
+    ..color = Colors.blue
+    ..strokeWidth = 0.5
+    ..style = PaintingStyle.stroke;
 
   final bool isHud;
 
-  double get borderRadius => _borderRadius;
+  late Rect _border;
+  Rect get border => _border;
+  final double borderWidth;
+  late RRect _rBorder;
+  RRect get rBorder => _rBorder;
+  final double borderRadius;
+  late RRect _clipRRect;
+  RRect get clipRRect => _clipRRect;
 
   Vector2? moving2Position;
   Vector2? moving2Size;
   double? moving2Angle;
-
-  GameComponent({
-    this.id,
-    super.position,
-    super.size,
-    super.scale,
-    super.angle,
-    super.anchor,
-    super.priority,
-    double borderRadius = 5.0,
-    double opacity = 1.0,
-    super.children,
-    bool? isHud,
-  })  : _borderRadius = borderRadius,
-        isHud = isHud ?? false {
-    this.opacity = opacity;
-
-    generateBorder();
-  }
-
-  @mustCallSuper
-  void generateBorder() {
-    border = Rect.fromLTWH(0, 0, width, height);
-    rborder =
-        RRect.fromLTRBR(0, 0, width, height, Radius.circular(_borderRadius));
-  }
-
-  set borderRadius(double value) {
-    _borderRadius = value;
-    rborder =
-        RRect.fromLTRBR(0, 0, width, height, Radius.circular(_borderRadius));
-  }
-
-  @override
-  set width(double value) {
-    super.width = value;
-    generateBorder();
-  }
-
-  @override
-  set height(double value) {
-    super.height = value;
-    generateBorder();
-  }
-
-  @override
-  set size(Vector2 value) {
-    super.size = value;
-    generateBorder();
-  }
 
   bool _isVisible = true;
 
@@ -98,6 +53,39 @@ abstract class GameComponent extends PositionComponent
       return false;
     }
     return true;
+  }
+
+  GameComponent({
+    super.position,
+    super.size,
+    super.scale,
+    super.angle,
+    super.anchor,
+    super.priority,
+    this.borderWidth = 1.0,
+    this.borderRadius = 0.0,
+    double opacity = 1.0,
+    super.children,
+    bool? isHud,
+  }) : isHud = isHud ?? false {
+    this.opacity = opacity;
+
+    generateBorder();
+    size.addListener(generateBorder);
+  }
+
+  @mustCallSuper
+  void generateBorder() {
+    _border = Rect.fromLTWH(0, 0, width, height);
+    _rBorder =
+        RRect.fromLTRBR(0, 0, width, height, Radius.circular(borderRadius));
+
+    _clipRRect = RRect.fromLTRBR(
+        0 - borderWidth,
+        0 - borderWidth,
+        width + borderWidth * 2,
+        height + borderWidth * 2,
+        Radius.circular(borderRadius));
   }
 
   // bool isVisibleInCamera() {
@@ -113,6 +101,37 @@ abstract class GameComponent extends PositionComponent
 
   Iterable<HandlesGesture> get gestureComponents =>
       children.reversed().whereType<HandlesGesture>().cast<HandlesGesture>();
+
+  Future<void> fadeIn({
+    required double duration,
+    void Function()? onComplete,
+  }) async {
+    final completer = Completer();
+    add(FadeEffect(
+      fadeIn: true,
+      controller: EffectController(duration: duration),
+      onComplete: () {
+        onComplete?.call();
+        completer.complete();
+      },
+    ));
+    return completer.future;
+  }
+
+  Future<void> fadeOut({
+    required double duration,
+    void Function()? onComplete,
+  }) async {
+    final completer = Completer();
+    add(FadeEffect(
+      controller: EffectController(duration: duration),
+      onComplete: () {
+        onComplete?.call();
+        completer.complete();
+      },
+    ));
+    return completer.future;
+  }
 
   void snapTo({
     Vector2? toPosition,

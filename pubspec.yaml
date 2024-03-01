@@ -11,7 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flame: ^1.15.0
+  flame: ^1.16.0
+  flame_audio: ^2.10.0
   logger: ^2.0.2+1
 
   hetu_script:
