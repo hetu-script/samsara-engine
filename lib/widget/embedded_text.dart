@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 
-import '../utils/color.dart';
+import '../extensions.dart' show HexColor;
 
 // 寻找以<bold color='#343434'>xxxxx</>括起来的文字，并将其替换为可以点击、hover等交互的控件
 // 支持参数：bold, color, route
@@ -65,7 +65,7 @@ class EmbeddedText extends StatelessWidget {
           if (currentTag == 'bold') {
             isBold = true;
           } else if (currentTag.startsWith('color="')) {
-            textColor = HexColor.fromHex(
+            textColor = HexColor.fromString(
                 currentTag.substring(7, currentTag.length - 1));
           } else if (currentTag.startsWith('route="')) {
             // route 的参数会直接放在问号后面

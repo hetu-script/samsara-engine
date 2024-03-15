@@ -1,36 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'outlined_text.dart';
-import '../../extensions.dart';
-import '../../utils/color.dart';
+import '../extensions.dart';
+// import '../utils/color.dart';
 
 class DynamicColorProgressBar extends StatelessWidget {
-  DynamicColorProgressBar({
-    super.key,
-    this.title,
-    required this.width,
-    this.height = 18.0,
-    required this.value,
-    required this.max,
-    this.showNumber = true,
-    this.showNumberAsPercentage = true,
-    required this.colors,
-    List<double>? stops,
-    this.borderRadius = 2.5,
-  }) : assert(colors.length > 1) {
-    if (stops == null || stops.isEmpty) {
-      this.stops = [];
-      final d = 1.0 / (colors.length - 1);
-      for (var i = 0; i < colors.length; ++i) {
-        this.stops.add(i * d);
-      }
-      this.stops.last = 1.0;
-    } else {
-      assert(stops.length == colors.length);
-      this.stops = stops;
-    }
-  }
-
   final String? title;
 
   final double width;
@@ -43,22 +17,45 @@ class DynamicColorProgressBar extends StatelessWidget {
 
   final List<Color> colors;
 
-  late final List<double> stops;
+  final List<double> stops = [];
 
   final double borderRadius;
+
+  final bool useVerticalStyle;
+
+  DynamicColorProgressBar({
+    super.key,
+    this.title,
+    required this.width,
+    required this.height,
+    required this.value,
+    required this.max,
+    this.showNumber = true,
+    this.showNumberAsPercentage = true,
+    required this.colors,
+    List<double>? stops,
+    this.borderRadius = 2.5,
+    this.useVerticalStyle = false,
+  }) : assert(colors.length > 1) {
+    if (stops == null || stops.isEmpty) {
+      final d = 1.0 / (colors.length - 1);
+      for (var i = 0; i < colors.length; ++i) {
+        this.stops.add(i * d);
+      }
+      this.stops.last = 1.0;
+    } else {
+      assert(stops.length == colors.length);
+      this.stops.addAll(stops);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final valueString = '${value.truncate()}/${max.truncate()}';
     return Tooltip(
-      message: valueString,
+      message: '$title $valueString',
       child: Row(
         children: [
-          if (title != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 5.0),
-              child: Text(title!),
-            ),
           Container(
             width: width,
             height: height,
@@ -76,11 +73,12 @@ class DynamicColorProgressBar extends StatelessWidget {
                   width: value / max * width,
                   height: height,
                   decoration: BoxDecoration(
-                    color: lerpGradient(
-                      percentage: value / max,
-                      colors: colors,
-                      stops: stops,
-                    ),
+                    gradient: LinearGradient(colors: colors),
+                    // color: lerpGradient(
+                    //   percentage: value / max,
+                    //   colors: colors,
+                    //   stops: stops,
+                    // ),
                   ),
                 ),
                 if (showNumber)

@@ -1,6 +1,6 @@
 import 'package:flame/effects.dart';
 
-import '../../component/game_component.dart';
+import '../component/game_component.dart';
 import '../paint.dart';
 import '../effect/fade_effect.dart';
 import 'timer.dart';

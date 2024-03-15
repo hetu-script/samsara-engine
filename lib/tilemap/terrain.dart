@@ -6,8 +6,28 @@ import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
 
 import '../component/game_component.dart';
-import 'tile.dart';
+import 'tile_mixin.dart';
 import '../animation/sprite_animation.dart';
+import 'tilemap.dart';
+import '../utils/json.dart';
+import '../paint.dart';
+
+enum TileMapTerrainKind {
+  none,
+  empty,
+  plain,
+  forest,
+  mountain,
+  shore,
+  lake,
+  sea,
+  river,
+  road,
+}
+
+TileMapTerrainKind getTerrainKind(String? kind) =>
+    TileMapTerrainKind.values.firstWhere((element) => element.name == kind,
+        orElse: () => TileMapTerrainKind.none);
 
 class TileMapTerrain extends GameComponent with TileInfo {
   static const defaultAnimationStepTime = 0.2;
@@ -23,95 +43,192 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   // final TileRenderDirection renderDirection;
 
-  final String? kind;
+  TileMapTerrainKind get terrainKind => getTerrainKind(_kind);
+  String? _kind;
+  String? get kind => _kind;
+  set kind(String? value) {
+    _kind = value;
+    data?['kind'] = value;
+  }
 
-  bool isWater;
+  bool get isWater =>
+      terrainKind == TileMapTerrainKind.sea ||
+      terrainKind == TileMapTerrainKind.lake;
 
-  final String? nationId;
-  final String? locationId;
-  final TextPaint _captionPaint;
-
-  bool isSelectable;
-
-  bool isVoid;
+  final String? _zoneIndex;
+  String? get zoneId => _zoneIndex;
+  final String? _nationId;
+  String? get nationId => _nationId;
+  final String? _locationId;
+  String? get locationId => _locationId;
 
   // 显示标签
   String? caption;
-  // 显示物体
+  // set caption(String? value) {
+  //   _caption = value;
+  //   data?['caption'] = value;
+  // }
+
+  // String? get caption => _caption;
+
+  bool _isNonInteractable, _isLighted;
+
+  set isNonInteractable(value) {
+    _isNonInteractable = value;
+    data?['isNonInteractable'] = value;
+  }
+
+  bool get isNonInteractable => _isNonInteractable;
+
+  set isLighted(value) {
+    _isLighted = value;
+    data?['isLighted'] = value;
+  }
+
+  bool get isLighted => _isLighted;
+
+  final TextPaint _captionPaint;
+
+  /// 此地块上的物体
+  /// 此属性代表一些通常固定不移动的可互动对象，例如传送门、开关、地牢入口等等
+  /// 对于可以在地图上移动的物体，地块本身并不保存，
+  /// 由 tilemap 上的 movingObjects 维护
   String? objectId;
-  // 显示贴图
-  Sprite? sprite, overlaySprite;
-  SpriteAnimationWithTicker? animation, overlayAnimation;
+
+  /// 显示贴图
+  Sprite? _sprite, _overlaySprite;
+  SpriteAnimationWithTicker? _animation, _overlayAnimation;
+
+  set spriteIndex(int? value) {
+    data?['spriteIndex'] = value;
+    if (value != null) {
+      _sprite = TileMap.terrainSpriteSheet.getSpriteById(value);
+    }
+  }
+
+  int? get spriteIndex {
+    return data?['spriteIndex'];
+  }
+
+  set overlaySprite(dynamic spriteData) {
+    assert(spriteData != null);
+    jsonLikeDataAssign(data?['overlaySprite'], spriteData);
+    tryLoadSprite(overlay: true);
+  }
+
+  dynamic get overlaySprite {
+    return data?['overlaySprite'];
+  }
 
   // 随机数，用来让多个 tile 的贴图动画错开播放
   late final double _overlayAnimationOffset;
   double _overlayAnimationOffsetValue = 0;
 
-  Future<Sprite?> _loadSprite(
-      dynamic data, SpriteSheet terrainSpriteSheet) async {
+  Future<void> _tryLoadSpriteFromData({bool overlay = false}) async {
+    if (data == null) return;
+
+    final d = overlay ? (data?['overlaySprite']) : data;
+    assert(d != null);
+
     Sprite? sprite;
-    if (data != null) {
-      final String? spritePath = data['sprite'];
-      final int? spriteIndex = data['spriteIndex'];
-      if (spritePath != null) {
-        sprite = await Sprite.load(
-          spritePath,
-          srcSize: Vector2(srcWidth, srcHeight),
-        );
-      } else if (spriteIndex != null) {
-        sprite = terrainSpriteSheet.getSpriteById(spriteIndex - 1);
+    final String? spritePath = d?['sprite'];
+    final int? spriteIndex = d?['spriteIndex'];
+    if (spritePath != null) {
+      sprite = await Sprite.load(
+        spritePath,
+        srcSize: Vector2(srcWidth, srcHeight),
+      );
+    } else if (spriteIndex != null) {
+      sprite = TileMap.terrainSpriteSheet.getSpriteById(spriteIndex);
+    }
+    if (sprite != null) {
+      if (!overlay) {
+        _sprite = sprite;
+      } else {
+        _overlaySprite = sprite;
       }
     }
-    return sprite;
   }
 
-  Future<SpriteAnimationWithTicker?> _loadAnimation(
-      dynamic data, SpriteSheet terrainSpriteSheet,
-      {bool loop = true}) async {
+  Future<void> _tryLoadAnimationFromData({bool overlay = false}) async {
+    final d =
+        overlay ? data?['overlaySprite']?['animation'] : data?['animation'];
+    if (d == null) return;
+
     SpriteAnimationWithTicker? animation;
-    if (data != null) {
-      final String? animationPath = data['animation'];
-      final int? animationFrameCount = data['animationFrameCount'];
-      final int? animationRow = data['row'];
-      final int? animationStart = data['start'];
-      final int? animationEnd = data['end'];
-      if (animationPath != null) {
-        final sheet = SpriteSheet(
-            image: await Flame.images.load(animationPath),
-            srcSize: Vector2(
-              srcWidth,
-              srcHeight,
-            ));
-        animation = SpriteAnimationWithTicker(
-            animation: sheet.createAnimation(
-                row: 0,
-                stepTime: defaultAnimationStepTime,
-                loop: loop,
-                from: 0,
-                to: animationFrameCount ?? sheet.columns));
-      } else if (animationRow != null) {
-        animation = SpriteAnimationWithTicker(
-            animation: terrainSpriteSheet.createAnimation(
-          row: animationRow,
-          stepTime: defaultAnimationStepTime,
-          loop: loop,
-          from: animationStart ?? 0,
-          to: animationEnd ?? terrainSpriteSheet.columns,
-        ));
+    final String? animationPath = d?['path'];
+    final int? animationFrameCount = d?['frameCount'];
+    final int? animationRow = d?['row'];
+    final int? animationStart = d?['start'];
+    final int? animationEnd = d?['end'];
+    final bool loop = d?['loop'] ?? (overlay ? false : true);
+    if (animationPath != null) {
+      final sheet = SpriteSheet(
+          image: await Flame.images.load(animationPath),
+          srcSize: Vector2(
+            srcWidth,
+            srcHeight,
+          ));
+      animation = SpriteAnimationWithTicker(
+          animation: sheet.createAnimation(
+              row: animationRow ?? 0,
+              stepTime: defaultAnimationStepTime,
+              loop: loop,
+              from: 0,
+              to: animationFrameCount ?? sheet.columns));
+    } else if (animationRow != null) {
+      animation = SpriteAnimationWithTicker(
+          animation: TileMap.terrainSpriteSheet.createAnimation(
+        row: animationRow,
+        stepTime: defaultAnimationStepTime,
+        loop: loop,
+        from: animationStart ?? 0,
+        to: animationEnd ?? TileMap.terrainSpriteSheet.columns,
+      ));
+    }
+    if (animation != null) {
+      if (!overlay) {
+        _animation = animation;
+      } else {
+        _overlayAnimation = animation;
       }
     }
-    return animation;
   }
 
-  void loadSprite(dynamic data, SpriteSheet terrainSpriteSheet) async {
-    sprite = await _loadSprite(data, terrainSpriteSheet);
-    animation = await _loadAnimation(data, terrainSpriteSheet);
+  void tryLoadSprite({bool overlay = false}) async {
+    await _tryLoadSpriteFromData(overlay: overlay);
+    await _tryLoadAnimationFromData(overlay: overlay);
   }
 
-  void loadOverlaySprite(dynamic data, SpriteSheet terrainSpriteSheet) async {
-    overlaySprite = await _loadSprite(data, terrainSpriteSheet);
-    overlayAnimation =
-        await _loadAnimation(data, terrainSpriteSheet, loop: false);
+  void clearAllSprite() {
+    data.remove('spriteIndex');
+    _sprite = null;
+    _animation = null;
+    data['overlaySprite'].clear();
+    _overlaySprite = null;
+    _overlayAnimation = null;
+  }
+
+  void clearSprite() {
+    data.remove('sprite');
+    data.remove('spriteIndex');
+    _sprite = null;
+  }
+
+  void clearOverlaySprite() {
+    data?['overlaySprite']?.remove('sprite');
+    data?['overlaySprite']?.remove('spriteIndex');
+    _overlaySprite = null;
+  }
+
+  void clearAnimation() {
+    data.remove('animation');
+    _animation = null;
+  }
+
+  void clearOverlayAnimation() {
+    data?['overlaySprite']?.remove('animation');
+    _overlayAnimation = null;
   }
 
   TileMapTerrain({
@@ -120,29 +237,30 @@ class TileMapTerrain extends GameComponent with TileInfo {
     this.data,
     required int left,
     required int top,
-    bool isVisible = true,
-    this.isSelectable = false,
-    this.isVoid = false,
-    required int tileMapWidth,
+    bool isNonInteractable = false,
+    bool isLighted = true,
     required double srcWidth,
     required double srcHeight,
     required double gridWidth,
     required double gridHeight,
-    required this.isWater,
-    required this.kind,
-    this.nationId,
-    this.locationId,
-    this.caption,
+    String? kind,
+    String? zoneId,
+    String? nationId,
+    String? locationId,
+    String? caption,
     required TextStyle captionStyle,
-    this.sprite,
-    this.animation,
-    this.overlaySprite,
-    this.overlayAnimation,
+    Sprite? sprite,
+    SpriteAnimationWithTicker? animation,
+    Sprite? overlaySprite,
+    SpriteAnimationWithTicker? overlayAnimation,
     this.offsetX = 0.0,
     this.offsetY = 0.0,
     this.objectId,
-  }) : _captionPaint = TextPaint(
+  })  : _overlayAnimation = overlayAnimation,
+        _animation = animation,
+        _captionPaint = TextPaint(
           style: captionStyle.copyWith(
+            color: Colors.white,
             fontSize: 7.0,
             shadows: const [
               Shadow(
@@ -163,8 +281,16 @@ class TileMapTerrain extends GameComponent with TileInfo {
                   color: Colors.black),
             ],
           ),
-        ) {
-    this.tileMapWidth = tileMapWidth;
+        ),
+        _kind = kind,
+        _isNonInteractable = isNonInteractable,
+        _isLighted = isLighted,
+        _zoneIndex = zoneId,
+        _nationId = nationId,
+        _locationId = locationId,
+        // _caption = caption,
+        _sprite = sprite,
+        _overlaySprite = overlaySprite {
     this.tileShape = tileShape;
     this.gridWidth = gridWidth;
     this.gridHeight = gridHeight;
@@ -173,9 +299,8 @@ class TileMapTerrain extends GameComponent with TileInfo {
     srcOffsetY = 0;
     tilePosition = TilePosition(left, top);
     generateRect();
-    this.isVisible = isVisible;
 
-    _overlayAnimationOffset = math.Random().nextDouble() * 3;
+    _overlayAnimationOffset = math.Random().nextDouble() * 5;
   }
 
   void generateRect() {
@@ -208,6 +333,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
         borderPath.relativeLineTo(-gridWidth / 4, gridHeight / 2);
         borderPath.relativeLineTo(-gridWidth / 2, 0);
         borderPath.relativeLineTo(-gridWidth / 4, -gridHeight / 2);
+        borderPath.close();
         shadowPath.moveTo(l - bleendingPixelHorizontal + offsetX,
             t + gridHeight / 2 + offsetX);
         shadowPath.relativeLineTo(gridWidth / 4 + bleendingPixelHorizontal,
@@ -220,6 +346,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
         shadowPath.relativeLineTo(-gridWidth / 2, 0);
         shadowPath.relativeLineTo(-gridWidth / 4 - bleendingPixelHorizontal,
             -gridHeight / 2 - bleendingPixelVertical);
+        shadowPath.close();
         break;
       case TileShape.isometric:
         throw 'Isometric map tile is not supported yet!';
@@ -254,42 +381,53 @@ class TileMapTerrain extends GameComponent with TileInfo {
   }
 
   @override
-  void render(Canvas canvas, [bool showGrids = false]) {
-    if (isVoid) return;
-    sprite?.renderRect(canvas, rect);
-    animation?.ticker.currentFrame.sprite.renderRect(canvas, rect);
-    overlaySprite?.renderRect(canvas, rect);
-    overlayAnimation?.ticker.currentFrame.sprite.renderRect(canvas, rect);
+  void render(Canvas canvas,
+      {bool showGrids = false, bool showNonInteractableHintColor = false}) {
+    _sprite?.renderRect(canvas, rect);
+    _animation?.ticker.currentFrame.sprite.renderRect(canvas, rect);
+    _overlaySprite?.renderRect(canvas, rect);
+    _overlayAnimation?.ticker.currentFrame.sprite.renderRect(canvas, rect);
     if (showGrids) {
       canvas.drawPath(borderPath, borderPaint);
+    }
+    if (_isNonInteractable && showNonInteractableHintColor) {
+      canvas.drawPath(borderPath, TileMap.uninteractablePaint);
     }
   }
 
   void renderCaption(Canvas canvas, {offset = 14.0}) {
     if (caption != null) {
-      final worldPos =
-          tilePosition2TileCenterInWorld(tilePosition.left, tilePosition.top);
-      worldPos.y += offset;
-      _captionPaint.render(
-        canvas,
-        caption!,
-        worldPos,
-        anchor: Anchor.bottomCenter,
-      );
+      // Vector2 rPos = renderPosition.clone();
+      // rPos.y += offset;
+      drawScreenText(canvas, caption!,
+          style: ScreenTextStyle(
+            rect: rect,
+            outlined: true,
+            anchor: Anchor.center,
+            padding: EdgeInsets.only(top: gridHeight / 2 - 5.0),
+            textPaint: _captionPaint,
+          ));
+      // canvas.drawRect(rect, Paint()..style = PaintingStyle.stroke);
+      // _captionPaint.render(
+      //   canvas,
+      //   caption!,
+      //   rPos,
+      //   anchor: Anchor.bottomCenter,
+      // );
     }
   }
 
   @override
   void update(double dt) {
     super.update(dt);
-    animation?.ticker.update(dt);
-    if (overlayAnimation != null) {
-      overlayAnimation?.ticker.update(dt);
-      if (overlayAnimation!.ticker.done()) {
+    _animation?.ticker.update(dt);
+    if (_overlayAnimation != null) {
+      _overlayAnimation?.ticker.update(dt);
+      if (_overlayAnimation!.ticker.done()) {
         _overlayAnimationOffsetValue += dt;
         if (_overlayAnimationOffsetValue >= _overlayAnimationOffset) {
           _overlayAnimationOffsetValue = 0;
-          overlayAnimation!.ticker.reset();
+          _overlayAnimation!.ticker.reset();
         }
       }
     }

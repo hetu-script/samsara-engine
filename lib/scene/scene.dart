@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:samsara/component/game_component.dart';
 import 'package:samsara/extensions.dart';
+import 'package:flame_audio/bgm.dart';
 
 import 'scene_controller.dart';
 import '../widget/pointer_detector.dart';
@@ -14,6 +15,10 @@ abstract class Scene extends FlameGame {
 
   final String id;
   final SceneController controller;
+  final BuildContext context;
+
+  String? bgmFile;
+  double bgmVolume;
 
   GameComponent? draggingComponent;
 
@@ -27,15 +32,42 @@ abstract class Scene extends FlameGame {
       bottomCenter = Vector2.zero(),
       bottomRight = Vector2.zero();
 
+  late final Bgm bgm;
+
   Scene({
     required this.id,
     required this.controller,
+    required this.context,
+    this.bgmFile,
+    this.bgmVolume = 0.5,
   }) {
     // camera.viewfinder.anchor = Anchor.topLeft;
+    bgm = Bgm();
   }
 
-  void end() {
-    controller.leaveScene(id);
+  void leave({bool clearCache = false}) async {
+    controller.leaveScene(id, clearCache: clearCache);
+    if (bgm.isPlaying) {
+      try {
+        await bgm.stop();
+      } catch (e) {
+        controller.error(e.toString());
+      }
+    }
+  }
+
+  @mustCallSuper
+  @override
+  void onLoad() async {
+    fitScreen();
+    bgm.initialize();
+    if (bgmFile != null) {
+      try {
+        await bgm.play('audio/music/$bgmFile', volume: bgmVolume);
+      } catch (e) {
+        controller.error(e.toString());
+      }
+    }
   }
 
   @override
@@ -51,10 +83,11 @@ abstract class Scene extends FlameGame {
 
   /// get all components within this scene which handles gesture,
   /// order is from highest priority to lowest.
-  Iterable<HandlesGesture> get gestureComponents => world.children
+  List<HandlesGesture> get gestureComponents => world.children
       .reversed()
       .whereType<HandlesGesture>()
-      .cast<HandlesGesture>();
+      .cast<HandlesGesture>()
+      .toList();
 
   /// zoom the camera to a certain size
   void fitScreen([Vector2? fitSize]) {

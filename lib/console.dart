@@ -1,12 +1,11 @@
-import 'dart:ui';
-
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:hetu_script/errors.dart';
 
 import 'engine.dart';
-import 'ui/flutter/close_button.dart';
-import 'ui/flutter/responsive_window.dart';
-import 'package:hetu_script/errors.dart';
+import 'ui/close_button.dart';
+import 'ui/responsive_window.dart';
+import 'extensions.dart';
 
 class Console extends StatefulWidget {
   const Console({
@@ -24,12 +23,15 @@ class _ConsoleState extends State<Console> {
   static int _commandHistoryIndex = 0;
   static final _commandHistory = <String>[];
   final TextEditingController _textEditingController = TextEditingController();
+  final FocusNode _keyboardListenerFocusNode = FocusNode();
   final FocusNode _textFieldFocusNode = FocusNode();
   late final ScrollController _scrollController = ScrollController();
 
   @override
   void dispose() {
     _textEditingController.dispose();
+    _keyboardListenerFocusNode.dispose();
+    _textFieldFocusNode.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -39,7 +41,7 @@ class _ConsoleState extends State<Console> {
     final layout = Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text(widget.engine.locale['console']),
+        title: Text(widget.engine.locale('console')),
         actions: const [CloseButton2()],
       ),
       body: Column(
@@ -47,28 +49,20 @@ class _ConsoleState extends State<Console> {
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(10.0),
-              child: ScrollConfiguration(
-                behavior: ScrollConfiguration.of(context).copyWith(
-                  dragDevices: {
-                    PointerDeviceKind.touch,
-                    PointerDeviceKind.mouse,
-                  },
-                ),
-                child: ListView(
-                  controller: _scrollController,
-                  reverse: true,
-                  children: widget.engine
-                      .getLog()
-                      .map((line) => Text(line))
-                      .toList()
-                      .reversed
-                      .toList(),
-                ),
+              child: ListView(
+                controller: _scrollController,
+                reverse: true,
+                children: widget.engine
+                    .getLog()
+                    .map((line) => Text(line))
+                    .toList()
+                    .reversed
+                    .toList(),
               ),
             ),
           ),
           KeyboardListener(
-            focusNode: _textFieldFocusNode,
+            focusNode: _keyboardListenerFocusNode,
             key: UniqueKey(),
             onKeyEvent: (KeyEvent key) {
               if (key is KeyUpEvent) {
@@ -77,12 +71,10 @@ class _ConsoleState extends State<Console> {
                     _textEditingController.selection =
                         TextSelection.fromPosition(
                             const TextPosition(offset: 0));
-                    break;
                   case LogicalKeyboardKey.end: // end
                     _textEditingController.selection =
                         TextSelection.fromPosition(TextPosition(
                             offset: _textEditingController.text.length));
-                    break;
                   case LogicalKeyboardKey.arrowUp: // up
                     if (_commandHistoryIndex > 0) {
                       --_commandHistoryIndex;
@@ -93,7 +85,6 @@ class _ConsoleState extends State<Console> {
                     } else {
                       _textEditingController.text = '';
                     }
-                    break;
                   case LogicalKeyboardKey.arrowDown: // down
                     if (_commandHistoryIndex < _commandHistory.length - 1) {
                       ++_commandHistoryIndex;
@@ -102,37 +93,36 @@ class _ConsoleState extends State<Console> {
                     } else {
                       _textEditingController.text = '';
                     }
-                    break;
+                  case LogicalKeyboardKey.enter:
+                    final text = _textEditingController.text;
+                    if (text.isNotBlank) {
+                      _commandHistory.add(text);
+                      _commandHistoryIndex = _commandHistory.length;
+                      setState(() {
+                        try {
+                          final r = widget.engine.hetu
+                              .eval(text, globallyImport: true);
+                          widget.engine
+                              .info(widget.engine.hetu.lexicon.stringify(r));
+                        } catch (e) {
+                          if (e is HTError) {
+                            widget.engine.error(e.message);
+                          } else {
+                            widget.engine.error(e.toString());
+                          }
+                        }
+                      });
+                    }
+                    _textEditingController.text = '';
+                    _scrollController
+                        .jumpTo(_scrollController.position.minScrollExtent);
+                    _textFieldFocusNode.requestFocus();
                 }
               }
             },
             child: TextField(
+              focusNode: _textFieldFocusNode,
               key: UniqueKey(),
-              onSubmitted: (value) {
-                _commandHistory.add(value);
-                _commandHistoryIndex = _commandHistory.length;
-                setState(() {
-                  try {
-                    final r =
-                        widget.engine.hetu.eval(value, globallyImport: true);
-                    if (r != null) {
-                      widget.engine
-                          .info(widget.engine.hetu.lexicon.stringify(r));
-                    }
-                  } catch (e) {
-                    if (e is HTError) {
-                      widget.engine.error(e.message);
-                    } else {
-                      widget.engine.error(e.toString());
-                    }
-                  }
-                  _textEditingController.text = '';
-                  _textFieldFocusNode.requestFocus();
-                  _scrollController
-                      .jumpTo(_scrollController.position.minScrollExtent);
-                });
-              },
-              autofocus: true,
               controller: _textEditingController,
               decoration: const InputDecoration(
                 focusedBorder: OutlineInputBorder(

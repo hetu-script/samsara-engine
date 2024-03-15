@@ -24,7 +24,7 @@ class CloseButton2 extends StatelessWidget {
         if (onPressed != null) {
           onPressed!();
         } else {
-          Navigator.maybePop(context);
+          Navigator.maybePop(context, null);
         }
       },
     );

@@ -27,6 +27,7 @@ dependencies:
   flutter_platform_alert: ^0.5.1
   meta: ^1.10.0
   quiver: ^3.2.1
+  colorfilter_generator: ^0.0.8
 
 dev_dependencies:
   flutter_test:

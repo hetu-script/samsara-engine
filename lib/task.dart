@@ -5,15 +5,15 @@ import 'dart:async';
 /// Callbacks registered through this function are always executed in order and
 /// are guaranteed to run after the previous registered function is completed.
 
-abstract class Task {
-  static final List<Completer> _scheduleTasks = [];
+class TaskController {
+  final List<Completer> _scheduleTasks = [];
 
-  static void clearAll() {
+  void clearAll() {
     _scheduleTasks.clear();
   }
 
   /// add a task to be executed after all previous task is completed.
-  static Future<T> schedule<T>(FutureOr<T> Function() task) {
+  Future<T> schedule<T>(FutureOr<T> Function() task) {
     final previousTask = _scheduleTasks.isNotEmpty ? _scheduleTasks.last : null;
 
     final completer = Completer<T>();
@@ -34,4 +34,11 @@ abstract class Task {
 
     return completer.future;
   }
+}
+
+mixin HasTaskController {
+  final TaskController _taskController = TaskController();
+
+  Future<T> schedule<T>(FutureOr<T> Function() task) =>
+      _taskController.schedule(task);
 }

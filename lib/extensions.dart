@@ -4,8 +4,17 @@ import 'dart:math' as math;
 import 'package:flame/components.dart';
 import 'component/game_component.dart';
 
-export 'utils/color.dart' show HexColor;
 export 'package:flame/extensions.dart';
+
+extension StringEx on String {
+  String replaceAllLineBreaks() {
+    return replaceAll(r'\n', '\n');
+  }
+
+  bool get isBlank => trim() == '';
+
+  bool get isNotBlank => !isBlank;
+}
 
 extension PercentageString on num {
   String toPercentageString([int fractionDigits = 0]) {
@@ -17,6 +26,23 @@ extension DoubleFixed on double {
   double toDoubleAsFixed([int n = 2]) {
     return double.parse(toStringAsFixed(n));
   }
+}
+
+extension HexColor on Color {
+  /// String is in the format "aabbcc" or "ffaabbcc" with an optional leading "#".
+  static Color fromString(String hexString) {
+    final buffer = StringBuffer();
+    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+    buffer.write(hexString.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
+  }
+
+  /// Prefixes a hash sign if [leadingHashSign] is set to `true` (default is `true`).
+  String toHex({bool leadingHashSign = true}) => '${leadingHashSign ? '#' : ''}'
+      '${alpha.toRadixString(16).padLeft(2, '0')}'
+      '${red.toRadixString(16).padLeft(2, '0')}'
+      '${green.toRadixString(16).padLeft(2, '0')}'
+      '${blue.toRadixString(16).padLeft(2, '0')}';
 }
 
 extension Vector2Ex on Vector2 {

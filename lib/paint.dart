@@ -1,13 +1,36 @@
-import 'dart:ui';
+import 'dart:ui' show PointMode;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide LineMetrics;
 import 'package:flame/components.dart';
+import 'package:flame/text.dart';
 
-export 'package:flame/text.dart' show TextPaint;
-export 'dart:ui' show Offset, Canvas, Color, Paint, PaintingStyle;
-export 'package:flutter/material.dart' show Colors, TextStyle, FontWeight;
+import 'package:colorfilter_generator/colorfilter_generator.dart';
+import 'package:colorfilter_generator/addons.dart';
+// import 'package:colorfilter_generator/presets.dart';
 
-abstract class DefaultBorderPaint {
+export 'package:flame/text.dart' show TextPaint, LineMetrics;
+export 'dart:ui'
+    show
+        Offset,
+        Canvas,
+        Color,
+        Paint,
+        PaintingStyle,
+        Image,
+        BlendMode,
+        ImageFilter;
+export 'package:flutter/material.dart'
+    show Colors, TextStyle, FontWeight, FilterQuality;
+
+abstract class PredefinedFilters {
+  static ColorFilter brightness(double value) {
+    return ColorFilter.matrix(ColorFilterGenerator(
+        name: 'brightnessTint',
+        filters: [ColorFilterAddons.brightness(value)]).matrix);
+  }
+}
+
+abstract class PresetPaints {
   static final light = Paint()
     ..strokeWidth = 1
     ..style = PaintingStyle.stroke
@@ -47,9 +70,54 @@ abstract class DefaultBorderPaint {
     ..strokeWidth = 1
     ..style = PaintingStyle.stroke
     ..color = Colors.red;
+
+  static final invalid = Paint()
+    ..strokeWidth = 1
+    ..style = PaintingStyle.stroke
+    ..color = Colors.grey.shade300;
+
+  static final lightFill = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.white70;
+
+  static final darkFill = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.black87;
+
+  static final primaryFill = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.blue;
+
+  static final secondaryFill = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.grey;
+
+  static final infoFill = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.lightBlue;
+
+  static final successFill = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.green;
+
+  static final warningFill = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.yellow;
+
+  static final dangerFill = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.red;
+
+  static final lightGreenFill = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.lightGreen;
+
+  static final invalidFill = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.grey.shade300;
 }
 
-final Map<TextPaint, TextPaint> _cachedOutline = {};
+// final Map<TextPaint, TextPaint> _cachedOutline = {};
 
 enum ScreenTextColorTheme {
   light,
@@ -62,7 +130,7 @@ enum ScreenTextColorTheme {
   danger,
 }
 
-abstract class DefaultTextPaint {
+abstract class PresetTextPaints {
   static final TextPaint light = TextPaint(
     style: const TextStyle(
       color: Colors.white70,
@@ -119,24 +187,105 @@ class ScreenTextStyle {
   final Anchor? anchor;
   final EdgeInsets? padding;
   final double? opacity;
-  final TextPaint? textPaint;
   final bool? outlined;
   final ScreenTextColorTheme? colorTheme;
   final Sprite? backgroundSprite;
   final TextStyle? textStyle;
 
-  const ScreenTextStyle({
+  late final TextPaint textPaint;
+
+  ScreenTextStyle({
     this.position,
     this.rect,
     this.anchor,
     this.padding,
     this.opacity,
-    this.textPaint,
     this.outlined,
     this.colorTheme,
     this.backgroundSprite,
     this.textStyle,
-  });
+    TextPaint? textPaint,
+  }) {
+    final ct = colorTheme ?? ScreenTextColorTheme.light;
+    if (textPaint == null) {
+      switch (ct) {
+        case ScreenTextColorTheme.light:
+          textPaint = TextPaint(
+            style: TextStyle(
+              color: Colors.white.withOpacity(opacity ?? 1.0),
+              fontSize: 12.0,
+            ).merge(textStyle),
+          );
+          break;
+        case ScreenTextColorTheme.dark:
+          textPaint = TextPaint(
+            style: TextStyle(
+              color: Colors.black87.withOpacity(opacity ?? 1.0),
+              fontSize: 12.0,
+            ).merge(textStyle),
+          );
+          break;
+        case ScreenTextColorTheme.primary:
+          textPaint = TextPaint(
+            style: TextStyle(
+              color: Colors.blue.withOpacity(opacity ?? 1.0),
+              fontSize: 12.0,
+            ).merge(textStyle),
+          );
+          break;
+        case ScreenTextColorTheme.secondary:
+          textPaint = TextPaint(
+            style: TextStyle(
+              color: Colors.grey.withOpacity(opacity ?? 1.0),
+              fontSize: 12.0,
+            ).merge(textStyle),
+          );
+          break;
+        case ScreenTextColorTheme.success:
+          textPaint = TextPaint(
+            style: TextStyle(
+              color: Colors.green.withOpacity(opacity ?? 1.0),
+              fontSize: 12.0,
+            ).merge(textStyle),
+          );
+          break;
+        case ScreenTextColorTheme.info:
+          textPaint = TextPaint(
+            style: TextStyle(
+              color: Colors.lightBlue.withOpacity(opacity ?? 1.0),
+              fontSize: 12.0,
+            ).merge(textStyle),
+          );
+          break;
+        case ScreenTextColorTheme.warning:
+          textPaint = TextPaint(
+            style: TextStyle(
+              color: Colors.yellow.withOpacity(opacity ?? 1.0),
+              fontSize: 12.0,
+            ).merge(textStyle),
+          );
+          break;
+        case ScreenTextColorTheme.danger:
+          textPaint = TextPaint(
+            style: TextStyle(
+              color: Colors.red.withOpacity(opacity ?? 1.0),
+              fontSize: 12.0,
+            ).merge(textStyle),
+          );
+          break;
+      }
+      this.textPaint = textPaint;
+    } else {
+      this.textPaint = textPaint.copyWith(
+        (textStyle) => textStyle.copyWith(
+          color: (textStyle.color ??
+                  textStyle.foreground?.color ??
+                  Colors.blueGrey)
+              .withOpacity(opacity ?? 1.0),
+        ),
+      );
+    }
+  }
 
   /// 优先使用参数的属性，如果参数为 null，使用自己的属性
   ScreenTextStyle copyWith({
@@ -145,11 +294,11 @@ class ScreenTextStyle {
     Anchor? anchor,
     EdgeInsets? padding,
     double? opacity,
-    TextPaint? textPaint,
     bool? outlined,
     ScreenTextColorTheme? colorTheme,
     Sprite? backgroundSprite,
     TextStyle? textStyle,
+    TextPaint? textPaint,
   }) {
     return ScreenTextStyle(
       position: position ?? this.position,
@@ -157,11 +306,11 @@ class ScreenTextStyle {
       anchor: anchor ?? this.anchor,
       padding: padding ?? this.padding,
       opacity: opacity ?? this.opacity,
-      textPaint: textPaint ?? this.textPaint,
       outlined: outlined ?? this.outlined,
       colorTheme: colorTheme ?? this.colorTheme,
       backgroundSprite: backgroundSprite ?? this.backgroundSprite,
       textStyle: textStyle ?? this.textStyle,
+      textPaint: textPaint ?? this.textPaint,
     );
   }
 
@@ -172,7 +321,6 @@ class ScreenTextStyle {
     Anchor? anchor,
     EdgeInsets? padding,
     double? opacity,
-    TextPaint? textPaint,
     bool? outlined,
     ScreenTextColorTheme? colorTheme,
     Sprite? backgroundSprite,
@@ -184,11 +332,11 @@ class ScreenTextStyle {
       anchor: this.anchor ?? anchor,
       padding: this.padding ?? padding,
       opacity: this.opacity ?? opacity,
-      textPaint: this.textPaint ?? textPaint,
       outlined: this.outlined ?? outlined,
       colorTheme: this.colorTheme ?? colorTheme,
       backgroundSprite: this.backgroundSprite ?? backgroundSprite,
       textStyle: this.textStyle ?? textStyle,
+      textPaint: textPaint,
     );
   }
 
@@ -200,11 +348,11 @@ class ScreenTextStyle {
       anchor: other.anchor ?? anchor,
       padding: other.padding ?? padding,
       opacity: other.opacity ?? opacity,
-      textPaint: other.textPaint ?? textPaint,
       outlined: other.outlined ?? outlined,
       colorTheme: other.colorTheme ?? colorTheme,
       backgroundSprite: other.backgroundSprite ?? backgroundSprite,
       textStyle: other.textStyle ?? textStyle,
+      textPaint: other.textPaint,
     );
   }
 
@@ -216,11 +364,11 @@ class ScreenTextStyle {
       anchor: anchor ?? other.anchor,
       padding: padding ?? other.padding,
       opacity: opacity ?? other.opacity,
-      textPaint: textPaint ?? other.textPaint,
       outlined: outlined ?? other.outlined,
       colorTheme: colorTheme ?? other.colorTheme,
       backgroundSprite: backgroundSprite ?? other.backgroundSprite,
       textStyle: textStyle ?? other.textStyle,
+      textPaint: textPaint,
     );
   }
 }
@@ -230,114 +378,53 @@ void drawScreenText(
   String text, {
   ScreenTextStyle? style,
 }) {
-  TextPaint? textPaint = style?.textPaint;
+  TextPaint textPaint = style?.textPaint ?? PresetTextPaints.light;
 
-  final opacity = style?.opacity ?? 1.0;
-
-  if (textPaint == null) {
-    final colorTheme = style?.colorTheme ?? ScreenTextColorTheme.light;
-    switch (colorTheme) {
-      case ScreenTextColorTheme.light:
-        textPaint = TextPaint(
-          style: TextStyle(
-            color: Colors.white.withOpacity(opacity),
-            fontSize: 12.0,
-            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
-          ).merge(style?.textStyle),
-        );
-        break;
-      case ScreenTextColorTheme.dark:
-        textPaint = TextPaint(
-          style: TextStyle(
-            color: Colors.black87.withOpacity(opacity),
-            fontSize: 12.0,
-            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
-          ).merge(style?.textStyle),
-        );
-        break;
-      case ScreenTextColorTheme.primary:
-        textPaint = TextPaint(
-          style: TextStyle(
-            color: Colors.blue.withOpacity(opacity),
-            fontSize: 12.0,
-            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
-          ).merge(style?.textStyle),
-        );
-        break;
-      case ScreenTextColorTheme.secondary:
-        textPaint = TextPaint(
-          style: TextStyle(
-            color: Colors.grey.withOpacity(opacity),
-            fontSize: 12.0,
-            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
-          ).merge(style?.textStyle),
-        );
-        break;
-      case ScreenTextColorTheme.success:
-        textPaint = TextPaint(
-          style: TextStyle(
-            color: Colors.green.withOpacity(opacity),
-            fontSize: 12.0,
-            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
-          ).merge(style?.textStyle),
-        );
-        break;
-      case ScreenTextColorTheme.info:
-        textPaint = TextPaint(
-          style: TextStyle(
-            color: Colors.lightBlue.withOpacity(opacity),
-            fontSize: 12.0,
-            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
-          ).merge(style?.textStyle),
-        );
-        break;
-      case ScreenTextColorTheme.warning:
-        textPaint = TextPaint(
-          style: TextStyle(
-            color: Colors.yellow.withOpacity(opacity),
-            fontSize: 12.0,
-            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
-          ).merge(style?.textStyle),
-        );
-        break;
-      case ScreenTextColorTheme.danger:
-        textPaint = TextPaint(
-          style: TextStyle(
-            color: Colors.red.withOpacity(opacity),
-            fontSize: 12.0,
-            fontFamily: 'RuiZiYunZiKuLiBianTiGBK',
-          ).merge(style?.textStyle),
-        );
-        break;
-    }
-  } else {
-    textPaint = textPaint.copyWith(
-      (textStyle) => textStyle.copyWith(
-        color:
-            (textStyle.color ?? textStyle.foreground?.color ?? Colors.blueGrey)
-                .withOpacity(opacity),
-      ),
-    );
-  }
+  // final opacity = style?.opacity ?? 1.0;
 
   if (style?.position != null) {
     if ((style?.outlined ?? false) &&
         style?.colorTheme != ScreenTextColorTheme.dark) {
-      TextPaint? outlinePaint = _cachedOutline[textPaint];
-      if (outlinePaint == null) {
-        outlinePaint = textPaint.copyWith(
-          (textStyle) => textStyle.copyWith(
-            foreground: Paint()
-              ..strokeWidth = 2
-              ..color = Colors.black.withOpacity(opacity)
-              ..style = PaintingStyle.stroke,
-          ),
-        );
-        _cachedOutline[textPaint] = outlinePaint;
-      }
+      textPaint = TextPaint(
+        style: textPaint.style.copyWith(
+          shadows: const [
+            Shadow(
+                // bottomLeft
+                offset: Offset(-0.5, -0.5),
+                color: Colors.black),
+            Shadow(
+                // bottomRight
+                offset: Offset(0.5, -0.5),
+                color: Colors.black),
+            Shadow(
+                // topRight
+                offset: Offset(0.5, 0.5),
+                color: Colors.black),
+            Shadow(
+                // topLeft
+                offset: Offset(-0.5, 0.5),
+                color: Colors.black),
+          ],
+        ),
+      );
 
-      outlinePaint.render(canvas, text, style!.position!);
+      //   TextPaint? outlinePaint = _cachedOutline[textPaint];
+      //   if (outlinePaint == null) {
+      //     outlinePaint = textPaint.copyWith(
+      //       (textStyle) => textStyle.copyWith(
+      //         foreground: Paint()
+      //           ..strokeWidth = 2
+      //           ..color = Colors.black.withOpacity(opacity)
+      //           ..style = PaintingStyle.stroke,
+      //       ),
+      //     );
+      //     _cachedOutline[textPaint] = outlinePaint;
+      //   }
+
+      //   outlinePaint.render(canvas, text, style!.position!);
     }
+
+    // 这里才是真正绘制文字的地方
     textPaint.render(canvas, text, style!.position!);
   } else {
     Vector2 textPosition = Vector2.zero();
@@ -345,9 +432,9 @@ void drawScreenText(
     if (style?.rect != null) {
       final rect = style!.rect!;
       final anchor = style.anchor;
-      final metric = textPaint.getLineMetrics(text);
-      final textWidth = metric.width;
-      final textHeight = metric.height;
+      final lineMetrics = textPaint.getLineMetrics(text);
+      final textWidth = lineMetrics.width;
+      final textHeight = lineMetrics.height;
       final padding = style.padding ?? const EdgeInsets.all(0);
       final offsetX = padding.left - padding.right;
       final offsetY = padding.top - padding.bottom;

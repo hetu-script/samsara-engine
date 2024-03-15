@@ -1,18 +1,18 @@
 import 'dart:async';
 
 import '../../component/game_component.dart';
-import '../playing_card.dart';
+import '../card.dart';
 import '../../paint.dart';
 
-const kQueueTopPriority = 2000;
-
 enum PileStructure {
-  // new cards put to bottom of pile
+  /// new cards put to bottom of pile
   queue,
-  // new cards put on top of pile
+
+  /// new cards put on top of pile
   stack,
-  // new cards put in random place in pile
-  // shuffle,
+
+  /// new cards put in random place in pile
+  /// shuffle,
 }
 
 class PiledZone extends GameComponent {
@@ -44,7 +44,7 @@ class PiledZone extends GameComponent {
   // Map<String, PlayingCard> cards = {};
 
   Map<String, int> count = {};
-  List<PlayingCard> cards = [];
+  List<Card> cards = [];
 
   bool containsCard(String deckId) => count.containsKey(deckId);
 
@@ -62,6 +62,8 @@ class PiledZone extends GameComponent {
 
   final PileStructure pileStructure;
   final bool reverseX, reverseY;
+
+  int pileTopPriority;
 
   final Anchor titleAnchor;
   final EdgeInsets titlePadding;
@@ -83,7 +85,7 @@ class PiledZone extends GameComponent {
     this.allowStack = false,
     this.limit = -1,
     // this.allowEmptySlots = false,
-    List<PlayingCard> cards = const [],
+    List<Card> cards = const [],
     required this.piledCardSize,
     this.focusedOffset,
     this.focusedPosition,
@@ -93,6 +95,7 @@ class PiledZone extends GameComponent {
     this.pileStructure = PileStructure.stack,
     this.reverseX = false,
     this.reverseY = false,
+    this.pileTopPriority = 250,
     this.titleAnchor = Anchor.topLeft,
     this.titlePadding = EdgeInsets.zero,
     this.cardState,
@@ -146,7 +149,7 @@ class PiledZone extends GameComponent {
 
   /// TODO: [insertAndRearrangeAll]如果为真，并且[allowEmptySlots]为真。并且目前有空位，则在向已经有卡牌的位置插入新卡牌时，会将已有的卡牌向后移动让出位置
   Future<void> placeCard(
-    PlayingCard card, {
+    Card card, {
     int? index,
     // bool insertAndRearrangeAll = false,
     bool animated = true,
@@ -154,11 +157,10 @@ class PiledZone extends GameComponent {
   }) async {
     if (cards.contains(card)) return;
 
-    final existedNumber = count[card.deckbuildingId];
+    final existedNumber = count[card.deckId];
     if (allowStack && existedNumber != null) {
-      count[card.deckbuildingId] = existedNumber + 1;
-      final existedCard =
-          cards.singleWhere((c) => c.deckbuildingId == card.deckbuildingId);
+      count[card.deckId] = existedNumber + 1;
+      final existedCard = cards.singleWhere((c) => c.deckId == card.deckId);
       existedCard.stack += 1;
       return;
     }
@@ -196,9 +198,9 @@ class PiledZone extends GameComponent {
     }
 
     if (existedNumber == null) {
-      count[card.deckbuildingId] = 1;
+      count[card.deckId] = 1;
     } else {
-      count[card.deckbuildingId] = existedNumber + 1;
+      count[card.deckId] = existedNumber + 1;
     }
 
     card.index = index;
@@ -216,7 +218,7 @@ class PiledZone extends GameComponent {
     int newIndex, {
     bool insertAndRearrangeAll = false,
   }) async {
-    PlayingCard? cardOnOldIndex;
+    Card? cardOnOldIndex;
     // PlayingCard? cardOnNewIndex;
 
     if (oldIndex != newIndex) {
@@ -276,10 +278,11 @@ class PiledZone extends GameComponent {
       final card = cards[i];
       // pile.add(card.id);
       if (pileStructure == PileStructure.queue) {
-        card.priority = priority + kQueueTopPriority - i;
+        card.preferredPriority = priority + pileTopPriority - i;
       } else if (pileStructure == PileStructure.stack) {
-        card.priority = priority + 1 + i;
+        card.preferredPriority = priority + 1 + i;
       }
+      card.resetPriority();
 
       // TODO: 有empty slots时，不重新赋值index
       card.index = i;
@@ -345,11 +348,11 @@ class PiledZone extends GameComponent {
       // pile.removeAt(cardIndex);
     }
 
-    final ec = count[card.deckbuildingId]!;
+    final ec = count[card.deckId]!;
     if (ec == 1) {
-      count.remove(card.deckbuildingId);
+      count.remove(card.deckId);
     } else {
-      count[card.deckbuildingId] = ec - 1;
+      count[card.deckId] = ec - 1;
     }
 
     card.removeFromParent();

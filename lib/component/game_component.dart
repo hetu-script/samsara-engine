@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Tooltip;
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:samsara/effect/fade_effect.dart';
@@ -23,10 +23,7 @@ export 'package:flutter/animation.dart' show Curve, Curves;
 abstract class GameComponent extends PositionComponent
     with HasGameRef<Scene>, HasPaint
     implements SizeProvider, OpacityProvider {
-  Paint borderPaint = Paint()
-    ..color = Colors.blue
-    ..strokeWidth = 0.5
-    ..style = PaintingStyle.stroke;
+  late Paint borderPaint;
 
   final bool isHud;
 
@@ -34,7 +31,7 @@ abstract class GameComponent extends PositionComponent
   Rect get border => _border;
   final double borderWidth;
   late RRect _rBorder;
-  RRect get rBorder => _rBorder;
+  RRect get rrect => _rBorder;
   final double borderRadius;
   late RRect _clipRRect;
   RRect get clipRRect => _clipRRect;
@@ -67,11 +64,25 @@ abstract class GameComponent extends PositionComponent
     double opacity = 1.0,
     super.children,
     bool? isHud,
+    bool flipH = false,
+    bool flipV = false,
+    Paint? paint,
+    Paint? borderPaint,
   }) : isHud = isHud ?? false {
     this.opacity = opacity;
+    this.paint = paint ?? Paint()
+      ..filterQuality = FilterQuality.medium
+      ..color = Colors.white.withOpacity(opacity);
+    this.borderPaint = borderPaint ?? Paint()
+      ..color = Colors.blue
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
 
     generateBorder();
     size.addListener(generateBorder);
+
+    if (flipH) flipHorizontally();
+    if (flipV) flipVertically();
   }
 
   @mustCallSuper
@@ -95,7 +106,6 @@ abstract class GameComponent extends PositionComponent
   @mustCallSuper
   @override
   void renderTree(Canvas canvas) {
-    if (!isVisible) return;
     super.renderTree(canvas);
   }
 

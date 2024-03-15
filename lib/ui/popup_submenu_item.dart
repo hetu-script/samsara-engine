@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// import 'package:flutter/widgets.dart';
 
 /// An item with sub menu for using in popup menus
 ///
@@ -9,22 +10,25 @@ import 'package:flutter/material.dart';
 /// Selecting items from the submenu will automatically close the parent menu
 /// Closing the sub menu by clicking outside of it, will automatically close the parent menu
 class PopupSubMenuItem<T> extends PopupMenuEntry<T> {
-  const PopupSubMenuItem(
-      {super.key,
-      required this.title,
-      required this.items,
-      this.offset = Offset.zero,
-      this.onSelected,
-      this.textStyle});
+  const PopupSubMenuItem({
+    super.key,
+    required this.title,
+    required this.items,
+    this.height = 24.0,
+    this.width = 120.0,
+    this.offset = Offset.zero,
+    this.onSelected,
+    this.textStyle,
+  });
 
   final String title;
+  @override
+  final double height;
+  final double width;
   final Offset offset;
   final Map<String, T> items;
   final Function(T)? onSelected;
   final TextStyle? textStyle;
-
-  @override
-  double get height => 24;
 
   @override
   bool represents(T? value) =>
@@ -38,11 +42,10 @@ class PopupSubMenuItem<T> extends PopupMenuEntry<T> {
 class _PopupSubMenuState<T> extends State<PopupSubMenuItem<T>> {
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final PopupMenuThemeData popupMenuTheme = PopupMenuTheme.of(context);
     TextStyle style = widget.textStyle ??
-        popupMenuTheme.textStyle ??
-        theme.textTheme.titleMedium!;
+        (PopupMenuTheme.of(context).textStyle ??
+                Theme.of(context).textTheme.titleMedium!)
+            .merge(const TextStyle(fontSize: 14.0));
 
     return PopupMenuButton<T>(
       tooltip: '',
@@ -63,15 +66,21 @@ class _PopupSubMenuState<T> extends State<PopupSubMenuItem<T>> {
         for (final key in widget.items.keys) {
           final value = widget.items[key];
           items.add(PopupMenuItem<T>(
-            height: 24.0,
+            height: widget.height,
             value: value,
-            child: Text(key, style: style),
+            child: Container(
+              alignment: Alignment.centerLeft,
+              width: widget.width,
+              child: Text(key, style: style),
+            ),
           ));
         }
         return items;
       },
-      child: Padding(
-        padding: const EdgeInsets.only(left: 16.0, right: 8.0),
+      child: Container(
+        padding: const EdgeInsets.only(left: 11.0),
+        alignment: Alignment.centerLeft,
+        width: widget.width,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
@@ -81,7 +90,7 @@ class _PopupSubMenuState<T> extends State<PopupSubMenuItem<T>> {
             ),
             Icon(
               Icons.arrow_right,
-              size: 24.0,
+              size: widget.height,
               color: Theme.of(context).iconTheme.color,
             ),
           ],

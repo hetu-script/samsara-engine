@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 // import 'package:flame_audio/flame_audio.dart';
-import 'package:samsara/ui/flutter/loading_screen.dart';
+import 'package:samsara/ui/loading_screen.dart';
 import 'package:samsara/console.dart';
 
-import '../../global.dart';
-import '../../scene/game.dart';
-import 'drop_menu.dart';
+import '../global.dart';
+import 'game.dart';
+import '../ui/drop_menu.dart';
 
 class MainGameOverlay extends StatefulWidget {
   MainGameOverlay() : super(key: UniqueKey());
@@ -48,7 +48,7 @@ class _MainGameOverlayState extends State<MainGameOverlay>
     // ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
 
     return _isDisposing
-        ? LoadingScreen(text: engine.locale['loading'])
+        ? LoadingScreen(text: engine.locale('loading'))
         : FutureBuilder(
             // 不知道为啥，这里必须用这种写法才能进入载入界面，否则一定会卡住
             future: Future.delayed(
@@ -61,7 +61,7 @@ class _MainGameOverlayState extends State<MainGameOverlay>
               }
 
               if (!snapshot.hasData) {
-                return LoadingScreen(text: engine.locale['loading']);
+                return LoadingScreen(text: engine.locale('loading'));
               } else {
                 _scene = snapshot.data as GameScene;
                 if (_scene.isAttached) {
@@ -72,7 +72,7 @@ class _MainGameOverlayState extends State<MainGameOverlay>
                   child: Stack(
                     children: [
                       if (_scene.isLoading)
-                        LoadingScreen(text: engine.locale['loading']),
+                        LoadingScreen(text: engine.locale('loading')),
                       SceneWidget(scene: _scene),
                       Positioned(
                         right: 0,

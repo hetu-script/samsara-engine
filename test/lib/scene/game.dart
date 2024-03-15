@@ -8,6 +8,7 @@ class GameScene extends Scene {
   GameScene({
     required super.id,
     required super.controller,
+    required super.context,
   });
 
   @override
@@ -16,11 +17,11 @@ class GameScene extends Scene {
 
     // camera.snapTo(size / 2);
 
-    final p = PlayGround(width: 400.0, height: 320.0);
+    final p = PlayGround(width: 800.0, height: 640.0);
     world.add(p);
 
-    engine.info('游戏界面可视区域大小：${p.size.x}x${p.size.y}');
     fitScreen(p.size);
+    engine.info('游戏界面可视区域大小：${p.size.x}x${p.size.y}');
   }
 
   @override

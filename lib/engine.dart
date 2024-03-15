@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
+import 'dart:ui';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:hetu_script/hetu_script.dart';
 import 'package:hetu_script_flutter/hetu_script_flutter.dart';
@@ -10,12 +10,13 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_audio/bgm.dart';
 
 import 'binding/engine_binding.dart';
-import '../event/event.dart';
+import '../event.dart';
 import 'localization/localization.dart';
-import 'utils/color.dart';
+import 'extensions.dart' show HexColor;
 import 'scene/scene_controller.dart';
 import 'logger/printer.dart';
 import 'logger/output.dart';
+import 'tilemap/tilemap.dart';
 
 class EngineConfig {
   final String name;
@@ -29,7 +30,7 @@ class EngineConfig {
   });
 }
 
-class SamsaraEngine with SceneController, EventAggregator implements HTLogger {
+class SamsaraEngine extends SceneController with EventAggregator {
   static const modeFileExtension = '.mod';
 
   final EngineConfig config;
@@ -44,7 +45,7 @@ class SamsaraEngine with SceneController, EventAggregator implements HTLogger {
       printer: _loggerPrinter,
       output: _loggerOutput,
     );
-    locale = GameLocalization();
+    _locale = GameLocalization();
   }
 
   final CustomLoggerPrinter _loggerPrinter = CustomLoggerPrinter();
@@ -52,28 +53,41 @@ class SamsaraEngine with SceneController, EventAggregator implements HTLogger {
 
   late final Logger logger;
 
-  late final GameLocalization locale;
+  late final GameLocalization _locale;
+
+  String locale(String? key, {List? interpolations}) =>
+      _locale.getLocaleString(key ?? 'null', interpolations: interpolations);
 
   late final String? _mainModName;
 
+  String get languageId => _locale.languageId;
+
   void loadLocale(Map localeData) {
     info('载入本地化字符串……');
-    locale.loadData(localeData);
+    _locale.loadData(localeData);
+    if (_locale.errors.isNotEmpty) {
+      for (final error in _locale.errors) {
+        warn(error);
+      }
+    }
   }
 
   void setLocale(String localeId) {
-    assert(locale.hasLanguage(localeId));
-    info('设置当前语言为 [${locale.getLanguageName(localeId)}]');
-    locale.languageId = localeId;
+    assert(_locale.hasLanguage(localeId));
+    info('设置当前语言为 [${_locale.getLanguageName(localeId)}]');
+    _locale.languageId = localeId;
   }
 
-  List<Map<int, Color>> colors = [];
-
-  void loadColors(List colorsList) {
+  void loadTileMapZoneColors(List colorsList) {
     for (final Map colorData in colorsList) {
-      final data = colorData
-          .map((key, value) => MapEntry(key as int, HexColor.fromHex(value)));
-      colors.add(data);
+      final colorInfo = colorData.map((key, value) {
+        final color = HexColor.fromString(value);
+        final paint = Paint()
+          ..style = PaintingStyle.fill
+          ..color = color.withOpacity(0.6);
+        return MapEntry(key as int, (color, paint));
+      });
+      TileMap.zoneColors.add(colorInfo);
     }
   }
 
@@ -102,7 +116,7 @@ class SamsaraEngine with SceneController, EventAggregator implements HTLogger {
       key,
       module: module,
       globallyImport: isMainMod,
-      invoke: 'init',
+      invoke: 'main',
       positionalArgs: positionalArgs,
       namedArgs: namedArgs,
     );
@@ -121,7 +135,7 @@ class SamsaraEngine with SceneController, EventAggregator implements HTLogger {
       bytes: bytes,
       module: moduleName,
       globallyImport: isMainMod,
-      invoke: 'init',
+      invoke: 'main',
       positionalArgs: positionalArgs,
       namedArgs: namedArgs,
     );
@@ -147,7 +161,7 @@ class SamsaraEngine with SceneController, EventAggregator implements HTLogger {
   //     bytes: bytes,
   //     moduleName: moduleName,
   //     globallyImport: isMainMod,
-  //     invokeFunc: 'init',
+  //     invokeFunc: 'main',
   //     positionalArgs: positionalArgs,
   //     namedArgs: namedArgs,
   //   );
@@ -161,7 +175,7 @@ class SamsaraEngine with SceneController, EventAggregator implements HTLogger {
   /// for accessing the assets bundle resources.
   Future<void> init({
     Map<String, Function> externalFunctions = const {},
-    Set<String> modules = const {'cardGame'},
+    Set<String> modules = const {},
   }) async {
     if (_isInitted) return;
     if (config.debugMode) {
@@ -174,7 +188,8 @@ class SamsaraEngine with SceneController, EventAggregator implements HTLogger {
       hetu = Hetu(
         config: HetuConfig(
           // printPerformanceStatistics: config.debugMode,
-          showDartStackTrace: config.debugMode,
+          showDartStackTrace: false,
+          // showDartStackTrace: config.debugMode,
           showHetuStackTrace: true,
           stackTraceDisplayCountLimit: 10,
           allowVariableShadowing: false,
@@ -233,7 +248,7 @@ class SamsaraEngine with SceneController, EventAggregator implements HTLogger {
 
     hetu.assign('engine', this);
 
-    await locale.init();
+    await _locale.init();
 
     _isInitted = true;
   }
@@ -280,7 +295,7 @@ class SamsaraEngine with SceneController, EventAggregator implements HTLogger {
       case 4:
         return Level.error;
       default:
-        return Level.all;
+        return Level.trace;
     }
   }
 

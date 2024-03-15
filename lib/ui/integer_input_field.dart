@@ -6,7 +6,8 @@ class IntegerInputField extends StatefulWidget {
   final FocusNode? focusNode;
   final int? initValue;
   final int min;
-  final int max;
+  final int? max;
+  final bool showSuffixButtons;
   final int step;
   final double buttonWidth;
   final double buttonHeight;
@@ -21,7 +22,8 @@ class IntegerInputField extends StatefulWidget {
     this.focusNode,
     this.initValue,
     required this.min,
-    required this.max,
+    this.max,
+    this.showSuffixButtons = false,
     this.step = 1,
     this.buttonWidth = 48,
     this.buttonHeight = 24,
@@ -68,8 +70,9 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
         textAlign: TextAlign.center,
         textInputAction: TextInputAction.done,
         keyboardType: TextInputType.number,
-        maxLength:
-            widget.max.toString().length + (widget.min.isNegative ? 1 : 0),
+        maxLength: widget.max != null
+            ? widget.max.toString().length + (widget.min.isNegative ? 1 : 0)
+            : null,
         cursorColor: Theme.of(context).colorScheme.onBackground,
         decoration: InputDecoration(
           focusedBorder: const OutlineInputBorder(
@@ -85,89 +88,96 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
           contentPadding: widget.contentPadding,
           prefixIconConstraints: BoxConstraints(
               maxHeight: widget.buttonHeight, maxWidth: widget.buttonWidth),
-          prefixIcon: Container(
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(widget.borderWidth),
-                    bottomRight: Radius.circular(widget.borderWidth))),
-            clipBehavior: Clip.antiAlias,
-            margin: EdgeInsets.only(
-                top: widget.borderWidth,
-                right: widget.borderWidth,
-                bottom: widget.borderWidth,
-                left: widget.borderWidth),
-            child: Material(
-              type: MaterialType.transparency,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: _canGoDown
-                          ? () => _update(absolute: widget.min)
-                          : null,
-                      child: Opacity(
-                        opacity: _canGoDown ? 1 : 0.5,
-                        child: const Text('MIN'),
-                      ),
+          prefixIcon: widget.showSuffixButtons
+              ? Container(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                          topRight: Radius.circular(widget.borderWidth),
+                          bottomRight: Radius.circular(widget.borderWidth))),
+                  clipBehavior: Clip.antiAlias,
+                  margin: EdgeInsets.only(
+                      top: widget.borderWidth,
+                      right: widget.borderWidth,
+                      bottom: widget.borderWidth,
+                      left: widget.borderWidth),
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: Row(
+                      children: [
+                        if (widget.max != null)
+                          Expanded(
+                            child: InkWell(
+                              onTap: _canGoDown
+                                  ? () => _update(absolute: widget.min)
+                                  : null,
+                              child: Opacity(
+                                opacity: _canGoDown ? 1 : 0.5,
+                                child: const Text('MIN'),
+                              ),
+                            ),
+                          ),
+                        Expanded(
+                          child: InkWell(
+                            onTap: _canGoDown
+                                ? () => _update(relative: -widget.step)
+                                : null,
+                            child: Opacity(
+                              opacity: _canGoDown ? 1 : 0.5,
+                              child: const Icon(Icons.remove),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Expanded(
-                    child: InkWell(
-                      onTap: _canGoDown
-                          ? () => _update(relative: -widget.step)
-                          : null,
-                      child: Opacity(
-                        opacity: _canGoDown ? 1 : 0.5,
-                        child: const Icon(Icons.remove),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+                )
+              : null,
           suffixIconConstraints: BoxConstraints(
               maxHeight: widget.buttonHeight, maxWidth: widget.buttonWidth),
-          suffixIcon: Container(
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(widget.borderWidth),
-                    bottomRight: Radius.circular(widget.borderWidth))),
-            clipBehavior: Clip.antiAlias,
-            margin: EdgeInsets.only(
-                top: widget.borderWidth,
-                right: widget.borderWidth,
-                bottom: widget.borderWidth,
-                left: widget.borderWidth),
-            child: Material(
-              type: MaterialType.transparency,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: _canGoUp
-                          ? () => _update(relative: widget.step)
-                          : null,
-                      child: Opacity(
-                        opacity: _canGoUp ? 1 : 0.5,
-                        child: const Icon(Icons.add),
-                      ),
+          suffixIcon: widget.showSuffixButtons
+              ? Container(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                          topRight: Radius.circular(widget.borderWidth),
+                          bottomRight: Radius.circular(widget.borderWidth))),
+                  clipBehavior: Clip.antiAlias,
+                  margin: EdgeInsets.only(
+                      top: widget.borderWidth,
+                      right: widget.borderWidth,
+                      bottom: widget.borderWidth,
+                      left: widget.borderWidth),
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: _canGoUp
+                                ? () => _update(relative: widget.step)
+                                : null,
+                            child: Opacity(
+                              opacity: _canGoUp ? 1 : 0.5,
+                              child: const Icon(Icons.add),
+                            ),
+                          ),
+                        ),
+                        if (widget.max != null)
+                          Expanded(
+                            child: InkWell(
+                              onTap: _canGoUp
+                                  ? () => _update(absolute: widget.max)
+                                  : null,
+                              child: Opacity(
+                                opacity: _canGoUp ? 1 : 0.5,
+                                child: const Text('MAX'),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                  Expanded(
-                    child: InkWell(
-                      onTap:
-                          _canGoUp ? () => _update(absolute: widget.max) : null,
-                      child: Opacity(
-                        opacity: _canGoUp ? 1 : 0.5,
-                        child: const Text('MAX'),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+                )
+              : null,
         ),
         maxLines: 1,
         onChanged: (value) {
@@ -189,7 +199,7 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
       _controller.text = intValue.toString();
     } else if (absolute != null) {
       if (absolute < widget.min) absolute = widget.min;
-      if (absolute > widget.max) absolute = widget.max;
+      if (widget.max != null && absolute > widget.max!) absolute = widget.max;
       _updateButtons(absolute);
       _controller.text = absolute.toString();
     }
@@ -197,7 +207,8 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
   }
 
   void _updateButtons(int? value) {
-    final canGoUp = value == null || value < widget.max;
+    final canGoUp =
+        value == null || (widget.max == null || value < widget.max!);
     final canGoDown = value == null || value > widget.min;
     if (_canGoUp != canGoUp || _canGoDown != canGoDown) {
       setState(() {
@@ -210,7 +221,7 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
 
 class _NumberTextInputFormatter extends TextInputFormatter {
   final int min;
-  final int max;
+  final int? max;
 
   _NumberTextInputFormatter(this.min, this.max);
 
@@ -220,8 +231,12 @@ class _NumberTextInputFormatter extends TextInputFormatter {
     if (const ['-', ''].contains(newValue.text)) return newValue;
     final intValue = int.tryParse(newValue.text);
     if (intValue == null) return oldValue;
-    if (intValue < min) return newValue.copyWith(text: min.toString());
-    if (intValue > max) return newValue.copyWith(text: max.toString());
+    if (intValue < min) {
+      return newValue.copyWith(text: min.toString());
+    }
+    if (max != null && intValue > max!) {
+      return newValue.copyWith(text: max.toString());
+    }
     return newValue.copyWith(text: intValue.toString());
   }
 }

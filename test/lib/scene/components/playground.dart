@@ -1,10 +1,13 @@
+import 'package:flame/components.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
-import 'package:samsara/component/sprite_component.dart';
-import 'package:samsara/effect/fade_effect.dart';
-import 'package:flame/effects.dart';
+import 'package:samsara/component/sprite_button.dart';
+// import 'package:samsara/effect/fade_effect.dart';
+// import 'package:flame/effects.dart';
 // import 'package:samsara/component/in_and_out_sprite.dart';
 import 'package:samsara/component/arrow.dart';
+import 'package:samsara/component/tooltip.dart';
+import 'package:flame/flame.dart';
 
 class PlayGround extends GameComponent with HandlesGesture {
   // late final StatusBar status;
@@ -18,10 +21,10 @@ class PlayGround extends GameComponent with HandlesGesture {
     required double height,
   }) : super(size: Vector2(width, height)) {
     onTapDown = (int buttons, Vector2 position) {
-      final c = SpriteComponent2(spriteId: 'pepe.png', anchor: Anchor.center);
-      c.position = position;
-      c.add(FadeEffect(target: c, controller: EffectController(duration: 1.0)));
-      add(c);
+      // final c = SpriteButton(spriteId: 'pepe.png', anchor: Anchor.center);
+      // c.position = position;
+      // c.add(FadeEffect(target: c, controller: EffectController(duration: 1.0)));
+      // add(c);
 
       // final c2 = FadingText(
       //   'hit!\n100',
@@ -54,6 +57,36 @@ class PlayGround extends GameComponent with HandlesGesture {
 
   @override
   Future<void> onLoad() async {
+    final SpriteComponent background = SpriteComponent(
+      sprite: Sprite(await Flame.images.load('main2-small.png')),
+      size: size,
+    );
+    add(background);
+
+    final button = SpriteButton(
+      spriteId: 'pepe.png',
+      // anchor: Anchor.center,
+      useSpriteSrcSize: true,
+      borderRadius: 20.0,
+      position: center,
+    );
+
+    button.onMouseEnter = () {
+      Tooltip.show(
+        scene: gameRef,
+        target: button,
+        preferredDirection: TooltipDirection.rightTop,
+        title: '野堂',
+        description:
+            '''宋代：陆游\n\n野堂萧飒雪侵冠，历尽人间行路难。\n病马不收烟草暝，孤桐半落井床寒。\n长瓶浊酒犹堪醉，败箧残编更细看。\n此兴不随年共老，未容城角动忧端。''',
+      );
+    };
+    button.onMouseExit = () {
+      Tooltip.hide();
+    };
+
+    add(button);
+
     // status = StatusBar(size: Vector2(100, 20));
     // status.position = center;
     // add(status);
@@ -65,7 +98,7 @@ class PlayGround extends GameComponent with HandlesGesture {
 
   @override
   void render(Canvas canvas) {
-    canvas.drawRect(border, DefaultBorderPaint.light);
+    canvas.drawRect(border, PresetPaints.light);
   }
 
   @override

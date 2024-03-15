@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../global.dart';
+import '../global.dart';
 
 enum MainGameDropMenuItems { console, quit }
 
@@ -20,7 +20,7 @@ class MainGameDropMenu extends StatelessWidget {
       child: PopupMenuButton<MainGameDropMenuItems>(
         offset: const Offset(0, 45),
         icon: const Icon(Icons.menu_open),
-        tooltip: engine.locale['menu'],
+        tooltip: engine.locale('menu'),
         onSelected: onSelected,
         itemBuilder: (BuildContext context) =>
             <PopupMenuEntry<MainGameDropMenuItems>>[
@@ -30,7 +30,7 @@ class MainGameDropMenu extends StatelessWidget {
             child: Container(
               alignment: Alignment.centerLeft,
               width: 100,
-              child: Text(engine.locale['console']),
+              child: Text(engine.locale('console')),
             ),
           ),
           const PopupMenuDivider(),
@@ -40,7 +40,7 @@ class MainGameDropMenu extends StatelessWidget {
             child: Container(
               alignment: Alignment.centerLeft,
               width: 100,
-              child: Text(engine.locale['quit']),
+              child: Text(engine.locale('quit')),
             ),
           ),
         ],

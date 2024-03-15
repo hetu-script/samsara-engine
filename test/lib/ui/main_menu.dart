@@ -1,15 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:samsara/ui/flutter/loading_screen.dart';
-import 'package:samsara/ui/flutter/label.dart';
+import 'package:samsara/ui/loading_screen.dart';
+import 'package:samsara/ui/label.dart';
 // import 'package:json5/json5.dart';
 import 'package:samsara/widget/markdown_wiki.dart';
 import 'package:samsara/widget/embedded_text.dart';
 
 import '../global.dart';
 import '../scene/game.dart';
-import 'overlay/main_game.dart';
+import '../scene/game_overlay.dart';
 
 class MainMenu extends StatefulWidget {
   const MainMenu({super.key});
@@ -24,7 +24,7 @@ class _MainMenuState extends State<MainMenu> {
     super.initState();
 
     engine.registerSceneConstructor('game', ([dynamic data]) async {
-      return GameScene(controller: engine, id: 'game');
+      return GameScene(controller: engine, id: 'game', context: context);
     });
   }
 
@@ -53,7 +53,7 @@ class _MainMenuState extends State<MainMenu> {
 
         if (!snapshot.hasData || snapshot.data == false) {
           return LoadingScreen(
-              text: engine.isInitted ? engine.locale['loading'] : 'Loading...');
+              text: engine.isInitted ? engine.locale('loading') : 'Loading...');
         } else {
           return Scaffold(
             body: Stack(
@@ -72,7 +72,7 @@ class _MainMenuState extends State<MainMenu> {
                             );
                           },
                           child: Label(
-                            engine.locale['newGame'],
+                            engine.locale('newGame'),
                             width: 100.0,
                             textAlign: TextAlign.center,
                           ),
@@ -155,7 +155,7 @@ class _MainMenuState extends State<MainMenu> {
                             windowManager.close();
                           },
                           child: Label(
-                            engine.locale['exit'],
+                            engine.locale('exit'),
                             width: 100.0,
                             textAlign: TextAlign.center,
                           ),

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import '../../component/game_component.dart';
 import '../../gestures.dart';
-import '../playing_card.dart';
+import '../card.dart';
 import '../../paint.dart';
 
 class DrawingZone extends GameComponent with HandlesGesture {
@@ -18,7 +18,7 @@ class DrawingZone extends GameComponent with HandlesGesture {
   /// the duration of the drawed card reveal time.
   double revealDuration;
 
-  final List<PlayingCard> cards;
+  final List<Card> cards;
 
   final Anchor tooltipAnchor;
   final EdgeInsets tooltipPadding;
@@ -57,7 +57,7 @@ class DrawingZone extends GameComponent with HandlesGesture {
   //   super.onLoad();
   // }
 
-  Future<PlayingCard> drawOneCard({bool flip = true}) async {
+  Future<Card> drawOneCard({bool flip = true}) async {
     assert(cards.isNotEmpty);
 
     // final drawingAction = Completer();
@@ -86,7 +86,7 @@ class DrawingZone extends GameComponent with HandlesGesture {
       card.isFlipped = false;
     }
 
-    return Future<PlayingCard>.delayed(
+    return Future<Card>.delayed(
       Duration(milliseconds: (revealDuration * 1000).toInt()),
       () => card,
     );
@@ -99,7 +99,7 @@ class DrawingZone extends GameComponent with HandlesGesture {
       // canvas.drawRRect(border, borderPaintFocused);
     }
     //  else {
-    canvas.drawRRect(rBorder, DefaultBorderPaint.light);
+    canvas.drawRRect(rrect, PresetPaints.light);
     // }
 
     // for (final card in cards) {

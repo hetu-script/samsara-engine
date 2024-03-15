@@ -1,7 +1,7 @@
-import '../../paint.dart';
-import '../../component/game_component.dart';
-import '../../utils/color.dart';
-import '../../extensions.dart';
+import '../paint.dart';
+import 'game_component.dart';
+import '../utils/color.dart';
+import '../extensions.dart';
 
 class DynamicColorProgressIndicator extends GameComponent {
   late final ScreenTextStyle textStyle;
@@ -25,13 +25,9 @@ class DynamicColorProgressIndicator extends GameComponent {
     this.showNumberAsPercentage = false,
     required this.colors,
     List<double>? stops,
-    Paint? borderPaint,
+    super.borderPaint,
+    super.flipH,
   }) {
-    borderPaint = Paint()
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke
-      ..color = const Color.fromARGB(255, 156, 138, 138);
-
     textStyle = ScreenTextStyle(
       rect: border,
       anchor: Anchor.center,
@@ -62,14 +58,16 @@ class DynamicColorProgressIndicator extends GameComponent {
         stops: stops,
       );
 
-    final progressBorder =
-        rBorder.copyWith(right: rBorder.left + value / max * rBorder.width);
+    final double progress =
+        max > 0 ? rrect.left + value / max * rrect.width : 0.0;
+
+    final progressBorder = rrect.copyWith(right: progress);
 
     canvas.drawRRect(progressBorder, progressPaint);
 
-    canvas.drawRRect(rBorder, borderPaint);
+    canvas.drawRRect(rrect, borderPaint);
 
-    final text = value.truncate().toString();
+    final text = '${value.truncate()}/${max.truncate()}';
 
     drawScreenText(canvas, text, style: textStyle);
   }

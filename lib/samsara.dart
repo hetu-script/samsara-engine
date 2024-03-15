@@ -7,5 +7,6 @@ export 'component/game_component.dart';
 export 'effect/advanced_move_effect.dart';
 export 'animation/sprite_animation.dart';
 export 'extensions.dart';
+export 'mixin.dart';
 export 'paint.dart';
 export 'error.dart';

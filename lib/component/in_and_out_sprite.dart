@@ -2,7 +2,7 @@ import 'package:flame/components.dart' hide Timer;
 import 'package:flame/effects.dart';
 import 'package:flame/flame.dart';
 
-import '../component/game_component.dart';
+import 'game_component.dart';
 import 'timer.dart';
 
 class InAndOutSprite extends GameComponent {

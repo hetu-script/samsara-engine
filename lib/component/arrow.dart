@@ -1,10 +1,9 @@
 import 'package:flame/components.dart';
 import 'package:samsara/samsara.dart';
-import 'package:samsara/component/sprite_component.dart';
 
 class Arrow extends GameComponent {
   Sprite sprite;
-  late final SpriteComponent2 sc;
+  late final SpriteComponent sc;
 
   Offset fromPoint = Offset.zero;
   Offset toPoint = Offset.zero;
@@ -20,7 +19,7 @@ class Arrow extends GameComponent {
 
   @override
   void onLoad() {
-    sc = SpriteComponent2(
+    sc = SpriteComponent(
       sprite: sprite,
       anchor: Anchor.bottomCenter,
     );

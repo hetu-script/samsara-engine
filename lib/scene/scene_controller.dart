@@ -1,8 +1,9 @@
 import 'package:meta/meta.dart';
+import 'package:hetu_script/hetu_script.dart';
 
 import 'scene.dart';
 
-mixin SceneController {
+abstract class SceneController implements HTLogger {
   Scene? _currentScene;
   Scene? get currentScene => _currentScene;
 
@@ -16,7 +17,7 @@ mixin SceneController {
   }
 
   @mustCallSuper
-  Future<Scene> createScene({
+  Future<T> createScene<T extends Scene>({
     required String contructorKey,
     required String sceneId,
     dynamic arg,
@@ -24,11 +25,11 @@ mixin SceneController {
     final cached = _cachedScenes[sceneId];
     if (cached != null) {
       _currentScene = cached;
-      return cached;
+      return cached as T;
     } else {
       final constructor = _sceneConstructors[contructorKey];
       assert(constructor != null);
-      final Scene scene = await constructor!(arg);
+      final T scene = (await constructor!(arg)) as T;
       _cachedScenes[sceneId] = scene;
       _currentScene = scene;
       return scene;

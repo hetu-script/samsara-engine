@@ -7,29 +7,33 @@ class SamsaraEngineClassBinding extends HTExternalClass {
   SamsaraEngineClassBinding() : super(r'SamsaraEngine');
 
   @override
-  dynamic instanceMemberGet(dynamic instance, String id) {
+  dynamic instanceMemberGet(dynamic instance, String id,
+      {bool ignoreUndefined = false}) {
     var engine = instance as SamsaraEngine;
     switch (id) {
-      case 'loadLocale':
+      case 'loadLocaleFromJSON':
         return ({positionalArgs, namedArgs}) =>
             engine.loadLocale(positionalArgs.first);
       case 'setLocale':
         return ({positionalArgs, namedArgs}) =>
             engine.setLocale(positionalArgs.first);
       case 'locale':
-        return ({positionalArgs, namedArgs}) => engine.locale.getLocaleString(
+        return ({positionalArgs, namedArgs}) => engine.locale(
               positionalArgs[0],
-              interpolations: positionalArgs[1],
+              interpolations: namedArgs['interpolations'],
             );
       // case 'updateZoneColors':
       //   return ({positionalArgs, namedArgs}) =>
       //       updateZoneColors(positionalArgs.first);
-      case 'loadColors':
+      case 'loadTileMapZoneColors':
         return ({positionalArgs, namedArgs}) =>
-            engine.loadColors(positionalArgs.first);
+            engine.loadTileMapZoneColors(positionalArgs.first);
       // case 'onIncident':
       //   return ({positionalArgs, namedArgs}) =>
       //       onIncident(positionalArgs.first);
+      case 'emit':
+        return ({positionalArgs, namedArgs}) =>
+            engine.emit(positionalArgs[0], args: positionalArgs[1]);
       case 'log':
         return ({positionalArgs, namedArgs}) => engine.log(positionalArgs
             .map((object) => engine.hetu.lexicon.stringify(object))
@@ -42,7 +46,7 @@ class SamsaraEngineClassBinding extends HTExternalClass {
         return ({positionalArgs, namedArgs}) => engine.info(positionalArgs
             .map((object) => engine.hetu.lexicon.stringify(object))
             .join(' '));
-      case 'warning':
+      case 'warn':
         return ({positionalArgs, namedArgs}) => engine.warn(positionalArgs
             .map((object) => engine.hetu.lexicon.stringify(object))
             .join(' '));
@@ -51,30 +55,31 @@ class SamsaraEngineClassBinding extends HTExternalClass {
             .map((object) => engine.hetu.lexicon.stringify(object))
             .join(' '));
       default:
-        throw HTError.undefined(id);
+        if (!ignoreUndefined) throw HTError.undefined(id);
     }
   }
 }
 
 const kHetuEngineBindingSource = r'''
 external class SamsaraEngine {
-  fun loadLocale(data: Map)
+  fun loadLocaleFromJSON(data: Map)
   fun setLocale(localeId: string)
-  fun locale(key: string, [interpolations: List])
-  fun loadColors(data: List)
+  fun locale(key: string, {interpolations: List})
+  fun loadTileMapZoneColors(data: List)
   // fun updateNationColors(data: Map)
+  fun emit(eventId, args)
   fun log(...content: string)
   fun debug(...content: string)
   fun info(...content: string)
-  fun warning(...content: string)
+  fun warn(...content: string)
   fun error(...content: string)
 }
 
-var buildContext
+let ctx
 
-fun build(ctx) {
-  buildContext = ctx
+function build(context) {
+  ctx = context
 }
 
-var engine: SamsaraEngine
+let engine: SamsaraEngine
 ''';

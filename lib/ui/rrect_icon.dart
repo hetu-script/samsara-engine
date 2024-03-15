@@ -6,6 +6,7 @@ class RRectIcon extends StatelessWidget {
     required this.image,
     this.size = const Size(48.0, 48.0),
     required this.borderRadius,
+    this.backgroundColor,
     this.borderColor,
     this.borderWidth = 1.0,
   });
@@ -13,6 +14,7 @@ class RRectIcon extends StatelessWidget {
   final ImageProvider<Object> image;
   final Size size;
   final BorderRadiusGeometry borderRadius;
+  final Color? backgroundColor;
   final Color? borderColor;
   final double borderWidth;
 
@@ -24,6 +26,7 @@ class RRectIcon extends StatelessWidget {
         width: size.width,
         height: size.height,
         decoration: BoxDecoration(
+          color: backgroundColor,
           image: DecorationImage(
             fit: BoxFit.fill,
             image: image,
