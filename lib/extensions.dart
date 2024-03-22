@@ -2,9 +2,24 @@ import 'dart:ui';
 import 'dart:math' as math;
 
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'component/game_component.dart';
 
 export 'package:flame/extensions.dart';
+
+extension IterableEx<T> on Iterable<T> {
+  T get random {
+    return elementAt(math.Random().nextInt(length));
+  }
+
+  T? get randomOrNull {
+    if (isNotEmpty) {
+      return elementAt(math.Random().nextInt(length));
+    } else {
+      return null;
+    }
+  }
+}
 
 extension StringEx on String {
   String replaceAllLineBreaks() {
@@ -14,6 +29,8 @@ extension StringEx on String {
   bool get isBlank => trim() == '';
 
   bool get isNotBlank => !isBlank;
+
+  String? get nonEmptyValueOrNull => isBlank ? null : this;
 }
 
 extension PercentageString on num {
@@ -85,12 +102,24 @@ extension CornerPosition on PositionComponent {
 }
 
 extension CameraExtension on CameraComponent {
+  void moveTo2(Vector2 point,
+      {double speed = double.infinity, void Function()? onComplete}) async {
+    stop();
+    viewfinder.add(
+      MoveToEffect(
+        point,
+        EffectController(speed: speed),
+        onComplete: onComplete,
+      ),
+    );
+  }
+
   void snapTo(Vector2 position) {
     viewfinder.position = position;
   }
 
-  void snapBy(Vector2 position) {
-    viewfinder.position += position;
+  void snapBy(Vector2 offset) {
+    viewfinder.position += offset;
   }
 
   Vector2 get position => viewfinder.position;

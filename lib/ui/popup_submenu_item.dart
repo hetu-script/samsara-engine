@@ -19,6 +19,7 @@ class PopupSubMenuItem<T> extends PopupMenuEntry<T> {
     this.offset = Offset.zero,
     this.onSelected,
     this.textStyle,
+    this.enabled = const {},
   });
 
   final String title;
@@ -29,6 +30,7 @@ class PopupSubMenuItem<T> extends PopupMenuEntry<T> {
   final Map<String, T> items;
   final Function(T)? onSelected;
   final TextStyle? textStyle;
+  final Map<String, bool> enabled;
 
   @override
   bool represents(T? value) =>
@@ -61,22 +63,20 @@ class _PopupSubMenuState<T> extends State<PopupSubMenuItem<T>> {
         widget.onSelected?.call(value);
       },
       offset: widget.offset,
-      itemBuilder: (BuildContext context) {
-        final items = <PopupMenuEntry<T>>[];
-        for (final key in widget.items.keys) {
-          final value = widget.items[key];
-          items.add(PopupMenuItem<T>(
-            height: widget.height,
-            value: value,
-            child: Container(
-              alignment: Alignment.centerLeft,
-              width: widget.width,
-              child: Text(key, style: style),
+      itemBuilder: (context) => widget.items.keys
+          .map(
+            (key) => PopupMenuItem<T>(
+              height: widget.height,
+              value: widget.items[key],
+              enabled: widget.enabled[key] ?? true,
+              child: Container(
+                alignment: Alignment.centerLeft,
+                width: widget.width,
+                child: Text(key, style: style),
+              ),
             ),
-          ));
-        }
-        return items;
-      },
+          )
+          .toList(),
       child: Container(
         padding: const EdgeInsets.only(left: 11.0),
         alignment: Alignment.centerLeft,

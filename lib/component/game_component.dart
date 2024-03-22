@@ -74,8 +74,8 @@ abstract class GameComponent extends PositionComponent
       ..filterQuality = FilterQuality.medium
       ..color = Colors.white.withOpacity(opacity);
     this.borderPaint = borderPaint ?? Paint()
-      ..color = Colors.blue
-      ..strokeWidth = 1
+      ..color = Colors.blue.withOpacity(0.5)
+      ..strokeWidth = 0.5
       ..style = PaintingStyle.stroke;
 
     generateBorder();

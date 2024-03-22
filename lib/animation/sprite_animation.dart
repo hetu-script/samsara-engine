@@ -77,7 +77,7 @@ class SpriteAnimationWithTicker {
   Future<void> load() async {
     if (animationId != null && srcSize != null) {
       final SpriteSheet spriteList = SpriteSheet(
-        image: await Flame.images.load('animation/$animationId.png'),
+        image: await Flame.images.load('animation/$animationId'),
         srcSize: srcSize!,
       );
       animation = SpriteAnimation.spriteList(

@@ -13,6 +13,7 @@ class LoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
+      type: MaterialType.canvas,
       color: Colors.black,
       child: Stack(
         alignment: Alignment.center,

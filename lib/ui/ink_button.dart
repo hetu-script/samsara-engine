@@ -6,9 +6,11 @@ class InkButton extends StatelessWidget {
     required this.size,
     this.borderRadius,
     this.image,
+    this.child,
     this.onPressed,
     this.padding = const EdgeInsets.all(0.0),
     this.isSelected = false,
+    this.isEnabled = true,
   });
 
   final Size size;
@@ -17,18 +19,21 @@ class InkButton extends StatelessWidget {
 
   final ImageProvider<Object>? image;
 
+  final Widget? child;
+
   final void Function()? onPressed;
 
   final EdgeInsetsGeometry padding;
 
-  final bool isSelected;
+  final bool isSelected, isEnabled;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: padding,
       child: MouseRegion(
-        cursor: SystemMouseCursors.click,
+        cursor:
+            isEnabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
         child: Material(
           type: MaterialType.transparency,
           child: Ink(
@@ -50,7 +55,8 @@ class InkButton extends StatelessWidget {
             ),
             child: InkWell(
               borderRadius: borderRadius,
-              onTap: () => onPressed?.call(),
+              onTap: isEnabled ? onPressed : null,
+              child: child,
             ),
           ),
         ),

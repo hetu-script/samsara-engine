@@ -34,31 +34,36 @@ class BorderedIconButton extends StatelessWidget {
         onTap: onPressed,
         child: MouseRegion(
           cursor: SystemMouseCursors.click,
-          child: Tooltip(
-            message: tooltip,
-            child: Container(
-              width: size.width,
-              height: size.height,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(borderRadius),
-                border: Border.all(
-                    color: Theme.of(context).colorScheme.onBackground),
-                // shape: BoxShape.rectangle,
-                // boxShadow: [
-                //   BoxShadow(
-                //     color: Colors.grey.withOpacity(0.5),
-                //     spreadRadius: 3,
-                //     blurRadius: 6,
-                //     offset: const Offset(0, 2), // changes position of shadow
-                //   ),
-                // ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(borderRadius),
-                child: icon,
-              ),
+          child: Container(
+            width: size.width,
+            height: size.height,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(borderRadius),
+              border:
+                  Border.all(color: Theme.of(context).colorScheme.onBackground),
+              // shape: BoxShape.rectangle,
+              // boxShadow: [
+              //   BoxShadow(
+              //     color: Colors.grey.withOpacity(0.5),
+              //     spreadRadius: 3,
+              //     blurRadius: 6,
+              //     offset: const Offset(0, 2), // changes position of shadow
+              //   ),
+              // ],
             ),
+            child: tooltip != null
+                ? Tooltip(
+                    message: tooltip,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(borderRadius),
+                      child: icon,
+                    ),
+                  )
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(borderRadius),
+                    child: icon,
+                  ),
           ),
         ),
       ),

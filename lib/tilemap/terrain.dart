@@ -35,6 +35,8 @@ class TileMapTerrain extends GameComponent with TileInfo {
   /// internal data of this tile, possible json or other user-defined data form.
   final dynamic data;
 
+  final SpriteSheet terrainSpriteSheet;
+
   final borderPath = Path();
   final shadowPath = Path();
   late Rect rect;
@@ -62,15 +64,6 @@ class TileMapTerrain extends GameComponent with TileInfo {
   final String? _locationId;
   String? get locationId => _locationId;
 
-  // 显示标签
-  String? caption;
-  // set caption(String? value) {
-  //   _caption = value;
-  //   data?['caption'] = value;
-  // }
-
-  // String? get caption => _caption;
-
   bool _isNonInteractable, _isLighted;
 
   set isNonInteractable(value) {
@@ -87,13 +80,29 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   bool get isLighted => _isLighted;
 
-  final TextPaint _captionPaint;
-
   /// 此地块上的物体
   /// 此属性代表一些通常固定不移动的可互动对象，例如传送门、开关、地牢入口等等
   /// 对于可以在地图上移动的物体，地块本身并不保存，
   /// 由 tilemap 上的 movingObjects 维护
-  String? objectId;
+  String? _objectId;
+
+  set objectId(value) {
+    _objectId = value;
+    data?['objectId'] = value;
+  }
+
+  String? get objectId => _objectId;
+
+  // 显示标签
+  String? _caption;
+  set caption(String? value) {
+    _caption = value;
+    data?['caption'] = value;
+  }
+
+  String? get caption => _caption;
+
+  final TextPaint _captionPaint;
 
   /// 显示贴图
   Sprite? _sprite, _overlaySprite;
@@ -102,7 +111,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
   set spriteIndex(int? value) {
     data?['spriteIndex'] = value;
     if (value != null) {
-      _sprite = TileMap.terrainSpriteSheet.getSpriteById(value);
+      _sprite = terrainSpriteSheet.getSpriteById(value);
     }
   }
 
@@ -139,14 +148,12 @@ class TileMapTerrain extends GameComponent with TileInfo {
         srcSize: Vector2(srcWidth, srcHeight),
       );
     } else if (spriteIndex != null) {
-      sprite = TileMap.terrainSpriteSheet.getSpriteById(spriteIndex);
+      sprite = terrainSpriteSheet.getSpriteById(spriteIndex);
     }
-    if (sprite != null) {
-      if (!overlay) {
-        _sprite = sprite;
-      } else {
-        _overlaySprite = sprite;
-      }
+    if (!overlay) {
+      _sprite = sprite;
+    } else {
+      _overlaySprite = sprite;
     }
   }
 
@@ -156,42 +163,44 @@ class TileMapTerrain extends GameComponent with TileInfo {
     if (d == null) return;
 
     SpriteAnimationWithTicker? animation;
-    final String? animationPath = d?['path'];
-    final int? animationFrameCount = d?['frameCount'];
-    final int? animationRow = d?['row'];
-    final int? animationStart = d?['start'];
-    final int? animationEnd = d?['end'];
-    final bool loop = d?['loop'] ?? (overlay ? false : true);
-    if (animationPath != null) {
+    final String? path = d?['path'];
+    // final int? animationFrameCount = d?['frameCount'];
+    final int? row = d?['row'];
+    final int from = d?['from'] ?? 0;
+    final int? to = d?['to'];
+    final double stepTime = d?['stepTime'] ?? defaultAnimationStepTime;
+    final bool loop = d?['loop'] ?? true;
+    if (path != null) {
       final sheet = SpriteSheet(
-          image: await Flame.images.load(animationPath),
+          image: await Flame.images.load(path),
           srcSize: Vector2(
             srcWidth,
             srcHeight,
           ));
       animation = SpriteAnimationWithTicker(
-          animation: sheet.createAnimation(
-              row: animationRow ?? 0,
-              stepTime: defaultAnimationStepTime,
-              loop: loop,
-              from: 0,
-              to: animationFrameCount ?? sheet.columns));
-    } else if (animationRow != null) {
+        animation: sheet.createAnimation(
+          row: row ?? 0,
+          stepTime: stepTime,
+          loop: loop,
+          from: from,
+          to: to ?? sheet.columns,
+        ),
+      );
+    } else if (row != null) {
       animation = SpriteAnimationWithTicker(
-          animation: TileMap.terrainSpriteSheet.createAnimation(
-        row: animationRow,
-        stepTime: defaultAnimationStepTime,
-        loop: loop,
-        from: animationStart ?? 0,
-        to: animationEnd ?? TileMap.terrainSpriteSheet.columns,
-      ));
+        animation: terrainSpriteSheet.createAnimation(
+          row: row,
+          stepTime: stepTime,
+          loop: loop,
+          from: from,
+          to: to,
+        ),
+      );
     }
-    if (animation != null) {
-      if (!overlay) {
-        _animation = animation;
-      } else {
-        _overlayAnimation = animation;
-      }
+    if (!overlay) {
+      _animation = animation;
+    } else {
+      _overlayAnimation = animation;
     }
   }
 
@@ -232,6 +241,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
   }
 
   TileMapTerrain({
+    required this.terrainSpriteSheet,
     required TileShape tileShape,
     // this.renderDirection = TileRenderDirection.bottomRight,
     this.data,
@@ -248,6 +258,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     String? nationId,
     String? locationId,
     String? caption,
+    String? objectId,
     required TextStyle captionStyle,
     Sprite? sprite,
     SpriteAnimationWithTicker? animation,
@@ -255,7 +266,6 @@ class TileMapTerrain extends GameComponent with TileInfo {
     SpriteAnimationWithTicker? overlayAnimation,
     this.offsetX = 0.0,
     this.offsetY = 0.0,
-    this.objectId,
   })  : _overlayAnimation = overlayAnimation,
         _animation = animation,
         _captionPaint = TextPaint(
@@ -288,7 +298,8 @@ class TileMapTerrain extends GameComponent with TileInfo {
         _zoneIndex = zoneId,
         _nationId = nationId,
         _locationId = locationId,
-        // _caption = caption,
+        _objectId = objectId,
+        _caption = caption,
         _sprite = sprite,
         _overlaySprite = overlaySprite {
     this.tileShape = tileShape;

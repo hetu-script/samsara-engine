@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui';
 
 // import 'package:flutter/foundation.dart';
 import 'package:flame/components.dart';
@@ -41,10 +42,12 @@ class TileMapObject extends GameComponent with TileInfo {
   TileMapDirectionOrthogonal direction = TileMapDirectionOrthogonal.south;
 
   bool _isMoving = false;
-  bool _isBackward = false;
   bool get isMoving => _isMoving;
+  bool _isStopping = false;
+  bool _isBackward = false;
 
   Vector2 _movingOffset = Vector2.zero();
+  Offset get movingOffset => _movingOffset.toOffset();
   Vector2 _movingTargetWorldPosition = Vector2.zero();
   TilePosition _movingTargetTilePosition = TilePosition.leftTop();
   Vector2 _velocity = Vector2.zero();
@@ -145,7 +148,7 @@ class TileMapObject extends GameComponent with TileInfo {
 
   void stop() {
     tilePosition = _movingTargetTilePosition;
-    _isMoving = false;
+    _isStopping = true;
     // 这里要先取消移动，再调用事件
     // 检查isBackward的目的，是为了在英雄倒退到entity上时，不触发
     // 只有玩家自己主动经过某个entity，才触发事件
@@ -153,7 +156,6 @@ class TileMapObject extends GameComponent with TileInfo {
       onMoved?.call(tilePosition.left, tilePosition.top);
     }
     _isBackward = false;
-    _movingOffset = Vector2.zero();
     _movingTargetWorldPosition = Vector2.zero();
     _velocity = Vector2.zero();
     _movingTargetTilePosition = TilePosition.leftTop();
@@ -182,7 +184,9 @@ class TileMapObject extends GameComponent with TileInfo {
     final t = d / velocityFactor;
     final tx = dx / t;
     final ty = dy / t;
-    _velocity = Vector2(tx * sx.sign, ty * sy.sign);
+    final vx = tx * sx.sign;
+    final vy = ty * sy.sign;
+    _velocity = Vector2(vx, vy);
   }
 
   SpriteAnimationWithTicker get currentAnimation {
@@ -225,7 +229,11 @@ class TileMapObject extends GameComponent with TileInfo {
 
   @override
   void update(double dt) {
-    if (isMoving) {
+    if (_isStopping) {
+      _isMoving = false;
+      _movingOffset = Vector2.zero();
+      _isStopping = false;
+    } else if (_isMoving) {
       currentAnimation.ticker.update(dt);
 
       _movingOffset.x += _velocity.x;

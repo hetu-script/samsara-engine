@@ -387,23 +387,23 @@ void drawScreenText(
         style?.colorTheme != ScreenTextColorTheme.dark) {
       textPaint = TextPaint(
         style: textPaint.style.copyWith(
-          shadows: const [
+          shadows: [
             Shadow(
                 // bottomLeft
-                offset: Offset(-0.5, -0.5),
-                color: Colors.black),
+                offset: const Offset(-0.5, -0.5),
+                color: Colors.black.withOpacity(style?.opacity ?? 1.0)),
             Shadow(
                 // bottomRight
-                offset: Offset(0.5, -0.5),
-                color: Colors.black),
+                offset: const Offset(0.5, -0.5),
+                color: Colors.black.withOpacity(style?.opacity ?? 1.0)),
             Shadow(
                 // topRight
-                offset: Offset(0.5, 0.5),
-                color: Colors.black),
+                offset: const Offset(0.5, 0.5),
+                color: Colors.black.withOpacity(style?.opacity ?? 1.0)),
             Shadow(
                 // topLeft
-                offset: Offset(-0.5, 0.5),
-                color: Colors.black),
+                offset: const Offset(-0.5, 0.5),
+                color: Colors.black.withOpacity(style?.opacity ?? 1.0)),
           ],
         ),
       );

@@ -41,7 +41,7 @@ class GameLocalization {
               //   final arr = [languageData[key]];
               //   arr.add(jsonData[key]);
               //   languageData[key] = arr;
-              errors.add('Found duplicate locale string: [$key]');
+              errors.add('found duplicate locale string: [$key]');
             }
             // else {
             languageData[key] = jsonData[key];
@@ -59,7 +59,7 @@ class GameLocalization {
       assert(locale is Map);
       final langId = locale['languageId'];
       if (langId == null) {
-        errors.add('Invalid locale data. Could not found languageId.');
+        errors.add('invalid locale data. could not found languageId.');
       } else {
         if (_data[langId] == null) _data[langId] = {};
         for (final key in locale.keys) {

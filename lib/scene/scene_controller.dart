@@ -16,6 +16,8 @@ abstract class SceneController implements HTLogger {
     _sceneConstructors[name] = constructor;
   }
 
+  bool containsScene(String id) => _cachedScenes.containsKey(id);
+
   @mustCallSuper
   Future<T> createScene<T extends Scene>({
     required String contructorKey,

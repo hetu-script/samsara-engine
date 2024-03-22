@@ -25,9 +25,9 @@ class SamsaraEngineClassBinding extends HTExternalClass {
       // case 'updateZoneColors':
       //   return ({positionalArgs, namedArgs}) =>
       //       updateZoneColors(positionalArgs.first);
-      case 'loadTileMapZoneColors':
-        return ({positionalArgs, namedArgs}) =>
-            engine.loadTileMapZoneColors(positionalArgs.first);
+      // case 'addTileMapZoneColors':
+      //   return ({positionalArgs, namedArgs}) =>
+      //       engine.addTileMapZoneColors(positionalArgs.first);
       // case 'onIncident':
       //   return ({positionalArgs, namedArgs}) =>
       //       onIncident(positionalArgs.first);
@@ -54,6 +54,12 @@ class SamsaraEngineClassBinding extends HTExternalClass {
         return ({positionalArgs, namedArgs}) => engine.error(positionalArgs
             .map((object) => engine.hetu.lexicon.stringify(object))
             .join(' '));
+      case 'play':
+        return ({positionalArgs, namedArgs}) =>
+            engine.play(positionalArgs.first);
+      case 'loop':
+        return ({positionalArgs, namedArgs}) =>
+            engine.loop(positionalArgs.first);
       default:
         if (!ignoreUndefined) throw HTError.undefined(id);
     }
@@ -64,8 +70,8 @@ const kHetuEngineBindingSource = r'''
 external class SamsaraEngine {
   fun loadLocaleFromJSON(data: Map)
   fun setLocale(localeId: string)
-  fun locale(key: string, {interpolations: List})
-  fun loadTileMapZoneColors(data: List)
+  fun locale(key: string, {interpolations})
+  // fun addTileMapZoneColors(data: List)
   // fun updateNationColors(data: Map)
   fun emit(eventId, args)
   fun log(...content: string)
@@ -73,6 +79,8 @@ external class SamsaraEngine {
   fun info(...content: string)
   fun warn(...content: string)
   fun error(...content: string)
+  fun play(filename)
+  fun loop(filename)
 }
 
 let ctx

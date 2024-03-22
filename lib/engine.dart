@@ -22,11 +22,15 @@ class EngineConfig {
   final String name;
   final bool debugMode;
   final bool isOnDesktop;
+  final double musicVolume;
+  final double soundEffectVolume;
 
   const EngineConfig({
     this.name = 'A Samsara Engine Game',
-    this.debugMode = false,
     this.isOnDesktop = false,
+    this.debugMode = false,
+    this.musicVolume = 0.5,
+    this.soundEffectVolume = 0.5,
   });
 }
 
@@ -55,8 +59,11 @@ class SamsaraEngine extends SceneController with EventAggregator {
 
   late final GameLocalization _locale;
 
-  String locale(String? key, {List? interpolations}) =>
-      _locale.getLocaleString(key ?? 'null', interpolations: interpolations);
+  String locale(String? key, {dynamic interpolations}) {
+    if (interpolations is! List) interpolations = [interpolations];
+    return _locale.getLocaleString(key ?? 'null',
+        interpolations: interpolations);
+  }
 
   late final String? _mainModName;
 
@@ -78,17 +85,20 @@ class SamsaraEngine extends SceneController with EventAggregator {
     _locale.languageId = localeId;
   }
 
-  void loadTileMapZoneColors(List colorsList) {
-    for (final Map colorData in colorsList) {
-      final colorInfo = colorData.map((key, value) {
+  void addTileMapZoneColors(TileMap map, String id, dynamic colors) {
+    final convertedList = [];
+    for (final colorData in colors) {
+      final colorInfo =
+          Map<int, (Color, Paint)>.from(colorData.map((key, value) {
         final color = HexColor.fromString(value);
         final paint = Paint()
           ..style = PaintingStyle.fill
           ..color = color.withOpacity(0.6);
         return MapEntry(key as int, (color, paint));
-      });
-      TileMap.zoneColors.add(colorInfo);
+      }));
+      convertedList.add(colorInfo);
     }
+    map.mapZoneColors[id] = List<Map<int, (Color, Paint)>>.from(convertedList);
   }
 
   late Hetu hetu;
@@ -228,7 +238,11 @@ class SamsaraEngine extends SceneController with EventAggregator {
         type: HTResourceType.hetuModule,
       );
     } catch (e) {
-      if (kDebugMode) print(e);
+      if (kDebugMode) {
+        print(e);
+      } else {
+        rethrow;
+      }
     }
 
     // if (modules.contains('cardGame')) {
@@ -316,9 +330,10 @@ class SamsaraEngine extends SceneController with EventAggregator {
   @override
   void error(String message) => log(message, severity: MessageSeverity.error);
 
-  Future<AudioPlayer?> playSound(String fileName, {double volume = 1}) async {
+  Future<AudioPlayer?> play(String fileName, {double? volume}) async {
     try {
-      return FlameAudio.play(fileName, volume: volume);
+      return FlameAudio.play('sound/$fileName',
+          volume: volume ?? config.musicVolume);
     } catch (e) {
       if (kDebugMode) {
         error(e.toString());
@@ -329,9 +344,9 @@ class SamsaraEngine extends SceneController with EventAggregator {
     }
   }
 
-  void playBGM(String fileName, {double volume = 1}) async {
+  void loop(String fileName, {double? volume}) async {
     try {
-      await FlameAudio.bgm.play(fileName, volume: volume);
+      await FlameAudio.bgm.play('music/$fileName', volume: config.musicVolume);
     } catch (e) {
       if (kDebugMode) {
         error(e.toString());

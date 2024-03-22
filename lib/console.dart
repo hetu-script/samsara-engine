@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'package:hetu_script/errors.dart';
+// import 'package:hetu_script/errors.dart';
 
 import 'engine.dart';
 import 'ui/close_button.dart';
@@ -22,6 +22,8 @@ class Console extends StatefulWidget {
 class _ConsoleState extends State<Console> {
   static int _commandHistoryIndex = 0;
   static final _commandHistory = <String>[];
+  final TextEditingController _consoleOutputTextController =
+      TextEditingController();
   final TextEditingController _textEditingController = TextEditingController();
   final FocusNode _keyboardListenerFocusNode = FocusNode();
   final FocusNode _textFieldFocusNode = FocusNode();
@@ -37,110 +39,105 @@ class _ConsoleState extends State<Console> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final layout = Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text(widget.engine.locale('console')),
-        actions: const [CloseButton2()],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(10.0),
-              child: ListView(
-                controller: _scrollController,
-                reverse: true,
-                children: widget.engine
-                    .getLog()
-                    .map((line) => Text(line))
-                    .toList()
-                    .reversed
-                    .toList(),
-              ),
-            ),
-          ),
-          KeyboardListener(
-            focusNode: _keyboardListenerFocusNode,
-            key: UniqueKey(),
-            onKeyEvent: (KeyEvent key) {
-              if (key is KeyUpEvent) {
-                switch (key.logicalKey) {
-                  case LogicalKeyboardKey.home: // home
-                    _textEditingController.selection =
-                        TextSelection.fromPosition(
-                            const TextPosition(offset: 0));
-                  case LogicalKeyboardKey.end: // end
-                    _textEditingController.selection =
-                        TextSelection.fromPosition(TextPosition(
-                            offset: _textEditingController.text.length));
-                  case LogicalKeyboardKey.arrowUp: // up
-                    if (_commandHistoryIndex > 0) {
-                      --_commandHistoryIndex;
-                    }
-                    if (_commandHistory.isNotEmpty) {
-                      _textEditingController.text =
-                          _commandHistory[_commandHistoryIndex];
-                    } else {
-                      _textEditingController.text = '';
-                    }
-                  case LogicalKeyboardKey.arrowDown: // down
-                    if (_commandHistoryIndex < _commandHistory.length - 1) {
-                      ++_commandHistoryIndex;
-                      _textEditingController.text =
-                          _commandHistory[_commandHistoryIndex];
-                    } else {
-                      _textEditingController.text = '';
-                    }
-                  case LogicalKeyboardKey.enter:
-                    final text = _textEditingController.text;
-                    if (text.isNotBlank) {
-                      _commandHistory.add(text);
-                      _commandHistoryIndex = _commandHistory.length;
-                      setState(() {
-                        try {
-                          final r = widget.engine.hetu
-                              .eval(text, globallyImport: true);
-                          widget.engine
-                              .info(widget.engine.hetu.lexicon.stringify(r));
-                        } catch (e) {
-                          if (e is HTError) {
-                            widget.engine.error(e.message);
-                          } else {
-                            widget.engine.error(e.toString());
-                          }
-                        }
-                      });
-                    }
-                    _textEditingController.text = '';
-                    _scrollController
-                        .jumpTo(_scrollController.position.minScrollExtent);
-                    _textFieldFocusNode.requestFocus();
-                }
-              }
-            },
-            child: TextField(
-              focusNode: _textFieldFocusNode,
-              key: UniqueKey(),
-              controller: _textEditingController,
-              decoration: const InputDecoration(
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                ),
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey, width: 0.0),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  void initState() {
+    // TODO: implement initState
+    super.initState();
 
+    _consoleOutputTextController.text = widget.engine.getLog().join('\n');
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _consoleOutputTextController.text = widget.engine.getLog().join('\n');
     return ResponsiveWindow(
       alignment: AlignmentDirectional.center,
-      child: layout,
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: Text(widget.engine.locale('console')),
+          actions: const [CloseButton2()],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                child: TextField(
+                  controller: _consoleOutputTextController,
+                  readOnly: true,
+                  maxLines: null,
+                  decoration: const InputDecoration(border: InputBorder.none),
+                ),
+              ),
+            ),
+            KeyboardListener(
+              focusNode: _keyboardListenerFocusNode,
+              onKeyEvent: (KeyEvent key) {
+                if (key is KeyUpEvent) {
+                  switch (key.logicalKey) {
+                    case LogicalKeyboardKey.arrowUp: // up
+                      if (_commandHistoryIndex > 0) {
+                        --_commandHistoryIndex;
+                      }
+                      if (_commandHistory.isNotEmpty) {
+                        _textEditingController.text =
+                            _commandHistory[_commandHistoryIndex];
+                      } else {
+                        _textEditingController.text = '';
+                      }
+                    case LogicalKeyboardKey.arrowDown: // down
+                      if (_commandHistoryIndex < _commandHistory.length - 1) {
+                        ++_commandHistoryIndex;
+                        _textEditingController.text =
+                            _commandHistory[_commandHistoryIndex];
+                      } else {
+                        _textEditingController.text = '';
+                      }
+                  }
+                }
+              },
+              child: TextField(
+                focusNode: _textFieldFocusNode,
+                controller: _textEditingController,
+                decoration: const InputDecoration(
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                  ),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey, width: 0.0),
+                  ),
+                ),
+                autofocus: true,
+                onSubmitted: (value) {
+                  final text = _textEditingController.text;
+                  _textEditingController.text = '';
+                  // _scrollController
+                  //     .jumpTo(_scrollController.position.maxScrollExtent);
+                  _textFieldFocusNode.requestFocus();
+                  if (text.isNotBlank) {
+                    _commandHistory.add(text);
+                    _commandHistoryIndex = _commandHistory.length;
+                    try {
+                      widget.engine.info('>>>$text');
+                      final r =
+                          widget.engine.hetu.eval(text, globallyImport: true);
+                      widget.engine
+                          .info(widget.engine.hetu.lexicon.stringify(r));
+                    } catch (e) {
+                      widget.engine.error(e.toString());
+                    }
+                  }
+                  setState(() {});
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

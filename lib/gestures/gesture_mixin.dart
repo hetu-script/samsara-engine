@@ -202,16 +202,13 @@ mixin HandlesGesture on GameComponent {
       onDragIn?.call(buttons, positionWithinComponent, draggingComponent);
     }
 
-    final isDragWithInComponent = handleTapUp(pointer, buttons, details);
-
-    if (isDragging && (tapPositions.containsKey(pointer))) {
+    if (isDragging) {
       isDragging = false;
-      tapPositions.remove(pointer);
-      if (!isDragWithInComponent) {
-        final dragPosition = tapPositions[pointer]!.positionWithinComponent;
-        onDragEnd?.call(buttons, dragPosition, convertedPointerPosition);
-      }
+      final dragPosition = tapPositions[pointer]!.positionWithinComponent;
+      onDragEnd?.call(buttons, dragPosition, convertedPointerPosition);
     }
+    // final isDragWithInComponent =
+    handleTapUp(pointer, buttons, details);
   }
 
   @mustCallSuper

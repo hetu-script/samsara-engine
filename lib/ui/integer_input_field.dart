@@ -5,7 +5,7 @@ class IntegerInputField extends StatefulWidget {
   final TextEditingController? controller;
   final FocusNode? focusNode;
   final int? initValue;
-  final int min;
+  final int? min;
   final int? max;
   final bool showSuffixButtons;
   final int step;
@@ -15,13 +15,14 @@ class IntegerInputField extends StatefulWidget {
   final double borderWidth;
   final ValueChanged<int?>? onChanged;
   final bool readOnly;
+  final bool autofocus;
 
   const IntegerInputField({
     super.key,
     this.controller,
     this.focusNode,
     this.initValue,
-    required this.min,
+    this.min,
     this.max,
     this.showSuffixButtons = false,
     this.step = 1,
@@ -31,6 +32,7 @@ class IntegerInputField extends StatefulWidget {
     this.borderWidth = 2,
     this.onChanged,
     this.readOnly = false,
+    this.autofocus = false,
   });
 
   @override
@@ -64,6 +66,7 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
 
   @override
   Widget build(BuildContext context) => TextField(
+        autofocus: widget.autofocus,
         readOnly: widget.readOnly,
         controller: _controller,
         focusNode: _focusNode,
@@ -71,7 +74,8 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
         textInputAction: TextInputAction.done,
         keyboardType: TextInputType.number,
         maxLength: widget.max != null
-            ? widget.max.toString().length + (widget.min.isNegative ? 1 : 0)
+            ? widget.max.toString().length +
+                ((widget.min?.isNegative ?? false) ? 1 : 0)
             : null,
         cursorColor: Theme.of(context).colorScheme.onBackground,
         decoration: InputDecoration(
@@ -104,7 +108,7 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
                     type: MaterialType.transparency,
                     child: Row(
                       children: [
-                        if (widget.max != null)
+                        if (widget.min != null)
                           Expanded(
                             child: InkWell(
                               onTap: _canGoDown
@@ -112,7 +116,8 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
                                   : null,
                               child: Opacity(
                                 opacity: _canGoDown ? 1 : 0.5,
-                                child: const Text('MIN'),
+                                child: const Icon(
+                                    Icons.keyboard_double_arrow_left),
                               ),
                             ),
                           ),
@@ -123,7 +128,7 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
                                 : null,
                             child: Opacity(
                               opacity: _canGoDown ? 1 : 0.5,
-                              child: const Icon(Icons.remove),
+                              child: const Icon(Icons.keyboard_arrow_left),
                             ),
                           ),
                         ),
@@ -136,6 +141,7 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
               maxHeight: widget.buttonHeight, maxWidth: widget.buttonWidth),
           suffixIcon: widget.showSuffixButtons
               ? Container(
+                  width: 60.0,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.only(
                           topRight: Radius.circular(widget.borderWidth),
@@ -157,7 +163,7 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
                                 : null,
                             child: Opacity(
                               opacity: _canGoUp ? 1 : 0.5,
-                              child: const Icon(Icons.add),
+                              child: const Icon(Icons.keyboard_arrow_right),
                             ),
                           ),
                         ),
@@ -169,7 +175,8 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
                                   : null,
                               child: Opacity(
                                 opacity: _canGoUp ? 1 : 0.5,
-                                child: const Text('MAX'),
+                                child: const Icon(
+                                    Icons.keyboard_double_arrow_right),
                               ),
                             ),
                           ),
@@ -198,8 +205,8 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
       _updateButtons(intValue);
       _controller.text = intValue.toString();
     } else if (absolute != null) {
-      if (absolute < widget.min) absolute = widget.min;
-      if (widget.max != null && absolute > widget.max!) absolute = widget.max;
+      if (widget.min != null && absolute < widget.min!) absolute = widget.min!;
+      if (widget.max != null && absolute > widget.max!) absolute = widget.max!;
       _updateButtons(absolute);
       _controller.text = absolute.toString();
     }
@@ -209,7 +216,8 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
   void _updateButtons(int? value) {
     final canGoUp =
         value == null || (widget.max == null || value < widget.max!);
-    final canGoDown = value == null || value > widget.min;
+    final canGoDown =
+        value == null || (widget.min != null && value > widget.min!);
     if (_canGoUp != canGoUp || _canGoDown != canGoDown) {
       setState(() {
         _canGoUp = canGoUp;
@@ -220,7 +228,7 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
 }
 
 class _NumberTextInputFormatter extends TextInputFormatter {
-  final int min;
+  final int? min;
   final int? max;
 
   _NumberTextInputFormatter(this.min, this.max);
@@ -228,10 +236,10 @@ class _NumberTextInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
       TextEditingValue oldValue, TextEditingValue newValue) {
-    if (const ['-', ''].contains(newValue.text)) return newValue;
+    // if (const ['-', ''].contains(newValue.text)) return newValue;
     final intValue = int.tryParse(newValue.text);
     if (intValue == null) return oldValue;
-    if (intValue < min) {
+    if (min != null && intValue < min!) {
       return newValue.copyWith(text: min.toString());
     }
     if (max != null && intValue > max!) {

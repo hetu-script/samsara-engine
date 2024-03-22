@@ -8,7 +8,7 @@ class TilePosition {
   TilePosition.leftTop() : this(1, 1);
 
   @override
-  String toString() => '[$left,$top]';
+  String toString() => '[$left, $top]';
 
   @override
   int get hashCode {
@@ -52,6 +52,8 @@ mixin TileInfo {
   double srcOffsetY = 0.0;
   TilePosition tilePosition = TilePosition.leftTop();
   Vector2 renderPosition = Vector2.zero();
+
+  /// 画布位置，不要和tilemap的tile坐标混淆
   Vector2 worldPosition = Vector2.zero();
 
   int get left => tilePosition.left;

@@ -28,19 +28,19 @@ class ResponsiveWindow extends StatelessWidget {
       child: Stack(
         alignment: alignment,
         children: [
-          Container(
-            width: size?.width,
-            height: size?.height,
-            margin: margin,
-            padding: padding,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: borderRadius,
-              border:
-                  Border.all(color: Theme.of(context).colorScheme.onBackground),
-            ),
-            child: ClipRRect(
-              borderRadius: borderRadius,
+          ClipRRect(
+            borderRadius: borderRadius,
+            child: Container(
+              width: size?.width,
+              height: size?.height,
+              margin: margin,
+              padding: padding,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: borderRadius,
+                border: Border.all(
+                    color: Theme.of(context).colorScheme.onBackground),
+              ),
               child: child,
             ),
           ),
