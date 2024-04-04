@@ -1,6 +1,6 @@
 import 'package:flame/effects.dart';
 
-import '../component/game_component.dart';
+import '../components/game_component.dart';
 
 class FadeEffect extends Effect with EffectTarget<GameComponent> {
   final bool fadeIn;

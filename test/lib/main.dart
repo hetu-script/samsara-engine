@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:samsara/error.dart';
+import 'package:flame_splash_screen/flame_splash_screen.dart';
 
 import 'ui/main_menu.dart';
 import 'global.dart';
@@ -25,23 +26,24 @@ void main() async {
       alertFlutterError(details);
     };
 
-    if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
-      await windowManager.ensureInitialized();
-      windowManager.setTitle(engine.name);
-      windowManager.waitUntilReadyToShow(
+    assert(Platform.isLinux || Platform.isWindows || Platform.isMacOS);
+    await windowManager.ensureInitialized();
+    // windowManager.addListener(CustomWindowListener());
+    await windowManager.setMaximizable(false);
+    await windowManager.setResizable(false);
+    const windowSize = Size(1440.0, 900.0);
+    windowManager.waitUntilReadyToShow(
         const WindowOptions(
+          title: 'Samsara Engine Tests',
           // fullScreen: true,
-          minimumSize: Size(1280.0, 720.0),
-        ),
-        () async {
-          await windowManager.show();
-          await windowManager.focus();
-          final screenSize = await windowManager.getSize();
-          engine.info('系统版本：${Platform.operatingSystemVersion}');
-          engine.info('窗口逻辑大小：${screenSize.width}x${screenSize.height}');
-        },
-      );
-    }
+          size: windowSize,
+          maximumSize: windowSize,
+          minimumSize: windowSize,
+        ), () async {
+      await windowManager.show();
+      await windowManager.focus();
+      engine.info('系统版本：${Platform.operatingSystemVersion}');
+    });
 
     runApp(
       MaterialApp(
@@ -49,7 +51,16 @@ void main() async {
         title: 'Heavenly Tribulation Tests',
         home: Scaffold(
           key: mainKey,
-          body: const MainMenu(),
+          body: FlameSplashScreen(
+            theme: FlameSplashTheme.dark,
+            showAfter: (context) => const Image(
+              image: AssetImage('assets/images/hetu_logo_small.png'),
+            ),
+            onFinish: (context) => Navigator.pushReplacement<void, void>(
+              context,
+              MaterialPageRoute(builder: (context) => const MainMenu()),
+            ),
+          ),
         ),
         // 控件绘制时发生错误，用一个显示错误信息的控件替代
         builder: (context, widget) {
@@ -68,7 +79,7 @@ void main() async {
             return error;
           };
           if (widget != null) return widget;
-          throw ('widget is null');
+          throw ('error trying to create error widget!');
         },
       ),
     );

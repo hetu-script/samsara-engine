@@ -3,36 +3,43 @@ import 'dart:async';
 
 // import 'package:flame/rendering.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:samsara/extensions.dart';
 // import 'package:samsara/paint.dart';
 
-import '../component/game_component.dart';
+import '../components/game_component.dart';
 import '../gestures/gesture_mixin.dart';
 import 'tile_mixin.dart';
 import 'object.dart';
-import '../utils/color.dart';
 import 'terrain.dart';
 import 'direction.dart';
 import 'route.dart';
+import '../utils/color.dart';
+import '../animation/sprite_animation.dart';
 
 export 'direction.dart';
 
-// enum DestinationAction {
-//   none,
-//   enter,
-//   check,
-// }
+const kTileBasePriority = 100;
+
+const kObjectBasePriority = 1000;
 
 const kColorModeNone = -1;
-const _kCaptionOffset = 14.0;
 
 class TileMap extends GameComponent with HandlesGesture {
-  /// key 是 mapId, value 是一个列表，列表的index代表colorMode，而列表的值代表具体的颜色
-  final Map<String, List<Map<int, (Color, Paint)>>> mapZoneColors = {};
+  static final Map<Color, Paint> cachedColorPaints = {};
+
+  static final halfShadowPaint = Paint()..color = Colors.white.withOpacity(0.5);
+
+  static final uninteractablePaint = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.red.withOpacity(0.75);
+
+  static final visiblePerimeterPaint = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.black.withOpacity(0.5)
+    ..maskFilter = MaskFilter.blur(BlurStyle.solid, convertRadiusToSigma(2));
 
   static final selectedPaint = Paint()
     ..strokeWidth = 1
@@ -44,21 +51,19 @@ class TileMap extends GameComponent with HandlesGesture {
     ..style = PaintingStyle.stroke
     ..color = Colors.yellow.withOpacity(0.75);
 
-  static final fogPaint = Paint()
-    ..style = PaintingStyle.fill
-    ..color = Colors.black
-    ..maskFilter = MaskFilter.blur(BlurStyle.solid, convertRadiusToSigma(2));
+  static final gridPaint = Paint()
+    ..color = Colors.blue.withOpacity(0.5)
+    ..strokeWidth = 0.5
+    ..style = PaintingStyle.stroke;
 
-  static final fogNeighborPaint = Paint()
-    ..style = PaintingStyle.fill
-    ..color = Colors.black.withOpacity(0.5)
-    ..maskFilter = MaskFilter.blur(BlurStyle.solid, convertRadiusToSigma(2));
+  static final Map<String, SpriteSheet> cachedMovingObjectSpriteSheet = {};
 
-  static final uninteractablePaint = Paint()
-    ..style = PaintingStyle.fill
-    ..color = Colors.red.withOpacity(0.75);
+  /// key 是 mapId, value 是一个列表
+  /// 列表的index代表colorMode，列表的值是一个包含全部地图节点颜色数据的JSON
+  /// 节点颜色数据的Key是terrain的index，值是一个Record对，包含颜色和对应的Paint
+  final Map<String, List<Map<int, (Color, Paint)>>> mapZoneColors = {};
 
-  static final Map<Color, Paint> cachedColorPaints = {};
+  int colorMode = kColorModeNone;
 
   late SpriteSheet terrainSpriteSheet;
 
@@ -68,7 +73,11 @@ class TileMap extends GameComponent with HandlesGesture {
   String? shadowSpriteId;
   Sprite? shadowSprite;
 
-  void Function(Canvas canvas)? customRender;
+  bool showNonInteractableHintColor;
+  bool showGrids;
+  bool showFogOfWar;
+  bool showSelected;
+  bool showHover;
 
   math.Random random;
 
@@ -83,99 +92,143 @@ class TileMap extends GameComponent with HandlesGesture {
 
   // double _cameraMoveDt = 0;
 
+  final TextStyle captionStyle;
+
+  final TileShape tileShape;
+  final Vector2 gridSize,
+      tileSpriteSrcSize,
+      tileOffset,
+      tileObjectSpriteSrcSize;
+
+  int tileMapWidth, tileMapHeight;
+
+  Vector2 mapScreenSize = Vector2.zero();
+
+  TileMapTerrain? selectedTerrain;
+  List<TileMapMovingObject>? selectedActors;
+
+  TileMapTerrain? hoveredTerrain;
+  List<TileMapMovingObject>? hoverActors;
+
+  List<TileMapTerrain> terrains = [];
+
+  /// 按id保存的object
+  /// 这些object不一定都可以互动
+  /// 而且也不一定都会在一开始就显示出来
+  Map<String, TileMapMovingObject> objects = {};
+
+  /// 地图上的移动物体，通常代表一些从一个地方移动到另一个地方的NPC
+  Map<String, TileMapMovingObject> movingObjects = {};
+
+  TileMapMovingObject? hero;
+
+  bool isTimeFlowing = false;
+
+  bool autoUpdateMovingObject;
+
+  bool isCameraFollowHero;
+
+  void Function()? onLoadComplete;
+
+  final Vector2 shadowOffset;
+
   TileMap({
     required this.id,
+    required this.tileShape,
+    required this.tileMapWidth,
+    required this.tileMapHeight,
     this.data,
-    this.tileShape = TileShape.hexagonalVertical,
-    this.gridWidth = 32.0,
-    this.gridHeight = 28.0,
-    this.tileSpriteSrcWidth = 32.0,
-    this.tileSpriteSrcHeight = 64.0,
-    this.tileOffsetX = 0.0,
-    this.tileOffsetY = 16.0,
-    this.tileObjectSpriteSrcWidth = 32.0,
-    this.tileObjectSpriteSrcHeight = 48.0,
-    double scaleFactor = 2.0,
-    this.showGrids = false,
-    this.showSelected = false,
+    required this.gridSize,
+    required this.tileSpriteSrcSize,
+    required this.tileObjectSpriteSrcSize,
+    required this.tileOffset,
+    double scaleFactor = 1.0,
     this.showNonInteractableHintColor = false,
-    this.showHover = false,
+    this.showGrids = false,
     this.showFogOfWar = false,
-    this.isCameraFollowHero = true,
+    this.showSelected = false,
+    this.showHover = false,
+    this.isCameraFollowHero = false,
     this.autoUpdateMovingObject = false,
     required this.captionStyle,
     this.shadowSpriteId,
     this.shadowSprite,
-  }) : random = math.Random() {
+    Vector2? shadowOffset,
+    this.onLoadComplete,
+  })  : random = math.Random(),
+        shadowOffset = shadowOffset ?? Vector2.zero(),
+        assert(!gridSize.isZero()),
+        assert(!tileSpriteSrcSize.isZero()),
+        assert(!tileObjectSpriteSrcSize.isZero()) {
     this.scaleFactor = scaleFactor;
+
+    onMouseHover = (Vector2 position) {
+      final tilePosition = worldPosition2Tile(position);
+      final terrain = getTerrainByPosition(tilePosition);
+      if (terrain != null && terrain != hoveredTerrain) {
+        terrain.isHovered = true;
+        hoveredTerrain?.isHovered = false;
+        hoveredTerrain = terrain;
+      }
+    };
   }
 
   /// 修改 tile 的位置会连带影响很多其他属性，这里一并将其纠正
   /// 一些信息涉及到地图本身，所以不能放在tile对象上进行
-  TilePosition refreshTileInfo(TileInfo tile) {
+  void refreshTileInfo(TileInfo tile) {
     tile.index = tilePosition2Index(tile.left, tile.top, tileMapWidth);
-    // tile.tileMapWidth = tileMapWidth;
-    final p = tilePosition2RenderPosition(tile.left, tile.top);
-    tile.renderPosition = Vector2(p.x, p.y + tile.srcOffsetY);
-    tile.worldPosition = tilePosition2TileCenterInWorld(tile.left, tile.top);
-    return tile.tilePosition;
+    tile.renderPosition =
+        tilePosition2RenderPosition(tile.left, tile.top) + tile.offset;
+    tile.centerPosition = tilePosition2TileCenterInWorld(tile.left, tile.top);
+
+    if (tile is TileMapMovingObject) {
+      tile.position = tile.renderPosition;
+    }
+
+    int basePriority =
+        tile is TileMapMovingObject ? kObjectBasePriority : kTileBasePriority;
+
+    switch (tileShape) {
+      case TileShape.orthogonal:
+        tile.priority =
+            basePriority + (tile.left - 1 + (tile.top - 1) * tileMapWidth);
+      case TileShape.hexagonalVertical:
+        // to avoid overlapping, render the tiles in a specific order:
+        tile.priority = basePriority +
+            tileMapWidth * (tile.top - 1) +
+            (tile.left.isOdd
+                ? tile.left ~/ 2
+                : ((tileMapWidth / 2).ceil() + tile.left ~/ 2));
+      case TileShape.isometric:
+        throw 'Isometric map tile is not supported yet!';
+      case TileShape.hexagonalHorizontal:
+        throw 'Vertical hexagonal map tile is not supported yet!';
+    }
   }
 
-  Future<void> loadData([dynamic mapData]) async {
-    if (mapData != null) {
-      data = mapData;
-    }
-    TileShape dataTileShape = TileShape.orthogonal;
-    final tileShapeData = data['tileShape'];
-    if (tileShapeData == 'isometric') {
-      dataTileShape = TileShape.isometric;
-    } else if (tileShapeData == 'hexagonalHorizontal') {
-      dataTileShape = TileShape.hexagonalHorizontal;
-    } else if (tileShapeData == 'hexagonalVertical') {
-      dataTileShape = TileShape.hexagonalVertical;
-    }
-    if (tileShape != dataTileShape) {
-      throw 'tile shape in loaded map data [$dataTileShape] is not the same to the tile map component [$tileShape]';
-    }
-    // final tapSelect = data['tapSelect'] ?? false;
-
-    final dataGridWidth = data['gridWidth'].toDouble();
-    if (gridWidth != dataGridWidth) {
-      throw 'gridWidth in loaded map data [$dataGridWidth] is not the same to the tile map component [$gridWidth]';
+  @override
+  Future<void> onLoad() async {
+    if (shadowSpriteId != null && shadowSprite == null) {
+      shadowSprite = Sprite(await Flame.images.load(shadowSpriteId!));
     }
 
-    final dataGridHeight = data['gridHeight'].toDouble();
-    if (gridHeight != dataGridHeight) {
-      throw 'gridWidth in loaded map data [$dataGridHeight] is not the same to the tile map component [$gridHeight]';
-    }
-
-    final dataTileSpriteSrcWidth = data['tileSpriteSrcWidth'].toDouble();
-    if (tileSpriteSrcWidth != dataTileSpriteSrcWidth) {
-      throw 'gridWidth in loaded map data [$dataTileSpriteSrcWidth] is not the same to the tile map component [$tileSpriteSrcWidth]';
-    }
-
-    final dataTileSpriteSrcHeight = data['tileSpriteSrcHeight'].toDouble();
-    if (tileSpriteSrcHeight != dataTileSpriteSrcHeight) {
-      throw 'gridWidth in loaded map data [$dataTileSpriteSrcHeight] is not the same to the tile map component [$tileSpriteSrcHeight]';
-    }
-
-    final dataTileOffsetX = data['tileOffsetX'];
-    if (tileOffsetX != dataTileOffsetX) {
-      throw 'gridWidth in loaded map data [$dataTileOffsetX] is not the same to the tile map component [$tileOffsetX]';
-    }
-
-    final dataTileOffsetY = data['tileOffsetY'];
-    if (tileOffsetY != dataTileOffsetY) {
-      throw 'gridWidth in loaded map data [$dataTileOffsetY] is not the same to the tile map component [$tileOffsetY]';
-    }
+    double mapScreenSizeX = (gridSize.x * 3 / 4) * tileMapWidth * scale.x;
+    double mapScreenSizeY =
+        (gridSize.y * tileMapHeight + gridSize.y / 2) * scale.y;
+    mapScreenSize = Vector2(mapScreenSizeX, mapScreenSizeY);
 
     final terrainSpritePath = data['terrainSpriteSheet'];
     terrainSpriteSheet = SpriteSheet(
       image: await Flame.images.load(terrainSpritePath),
-      srcSize: Vector2(tileSpriteSrcWidth, tileSpriteSrcHeight),
+      srcSize: tileSpriteSrcSize,
     );
 
-    updateData();
+    await updateData();
+
+    moveCameraToTilePosition(tileMapWidth ~/ 2, tileMapHeight ~/ 2,
+        animated: false);
+
+    onLoadComplete?.call();
   }
 
   Future<void> updateData([dynamic mapData]) async {
@@ -183,15 +236,19 @@ class TileMap extends GameComponent with HandlesGesture {
       data = mapData;
     }
 
-    id = data['id'];
-    tileMapWidth = data['width'];
-    tileMapHeight = data['height'];
-    final terrainsData = data['terrains'];
+    assert(tileShape.name == data['tileShape']);
+    assert(gridSize.x == data['gridWidth']);
+    assert(gridSize.y == data['gridHeight']);
+    assert(tileSpriteSrcSize.x == data['tileSpriteSrcWidth']);
+    assert(tileSpriteSrcSize.y == data['tileSpriteSrcHeight']);
+    assert(tileOffset.x == data['tileOffsetX']);
+    assert(tileOffset.y == data['tileOffsetY']);
+
     terrains = <TileMapTerrain>[];
     for (var j = 0; j < tileMapHeight; ++j) {
       for (var i = 0; i < tileMapWidth; ++i) {
         final index = tilePosition2Index(i + 1, j + 1, tileMapWidth);
-        final terrainData = terrainsData[index];
+        final terrainData = data['terrains'][index];
         final bool isLighted = terrainData['isLighted'] ?? false;
         final bool isNonInteractable =
             terrainData['isNonInteractable'] ?? false;
@@ -199,10 +256,10 @@ class TileMap extends GameComponent with HandlesGesture {
         final String? zoneId = terrainData['zoneId'];
         final String? nationId = terrainData['nationId'];
         final String? locationId = terrainData['locationId'];
-        final String? caption = terrainData['caption'];
         final String? objectId = terrainData['objectId'];
         // 这里不载入图片和动画，而是交给terrain自己从data中读取
         final tile = TileMapTerrain(
+          mapId: id,
           terrainSpriteSheet: terrainSpriteSheet,
           tileShape: tileShape,
           data: terrainData,
@@ -210,19 +267,15 @@ class TileMap extends GameComponent with HandlesGesture {
           top: j + 1,
           isLighted: isLighted,
           isNonInteractable: isNonInteractable,
-          srcWidth: tileSpriteSrcWidth,
-          srcHeight: tileSpriteSrcHeight,
-          gridWidth: gridWidth,
-          gridHeight: gridHeight,
+          srcSize: tileSpriteSrcSize,
+          gridSize: gridSize,
           kind: kindString,
           zoneId: zoneId,
           nationId: nationId,
           locationId: locationId,
-          caption: caption,
           objectId: objectId,
           captionStyle: captionStyle,
-          offsetX: tileOffsetX,
-          offsetY: tileOffsetY,
+          offset: tileOffset,
         );
         refreshTileInfo(tile);
         tile.tryLoadSprite();
@@ -233,90 +286,16 @@ class TileMap extends GameComponent with HandlesGesture {
         }
 
         terrains.add(tile);
+        add(tile);
       }
     }
-
-    // final ObjectData = data['objects'];
-    // objects = <String, TileMapObject>{};
-    // if (ObjectData != null) {
-    //   for (final data in ObjectData) {
-    //     _loadObjectFromData(data);
-    //   }
-    // }
   }
-
-  final TextStyle captionStyle;
-
-  final TileShape tileShape;
-  final double gridWidth,
-      gridHeight,
-      tileSpriteSrcWidth,
-      tileSpriteSrcHeight,
-      tileOffsetX,
-      tileOffsetY,
-      tileObjectSpriteSrcWidth,
-      tileObjectSpriteSrcHeight;
-
-  late int tileMapWidth, tileMapHeight;
-
-  // final bool tapSelect;
-
-  Vector2 mapScreenSize = Vector2.zero();
-
-  TileMapTerrain? selectedTerrain;
-  List<TileMapObject>? selectedActors;
-
-  TileMapTerrain? hoverTerrain;
-  List<TileMapObject>? hoverActors;
-
-  List<TileMapTerrain> terrains = [];
-  // List<TileMapZone> zones = [];
-
-  /// 按id保存的object
-  /// 这些object不一定都可以互动
-  /// 而且也不一定都会在一开始就显示出来
-  Map<String, TileMapObject> objects = {};
-
-  /// 地图上的移动物体，通常代表一些从一个地方移动到另一个地方的NPC
-  Map<String, TileMapObject> movingObjects = {};
 
   void setTerrainCaption(int left, int top, String? caption) {
     final tile = getTerrain(left, top);
     assert(tile != null);
     tile!.caption = caption;
   }
-
-  // void _loadObjectFromData(dynamic data) async {
-  //   final spritePath = data['sprite'];
-  //   final int? left = data['left'];
-  //   final int? top = data['top'];
-  //   Sprite? sprite;
-  //   if (spritePath) {
-  //     sprite = Sprite(await Flame.images.load(spritePath));
-  //   }
-  //   final objectId = data['id'];
-  //   final object = TileMapObject(
-  //     id: objectId,
-  //     data: data,
-  //     left: left,
-  //     top: top,
-  //     sprite: sprite,
-  //     tileShape: tileShape,
-  //     tileMapWidth: tileMapWidth,
-  //     gridWidth: gridWidth,
-  //     gridHeight: gridHeight,
-  //     srcWidth: data['srcWidth'].toDouble(),
-  //     srcHeight: data['srcHeight'].toDouble(),
-  //     srcOffsetY: data['srcOffsetY'] ?? 0.0,
-  //   );
-  //   refreshTileInfo(object);
-
-  //   if (left != null && top != null) {
-  //     final tile = terrains[object.index];
-  //     tile.objectId = objectId;
-  //   }
-  //   objects[objectId] = object;
-  // }
 
   void setTerrainObject(int left, int top, String? objectId) {
     if (objectId != null) assert(objects.containsKey(objectId));
@@ -327,81 +306,112 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   void removeMovingObject(String id) {
-    movingObjects.remove(id);
+    final obj = movingObjects.remove(id);
+    obj?.removeFromParent();
   }
 
-  Future<TileMapObject> _loadMovingObjectFromData(dynamic data,
+  Future<TileMapMovingObject> _loadMovingObjectFromData(dynamic data,
       [void Function(int left, int top)? onMoved]) async {
-    final object = TileMapObject(
+    final String skinId = data!['skin'];
+
+    late SpriteSheet moveAnimationSpriteSheet, swimAnimationSpriteSheet;
+
+    if (cachedMovingObjectSpriteSheet.containsKey(skinId)) {
+      moveAnimationSpriteSheet = cachedMovingObjectSpriteSheet[skinId]!;
+    } else {
+      cachedMovingObjectSpriteSheet[skinId] =
+          moveAnimationSpriteSheet = SpriteSheet(
+        image: await Flame.images.load('animation/$skinId/tile_character.png'),
+        srcSize: tileObjectSpriteSrcSize,
+      );
+    }
+    if (cachedMovingObjectSpriteSheet.containsKey('_ship')) {
+      swimAnimationSpriteSheet = cachedMovingObjectSpriteSheet['_ship']!;
+    } else {
+      cachedMovingObjectSpriteSheet['_ship'] =
+          swimAnimationSpriteSheet = SpriteSheet(
+        image: await Flame.images.load('animation/tile_ship.png'),
+        srcSize: tileObjectSpriteSrcSize,
+      );
+    }
+
+    final Map<String, SpriteAnimationWithTicker> states = {};
+
+    states['move_south'] = SpriteAnimationWithTicker(
+        animation: moveAnimationSpriteSheet.createAnimation(
+            row: 0, stepTime: TileMapMovingObject.defaultAnimationStepTime));
+    states['move_east'] = SpriteAnimationWithTicker(
+        animation: moveAnimationSpriteSheet.createAnimation(
+            row: 1, stepTime: TileMapMovingObject.defaultAnimationStepTime));
+    states['move_north'] = SpriteAnimationWithTicker(
+        animation: moveAnimationSpriteSheet.createAnimation(
+            row: 2, stepTime: TileMapMovingObject.defaultAnimationStepTime));
+    states['move_west'] = SpriteAnimationWithTicker(
+        animation: moveAnimationSpriteSheet.createAnimation(
+            row: 3, stepTime: TileMapMovingObject.defaultAnimationStepTime));
+
+    states['swim_south'] = SpriteAnimationWithTicker(
+        animation: swimAnimationSpriteSheet.createAnimation(
+            row: 0, stepTime: TileMapMovingObject.defaultAnimationStepTime));
+    states['swim_east'] = SpriteAnimationWithTicker(
+        animation: swimAnimationSpriteSheet.createAnimation(
+            row: 1, stepTime: TileMapMovingObject.defaultAnimationStepTime));
+    states['swim_north'] = SpriteAnimationWithTicker(
+        animation: swimAnimationSpriteSheet.createAnimation(
+            row: 2, stepTime: TileMapMovingObject.defaultAnimationStepTime));
+    states['swim_west'] = SpriteAnimationWithTicker(
+        animation: swimAnimationSpriteSheet.createAnimation(
+            row: 3, stepTime: TileMapMovingObject.defaultAnimationStepTime));
+
+    final object = TileMapMovingObject(
       id: data!['id'],
       data: data,
-      moveAnimationSpriteSheet: SpriteSheet(
-        image: await Flame.images
-            .load('animation/${data!['skin']}/tile_character.png'),
-        srcSize: Vector2(tileObjectSpriteSrcWidth, tileObjectSpriteSrcHeight),
-      ),
-      swimAnimationSpriteSheet: SpriteSheet(
-        image: await Flame.images.load('animation/tile_ship.png'),
-        srcSize: Vector2(tileObjectSpriteSrcWidth, tileObjectSpriteSrcHeight),
-      ),
       left: data!['worldPosition']['left'],
       top: data!['worldPosition']['top'],
-      tileShape: tileShape,
-      tileMapWidth: tileMapWidth,
-      gridWidth: gridWidth,
-      gridHeight: gridHeight,
-      srcOffsetY: 16.0,
-      srcWidth: tileObjectSpriteSrcWidth,
-      srcHeight: tileObjectSpriteSrcHeight,
+      srcSize: tileObjectSpriteSrcSize,
+      offset: tileOffset,
       onMoved: onMoved,
+      states: states,
     );
+    refreshTileInfo(object);
+    add(object);
     return object;
   }
 
-  Future<void> loadHero(dynamic data,
+  Future<void> loadHeroFromData(dynamic data,
       [void Function(int left, int top)? onMoved]) async {
     hero = await _loadMovingObjectFromData(data, onMoved);
-    refreshTileInfo(hero!);
   }
 
-  Future<void> loadMovingObject(dynamic data,
+  Future<void> loadMovingObjectFromData(dynamic data,
       [void Function(int, int)? onMoved]) async {
-    if (movingObjects.containsKey(data['id'])) {
-      return;
-    } else {
-      assert(data['worldPosition'] != null);
+    if (movingObjects.containsKey(data['id'])) return;
 
-      final object = await _loadMovingObjectFromData(data, onMoved);
-      movingObjects[object.id] = object;
-      object.loadFrameData();
-      refreshTileInfo(object);
+    assert(data['worldPosition'] != null);
+    final object = await _loadMovingObjectFromData(data, onMoved);
+    movingObjects[object.id] = object;
+    object.loadFrameData();
+  }
+
+  void saveMovingObjectsFrameData() {
+    for (final object in movingObjects.values) {
+      object.saveFrameData();
     }
   }
 
-  void reloadObjectsSprite() {
-    // TODO: 修改对象图片路径后，刷新显示
+  void setCameraFollowHero(bool value) {
+    if (hero != null) {
+      if (value) {
+        gameRef.camera.follow(hero!);
+      } else {
+        gameRef.camera.stop();
+      }
+    }
   }
-
-  TileMapObject? hero;
-
-  bool isTimeFlowing = false;
-
-  int colorMode = kColorModeNone;
-
-  bool showGrids;
-  bool showSelected;
-  bool showNonInteractableHintColor;
-  bool showHover;
-  bool showFogOfWar;
-  bool isCameraFollowHero;
-  bool autoUpdateMovingObject;
-
-  final Set<TilePosition> _visiblePerimeter = {};
 
   bool isTileVisible(int left, int top) {
     final tile = getTerrain(left, top);
-    return (tile?.isLighted ?? false) ||
-        _visiblePerimeter.contains(tile?.tilePosition);
+    return (tile?.isLighted ?? false) || (tile?.isOnVisiblePerimeter ?? false);
   }
 
   // 从索引得到坐标
@@ -426,7 +436,6 @@ class TileMap extends GameComponent with HandlesGesture {
         positions.add(TilePosition(left, top - 1));
         positions.add(TilePosition(left + 1, top));
         positions.add(TilePosition(left, top + 1));
-        break;
       case TileShape.hexagonalVertical:
         positions.add(TilePosition(left - 1, top));
         positions.add(TilePosition(left, top - 1));
@@ -439,7 +448,6 @@ class TileMap extends GameComponent with HandlesGesture {
           positions.add(TilePosition(left + 1, top + 1));
           positions.add(TilePosition(left - 1, top + 1));
         }
-        break;
       case TileShape.isometric:
         throw 'Get neighbors of Isometric map tile is not supported yet!';
       case TileShape.hexagonalHorizontal:
@@ -457,8 +465,8 @@ class TileMap extends GameComponent with HandlesGesture {
     final top = random.nextInt(tileMapHeight);
 
     final pos = tilePosition2RenderPosition(left, top);
-    // pos.x = pos.x - gridWidth / 2 + random.nextDouble() * gridWidth;
-    // pos.y = pos.y - gridHeight / 2 + random.nextDouble() * gridHeight;
+    // pos.x = pos.x - gridSize.x / 2 + random.nextDouble() * gridSize.x;
+    // pos.y = pos.y - gridSize.y / 2 + random.nextDouble() * gridSize.y;
 
     return Vector2(pos.x, pos.y);
   }
@@ -501,7 +509,7 @@ class TileMap extends GameComponent with HandlesGesture {
         if (excludeTerrainKinds.isEmpty ||
             !excludeTerrainKinds.contains(tile.kind)) {
           tile.isLighted = true;
-          _visiblePerimeter.remove(tile.tilePosition);
+          tile.isOnVisiblePerimeter = false;
           final neighbors = getNeighborTilePositions(tile.left, tile.top);
           for (final neighbor in neighbors) {
             final neighborTile = getTerrain(neighbor.left, neighbor.top);
@@ -520,7 +528,7 @@ class TileMap extends GameComponent with HandlesGesture {
     } while (lightedLayers < (size + 1));
 
     for (final tile in pendingTiles) {
-      _visiblePerimeter.add(tile.tilePosition);
+      tile.isOnVisiblePerimeter = true;
     }
   }
 
@@ -537,31 +545,68 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   Vector2 tilePosition2TileCenterInWorld(int left, int top) {
-    late final double rl, rt;
+    late final double l, t;
     switch (tileShape) {
       case TileShape.orthogonal:
-        rl = ((left - 1) * gridWidth);
-        rt = ((top - 1) * gridHeight);
-        break;
+        l = ((left - 1) * gridSize.x);
+        t = ((top - 1) * gridSize.y);
       case TileShape.hexagonalVertical:
-        rl = (left - 1) * gridWidth * (3 / 4) + gridWidth / 2;
-        rt = left.isOdd
-            ? (top - 1) * gridHeight + gridHeight / 2
-            : (top - 1) * gridHeight + gridHeight;
-        break;
+        l = (left - 1) * gridSize.x * (3 / 4) + gridSize.x / 2;
+        t = left.isOdd
+            ? (top - 1) * gridSize.y + gridSize.y / 2
+            : (top - 1) * gridSize.y + gridSize.y;
       case TileShape.isometric:
         throw 'Isometric map tile is not supported yet!';
       case TileShape.hexagonalHorizontal:
         throw 'Vertical hexagonal map tile is not supported yet!';
     }
-    return Vector2(rl, rt);
+    return Vector2(l, t);
+  }
+
+  Vector2 tilePosition2RenderPosition(int left, int top) {
+    late final double l, t; //, l, t;
+    switch (tileShape) {
+      case TileShape.orthogonal:
+        l = ((left - 1) * gridSize.x);
+        t = ((top - 1) * gridSize.y);
+      case TileShape.hexagonalVertical:
+        l = (left - 1) * gridSize.x * (3 / 4);
+        t = left.isOdd
+            ? (top - 1) * gridSize.y
+            : (top - 1) * gridSize.y + gridSize.y / 2;
+      case TileShape.isometric:
+        throw 'Isometric map tile is not supported yet!';
+      case TileShape.hexagonalHorizontal:
+        throw 'Vertical hexagonal map tile is not supported yet!';
+    }
+    // switch (renderDirection) {
+    //   case TileRenderDirection.bottomRight:
+    //     l = bl - (srcWidth - gridSize.x);
+    //     t = bt - (srcHeight - gridSize.y);
+    //     break;
+    //   case TileRenderDirection.bottomLeft:
+    //     l = bl;
+    //     t = bt - (srcWidth - gridSize.y);
+    //     break;
+    //   case TileRenderDirection.topRight:
+    //     l = bl - (srcHeight - gridSize.x);
+    //     t = bt;
+    //     break;
+    //   case TileRenderDirection.topLeft:
+    //     l = bl;
+    //     t = bt;
+    //     break;
+    //   case TileRenderDirection.bottomCenter:
+    //     break;
+    // }
+    return Vector2(l - (tileSpriteSrcSize.x - gridSize.x) / 2,
+        t - (tileSpriteSrcSize.y - gridSize.y));
   }
 
   Vector2 tilePosition2TileCenterInScreen(int left, int top) {
     final worldPos = tilePosition2TileCenterInWorld(left, top);
-    final scaled = Vector2(worldPos.x * scale.x, worldPos.y * scale.y);
-    final result =
-        scaled - (gameRef.camera.viewfinder.position - gameRef.size / 2);
+    final result = worldPos * scaleFactor -
+        (gameRef.camera.viewfinder.position - gameRef.size / 2);
     return result;
   }
 
@@ -569,27 +614,27 @@ class TileMap extends GameComponent with HandlesGesture {
     late final int left, top;
     switch (tileShape) {
       case TileShape.orthogonal:
-        left = (worldPos.x / scale.x / gridWidth).floor();
-        top = (worldPos.y / scale.x / gridHeight).floor();
-        break;
+        left = (worldPos.x / scale.x / gridSize.x).floor();
+        top = (worldPos.y / scale.x / gridSize.y).floor();
       case TileShape.hexagonalVertical:
-        int l = (worldPos.x / (gridWidth * 3 / 4) / scale.x).floor() + 1;
-        final inTilePosX = worldPos.x / scale.x - (l - 1) * (gridWidth * 3 / 4);
+        int l = (worldPos.x / (gridSize.x * 3 / 4) / scale.x).floor() + 1;
+        final inTilePosX =
+            worldPos.x / scale.x - (l - 1) * (gridSize.x * 3 / 4);
         late final double inTilePosY;
         int t;
         if (l.isOdd) {
-          t = (worldPos.y / scale.y / gridHeight).floor() + 1;
-          inTilePosY = gridHeight / 2 - (worldPos.y / scale.y) % gridHeight;
+          t = (worldPos.y / scale.y / gridSize.y).floor() + 1;
+          inTilePosY = gridSize.y / 2 - (worldPos.y / scale.y) % gridSize.y;
         } else {
-          t = ((worldPos.y / scale.y - gridHeight / 2) / gridHeight).floor() +
+          t = ((worldPos.y / scale.y - gridSize.y / 2) / gridSize.y).floor() +
               1;
-          inTilePosY = gridHeight / 2 -
-              (worldPos.y / scale.y - gridHeight / 2) % gridHeight;
+          inTilePosY = gridSize.y / 2 -
+              (worldPos.y / scale.y - gridSize.y / 2) % gridSize.y;
         }
-        if (inTilePosX < gridWidth / 4) {
+        if (inTilePosX < gridSize.x / 4) {
           if (l.isOdd) {
             if (inTilePosY >= 0) {
-              if (inTilePosY / inTilePosX > gridHeight / gridWidth * 2) {
+              if (inTilePosY / inTilePosX > gridSize.y / gridSize.x * 2) {
                 left = l - 1;
                 top = t - 1;
               } else {
@@ -597,7 +642,7 @@ class TileMap extends GameComponent with HandlesGesture {
                 top = t;
               }
             } else {
-              if (-inTilePosY / inTilePosX > gridHeight / gridWidth * 2) {
+              if (-inTilePosY / inTilePosX > gridSize.y / gridSize.x * 2) {
                 left = l - 1;
                 top = t;
               } else {
@@ -607,7 +652,7 @@ class TileMap extends GameComponent with HandlesGesture {
             }
           } else {
             if (inTilePosY >= 0) {
-              if (inTilePosY / inTilePosX > gridHeight / gridWidth * 2) {
+              if (inTilePosY / inTilePosX > gridSize.y / gridSize.x * 2) {
                 left = l - 1;
                 top = t;
               } else {
@@ -615,7 +660,7 @@ class TileMap extends GameComponent with HandlesGesture {
                 top = t;
               }
             } else {
-              if (-inTilePosY / inTilePosX > gridHeight / gridWidth * 2) {
+              if (-inTilePosY / inTilePosX > gridSize.y / gridSize.x * 2) {
                 left = l - 1;
                 top = t + 1;
               } else {
@@ -628,55 +673,12 @@ class TileMap extends GameComponent with HandlesGesture {
           left = l;
           top = t;
         }
-        break;
       case TileShape.isometric:
         throw 'Get Isometric map tile position from screen position is not supported yet!';
       case TileShape.hexagonalHorizontal:
         throw 'Get Horizontal hexagonal map tile position from screen position is not supported yet!';
     }
     return TilePosition(left, top);
-  }
-
-  Vector2 tilePosition2RenderPosition(int left, int top) {
-    late final double l, t; //, l, t;
-    switch (tileShape) {
-      case TileShape.orthogonal:
-        l = ((left - 1) * gridWidth);
-        t = ((top - 1) * gridHeight);
-        break;
-      case TileShape.hexagonalVertical:
-        l = (left - 1) * gridWidth * (3 / 4);
-        t = left.isOdd
-            ? (top - 1) * gridHeight
-            : (top - 1) * gridHeight + gridHeight / 2;
-        break;
-      case TileShape.isometric:
-        throw 'Isometric map tile is not supported yet!';
-      case TileShape.hexagonalHorizontal:
-        throw 'Vertical hexagonal map tile is not supported yet!';
-    }
-    // switch (renderDirection) {
-    //   case TileRenderDirection.bottomRight:
-    //     l = bl - (srcWidth - gridWidth);
-    //     t = bt - (srcHeight - gridHeight);
-    //     break;
-    //   case TileRenderDirection.bottomLeft:
-    //     l = bl;
-    //     t = bt - (srcWidth - gridHeight);
-    //     break;
-    //   case TileRenderDirection.topRight:
-    //     l = bl - (srcHeight - gridWidth);
-    //     t = bt;
-    //     break;
-    //   case TileRenderDirection.topLeft:
-    //     l = bl;
-    //     t = bt;
-    //     break;
-    //   case TileRenderDirection.bottomCenter:
-    //     break;
-    // }
-    return Vector2(l - (tileSpriteSrcWidth - gridWidth) / 2,
-        t - (tileSpriteSrcHeight - gridHeight));
   }
 
   /// 计算 hexagonal tile 的方向，如果是 backward 则是反方向
@@ -774,15 +776,20 @@ class TileMap extends GameComponent with HandlesGesture {
     }
   }
 
-  Future<void> moveCameraToTilePosition(int left, int top,
-      {bool animated = true, double speed = 500.0}) {
+  Future<void> moveCameraToTilePosition(
+    int left,
+    int top, {
+    bool animated = true,
+    double speed = 250.0,
+    double? zoom,
+  }) {
     final worldPos = tilePosition2TileCenterInWorld(left, top);
-    final dest = Vector2(worldPos.x * scale.x, worldPos.y * scale.y);
+    final dest = worldPos * scaleFactor;
 
     final completer = Completer();
 
     if (animated) {
-      gameRef.camera.moveTo2(dest, speed: speed, onComplete: () {
+      gameRef.camera.moveTo2(dest, speed: speed, zoom: zoom, onComplete: () {
         completer.complete();
       });
     } else {
@@ -794,20 +801,25 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   void unselectTile() {
+    selectedTerrain?.isSelected = false;
     selectedTerrain = null;
   }
 
   bool trySelectTile(int left, int top) {
     final terrain = getTerrain(left, top);
     if (terrain != null) {
-      // &&  (!terrain.isNonInteractable || selectNonInteractable)) {
-      selectedTerrain = terrain;
+      if (terrain != selectedTerrain) {
+        unselectTile();
+        // &&  (!terrain.isNonInteractable || selectNonInteractable)) {
+        terrain.isSelected = true;
+        selectedTerrain = terrain;
+      }
       return true;
     }
     return false;
   }
 
-  void cancelObjectMoving(TileMapObject object) {
+  void cancelObjectMoving(TileMapMovingObject object) {
     // assert(movingObjects.containsKey(id));
     // final object = movingObjects[id]!;
 
@@ -827,16 +839,16 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   void moveObjectToTilePositionByRoute(
-    TileMapObject object,
+    TileMapMovingObject object,
     List<int> route, {
-    TileMapDirectionOrthogonal? endDirection,
-    void Function()? onDestinationCallback,
+    OrthogonalDirection? endDirection,
+    void Function(TileMapTerrain tile)? onDestinationCallback,
     bool isMoveCanceling = false,
   }) {
     // assert(movingObjects.containsKey(id));
     // final object = movingObjects[id]!;
 
-    if (object.isMoving) {
+    if (object.isWalking) {
       if (kDebugMode) {
         print('tilemap warning: try to move object while it is already moving');
       }
@@ -847,7 +859,16 @@ class TileMap extends GameComponent with HandlesGesture {
         route.first);
 
     object.backwardMoving = isMoveCanceling;
-    object.onDestinationCallback = onDestinationCallback;
+
+    if (object == hero && isCameraFollowHero) {
+      setCameraFollowHero(true);
+      object.onDestinationCallback = (TileMapTerrain tile) {
+        setCameraFollowHero(false);
+        onDestinationCallback?.call(tile);
+      };
+    } else {
+      object.onDestinationCallback = onDestinationCallback;
+    }
     // 默认移动结束后面朝主视角
     object.endDirection = endDirection;
     object.currentRoute = route
@@ -866,21 +887,7 @@ class TileMap extends GameComponent with HandlesGesture {
         .toList();
   }
 
-  @override
-  Future<void> onLoad() async {
-    super.onLoad();
-
-    if (shadowSpriteId != null && shadowSprite == null) {
-      shadowSprite = Sprite(await Flame.images.load(shadowSpriteId!));
-    }
-
-    double mapScreenSizeX = (gridWidth * 3 / 4) * tileMapWidth * scale.x;
-    double mapScreenSizeY =
-        (gridHeight * tileMapHeight + gridHeight / 2) * scale.y;
-    mapScreenSize = Vector2(mapScreenSizeX, mapScreenSizeY);
-  }
-
-  void updateObjectMoving(TileMapObject object) {
+  void updateObjectMoving(TileMapMovingObject object) {
     if (object.currentRoute == null) return;
 
     assert(object.currentRoute!.isNotEmpty);
@@ -888,7 +895,7 @@ class TileMap extends GameComponent with HandlesGesture {
     if (object.isMovingCanceled) {
       object.currentRoute = null;
       object.isMovingCanceled = false;
-    } else if (!object.isMoving) {
+    } else if (!object.isWalking) {
       object.lastRouteNode = object.currentRoute!.last;
       object.currentRoute!.removeLast();
       refreshTileInfo(object);
@@ -903,8 +910,8 @@ class TileMap extends GameComponent with HandlesGesture {
         final nextTile = object.currentRoute!.last.tilePosition;
         object.walkTo(
           target: nextTile,
-          targetWorldPosition:
-              tilePosition2TileCenterInWorld(nextTile.left, nextTile.top),
+          targetRenderPosition:
+              tilePosition2RenderPosition(nextTile.left, nextTile.top),
           targetDirection: direction2Orthogonal(directionTo(
               hero!.tilePosition, nextTile,
               backward: object.backwardMoving)),
@@ -912,7 +919,7 @@ class TileMap extends GameComponent with HandlesGesture {
         );
       } else {
         if (object.onDestinationCallback != null) {
-          object.onDestinationCallback!();
+          object.onDestinationCallback!(terrain);
         }
         object.currentRoute = null;
         object.lastRouteNode = null;
@@ -929,130 +936,56 @@ class TileMap extends GameComponent with HandlesGesture {
   void updateTree(double dt) {
     super.updateTree(dt);
 
-    for (final tile in terrains) {
-      tile.update(dt);
-    }
-
-    for (final object in objects.values) {
-      object.update(dt);
-    }
-
     if (hero != null) {
-      hero!.update(dt);
       updateObjectMoving(hero!);
-
-      // if (hero!.isMoving && isCameraFollowHero) {
-      //   final heroPos = hero!.worldPosition + hero!.movingOffset.toVector2();
-      //   gameRef.camera.position = heroPos * scaleFactor;
-      // }
     }
 
     for (final object in movingObjects.values) {
-      if (autoUpdateMovingObject || (hero?.isMoving ?? false)) {
-        object.update(dt);
+      if (autoUpdateMovingObject || (hero?.isWalking ?? false)) {
         updateObjectMoving(object);
       }
     }
   }
 
-  void renderTileObject(Canvas canvas, TileMapTerrain tile) {
-    // if (tile.objectId != null) {
-    //   final object = objects[tile.objectId]!;
-    //   object.render(canvas);
-    // }
-    for (final object in movingObjects.values) {
-      if (object.tilePosition == tile.tilePosition) {
-        object.render(canvas);
-      }
-    }
-    if (tile.tilePosition == hero?.tilePosition) {
-      hero?.render(canvas);
-    }
-  }
-
   @override
   void renderTree(Canvas canvas) {
-    // backgroundSprite?.render(canvas, size: gameRef.size);
-
+    super.renderTree(canvas);
     canvas.save();
     canvas.transform(transformMatrix.storage);
 
-    // to avoid overlapping, render the tiles in a specific order:
-    for (var j = 0; j < tileMapHeight; ++j) {
-      if (tileShape == TileShape.hexagonalVertical) {
-        for (var i = 0; i < tileMapWidth; i = i + 2) {
-          final tile = terrains[i + j * tileMapWidth];
-          tile.render(canvas,
-              showGrids: showGrids,
-              showNonInteractableHintColor: showNonInteractableHintColor);
-        }
-        for (var i = 1; i < tileMapWidth; i = i + 2) {
-          final tile = terrains[i + j * tileMapWidth];
-          tile.render(canvas,
-              showGrids: showGrids,
-              showNonInteractableHintColor: showNonInteractableHintColor);
-        }
-      } else if (tileShape == TileShape.orthogonal) {
-        for (var i = 0; i < tileMapWidth; ++i) {
-          final tile = terrains[i + j * tileMapWidth];
-          tile.render(canvas,
-              showGrids: showGrids,
-              showNonInteractableHintColor: showNonInteractableHintColor);
-        }
-      } else {
-        throw 'tile shape $tileShape is not supported!';
-      }
-    }
-
-    // after all terrains, render the objects, in the same way:
-    for (var j = 0; j < tileMapHeight; ++j) {
-      if (tileShape == TileShape.hexagonalVertical) {
-        for (var i = 0; i < tileMapWidth; i = i + 2) {
-          final tile = terrains[i + j * tileMapWidth];
-          renderTileObject(canvas, tile);
-        }
-        for (var i = 1; i < tileMapWidth; i = i + 2) {
-          final tile = terrains[i + j * tileMapWidth];
-          renderTileObject(canvas, tile);
-        }
-      } else if (tileShape == TileShape.orthogonal) {
-        for (var i = 0; i < tileMapWidth; ++i) {
-          final tile = terrains[i + j * tileMapWidth];
-          renderTileObject(canvas, tile);
-        }
-      } else {
-        throw 'tile shape $tileShape is not supported!';
-      }
-    }
-
     for (final tile in terrains) {
-      tile.renderCaption(canvas, offset: _kCaptionOffset);
-    }
-
-    if (colorMode >= 0) {
-      for (final tile in terrains) {
+      if (colorMode != kColorModeNone) {
         final colorData = mapZoneColors[id]?[colorMode][tile.index];
         if (colorData != null) {
           final (_, paint) = colorData;
           canvas.drawPath(tile.borderPath, paint);
         }
       }
+      if (tile.isNonInteractable && showNonInteractableHintColor) {
+        canvas.drawPath(tile.borderPath, uninteractablePaint);
+      }
     }
 
-    customRender?.call(canvas);
-
-    if (showFogOfWar) {
-      for (final tile in terrains) {
-        if (tile.isLighted || tile.terrainKind == TileMapTerrainKind.empty) {
-          continue;
-        } else if (_visiblePerimeter.contains(tile.tilePosition)) {
-          canvas.drawPath(tile.borderPath, fogNeighborPaint);
-          // canvas.drawShadow(tile.shadowPath, Colors.black, 0, true);
-
-          // shadowSprite?.render(canvas, position: tile.worldPosition);
-        } else {
-          canvas.drawPath(tile.shadowPath, fogPaint);
+    for (final tile in terrains) {
+      if (showFogOfWar) {
+        if (!tile.isLighted && tile.terrainKind != TileMapTerrainKind.empty) {
+          if (tile.isOnVisiblePerimeter) {
+            canvas.drawPath(tile.borderPath, visiblePerimeterPaint);
+            // canvas.drawShadow(tile.shadowPath, Colors.black, 0, true);
+            // shadowSprite?.render(canvas,
+            //     position: tile.renderPosition, overridePaint: halfShadowPaint);
+          } else {
+            // canvas.drawPath(tile.shadowPath, fogPaint);
+            shadowSprite?.render(canvas,
+                position: tile.renderPosition + shadowOffset);
+          }
         }
+      }
+    }
+
+    for (final tile in terrains) {
+      if (showGrids) {
+        canvas.drawPath(tile.borderPath, gridPaint);
       }
     }
 
@@ -1060,13 +993,11 @@ class TileMap extends GameComponent with HandlesGesture {
       canvas.drawPath(selectedTerrain!.borderPath, selectedPaint);
     }
 
-    if (showHover && hoverTerrain != null) {
-      canvas.drawPath(hoverTerrain!.borderPath, hoverPaint);
+    if (showHover && hoveredTerrain != null) {
+      canvas.drawPath(hoveredTerrain!.borderPath, hoverPaint);
     }
 
     canvas.restore();
-
-    super.renderTree(canvas);
   }
 
   @override

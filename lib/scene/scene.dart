@@ -1,14 +1,17 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
-import 'package:samsara/component/game_component.dart';
+import 'package:samsara/components/game_component.dart';
 import 'package:samsara/extensions.dart';
 import 'package:flame_audio/bgm.dart';
+// import 'package:samsara/lighting/lighting_config.dart';
 
 import 'scene_controller.dart';
 import '../widget/pointer_detector.dart';
 import '../gestures/gesture_mixin.dart';
-import 'scene_widget.dart';
+// import '../components/border_component.dart';
+import '../lighting/camera2.dart';
+import '../lighting/world2.dart';
 
 abstract class Scene extends FlameGame {
   static const overlayUIBuilderMapKey = 'overlayUI';
@@ -16,6 +19,8 @@ abstract class Scene extends FlameGame {
   final String id;
   final SceneController controller;
   final BuildContext context;
+
+  Rect bounds = Rect.zero;
 
   String? bgmFile;
   double bgmVolume;
@@ -34,13 +39,24 @@ abstract class Scene extends FlameGame {
 
   late final Bgm bgm;
 
+  bool get enableLighting => (camera as Camera2).enableLighting;
+  set enableLighting(bool value) => (camera as Camera2).enableLighting = value;
+
   Scene({
     required this.id,
     required this.controller,
     required this.context,
     this.bgmFile,
     this.bgmVolume = 0.5,
-  }) {
+    bool enableLighting = false,
+    Color? backgroundLightingColor,
+  }) : super(
+          camera: Camera2(
+            enableLighting: enableLighting,
+            backgroundLightingColor: backgroundLightingColor,
+          ),
+          world: World2(),
+        ) {
     // camera.viewfinder.anchor = Anchor.topLeft;
     bgm = Bgm();
   }
@@ -79,15 +95,12 @@ abstract class Scene extends FlameGame {
     topRight.x = centerRight.x = bottomRight.x = size.x;
     centerLeft.y = center.y = centerRight.y = size.y / 2;
     bottomLeft.y = bottomCenter.y = bottomRight.y = size.y;
+
+    bounds = Rect.fromLTWH(0, 0, size.x, size.y);
   }
 
-  /// get all components within this scene which handles gesture,
-  /// order is from highest priority to lowest.
-  List<HandlesGesture> get gestureComponents => world.children
-      .reversed()
-      .whereType<HandlesGesture>()
-      .cast<HandlesGesture>()
-      .toList();
+  Iterable<HandlesGesture> get gestureComponents =>
+      descendants(reversed: true).whereType<HandlesGesture>();
 
   /// zoom the camera to a certain size
   void fitScreen([Vector2? fitSize]) {
@@ -147,7 +160,7 @@ abstract class Scene extends FlameGame {
   @mustCallSuper
   void onDragUpdate(int pointer, int buttons, DragUpdateDetails details) {
     for (final c in gestureComponents) {
-      c.handleDragUpdate(pointer, buttons, details);
+      c.handleDragUpdate(pointer, buttons, details, draggingComponent);
     }
   }
 
@@ -156,6 +169,7 @@ abstract class Scene extends FlameGame {
     for (final c in gestureComponents) {
       c.handleDragEnd(pointer, buttons, details, draggingComponent);
     }
+    draggingComponent = null;
   }
 
   @mustCallSuper
@@ -204,17 +218,5 @@ abstract class Scene extends FlameGame {
     for (final c in gestureComponents) {
       c.handleMouseScroll(details);
     }
-  }
-
-  SceneWidget getWidget({
-    Key? key,
-    required Scene scene,
-    Map<String, Widget Function(BuildContext, Scene)>? overlayBuilderMap,
-  }) {
-    return SceneWidget(
-      key: key,
-      scene: this,
-      overlayBuilderMap: overlayBuilderMap,
-    );
   }
 }

@@ -12,24 +12,26 @@ const kConsoleColorWhite = '\x1B[37m';
 const kConsoleColorReset = '\x1B[0m';
 
 class CustomLoggerOutput extends LogOutput {
-  final List<String> log = [];
+  final List<String> logs = [];
+  final List<OutputEvent> events = [];
   @override
   void output(OutputEvent event) {
+    events.add(event);
     for (final message in event.lines) {
-      final lines = message.split('\n');
+      final splited = message.split('\n');
       if (kDebugMode) {
-        log.addAll(event.lines);
-        if (lines.length > 1) {
+        logs.addAll(splited);
+        if (splited.length > 1) {
           if (event.level == Level.warning) {
             print(
-                '${kConsoleColorYellow}samsara engine - ${event.level.name}:$kConsoleColorReset');
+                '${kConsoleColorYellow}samsara - ${event.level.name}:$kConsoleColorReset');
           } else if (event.level == Level.error) {
             print(
-                '${kConsoleColorRed}samsara engine - ${event.level.name}:$kConsoleColorReset');
+                '${kConsoleColorRed}samsara - ${event.level.name}:$kConsoleColorReset');
           } else {
-            print('samsara engine - ${event.level.name}:');
+            print('samsara - ${event.level.name}:');
           }
-          for (final line in lines) {
+          for (final line in splited) {
             if (event.level == Level.warning) {
               print('$kConsoleColorYellow$line$kConsoleColorReset');
             } else if (event.level == Level.error) {
@@ -41,19 +43,17 @@ class CustomLoggerOutput extends LogOutput {
         } else {
           if (event.level == Level.warning) {
             print(
-                '${kConsoleColorYellow}samsara engine - ${event.level.name}: $message$kConsoleColorReset');
+                '${kConsoleColorYellow}samsara - ${event.level.name}: $message$kConsoleColorReset');
           } else if (event.level == Level.error) {
             print(
-                '${kConsoleColorRed}samsara engine - ${event.level.name}: $message$kConsoleColorReset');
+                '${kConsoleColorRed}samsara - ${event.level.name}: $message$kConsoleColorReset');
           } else {
-            print('samsara engine - ${event.level.name}: $message');
+            print('samsara - ${event.level.name}: $message');
           }
         }
       } else {
-        for (final line in lines) {
-          if (event.level == Level.warning || event.level == Level.error) {
-            log.add(line);
-          }
+        if (event.level == Level.warning || event.level == Level.error) {
+          logs.addAll(splited);
         }
       }
     }

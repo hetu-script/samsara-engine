@@ -77,6 +77,6 @@ class InAndOutSprite extends GameComponent {
 
   @override
   void render(Canvas canvas) {
-    sprite?.renderRect(canvas, border);
+    sprite?.render(canvas);
   }
 }

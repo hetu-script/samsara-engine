@@ -5,10 +5,9 @@ import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
 
-import '../component/game_component.dart';
+import '../components/game_component.dart';
 import 'tile_mixin.dart';
 import '../animation/sprite_animation.dart';
-import 'tilemap.dart';
 import '../utils/json.dart';
 import '../paint.dart';
 
@@ -35,13 +34,16 @@ class TileMapTerrain extends GameComponent with TileInfo {
   /// internal data of this tile, possible json or other user-defined data form.
   final dynamic data;
 
+  final String mapId;
+
   final SpriteSheet terrainSpriteSheet;
 
   final borderPath = Path();
   final shadowPath = Path();
   late Rect rect;
 
-  final double offsetX, offsetY;
+  bool isSelected = false;
+  bool isHovered = false;
 
   // final TileRenderDirection renderDirection;
 
@@ -80,6 +82,8 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   bool get isLighted => _isLighted;
 
+  bool isOnVisiblePerimeter = false;
+
   /// 此地块上的物体
   /// 此属性代表一些通常固定不移动的可互动对象，例如传送门、开关、地牢入口等等
   /// 对于可以在地图上移动的物体，地块本身并不保存，
@@ -94,13 +98,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
   String? get objectId => _objectId;
 
   // 显示标签
-  String? _caption;
-  set caption(String? value) {
-    _caption = value;
-    data?['caption'] = value;
-  }
-
-  String? get caption => _caption;
+  String? caption;
 
   final TextPaint _captionPaint;
 
@@ -143,10 +141,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     final String? spritePath = d?['sprite'];
     final int? spriteIndex = d?['spriteIndex'];
     if (spritePath != null) {
-      sprite = await Sprite.load(
-        spritePath,
-        srcSize: Vector2(srcWidth, srcHeight),
-      );
+      sprite = await Sprite.load(spritePath, srcSize: srcSize);
     } else if (spriteIndex != null) {
       sprite = terrainSpriteSheet.getSpriteById(spriteIndex);
     }
@@ -171,12 +166,8 @@ class TileMapTerrain extends GameComponent with TileInfo {
     final double stepTime = d?['stepTime'] ?? defaultAnimationStepTime;
     final bool loop = d?['loop'] ?? true;
     if (path != null) {
-      final sheet = SpriteSheet(
-          image: await Flame.images.load(path),
-          srcSize: Vector2(
-            srcWidth,
-            srcHeight,
-          ));
+      final sheet =
+          SpriteSheet(image: await Flame.images.load(path), srcSize: srcSize);
       animation = SpriteAnimationWithTicker(
         animation: sheet.createAnimation(
           row: row ?? 0,
@@ -241,6 +232,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
   }
 
   TileMapTerrain({
+    required this.mapId,
     required this.terrainSpriteSheet,
     required TileShape tileShape,
     // this.renderDirection = TileRenderDirection.bottomRight,
@@ -249,24 +241,22 @@ class TileMapTerrain extends GameComponent with TileInfo {
     required int top,
     bool isNonInteractable = false,
     bool isLighted = true,
-    required double srcWidth,
-    required double srcHeight,
-    required double gridWidth,
-    required double gridHeight,
+    required Vector2 srcSize,
+    required Vector2 gridSize,
     String? kind,
     String? zoneId,
     String? nationId,
     String? locationId,
-    String? caption,
     String? objectId,
     required TextStyle captionStyle,
     Sprite? sprite,
     SpriteAnimationWithTicker? animation,
     Sprite? overlaySprite,
     SpriteAnimationWithTicker? overlayAnimation,
-    this.offsetX = 0.0,
-    this.offsetY = 0.0,
-  })  : _overlayAnimation = overlayAnimation,
+    Vector2? offset,
+  })  : assert(!gridSize.isZero()),
+        assert(!srcSize.isZero()),
+        _overlayAnimation = overlayAnimation,
         _animation = animation,
         _captionPaint = TextPaint(
           style: captionStyle.copyWith(
@@ -299,15 +289,13 @@ class TileMapTerrain extends GameComponent with TileInfo {
         _nationId = nationId,
         _locationId = locationId,
         _objectId = objectId,
-        _caption = caption,
         _sprite = sprite,
         _overlaySprite = overlaySprite {
     this.tileShape = tileShape;
-    this.gridWidth = gridWidth;
-    this.gridHeight = gridHeight;
-    this.srcWidth = width = srcWidth;
-    this.srcHeight = height = srcHeight;
-    srcOffsetY = 0;
+    this.gridSize = gridSize;
+    this.srcSize = srcSize;
+    this.offset = offset ?? Vector2.zero();
+
     tilePosition = TilePosition(left, top);
     generateRect();
 
@@ -315,8 +303,8 @@ class TileMapTerrain extends GameComponent with TileInfo {
   }
 
   void generateRect() {
-    double bleendingPixelHorizontal = width * 0.04;
-    double bleendingPixelVertical = height * 0.04;
+    double bleendingPixelHorizontal = srcSize.x * 0.04;
+    double bleendingPixelVertical = srcSize.y * 0.04;
     if (bleendingPixelHorizontal > 2) {
       bleendingPixelHorizontal = 2;
     }
@@ -327,36 +315,36 @@ class TileMapTerrain extends GameComponent with TileInfo {
     late final double l, t; // l, t,
     switch (tileShape) {
       case TileShape.orthogonal:
-        l = ((left - 1) * gridWidth);
-        t = ((top - 1) * gridHeight);
-        final border = Rect.fromLTWH(l, t, gridWidth, gridHeight);
+        l = (left - 1) * gridSize.x;
+        t = (top - 1) * gridSize.y;
+        final border = Rect.fromLTWH(l, t, gridSize.x, gridSize.y);
         borderPath.addRect(border);
         break;
       case TileShape.hexagonalVertical:
-        l = (left - 1) * gridWidth * (3 / 4);
+        l = (left - 1) * gridSize.x * (3 / 4);
         t = left.isOdd
-            ? (top - 1) * gridHeight
-            : (top - 1) * gridHeight + gridHeight / 2;
-        borderPath.moveTo(l, t + gridHeight / 2);
-        borderPath.relativeLineTo(gridWidth / 4, -gridHeight / 2);
-        borderPath.relativeLineTo(gridWidth / 2, 0);
-        borderPath.relativeLineTo(gridWidth / 4, gridHeight / 2);
-        borderPath.relativeLineTo(-gridWidth / 4, gridHeight / 2);
-        borderPath.relativeLineTo(-gridWidth / 2, 0);
-        borderPath.relativeLineTo(-gridWidth / 4, -gridHeight / 2);
+            ? (top - 1) * gridSize.y
+            : (top - 1) * gridSize.y + gridSize.y / 2;
+        borderPath.moveTo(l, t + gridSize.y / 2);
+        borderPath.relativeLineTo(gridSize.x / 4, -gridSize.y / 2);
+        borderPath.relativeLineTo(gridSize.x / 2, 0);
+        borderPath.relativeLineTo(gridSize.x / 4, gridSize.y / 2);
+        borderPath.relativeLineTo(-gridSize.x / 4, gridSize.y / 2);
+        borderPath.relativeLineTo(-gridSize.x / 2, 0);
+        borderPath.relativeLineTo(-gridSize.x / 4, -gridSize.y / 2);
         borderPath.close();
-        shadowPath.moveTo(l - bleendingPixelHorizontal + offsetX,
-            t + gridHeight / 2 + offsetX);
-        shadowPath.relativeLineTo(gridWidth / 4 + bleendingPixelHorizontal,
-            -gridHeight / 2 - bleendingPixelVertical);
-        shadowPath.relativeLineTo(gridWidth / 2, 0);
-        shadowPath.relativeLineTo(gridWidth / 4 + bleendingPixelHorizontal,
-            gridHeight / 2 + bleendingPixelVertical);
-        shadowPath.relativeLineTo(-gridWidth / 4 - bleendingPixelHorizontal,
-            gridHeight / 2 + bleendingPixelVertical);
-        shadowPath.relativeLineTo(-gridWidth / 2, 0);
-        shadowPath.relativeLineTo(-gridWidth / 4 - bleendingPixelHorizontal,
-            -gridHeight / 2 - bleendingPixelVertical);
+        shadowPath.moveTo(l - bleendingPixelHorizontal + offset.x,
+            t + gridSize.y / 2 + offset.y);
+        shadowPath.relativeLineTo(gridSize.x / 4 + bleendingPixelHorizontal,
+            -gridSize.y / 2 - bleendingPixelVertical);
+        shadowPath.relativeLineTo(gridSize.x / 2, 0);
+        shadowPath.relativeLineTo(gridSize.x / 4 + bleendingPixelHorizontal,
+            gridSize.y / 2 + bleendingPixelVertical);
+        shadowPath.relativeLineTo(-gridSize.x / 4 - bleendingPixelHorizontal,
+            gridSize.y / 2 + bleendingPixelVertical);
+        shadowPath.relativeLineTo(-gridSize.x / 2, 0);
+        shadowPath.relativeLineTo(-gridSize.x / 4 - bleendingPixelHorizontal,
+            -gridSize.y / 2 - bleendingPixelVertical);
         shadowPath.close();
         break;
       case TileShape.isometric:
@@ -366,15 +354,15 @@ class TileMapTerrain extends GameComponent with TileInfo {
     }
     // switch (renderDirection) {
     //   case TileRenderDirection.bottomRight:
-    //     l = bl - (width - gridWidth);
-    //     t = bt - (height - gridHeight);
+    //     l = bl - (width - gridSize.x);
+    //     t = bt - (height - gridSize.y);
     //     break;
     //   case TileRenderDirection.bottomLeft:
     //     l = bl;
-    //     t = bt - (height - gridHeight);
+    //     t = bt - (height - gridSize.y);
     //     break;
     //   case TileRenderDirection.topRight:
-    //     l = bl - (width - gridWidth);
+    //     l = bl - (width - gridSize.x);
     //     t = bt;
     //     break;
     //   case TileRenderDirection.topLeft:
@@ -385,46 +373,31 @@ class TileMapTerrain extends GameComponent with TileInfo {
     //     break;
     // }
     rect = Rect.fromLTWH(
-        l - (width - gridWidth) / 2 - bleendingPixelHorizontal / 2 + offsetX,
-        t - (height - gridHeight) - bleendingPixelVertical / 2 + offsetY,
-        width + bleendingPixelHorizontal,
-        height + bleendingPixelVertical);
+        l -
+            (srcSize.x - gridSize.x) / 2 -
+            bleendingPixelHorizontal / 2 +
+            offset.x,
+        t - (srcSize.y - gridSize.y) - bleendingPixelVertical / 2 + offset.y,
+        srcSize.x + bleendingPixelHorizontal,
+        srcSize.y + bleendingPixelVertical);
   }
 
   @override
-  void render(Canvas canvas,
-      {bool showGrids = false, bool showNonInteractableHintColor = false}) {
+  void render(Canvas canvas) {
     _sprite?.renderRect(canvas, rect);
     _animation?.ticker.currentFrame.sprite.renderRect(canvas, rect);
     _overlaySprite?.renderRect(canvas, rect);
     _overlayAnimation?.ticker.currentFrame.sprite.renderRect(canvas, rect);
-    if (showGrids) {
-      canvas.drawPath(borderPath, borderPaint);
-    }
-    if (_isNonInteractable && showNonInteractableHintColor) {
-      canvas.drawPath(borderPath, TileMap.uninteractablePaint);
-    }
-  }
 
-  void renderCaption(Canvas canvas, {offset = 14.0}) {
     if (caption != null) {
-      // Vector2 rPos = renderPosition.clone();
-      // rPos.y += offset;
       drawScreenText(canvas, caption!,
           style: ScreenTextStyle(
             rect: rect,
             outlined: true,
             anchor: Anchor.center,
-            padding: EdgeInsets.only(top: gridHeight / 2 - 5.0),
+            padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
             textPaint: _captionPaint,
           ));
-      // canvas.drawRect(rect, Paint()..style = PaintingStyle.stroke);
-      // _captionPaint.render(
-      //   canvas,
-      //   caption!,
-      //   rPos,
-      //   anchor: Anchor.bottomCenter,
-      // );
     }
   }
 

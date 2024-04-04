@@ -1,15 +1,16 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:samsara/ui/loading_screen.dart';
 import 'package:samsara/ui/label.dart';
 // import 'package:json5/json5.dart';
 import 'package:samsara/widget/markdown_wiki.dart';
-import 'package:samsara/widget/embedded_text.dart';
+import 'package:samsara/widget/rich_text_builder.dart';
 
 import '../global.dart';
 import '../scene/game.dart';
 import '../scene/game_overlay.dart';
+
+const richText = 'rich text is <yellow italic>awesome</> !!!';
 
 class MainMenu extends StatefulWidget {
   const MainMenu({super.key});
@@ -47,13 +48,14 @@ class _MainMenuState extends State<MainMenu> {
     return FutureBuilder(
       future: _prepareData(),
       builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          throw (snapshot.error!);
-        }
-
-        if (!snapshot.hasData || snapshot.data == false) {
+        if (!snapshot.hasData) {
+          if (snapshot.hasError) {
+            throw Exception('${snapshot.error}\n${snapshot.stackTrace}');
+          }
           return LoadingScreen(
-              text: engine.isInitted ? engine.locale('loading') : 'Loading...');
+            text: engine.isInitted ? engine.locale('loading') : 'Loading...',
+            showClose: snapshot.hasError,
+          );
         } else {
           return Scaffold(
             body: Stack(
@@ -92,16 +94,16 @@ class _MainMenuState extends State<MainMenu> {
                                       color: Colors.blueGrey,
                                       padding: const EdgeInsets.symmetric(
                                           vertical: 5.0, horizontal: 10.0),
-                                      child: EmbeddedText(
-                                        'test <bold color="#ff0000">text</>',
-                                        style: const TextStyle(
-                                            color: Colors.white),
-                                        onRoute: (route, arg) {
-                                          if (kDebugMode) {
-                                            print(route);
-                                            print(arg);
-                                          }
-                                        },
+                                      child: RichText(
+                                        text: TextSpan(
+                                          children: buildRichText(
+                                            richText,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 24,
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -124,27 +126,6 @@ class _MainMenuState extends State<MainMenu> {
                             );
                           },
                           child: const Text('markdown_wiki'),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 20.0, bottom: 20.0),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return Scaffold(
-                                  appBar: AppBar(),
-                                  body: Column(
-                                    children: <Widget>[
-                                      Positioned(child: Container())
-                                    ],
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                          child: const Text('error test'),
                         ),
                       ),
                       Padding(

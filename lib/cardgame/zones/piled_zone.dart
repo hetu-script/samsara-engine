@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import '../../component/game_component.dart';
+import '../../components/border_component.dart';
 import '../card.dart';
 import '../../paint.dart';
 
@@ -15,7 +15,7 @@ enum PileStructure {
   /// shuffle,
 }
 
-class PiledZone extends GameComponent {
+class PiledZone extends BorderComponent {
   String? ownedBy;
 
   bool isOwnedBy(String? player) {

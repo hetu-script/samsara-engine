@@ -1,5 +1,6 @@
 import 'package:quiver/core.dart';
-import 'package:flame/components.dart';
+
+import '../components/game_component.dart';
 
 class TilePosition {
   int left, top;
@@ -39,22 +40,20 @@ enum TileRenderDirection {
   bottomCenter,
 }
 
-mixin TileInfo {
+mixin TileInfo on GameComponent {
   TileShape tileShape = TileShape.hexagonalVertical;
-  double gridWidth = 0.0;
-  double gridHeight = 0.0;
-  double srcWidth = 0.0;
-  double srcHeight = 0.0;
+  Vector2 gridSize = Vector2.zero();
+  Vector2 srcSize = Vector2.zero();
 
   /// the tile index of the terrain array
   int index = 0;
   // int tileMapWidth = 0;
-  double srcOffsetY = 0.0;
+  Vector2 offset = Vector2.zero();
   TilePosition tilePosition = TilePosition.leftTop();
   Vector2 renderPosition = Vector2.zero();
 
   /// 画布位置，不要和tilemap的tile坐标混淆
-  Vector2 worldPosition = Vector2.zero();
+  Vector2 centerPosition = Vector2.zero();
 
   int get left => tilePosition.left;
   int get top => tilePosition.top;

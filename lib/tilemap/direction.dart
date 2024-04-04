@@ -9,7 +9,7 @@ enum TileMapDirection {
   northWest,
 }
 
-enum TileMapDirectionHexagonal {
+enum HexagonalVerticalDirection {
   north,
   northEast,
   southEast,
@@ -18,49 +18,49 @@ enum TileMapDirectionHexagonal {
   northWest,
 }
 
-enum TileMapDirectionOrthogonal {
+enum OrthogonalDirection {
   north,
   east,
   south,
   west,
 }
 
-TileMapDirectionHexagonal direction2Hexagonal(TileMapDirection direction) {
+HexagonalVerticalDirection direction2Hexagonal(TileMapDirection direction) {
   switch (direction) {
     case TileMapDirection.north:
-      return TileMapDirectionHexagonal.north;
+      return HexagonalVerticalDirection.north;
     case TileMapDirection.south:
-      return TileMapDirectionHexagonal.south;
+      return HexagonalVerticalDirection.south;
     case TileMapDirection.northEast:
-      return TileMapDirectionHexagonal.northEast;
+      return HexagonalVerticalDirection.northEast;
     case TileMapDirection.southEast:
-      return TileMapDirectionHexagonal.southEast;
+      return HexagonalVerticalDirection.southEast;
     case TileMapDirection.northWest:
-      return TileMapDirectionHexagonal.northWest;
+      return HexagonalVerticalDirection.northWest;
     case TileMapDirection.southWest:
-      return TileMapDirectionHexagonal.southWest;
+      return HexagonalVerticalDirection.southWest;
     default:
       throw 'Hexagonal map tile direction should never be $direction';
   }
 }
 
-TileMapDirectionOrthogonal direction2Orthogonal(TileMapDirection direction) {
+OrthogonalDirection direction2Orthogonal(TileMapDirection direction) {
   switch (direction) {
     case TileMapDirection.north:
-      return TileMapDirectionOrthogonal.north;
+      return OrthogonalDirection.north;
     case TileMapDirection.south:
-      return TileMapDirectionOrthogonal.south;
+      return OrthogonalDirection.south;
     case TileMapDirection.east:
-      return TileMapDirectionOrthogonal.east;
+      return OrthogonalDirection.east;
     case TileMapDirection.west:
-      return TileMapDirectionOrthogonal.west;
+      return OrthogonalDirection.west;
     case TileMapDirection.northEast:
-      return TileMapDirectionOrthogonal.east;
+      return OrthogonalDirection.east;
     case TileMapDirection.southEast:
-      return TileMapDirectionOrthogonal.east;
+      return OrthogonalDirection.east;
     case TileMapDirection.northWest:
-      return TileMapDirectionOrthogonal.west;
+      return OrthogonalDirection.west;
     case TileMapDirection.southWest:
-      return TileMapDirectionOrthogonal.west;
+      return OrthogonalDirection.west;
   }
 }

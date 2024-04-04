@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import '../../component/game_component.dart';
+import '../../components/border_component.dart';
 import '../../gestures.dart';
 import '../card.dart';
 import '../../paint.dart';
 
-class DrawingZone extends GameComponent with HandlesGesture {
+class DrawingZone extends BorderComponent with HandlesGesture {
   String? ownedBy;
 
   bool isOwnedBy(String? player) {
@@ -99,7 +99,7 @@ class DrawingZone extends GameComponent with HandlesGesture {
       // canvas.drawRRect(border, borderPaintFocused);
     }
     //  else {
-    canvas.drawRRect(rrect, PresetPaints.light);
+    canvas.drawRRect(roundBorder, PresetPaints.light);
     // }
 
     // for (final card in cards) {

@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
-import 'component/game_component.dart';
+import 'effect/zoom_effect.dart';
 
 export 'package:flame/extensions.dart';
 
@@ -102,8 +102,12 @@ extension CornerPosition on PositionComponent {
 }
 
 extension CameraExtension on CameraComponent {
-  void moveTo2(Vector2 point,
-      {double speed = double.infinity, void Function()? onComplete}) async {
+  void moveTo2(
+    Vector2 point, {
+    double speed = double.infinity,
+    double? zoom,
+    void Function()? onComplete,
+  }) async {
     stop();
     viewfinder.add(
       MoveToEffect(
@@ -112,6 +116,17 @@ extension CameraExtension on CameraComponent {
         onComplete: onComplete,
       ),
     );
+    if (zoom != null) {
+      final game = findGame();
+      assert(game != null);
+      game!.add(
+        ZoomEffect(
+          game,
+          EffectController(speed: speed),
+          zoom: zoom,
+        ),
+      );
+    }
   }
 
   void snapTo(Vector2 position) {

@@ -2,12 +2,11 @@ import 'dart:async';
 
 import 'package:flame/components.dart' hide SpriteComponent;
 import 'package:flame/effects.dart';
-import 'package:flutter/material.dart' hide Image;
 import 'package:flame/flame.dart';
 // import 'package:flame/effects.dart';
 
-import '../component/sprite_button.dart';
-import '../component/game_component.dart';
+import '../components/sprite_button.dart';
+import '../components/game_component.dart';
 import '../paint.dart';
 import '../extensions.dart';
 import 'zones/piled_zone.dart';
@@ -128,7 +127,7 @@ class Card extends SpriteButton with HasTaskController {
     required this.deckId,
     this.script,
     this.kind,
-    super.title,
+    super.text,
     ScreenTextStyle? titleStyle,
     this.enablePreview = false,
     this.showTitle = false,
@@ -273,7 +272,7 @@ class Card extends SpriteButton with HasTaskController {
       deckId: deckId,
       script: script,
       kind: kind,
-      title: title,
+      text: text,
       titleStyle: titleStyle,
       enablePreview: enablePreview,
       showTitle: showTitle,
@@ -459,7 +458,7 @@ class Card extends SpriteButton with HasTaskController {
   // }
 
   @override
-  void renderClip(Canvas canvas) {
+  void customRender(Canvas canvas) {
     if (isFlipped) {
       backSprite?.renderRect(canvas, border);
     } else {
@@ -470,8 +469,8 @@ class Card extends SpriteButton with HasTaskController {
     }
 
     if ((showTitleOnHovering && isHovering) || isFocused || showTitle) {
-      if (title != null) {
-        drawScreenText(canvas, title!, style: titleStyle);
+      if (text != null) {
+        drawScreenText(canvas, text!, style: titleStyle);
       }
     }
 

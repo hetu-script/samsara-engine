@@ -4,7 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 import 'package:flutter/gestures.dart';
 
-import '../utils/math.dart';
+import 'package:hetu_script/utils/math.dart';
 
 export 'package:flutter/gestures.dart' show PointerHoverEvent;
 

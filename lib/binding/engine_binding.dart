@@ -11,15 +11,18 @@ class SamsaraEngineClassBinding extends HTExternalClass {
       {bool ignoreUndefined = false}) {
     var engine = instance as SamsaraEngine;
     switch (id) {
-      case 'loadLocaleFromJSON':
+      case 'loadLocaleDataFromJSON':
         return ({positionalArgs, namedArgs}) =>
-            engine.loadLocale(positionalArgs.first);
-      case 'setLocale':
+            engine.loadLocaleDataFromJSON(positionalArgs.first);
+      case 'setLanguage':
         return ({positionalArgs, namedArgs}) =>
-            engine.setLocale(positionalArgs.first);
+            engine.setLanguage(positionalArgs.first);
+      case 'hasLocaleKey':
+        return ({positionalArgs, namedArgs}) =>
+            engine.hasLocaleKey(positionalArgs.first);
       case 'locale':
         return ({positionalArgs, namedArgs}) => engine.locale(
-              positionalArgs[0],
+              positionalArgs.first,
               interpolations: namedArgs['interpolations'],
             );
       // case 'updateZoneColors':
@@ -68,8 +71,9 @@ class SamsaraEngineClassBinding extends HTExternalClass {
 
 const kHetuEngineBindingSource = r'''
 external class SamsaraEngine {
-  fun loadLocaleFromJSON(data: Map)
-  fun setLocale(localeId: string)
+  fun loadLocaleDataFromJSON(data: Map)
+  fun setLanguage(languageId: string)
+  fun hasLocaleKey(key)
   fun locale(key: string, {interpolations})
   // fun addTileMapZoneColors(data: List)
   // fun updateNationColors(data: Map)

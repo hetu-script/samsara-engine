@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 // import 'package:flame_audio/flame_audio.dart';
 import 'package:samsara/ui/loading_screen.dart';
-import 'package:samsara/console.dart';
 
 import '../global.dart';
 import 'game.dart';

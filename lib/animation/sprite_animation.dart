@@ -57,11 +57,11 @@ class SpriteAnimationWithTicker {
   Rect? renderRect;
 
   SpriteAnimationWithTicker({
+    SpriteAnimation? animation,
     this.animationId,
     this.srcSize,
     this.stepTime = kDefaultAnimationStepTime,
     this.loop = true,
-    SpriteAnimation? animation,
     this.renderRect,
   }) {
     if (animation != null) {

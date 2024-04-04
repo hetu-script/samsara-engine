@@ -1,12 +1,12 @@
 import 'package:flame/effects.dart';
 
-import '../component/game_component.dart';
+import 'border_component.dart';
 import '../paint.dart';
 import '../effect/fade_effect.dart';
 import 'timer.dart';
 import '../effect/advanced_move_effect.dart';
 
-class FadingText extends GameComponent {
+class FadingText extends BorderComponent {
   late final ScreenTextStyle style;
 
   final String text;

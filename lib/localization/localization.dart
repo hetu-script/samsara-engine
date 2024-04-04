@@ -69,7 +69,8 @@ class GameLocalization {
     }
   }
 
-  /// 对于需要替换部分字符串的本地化串，使用这个接口
+  bool hasLocaleString(String? key) => current.containsKey(key);
+
   String getLocaleString(String key, {List? interpolations}) {
     // if (text is List) {
     //   text = text.elementAt(Random().nextInt(text.length));

@@ -8,19 +8,8 @@ import 'package:colorfilter_generator/colorfilter_generator.dart';
 import 'package:colorfilter_generator/addons.dart';
 // import 'package:colorfilter_generator/presets.dart';
 
-export 'package:flame/text.dart' show TextPaint, LineMetrics;
-export 'dart:ui'
-    show
-        Offset,
-        Canvas,
-        Color,
-        Paint,
-        PaintingStyle,
-        Image,
-        BlendMode,
-        ImageFilter;
-export 'package:flutter/material.dart'
-    show Colors, TextStyle, FontWeight, FilterQuality;
+export '../extensions.dart' show Vector2Ex;
+export 'package:flame/extensions.dart' show Vector2Extension;
 
 abstract class PredefinedFilters {
   static ColorFilter brightness(double value) {
@@ -390,19 +379,19 @@ void drawScreenText(
           shadows: [
             Shadow(
                 // bottomLeft
-                offset: const Offset(-0.5, -0.5),
+                offset: const Offset(-1, -1),
                 color: Colors.black.withOpacity(style?.opacity ?? 1.0)),
             Shadow(
                 // bottomRight
-                offset: const Offset(0.5, -0.5),
+                offset: const Offset(1, -1),
                 color: Colors.black.withOpacity(style?.opacity ?? 1.0)),
             Shadow(
                 // topRight
-                offset: const Offset(0.5, 0.5),
+                offset: const Offset(1, 1),
                 color: Colors.black.withOpacity(style?.opacity ?? 1.0)),
             Shadow(
                 // topLeft
-                offset: const Offset(-0.5, 0.5),
+                offset: const Offset(-1, 1),
                 color: Colors.black.withOpacity(style?.opacity ?? 1.0)),
           ],
         ),

@@ -1,10 +1,14 @@
+import 'dart:math' as math;
+
 import 'package:flame/effects.dart';
 
-import '../component/game_component.dart';
+import '../components/game_component.dart';
+import '../extensions.dart';
 
 class AdvancedMoveEffect extends Effect with EffectTarget<GameComponent> {
-  final Vector2? endPosition, endSize;
-  final double? endAngle;
+  final Vector2? _endPosition, _endSize;
+  final double? _endAngle;
+  final bool _clockwise;
 
   Vector2? _diffPosition, _diffSize;
   double? _diffAngle;
@@ -12,41 +16,47 @@ class AdvancedMoveEffect extends Effect with EffectTarget<GameComponent> {
   void Function()? onChange;
 
   AdvancedMoveEffect({
-    this.endPosition,
-    this.endSize,
-    this.endAngle,
+    Vector2? endPosition,
+    Vector2? endSize,
+    double? endAngle,
+    bool clockwise = true,
     GameComponent? target,
     required EffectController controller,
     this.onChange,
     super.onComplete,
-  }) : super(controller) {
+  })  : _endPosition = endPosition,
+        _endSize = endSize,
+        _endAngle = endAngle,
+        _clockwise = clockwise,
+        super(controller) {
     this.target = target;
   }
 
   @override
   void onStart() {
-    if (endPosition != null) {
-      final diffX = (target.x - endPosition!.x).abs() *
-          (target.x > endPosition!.x ? -1 : 1);
-      final diffY = (target.y - endPosition!.y).abs() *
-          (target.y > endPosition!.y ? -1 : 1);
+    if (_endPosition != null) {
+      final diffX = (target.x - _endPosition!.x).abs() *
+          (target.x > _endPosition!.x ? -1 : 1);
+      final diffY = (target.y - _endPosition!.y).abs() *
+          (target.y > _endPosition!.y ? -1 : 1);
       _diffPosition = Vector2(diffX, diffY);
     }
 
-    if (endSize != null) {
-      final diffWidth = (target.width - endSize!.x).abs() *
-          (target.width > endSize!.x ? -1 : 1);
-      final diffHeight = (target.height - endSize!.y).abs() *
-          (target.height > endSize!.y ? -1 : 1);
+    if (_endSize != null) {
+      final diffWidth = (target.width - _endSize!.x).abs() *
+          (target.width > _endSize!.x ? -1 : 1);
+      final diffHeight = (target.height - _endSize!.y).abs() *
+          (target.height > _endSize!.y ? -1 : 1);
       _diffSize = Vector2(diffWidth, diffHeight);
     }
 
-    if (endAngle != null) {
-      _diffAngle = (target.angle - endAngle!).abs() *
-          (target.angle > endAngle! ? -1 : 1);
+    if (_endAngle != null) {
+      _diffAngle =
+          (target.angle - (_endAngle != 0 ? _endAngle! : 2 * math.pi)).abs() *
+              (_clockwise ? 1 : -1);
     }
 
-    assert(_diffPosition != null || _diffSize != null || _diffAngle != null);
+    assert(_diffPosition != null || _diffSize != null || _endAngle != null);
   }
 
   @override
@@ -69,14 +79,14 @@ class AdvancedMoveEffect extends Effect with EffectTarget<GameComponent> {
 
   @override
   void onFinish() {
-    if (endPosition != null) {
-      target.position = endPosition!;
+    if (_endPosition != null) {
+      target.position = _endPosition!;
     }
-    if (endSize != null) {
-      target.size = endSize!;
+    if (_endSize != null) {
+      target.size = _endSize!;
     }
-    if (endAngle != null) {
-      target.angle = endAngle!;
+    if (_endAngle != null) {
+      target.angle = _endAngle!;
     }
 
     super.onFinish();

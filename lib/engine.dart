@@ -59,6 +59,8 @@ class SamsaraEngine extends SceneController with EventAggregator {
 
   late final GameLocalization _locale;
 
+  bool hasLocaleKey(String? key) => _locale.hasLocaleString(key);
+
   String locale(String? key, {dynamic interpolations}) {
     if (interpolations is! List) interpolations = [interpolations];
     return _locale.getLocaleString(key ?? 'null',
@@ -69,7 +71,7 @@ class SamsaraEngine extends SceneController with EventAggregator {
 
   String get languageId => _locale.languageId;
 
-  void loadLocale(Map localeData) {
+  void loadLocaleDataFromJSON(Map localeData) {
     info('载入本地化字符串……');
     _locale.loadData(localeData);
     if (_locale.errors.isNotEmpty) {
@@ -79,7 +81,7 @@ class SamsaraEngine extends SceneController with EventAggregator {
     }
   }
 
-  void setLocale(String localeId) {
+  void setLanguage(String localeId) {
     assert(_locale.hasLanguage(localeId));
     info('设置当前语言为 [${_locale.getLanguageName(localeId)}]');
     _locale.languageId = localeId;
@@ -280,7 +282,8 @@ class SamsaraEngine extends SceneController with EventAggregator {
   //   broadcast(SceneEvent.ended(sceneKey: key));
   // }
 
-  List<String> getLog() => _loggerOutput.log;
+  List<OutputEvent> getLogEvents() => _loggerOutput.events;
+  List<String> getLogs() => _loggerOutput.logs;
 
   String stringify(dynamic args) {
     if (args is List) {
@@ -298,7 +301,7 @@ class SamsaraEngine extends SceneController with EventAggregator {
     }
   }
 
-  Level getLogLevel(MessageSeverity severity) {
+  Level _getLogLevel(MessageSeverity severity) {
     switch (severity.weight) {
       case 1:
         return Level.debug;
@@ -315,7 +318,7 @@ class SamsaraEngine extends SceneController with EventAggregator {
 
   @override
   void log(String message, {MessageSeverity severity = MessageSeverity.none}) {
-    logger.log(getLogLevel(severity), message);
+    logger.log(_getLogLevel(severity), message);
   }
 
   @override

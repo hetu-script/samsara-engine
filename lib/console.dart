@@ -38,21 +38,23 @@ class _ConsoleState extends State<Console> {
     super.dispose();
   }
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-
-    _consoleOutputTextController.text = widget.engine.getLog().join('\n');
-
+  void jumpToEnd() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     });
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    jumpToEnd();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    _consoleOutputTextController.text = widget.engine.getLog().join('\n');
+    _consoleOutputTextController.text = widget.engine.getLogs().join('\n');
     return ResponsiveWindow(
       alignment: AlignmentDirectional.center,
       child: Scaffold(
@@ -115,8 +117,6 @@ class _ConsoleState extends State<Console> {
                 onSubmitted: (value) {
                   final text = _textEditingController.text;
                   _textEditingController.text = '';
-                  // _scrollController
-                  //     .jumpTo(_scrollController.position.maxScrollExtent);
                   _textFieldFocusNode.requestFocus();
                   if (text.isNotBlank) {
                     _commandHistory.add(text);
@@ -131,6 +131,7 @@ class _ConsoleState extends State<Console> {
                       widget.engine.error(e.toString());
                     }
                   }
+                  jumpToEnd();
                   setState(() {});
                 },
               ),

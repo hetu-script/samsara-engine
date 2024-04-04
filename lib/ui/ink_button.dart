@@ -4,6 +4,9 @@ class InkButton extends StatelessWidget {
   const InkButton({
     super.key,
     required this.size,
+    this.color,
+    this.border,
+    this.selectedBorder,
     this.borderRadius,
     this.image,
     this.child,
@@ -14,6 +17,10 @@ class InkButton extends StatelessWidget {
   });
 
   final Size size;
+
+  final Color? color;
+
+  final BoxBorder? border, selectedBorder;
 
   final BorderRadius? borderRadius;
 
@@ -40,11 +47,8 @@ class InkButton extends StatelessWidget {
             width: size.width,
             height: size.height,
             decoration: BoxDecoration(
-              border: isSelected
-                  ? Border.all(
-                      color: Colors.white.withOpacity(0.5),
-                    )
-                  : null,
+              color: color,
+              border: isSelected ? selectedBorder : border,
               borderRadius: borderRadius,
               image: image != null
                   ? DecorationImage(
