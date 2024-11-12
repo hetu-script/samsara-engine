@@ -22,7 +22,7 @@ extension IterableEx<T> on Iterable<T> {
 }
 
 extension StringEx on String {
-  String replaceAllLineBreaks() {
+  String replaceAllEscapedLineBreaks() {
     return replaceAll(r'\n', '\n');
   }
 
@@ -46,7 +46,7 @@ extension DoubleFixed on double {
 }
 
 extension HexColor on Color {
-  /// String is in the format "aabbcc" or "ffaabbcc" with an optional leading "#".
+  /// String is in the format "rrggbb" or "aarrggbb" with an optional leading "#".
   static Color fromString(String hexString) {
     final buffer = StringBuffer();
     if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');

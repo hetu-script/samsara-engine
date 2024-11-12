@@ -51,7 +51,7 @@ class Avatar extends StatelessWidget {
                   size: size,
                   borderRadius: BorderRadius.all(Radius.circular(radius)),
                   borderColor:
-                      borderColor ?? Theme.of(context).colorScheme.onBackground,
+                      borderColor ?? Theme.of(context).colorScheme.onSurface,
                   borderWidth: borderWidth,
                 ),
               if (name != null)
@@ -63,14 +63,14 @@ class Avatar extends StatelessWidget {
                       borderRadius: BorderRadius.all(Radius.circular(radius)),
                       color: Theme.of(context)
                           .colorScheme
-                          .onBackground
+                          .onSurface
                           .withOpacity(0.5),
                     ),
                     child: Text(
                       name!,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                          color: Theme.of(context).colorScheme.onBackground),
+                          color: Theme.of(context).colorScheme.onSurface),
                     ),
                   ),
                 )

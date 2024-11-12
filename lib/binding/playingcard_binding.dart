@@ -8,7 +8,7 @@ class PlayingCardClassBinding extends HTExternalClass {
   @override
   dynamic instanceMemberGet(dynamic instance, String id,
       {bool ignoreUndefined = false}) {
-    final object = instance as Card;
+    final object = instance as GameCard;
     switch (id) {
       case 'setUsable':
         return ({positionalArgs, namedArgs}) =>

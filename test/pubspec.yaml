@@ -16,10 +16,12 @@ dependencies:
   cupertino_icons: ^1.0.2
   fast_noise: ^2.0.0
 
+  hetu_script:
+    path: ../../hetu-script/packages/hetu_script
   samsara:
     path: ../../samsara_engine/
 
-  flame: ^1.17.0
+  flame: ^1.18.0
   flame_splash_screen: ^0.3.0
   flutter_platform_alert: ^0.5.1
   json5: ^0.8.0

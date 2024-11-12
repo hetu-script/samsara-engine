@@ -5,7 +5,7 @@ import '../extensions.dart';
 import '../scene/scene.dart';
 import 'game_component.dart';
 import 'border_component.dart';
-import '../paint.dart';
+import '../paint/paint.dart';
 
 enum TooltipDirection {
   topLeft,
@@ -26,7 +26,15 @@ const kTooltipContentIndent = 10.0;
 const kTooltipBackgroundBorderRadius = 5.0;
 
 class Tooltip extends BorderComponent {
-  static final _tooltipInstance = Tooltip();
+  static Tooltip instance = Tooltip(maxWidth: 300.0);
+
+  static void setTitleStyle(ScreenTextConfig config) {
+    instance.titleConfig = config.copyWith(size: instance.size);
+  }
+
+  static void setDescriptionStyle(ScreenTextConfig config) {
+    instance.descriptionConfig = config.copyWith(size: instance.size);
+  }
 
   static show({
     required Scene scene,
@@ -35,87 +43,80 @@ class Tooltip extends BorderComponent {
     String? title,
     String? description,
   }) {
-    _tooltipInstance.removeFromParent();
-    _tooltipInstance.setContent(title: title, description: description);
+    instance.removeFromParent();
+    instance.setContent(title: title, description: description);
 
     final left = target.topLeftPosition.x;
     final top = target.topLeftPosition.y;
     // TODO: 检查是否超出了游戏屏幕
     switch (preferredDirection) {
       case TooltipDirection.topLeft:
-        _tooltipInstance.position =
-            Vector2(left, top - 10 - _tooltipInstance.height);
+        instance.position = Vector2(left, top - 10 - instance.height);
       case TooltipDirection.topCenter:
-        _tooltipInstance.position = Vector2(
-            left - (_tooltipInstance.width - target.width) / 2,
-            top - 10 - _tooltipInstance.height);
+        instance.position = Vector2(left - (instance.width - target.width) / 2,
+            top - 10 - instance.height);
       case TooltipDirection.topRight:
-        _tooltipInstance.position = Vector2(
-            left + target.width - _tooltipInstance.width,
-            top - 10 - _tooltipInstance.height);
+        instance.position = Vector2(
+            left + target.width - instance.width, top - 10 - instance.height);
       case TooltipDirection.leftTop:
-        _tooltipInstance.position =
-            Vector2(left - 10 - _tooltipInstance.width, top);
+        instance.position = Vector2(left - 10 - instance.width, top);
       case TooltipDirection.leftCenter:
-        _tooltipInstance.position = Vector2(left - 10 - _tooltipInstance.width,
-            top - (_tooltipInstance.height - target.height) / 2);
+        instance.position = Vector2(left - 10 - instance.width,
+            top - (instance.height - target.height) / 2);
       case TooltipDirection.leftBottom:
-        _tooltipInstance.position = Vector2(left - 10 - _tooltipInstance.width,
-            top + target.height - _tooltipInstance.height);
+        instance.position = Vector2(
+            left - 10 - instance.width, top + target.height - instance.height);
       case TooltipDirection.rightTop:
-        _tooltipInstance.position = Vector2(left + target.width + 10, top);
+        instance.position = Vector2(left + target.width + 10, top);
       case TooltipDirection.rightCenter:
-        _tooltipInstance.position = Vector2(left + target.width + 10,
-            top - (_tooltipInstance.height - target.height) / 2);
+        instance.position = Vector2(left + target.width + 10,
+            top - (instance.height - target.height) / 2);
       case TooltipDirection.rightBottom:
-        _tooltipInstance.position = Vector2(left + target.width + 10,
-            top + target.height - _tooltipInstance.height);
+        instance.position = Vector2(
+            left + target.width + 10, top + target.height - instance.height);
       case TooltipDirection.bottomLeft:
-        _tooltipInstance.position = Vector2(left, top + target.height + 10);
+        instance.position = Vector2(left, top + target.height + 10);
       case TooltipDirection.bottomCenter:
-        _tooltipInstance.position = Vector2(
-            left - (_tooltipInstance.width - target.width) / 2,
+        instance.position = Vector2(left - (instance.width - target.width) / 2,
             top + target.height + 10);
       case TooltipDirection.bottomRight:
-        _tooltipInstance.position = Vector2(
-            left + target.width - _tooltipInstance.width,
-            top + target.height + 10);
+        instance.position = Vector2(
+            left + target.width - instance.width, top + target.height + 10);
     }
-    scene.camera.viewport.add(_tooltipInstance);
+    scene.camera.viewport.add(instance);
   }
 
-  static hide() => _tooltipInstance.removeFromParent();
+  static hide() => instance.removeFromParent();
 
-  static final defaultTitleStyle = ScreenTextStyle(
-    anchor: Anchor.topLeft,
-    padding: const EdgeInsets.only(top: 10.0, left: 10.0),
-    colorTheme: ScreenTextColorTheme.light,
-    textStyle: const TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.bold,
-    ),
-  );
+  static const defaultTitleConfig = ScreenTextConfig(
+      anchor: Anchor.topLeft,
+      padding: EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0),
+      textStyle: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+      ),
+      overflow: ScreenTextOverflow.wordwrap);
 
-  static final defaultDescriptionStyle = ScreenTextStyle(
-    anchor: Anchor.topLeft,
-    padding: const EdgeInsets.only(top: 10.0, left: 10.0),
-    colorTheme: ScreenTextColorTheme.light,
-    textStyle: const TextStyle(fontSize: 16),
-  );
+  static const defaultDescriptionConfig = ScreenTextConfig(
+      anchor: Anchor.topLeft,
+      padding: EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
+      textStyle: TextStyle(fontSize: 24),
+      overflow: ScreenTextOverflow.wordwrap);
 
-  String? _title;
-  late ScreenTextStyle _titleStyle;
-
-  String? _description;
-  late ScreenTextStyle _descriptionStyle;
+  String? _title, _description;
+  late ScreenTextConfig titleConfig, descriptionConfig;
+  late TextPaint _titleTextPaint, _descriptionTextPaint;
+  Rect _titleRect, _descriptionRect;
 
   late final Paint backgroundPaint;
+
+  double? minWidth, maxWidth;
 
   Tooltip({
     String? title,
     String? description,
-    ScreenTextStyle? titleStyle,
-    ScreenTextStyle? descriptionStyle,
+    ScreenTextConfig? titleConfig,
+    ScreenTextConfig? descriptionConfig,
     super.size,
     super.anchor,
     super.position,
@@ -124,12 +125,23 @@ class Tooltip extends BorderComponent {
     super.borderRadius = 5.0,
     super.borderWidth = 5.0,
     super.borderPaint,
+    this.minWidth,
+    this.maxWidth,
   })  : _title = title,
+        _titleRect = Rect.zero,
         _description = description,
+        _descriptionRect = Rect.zero,
         super(priority: 9999999999) {
-    _titleStyle = titleStyle?.fillFrom(defaultTitleStyle) ?? defaultTitleStyle;
-    _descriptionStyle = descriptionStyle?.fillFrom(defaultDescriptionStyle) ??
-        defaultDescriptionStyle;
+    if (minWidth != null && maxWidth != null) {
+      assert(minWidth! <= maxWidth!);
+    }
+
+    this.titleConfig =
+        (titleConfig ?? const ScreenTextConfig()).fillFrom(defaultTitleConfig);
+    _titleTextPaint = getTextPaint(config: titleConfig);
+    this.descriptionConfig = (descriptionConfig ?? const ScreenTextConfig())
+        .fillFrom(defaultDescriptionConfig);
+    _descriptionTextPaint = getTextPaint(config: descriptionConfig);
 
     _calculateSize();
 
@@ -143,7 +155,7 @@ class Tooltip extends BorderComponent {
     if (_title != title || _description != description) changed = true;
 
     _title = title;
-    _description = description?.replaceAllLineBreaks();
+    _description = description?.replaceAllEscapedLineBreaks();
 
     if (changed) _calculateSize();
   }
@@ -157,29 +169,74 @@ class Tooltip extends BorderComponent {
         descriptionWidth = 0;
 
     if (_title != null) {
-      final titleMetrics = _titleStyle.textPaint.getLineMetrics(_title!);
+      final titleMetrics = _titleTextPaint.getLineMetrics(_title!);
       titleHeight = titleMetrics.height + kTooltipContentIndent;
       titleWidth = titleMetrics.width;
+      _titleRect = Rect.fromLTWH(0.0, 0.0, width, titleHeight);
     }
 
     if (_description != null) {
       final descriptionMetrics =
-          _descriptionStyle.textPaint.getLineMetrics(_description!);
+          _descriptionTextPaint.getLineMetrics(_description!);
       descriptionHeight = descriptionMetrics.height;
       descriptionWidth = descriptionMetrics.width;
     }
 
-    size = Vector2(
-        max(titleWidth, descriptionWidth) + kTooltipContentIndent * 2,
-        titleHeight + descriptionHeight + kTooltipContentIndent * 2);
+    double preferredWidth =
+        max(titleWidth, descriptionWidth) + kTooltipContentIndent * 2;
 
-    _titleStyle = _titleStyle.copyWith(rect: border);
+    bool widthChanged = false;
+    if (maxWidth != null) {
+      double realMaxWidth = maxWidth! + kTooltipContentIndent * 2;
+      if (preferredWidth > realMaxWidth) {
+        preferredWidth = realMaxWidth;
+        widthChanged = true;
+      }
+    } else if (minWidth != null && preferredWidth < minWidth!) {
+      preferredWidth = minWidth!;
+      widthChanged = true;
+    }
+
+    if (widthChanged) {
+      // 重新计算高度
+      if (_title != null) {
+        final titleLines = getWrappedText(_title!,
+            maxWidth: preferredWidth - kTooltipContentIndent * 2,
+            textPaint: _titleTextPaint);
+        titleHeight = getLinesHeight(titleLines.length, _titleTextPaint);
+        _titleRect = Rect.fromLTWH(
+          0,
+          0,
+          width,
+          titleHeight,
+        );
+      }
+
+      if (_description != null) {
+        final descriptionLines = getWrappedText(_description!,
+            maxWidth: preferredWidth - kTooltipContentIndent * 2,
+            textPaint: _descriptionTextPaint);
+        descriptionHeight =
+            getLinesHeight(descriptionLines.length, _descriptionTextPaint);
+      }
+    }
+
+    double preferredHeight =
+        titleHeight + descriptionHeight + kTooltipContentIndent * 3;
+    size = Vector2(preferredWidth, preferredHeight);
+
+    titleConfig = titleConfig.copyWith(size: size);
 
     if (_description != null) {
-      final descriptionRect =
-          Rect.fromLTWH(0.0, titleHeight, width, height - titleHeight);
+      _descriptionRect = Rect.fromLTWH(
+        0,
+        titleHeight + kTooltipContentIndent * 2,
+        width,
+        height - titleHeight - kTooltipContentIndent * 2,
+      );
 
-      _descriptionStyle = _descriptionStyle.copyWith(rect: descriptionRect);
+      descriptionConfig =
+          descriptionConfig.copyWith(size: _descriptionRect.size.toVector2());
     }
   }
 
@@ -192,14 +249,18 @@ class Tooltip extends BorderComponent {
       drawScreenText(
         canvas,
         _title!,
-        style: _titleStyle,
+        position: _titleRect.topLeft,
+        textPaint: _titleTextPaint,
+        config: titleConfig,
       );
     }
     if (_description != null) {
       drawScreenText(
         canvas,
         _description!,
-        style: _descriptionStyle,
+        position: _descriptionRect.topLeft,
+        textPaint: _descriptionTextPaint,
+        config: descriptionConfig,
       );
     }
   }

@@ -1,4 +1,4 @@
-import '../paint.dart';
+import '../paint/paint.dart';
 import 'border_component.dart';
 import '../utils/color.dart';
 import '../extensions.dart';
@@ -6,7 +6,7 @@ import '../gestures/gesture_mixin.dart';
 
 class DynamicColorProgressIndicator extends BorderComponent
     with HandlesGesture {
-  late final ScreenTextStyle textStyle;
+  late final ScreenTextConfig textStyle;
 
   int _value, max;
 
@@ -39,10 +39,9 @@ class DynamicColorProgressIndicator extends BorderComponent
     this.animationDuration = 4,
   })  : _value = value,
         _currentValue = value.toDouble() {
-    textStyle = ScreenTextStyle(
-      rect: border,
+    textStyle = ScreenTextConfig(
+      size: border.size.toVector2(),
       anchor: Anchor.center,
-      colorTheme: ScreenTextColorTheme.light,
       outlined: true,
     );
 
@@ -117,6 +116,6 @@ class DynamicColorProgressIndicator extends BorderComponent
 
     final text = '${_currentValue.toInt()}/$max';
 
-    drawScreenText(canvas, text, style: textStyle);
+    drawScreenText(canvas, text, config: textStyle);
   }
 }

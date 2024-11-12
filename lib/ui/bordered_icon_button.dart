@@ -41,7 +41,7 @@ class BorderedIconButton extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(borderRadius),
               border:
-                  Border.all(color: Theme.of(context).colorScheme.onBackground),
+                  Border.all(color: Theme.of(context).colorScheme.onSurface),
               // shape: BoxShape.rectangle,
               // boxShadow: [
               //   BoxShadow(

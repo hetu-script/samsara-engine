@@ -9,7 +9,7 @@ import '../components/game_component.dart';
 import 'tile_mixin.dart';
 import '../animation/sprite_animation.dart';
 import '../utils/json.dart';
-import '../paint.dart';
+import '../paint/paint.dart';
 
 enum TileMapTerrainKind {
   none,
@@ -390,14 +390,17 @@ class TileMapTerrain extends GameComponent with TileInfo {
     _overlayAnimation?.ticker.currentFrame.sprite.renderRect(canvas, rect);
 
     if (caption != null) {
-      drawScreenText(canvas, caption!,
-          style: ScreenTextStyle(
-            rect: rect,
-            outlined: true,
-            anchor: Anchor.center,
-            padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
-            textPaint: _captionPaint,
-          ));
+      drawScreenText(
+        canvas,
+        caption!,
+        textPaint: _captionPaint,
+        config: ScreenTextConfig(
+          size: size,
+          outlined: true,
+          anchor: Anchor.center,
+          padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
+        ),
+      );
     }
   }
 

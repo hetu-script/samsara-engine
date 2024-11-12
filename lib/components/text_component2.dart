@@ -1,9 +1,10 @@
 import 'package:samsara/components/border_component.dart';
-import 'package:samsara/paint.dart';
+import 'package:samsara/paint/paint.dart';
 
 class TextComponent2 extends BorderComponent {
-  static final defaultStyle =
-      ScreenTextStyle(textPaint: PresetTextPaints.light);
+  ScreenTextConfig config;
+
+  late TextPaint _textPaint;
 
   String? _text;
 
@@ -13,32 +14,26 @@ class TextComponent2 extends BorderComponent {
     _text = value;
 
     if (_text != null) {
-      final metrics = style.textPaint.getLineMetrics(_text!);
+      final metrics = _textPaint.getLineMetrics(_text!);
       width = metrics.width;
       height = metrics.height;
     }
   }
-
-  late final ScreenTextStyle style;
 
   TextComponent2({
     super.anchor,
     super.position,
     super.priority,
     String? text,
-    ScreenTextStyle? style,
+    this.config = const ScreenTextConfig(),
   }) : _text = text {
-    if (style != null) {
-      this.style = defaultStyle.copyFrom(style);
-    } else {
-      this.style = defaultStyle;
-    }
+    _textPaint = getTextPaint(config: config);
   }
 
   @override
   void render(Canvas canvas) {
     if (!isVisible || text == null) return;
 
-    drawScreenText(canvas, text!, style: style);
+    drawScreenText(canvas, text!, config: config);
   }
 }

@@ -63,7 +63,7 @@ class DynamicColorProgressBar extends StatelessWidget {
               color: Colors.white24,
               borderRadius: BorderRadius.circular(borderRadius),
               border:
-                  Border.all(color: Theme.of(context).colorScheme.onBackground),
+                  Border.all(color: Theme.of(context).colorScheme.onSurface),
             ),
             child: Stack(
               alignment: AlignmentDirectional.centerStart,
@@ -88,7 +88,7 @@ class DynamicColorProgressBar extends StatelessWidget {
                       showNumberAsPercentage
                           ? (value / max).toPercentageString()
                           : valueString,
-                      textColor: Theme.of(context).colorScheme.onBackground,
+                      textColor: Theme.of(context).colorScheme.onSurface,
                       style: const TextStyle(fontSize: 12.0),
                     ),
                   )

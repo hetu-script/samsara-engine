@@ -33,7 +33,7 @@ class RRectIcon extends StatelessWidget {
           ),
           borderRadius: borderRadius,
           border: Border.all(
-            color: borderColor ?? Theme.of(context).colorScheme.onBackground,
+            color: borderColor ?? Theme.of(context).colorScheme.onSurface,
             width: borderWidth,
           ),
         ),

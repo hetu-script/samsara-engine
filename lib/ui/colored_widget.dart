@@ -16,7 +16,7 @@ class ColoredPreferredSizeWidget extends StatelessWidget
 
   @override
   Widget build(BuildContext context) => Material(
-        color: color ?? Theme.of(context).colorScheme.background,
+        color: color ?? Theme.of(context).colorScheme.surface,
         child: child,
       );
 }

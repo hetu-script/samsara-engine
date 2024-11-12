@@ -1,13 +1,15 @@
 import 'package:flame/effects.dart';
 
-import 'border_component.dart';
-import '../paint.dart';
+import 'game_component.dart';
+import '../paint/paint.dart';
 import '../effect/fade_effect.dart';
 import 'timer.dart';
 import '../effect/advanced_move_effect.dart';
+// import '../extensions.dart';
 
-class FadingText extends BorderComponent {
-  late final ScreenTextStyle style;
+class FadingText extends GameComponent {
+  // late TextPaint _textPaint;
+  late ScreenTextConfig config;
 
   final String text;
 
@@ -28,14 +30,13 @@ class FadingText extends BorderComponent {
     super.angle,
     super.priority,
     super.opacity,
-    bool outlined = true,
-    required TextPaint textPaint,
+    this.config = const ScreenTextConfig(),
     this.onComplete,
-  })  : style = ScreenTextStyle(textPaint: textPaint, outlined: outlined),
-        super(anchor: Anchor.center) {
-    final metric = textPaint.getLineMetrics(text);
-    width = metric.width;
-    height = metric.height;
+  }) : super(anchor: Anchor.center) {
+    // _textPaint = getTextPaint(config: config);
+    // final metric = _textPaint.getLineMetrics(text);
+    // width = metric.width;
+    // height = metric.height;
 
     assert(fadeOutAfterDuration < duration);
   }
@@ -65,7 +66,6 @@ class FadingText extends BorderComponent {
 
   @override
   void render(Canvas canvas) {
-    drawScreenText(canvas, text,
-        style: style.copyWith(rect: border, opacity: opacity));
+    drawScreenText(canvas, text, config: config);
   }
 }

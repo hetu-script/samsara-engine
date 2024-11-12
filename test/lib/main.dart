@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:samsara/error.dart';
-import 'package:flame_splash_screen/flame_splash_screen.dart';
+// import 'package:flame_splash_screen/flame_splash_screen.dart';
 
 import 'ui/main_menu.dart';
 import 'global.dart';
@@ -51,16 +51,17 @@ void main() async {
         title: 'Heavenly Tribulation Tests',
         home: Scaffold(
           key: mainKey,
-          body: FlameSplashScreen(
-            theme: FlameSplashTheme.dark,
-            showAfter: (context) => const Image(
-              image: AssetImage('assets/images/hetu_logo_small.png'),
-            ),
-            onFinish: (context) => Navigator.pushReplacement<void, void>(
-              context,
-              MaterialPageRoute(builder: (context) => const MainMenu()),
-            ),
-          ),
+          body: const MainMenu(),
+          // FlameSplashScreen(
+          //   theme: FlameSplashTheme.dark,
+          //   showAfter: (context) => const Image(
+          //     image: AssetImage('assets/images/hetu_logo_small.png'),
+          //   ),
+          //   onFinish: (context) => Navigator.pushReplacement<void, void>(
+          //     context,
+          //     MaterialPageRoute(builder: (context) => const MainMenu()),
+          //   ),
+          // ),
         ),
         // 控件绘制时发生错误，用一个显示错误信息的控件替代
         builder: (context, widget) {

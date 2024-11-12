@@ -3,7 +3,7 @@ import 'dart:async';
 import '../../components/border_component.dart';
 import '../../gestures.dart';
 import '../card.dart';
-import '../../paint.dart';
+import '../../paint/paint.dart';
 
 class DrawingZone extends BorderComponent with HandlesGesture {
   String? ownedBy;
@@ -18,12 +18,12 @@ class DrawingZone extends BorderComponent with HandlesGesture {
   /// the duration of the drawed card reveal time.
   double revealDuration;
 
-  final List<Card> cards;
+  final List<GameCard> cards;
 
   final Anchor tooltipAnchor;
   final EdgeInsets tooltipPadding;
 
-  ScreenTextStyle? piledNumberStyle;
+  ScreenTextConfig? piledNumberStyle;
 
   DrawingZone({
     this.ownedBy,
@@ -38,8 +38,8 @@ class DrawingZone extends BorderComponent with HandlesGesture {
     this.tooltipAnchor = Anchor.topCenter,
     this.tooltipPadding = EdgeInsets.zero,
   }) {
-    piledNumberStyle = ScreenTextStyle(
-      rect: border,
+    piledNumberStyle = ScreenTextConfig(
+      size: size,
       anchor: tooltipAnchor,
       padding: tooltipPadding,
     );
@@ -49,7 +49,7 @@ class DrawingZone extends BorderComponent with HandlesGesture {
   void generateBorder() {
     super.generateBorder();
 
-    piledNumberStyle = piledNumberStyle?.copyWith(rect: border);
+    piledNumberStyle = piledNumberStyle?.copyWith(size: size);
   }
 
   // @override
@@ -57,7 +57,7 @@ class DrawingZone extends BorderComponent with HandlesGesture {
   //   super.onLoad();
   // }
 
-  Future<Card> drawOneCard({bool flip = true}) async {
+  Future<GameCard> drawOneCard({bool flip = true}) async {
     assert(cards.isNotEmpty);
 
     // final drawingAction = Completer();
@@ -86,7 +86,7 @@ class DrawingZone extends BorderComponent with HandlesGesture {
       card.isFlipped = false;
     }
 
-    return Future<Card>.delayed(
+    return Future<GameCard>.delayed(
       Duration(milliseconds: (revealDuration * 1000).toInt()),
       () => card,
     );
@@ -94,10 +94,10 @@ class DrawingZone extends BorderComponent with HandlesGesture {
 
   @override
   void render(Canvas canvas) {
-    if (isHovering) {
-      drawScreenText(canvas, '数量：${cards.length}', style: piledNumberStyle);
-      // canvas.drawRRect(border, borderPaintFocused);
-    }
+    // if (isHovering) {
+    //   drawScreenText(canvas, '数量：${cards.length}', config: piledNumberStyle);
+    //   // canvas.drawRRect(border, borderPaintFocused);
+    // }
     //  else {
     canvas.drawRRect(roundBorder, PresetPaints.light);
     // }

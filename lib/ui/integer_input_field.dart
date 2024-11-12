@@ -77,7 +77,7 @@ class _IntegerInputFieldState extends State<IntegerInputField> {
             ? widget.max.toString().length +
                 ((widget.min?.isNegative ?? false) ? 1 : 0)
             : null,
-        cursorColor: Theme.of(context).colorScheme.onBackground,
+        cursorColor: Theme.of(context).colorScheme.onSurface,
         decoration: InputDecoration(
           focusedBorder: const OutlineInputBorder(
             borderSide: BorderSide(color: Colors.grey, width: 1.0),

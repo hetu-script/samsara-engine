@@ -2,7 +2,7 @@ import 'dart:async';
 
 import '../../components/border_component.dart';
 import '../card.dart';
-import '../../paint.dart';
+import '../../paint/paint.dart';
 
 enum PileStructure {
   /// new cards put to bottom of pile
@@ -25,7 +25,7 @@ class PiledZone extends BorderComponent {
 
   final String? title;
 
-  ScreenTextStyle? titleStyle;
+  ScreenTextConfig? titleStyle;
 
   /// 是否允许堆叠
   final bool allowStack;
@@ -44,7 +44,7 @@ class PiledZone extends BorderComponent {
   // Map<String, PlayingCard> cards = {};
 
   Map<String, int> count = {};
-  List<Card> cards = [];
+  List<GameCard> cards = [];
 
   bool containsCard(String deckId) => count.containsKey(deckId);
 
@@ -68,7 +68,7 @@ class PiledZone extends BorderComponent {
   final Anchor titleAnchor;
   final EdgeInsets titlePadding;
 
-  final String? cardState;
+  // final String? cardState;
 
   // int _largestIndex = 0;
 
@@ -85,7 +85,7 @@ class PiledZone extends BorderComponent {
     this.allowStack = false,
     this.limit = -1,
     // this.allowEmptySlots = false,
-    List<Card> cards = const [],
+    List<GameCard> cards = const [],
     required this.piledCardSize,
     this.focusedOffset,
     this.focusedPosition,
@@ -98,7 +98,7 @@ class PiledZone extends BorderComponent {
     this.pileTopPriority = 250,
     this.titleAnchor = Anchor.topLeft,
     this.titlePadding = EdgeInsets.zero,
-    this.cardState,
+    // this.cardState,
   }) {
     pileMargin ??= Vector2(10.0, 10.0);
     pileOffset ??= Vector2(50.0, 0.0);
@@ -126,8 +126,8 @@ class PiledZone extends BorderComponent {
       sortCards(animated: false);
     }
 
-    titleStyle = ScreenTextStyle(
-      rect: border,
+    titleStyle = ScreenTextConfig(
+      size: size,
       anchor: titleAnchor,
       padding: titlePadding,
     );
@@ -137,7 +137,7 @@ class PiledZone extends BorderComponent {
   void generateBorder() {
     super.generateBorder();
 
-    titleStyle = titleStyle?.copyWith(rect: border);
+    titleStyle = titleStyle?.copyWith(size: size);
   }
 
   @override
@@ -149,7 +149,7 @@ class PiledZone extends BorderComponent {
 
   /// TODO: [insertAndRearrangeAll]如果为真，并且[allowEmptySlots]为真。并且目前有空位，则在向已经有卡牌的位置插入新卡牌时，会将已有的卡牌向后移动让出位置
   Future<void> placeCard(
-    Card card, {
+    GameCard card, {
     int? index,
     // bool insertAndRearrangeAll = false,
     bool animated = true,
@@ -206,7 +206,7 @@ class PiledZone extends BorderComponent {
     card.index = index;
     cards.add(card);
     card.pile = this;
-    if (cardState != null) card.state = cardState!;
+    // if (cardState != null) card.state = cardState!;
 
     // card.onAddedToPileZone?.call(this);
 
@@ -218,7 +218,7 @@ class PiledZone extends BorderComponent {
     int newIndex, {
     bool insertAndRearrangeAll = false,
   }) async {
-    Card? cardOnOldIndex;
+    GameCard? cardOnOldIndex;
     // PlayingCard? cardOnNewIndex;
 
     if (oldIndex != newIndex) {
@@ -370,9 +370,9 @@ class PiledZone extends BorderComponent {
 
   @override
   void render(Canvas canvas) {
-    if (title != null) {
-      drawScreenText(canvas, '$title：${cards.length}', style: titleStyle);
-    }
+    // if (title != null) {
+    //   drawScreenText(canvas, '$title：${cards.length}', config: titleStyle);
+    // }
 
     // canvas.drawRRect(rborder, DefaultBorderPaint.light);
   }

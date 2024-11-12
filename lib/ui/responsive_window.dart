@@ -38,8 +38,8 @@ class ResponsiveWindow extends StatelessWidget {
               decoration: BoxDecoration(
                 color: color,
                 borderRadius: borderRadius,
-                border: Border.all(
-                    color: Theme.of(context).colorScheme.onBackground),
+                border:
+                    Border.all(color: Theme.of(context).colorScheme.onSurface),
               ),
               child: child,
             ),

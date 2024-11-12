@@ -4,7 +4,7 @@ import 'package:samsara/ui/loading_screen.dart';
 import 'package:samsara/ui/label.dart';
 // import 'package:json5/json5.dart';
 import 'package:samsara/widget/markdown_wiki.dart';
-import 'package:samsara/widget/rich_text_builder.dart';
+import 'package:samsara/rich_text_builder.dart';
 
 import '../global.dart';
 import '../scene/game.dart';

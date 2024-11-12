@@ -4,17 +4,16 @@ import 'package:meta/meta.dart';
 
 import 'border_component.dart';
 import '../gestures.dart';
-import '../paint.dart';
+import '../paint/paint.dart';
 
 class SpriteButton extends BorderComponent with HandlesGesture {
-  static final defaultTextStyle = ScreenTextStyle(
+  static const defaultTextConfig = ScreenTextConfig(
     anchor: Anchor.center,
-    colorTheme: ScreenTextColorTheme.light,
-    textStyle: const TextStyle(fontSize: 16),
+    textStyle: TextStyle(fontSize: 16),
     outlined: true,
   );
 
-  late Paint hoverTintPaint, darkenedPaint, invalidPaint, shadowPaint;
+  late Paint hoverTintPaint, invalidPaint, shadowPaint;
 
   Sprite? sprite;
   String? spriteId;
@@ -30,15 +29,13 @@ class SpriteButton extends BorderComponent with HandlesGesture {
   String? pressSpriteId;
 
   String? text;
-  late ScreenTextStyle textStyle;
+  late ScreenTextConfig textConfig;
 
   late bool _isEnabled;
   set isEnabled(bool value) {
     enableGesture = value;
     _isEnabled = value;
   }
-
-  bool isDarkened;
 
   bool get isEnabled => _isEnabled;
 
@@ -49,7 +46,7 @@ class SpriteButton extends BorderComponent with HandlesGesture {
 
   SpriteButton({
     this.text,
-    ScreenTextStyle? textStyle,
+    ScreenTextConfig? textConfig,
     super.size,
     super.anchor,
     super.priority,
@@ -62,7 +59,6 @@ class SpriteButton extends BorderComponent with HandlesGesture {
     void Function(int buttons, Vector2 position)? onTap,
     super.borderRadius,
     bool isEnabled = true,
-    this.isDarkened = false,
     Image? image,
     this.sprite,
     this.spriteId,
@@ -76,8 +72,8 @@ class SpriteButton extends BorderComponent with HandlesGesture {
     Image? pressImage,
     this.pressSprite,
     this.pressSpriteId,
-    Paint? hoverTintPaint,
     Paint? darkenedPaint,
+    Paint? hoverTintPaint,
     Paint? invalidPaint,
     Paint? shadowPaint,
     this.useDefaultRender = true,
@@ -87,16 +83,15 @@ class SpriteButton extends BorderComponent with HandlesGesture {
   }) {
     this.isEnabled = isEnabled;
 
-    if (textStyle != null) {
-      this.textStyle =
-          textStyle.fillFrom(defaultTextStyle).fillWith(rect: border);
+    if (textConfig != null) {
+      this.textConfig =
+          textConfig.fillFrom(defaultTextConfig).fillWith(size: size);
     } else {
-      this.textStyle = defaultTextStyle.copyWith(rect: border);
+      this.textConfig = defaultTextConfig.copyWith(size: size);
     }
 
     size.addListener(() {
-      this.textStyle =
-          this.textStyle.copyWith(rect: Rect.fromLTWH(0, 0, size.x, size.y));
+      this.textConfig = this.textConfig.copyWith(size: size);
     });
 
     if (image != null) {
@@ -129,13 +124,8 @@ class SpriteButton extends BorderComponent with HandlesGesture {
     this.hoverTintPaint = hoverTintPaint ?? Paint()
       ..filterQuality = FilterQuality.medium
       ..color = Colors.white.withOpacity(opacity)
-      ..colorFilter = PredefinedFilters.brightness(0.3);
+      ..colorFilter = PresetFilters.brightness(0.3);
     setPaint('hoverTintPaint', this.hoverTintPaint);
-
-    this.darkenedPaint = darkenedPaint ?? Paint()
-      ..color = Colors.black
-      ..blendMode = BlendMode.luminosity;
-    setPaint('darkenedPaint', this.darkenedPaint);
 
     this.invalidPaint = invalidPaint ?? Paint()
       ..color = Colors.black.withOpacity(0.5)
@@ -188,21 +178,20 @@ class SpriteButton extends BorderComponent with HandlesGesture {
     } else {
       if (isEnabled) {
         if (borderSprite != null) {
-          borderSprite?.render(canvas,
-              size: size, overridePaint: isDarkened ? darkenedPaint : paint);
+          borderSprite?.render(canvas, size: size, overridePaint: paint);
         }
         if (isPressing) {
           if (pressSprite != null) {
-            pressSprite?.render(canvas,
-                size: size, overridePaint: isDarkened ? darkenedPaint : paint);
+            pressSprite?.render(canvas, size: size, overridePaint: paint);
           } else if (hoverSprite != null) {
-            hoverSprite?.render(canvas,
-                size: size, overridePaint: isDarkened ? darkenedPaint : paint);
+            hoverSprite?.render(canvas, size: size, overridePaint: paint);
           } else if (sprite != null) {
-            sprite?.render(canvas,
-                size: size, overridePaint: isDarkened ? darkenedPaint : paint);
+            sprite?.render(canvas, size: size, overridePaint: paint);
           } else if (useSimpleStyle) {
-            canvas.drawRRect(roundBorder, PresetPaints.successFill);
+            canvas.drawRRect(
+              roundBorder,
+              PresetPaints.successFill,
+            );
           }
         } else if (isHovering) {
           if (hoverSprite != null) {
@@ -215,8 +204,7 @@ class SpriteButton extends BorderComponent with HandlesGesture {
           }
         } else {
           if (sprite != null) {
-            sprite?.render(canvas,
-                size: size, overridePaint: isDarkened ? darkenedPaint : paint);
+            sprite?.render(canvas, size: size, overridePaint: paint);
           } else if (useSimpleStyle) {
             canvas.drawRRect(roundBorder, PresetPaints.successFill);
           }
@@ -246,7 +234,7 @@ class SpriteButton extends BorderComponent with HandlesGesture {
         drawScreenText(
           canvas,
           text!,
-          style: textStyle,
+          config: textConfig,
         );
         // } else {
         //   drawScreenText(
