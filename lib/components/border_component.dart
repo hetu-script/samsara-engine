@@ -34,7 +34,7 @@ class BorderComponent extends GameComponent {
     super.isVisible,
   }) {
     this.borderPaint = borderPaint ?? Paint()
-      ..color = Colors.white.withOpacity(0.75)
+      ..color = Colors.white.withAlpha(180)
       ..strokeWidth = 0.35
       ..style = PaintingStyle.stroke;
     setPaint('borderPaint', this.borderPaint);

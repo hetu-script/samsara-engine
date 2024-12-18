@@ -6,9 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
-import 'package:samsara/extensions.dart';
-// import 'package:samsara/paint.dart';
 
+import '../extensions.dart';
+// import '../paint.dart';
 import '../components/game_component.dart';
 import '../gestures/gesture_mixin.dart';
 import 'tile_mixin.dart';
@@ -30,15 +30,15 @@ const kColorModeNone = -1;
 class TileMap extends GameComponent with HandlesGesture {
   static final Map<Color, Paint> cachedColorPaints = {};
 
-  static final halfShadowPaint = Paint()..color = Colors.white.withOpacity(0.5);
+  static final halfShadowPaint = Paint()..color = Colors.white.withAlpha(128);
 
   static final uninteractablePaint = Paint()
     ..style = PaintingStyle.fill
-    ..color = Colors.red.withOpacity(0.75);
+    ..color = Colors.red.withAlpha(180);
 
   static final visiblePerimeterPaint = Paint()
     ..style = PaintingStyle.fill
-    ..color = Colors.black.withOpacity(0.5)
+    ..color = Colors.black.withAlpha(128)
     ..maskFilter = MaskFilter.blur(BlurStyle.solid, convertRadiusToSigma(2));
 
   static final selectedPaint = Paint()
@@ -49,10 +49,10 @@ class TileMap extends GameComponent with HandlesGesture {
   static final hoverPaint = Paint()
     ..strokeWidth = 0.5
     ..style = PaintingStyle.stroke
-    ..color = Colors.yellow.withOpacity(0.75);
+    ..color = Colors.yellow.withAlpha(180);
 
   static final gridPaint = Paint()
-    ..color = Colors.blue.withOpacity(0.5)
+    ..color = Colors.blue.withAlpha(128)
     ..strokeWidth = 0.5
     ..style = PaintingStyle.stroke;
 

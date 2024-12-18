@@ -64,7 +64,7 @@ class Avatar extends StatelessWidget {
                       color: Theme.of(context)
                           .colorScheme
                           .onSurface
-                          .withOpacity(0.5),
+                          .withAlpha(128),
                     ),
                     child: Text(
                       name!,

@@ -1,5 +1,5 @@
 import 'package:flame/components.dart';
-import 'package:samsara/samsara.dart';
+import '../samsara.dart';
 
 class Arrow extends GameComponent {
   Sprite sprite;

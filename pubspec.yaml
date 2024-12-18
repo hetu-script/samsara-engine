@@ -11,29 +11,29 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flame: ^1.18.0
+  flame: ^1.22.0
   flame_splash_screen: ^0.3.0
   flame_audio: ^2.10.0
-  logger: ^2.0.2+1
+  logger: ^2.5.0
 
   hetu_script:
     path: ../hetu-script/packages/hetu_script
   hetu_script_flutter:
     path: ../hetu-script/packages/hetu_script_flutter
   html: ^0.15.1
-  flutter_treeview: ^1.0.7+1
+  flutter_fancy_tree_view: ^1.6.0
   vector_math: ^2.1.4
   path_provider: ^2.0.13
   path: ^1.8.2
-  flutter_platform_alert: ^0.5.1
+  flutter_platform_alert: ^0.6.1
+  colorfilter_generator: ^0.0.8
   meta: ^1.10.0
   quiver: ^3.2.1
-  colorfilter_generator: ^0.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^5.0.0
 
 flutter:
 

@@ -1,6 +1,6 @@
 import 'package:hetu_script/hetu_script.dart';
 import 'package:hetu_script/binding.dart';
-import 'package:samsara/cardgame/card.dart';
+import '../cardgame/card.dart';
 
 class PlayingCardClassBinding extends HTExternalClass {
   PlayingCardClassBinding() : super(r'PlayingCard');

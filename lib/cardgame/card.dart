@@ -1,13 +1,15 @@
 import 'dart:async';
+// import 'dart:ui';
 
 import 'package:flame/components.dart' hide SpriteComponent;
 import 'package:flame/effects.dart';
 import 'package:flame/flame.dart';
+// import 'package:flutter/widgets.dart';
 // import 'package:flame/effects.dart';
 
 import '../components/border_component.dart';
 import '../components/game_component.dart';
-// import '../paint.dart';
+import '../paint/paint.dart';
 import 'zones/piled_zone.dart';
 // import '../mixin.dart';
 import '../task.dart';
@@ -78,13 +80,22 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
   }
 
   bool enablePreview;
-  bool isEnabled;
 
-  late Paint invalidPaint;
+  // bool isEnabled;
+  late bool _isEnabled;
+  bool get isEnabled => _isEnabled;
+  set isEnabled(bool value) {
+    _isEnabled = value;
+    if (value) {
+      paint = getPaint('default');
+    } else {
+      paint = getPaint('invalid');
+    }
+  }
 
   GameCard({
     required this.id,
-    required this.deckId,
+    String? deckId,
     this.script,
     this.kind,
     this.enablePreview = false,
@@ -115,16 +126,17 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
     this.onUnfocused,
     this.onPreviewed,
     this.onUnpreviewed,
-    this.isEnabled = false,
-  }) : tags = tags ?? {} {
+    // this.isEnabled = true,
+    bool isEnabled = true,
+  })  : deckId = deckId ?? id,
+        tags = tags ?? {} {
     _savedPosition = position.clone();
     _savedSize = size.clone();
     preferredPriority = priority;
 
-    invalidPaint = Paint()
-      ..color = Colors.black
-      ..blendMode = BlendMode.luminosity;
-    setPaint('darkenedPaint', invalidPaint);
+    final invalidPaint = Paint()..colorFilter = kColorFilterGreyscale;
+    setPaint('invalid', invalidPaint);
+    this.isEnabled = isEnabled;
 
     onMouseEnter = () {
       if (enablePreview) {
@@ -173,9 +185,17 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
       isFlipped: isFlipped,
       isRotated: isRotated,
       isRotatable: isRotatable,
+      isEnabled: isEnabled,
       anchor: anchor,
       focusAnimationDuration: focusAnimationDuration,
     );
+  }
+
+  @override
+  void onLoad() async {
+    if (spriteId != null) {
+      sprite = Sprite(await Flame.images.load(spriteId!));
+    }
   }
 
   void setUsable(String state, String phase) {
@@ -281,15 +301,7 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
   }
 
   @override
-  void onLoad() async {
-    if (spriteId != null) {
-      sprite = Sprite(await Flame.images.load(spriteId!));
-    }
-  }
-
-  @override
   void render(Canvas canvas) {
-    sprite?.render(canvas,
-        size: size, overridePaint: isEnabled ? invalidPaint : paint);
+    sprite?.render(canvas, size: size, overridePaint: paint);
   }
 }

@@ -1,5 +1,5 @@
-import 'package:samsara/components/border_component.dart';
-import 'package:samsara/paint/paint.dart';
+import 'border_component.dart';
+import '../paint/paint.dart';
 
 class TextComponent2 extends BorderComponent {
   ScreenTextConfig config;

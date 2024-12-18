@@ -1,10 +1,8 @@
 import 'dart:math' as math;
 
 // import 'package:flutter/foundation.dart';
-// import 'package:samsara/extensions.dart';
 
-import 'package:samsara/tilemap/terrain.dart';
-
+import '../tilemap/terrain.dart';
 import '../components/game_component.dart';
 import 'tile_mixin.dart';
 import 'direction.dart';

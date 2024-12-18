@@ -61,8 +61,12 @@ class SamsaraEngine extends SceneController with EventAggregator {
 
   bool hasLocaleKey(String? key) => _locale.hasLocaleString(key);
 
-  String locale(String? key, {dynamic interpolations}) {
-    if (interpolations is! List) interpolations = [interpolations];
+  String get localeId => _locale.languageId;
+
+  String locale(dynamic key, {dynamic interpolations}) {
+    if (interpolations != null && interpolations is! List) {
+      interpolations = [interpolations];
+    }
     return _locale.getLocaleString(key ?? 'null',
         interpolations: interpolations);
   }
@@ -95,7 +99,7 @@ class SamsaraEngine extends SceneController with EventAggregator {
         final color = HexColor.fromString(value);
         final paint = Paint()
           ..style = PaintingStyle.fill
-          ..color = color.withOpacity(0.6);
+          ..color = color.withAlpha(150);
         return MapEntry(key as int, (color, paint));
       }));
       convertedList.add(colorInfo);

@@ -15,7 +15,7 @@ class Camera2 extends CameraComponent {
     this.enableLighting = false,
     Color? backgroundLightingColor,
   }) : backgroundLightingColor =
-            backgroundLightingColor ?? Colors.black.withOpacity(0.8);
+            backgroundLightingColor ?? Colors.black.withAlpha(200);
 
   /// Renders the [world] as seen through this camera.
   ///

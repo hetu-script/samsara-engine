@@ -123,16 +123,16 @@ class SpriteButton extends BorderComponent with HandlesGesture {
 
     this.hoverTintPaint = hoverTintPaint ?? Paint()
       ..filterQuality = FilterQuality.medium
-      ..color = Colors.white.withOpacity(opacity)
+      ..color = Colors.white.withAlpha((opacity * 255).round())
       ..colorFilter = PresetFilters.brightness(0.3);
     setPaint('hoverTintPaint', this.hoverTintPaint);
 
     this.invalidPaint = invalidPaint ?? Paint()
-      ..color = Colors.black.withOpacity(0.5)
+      ..color = Colors.black.withAlpha((opacity * 255).round())
       ..blendMode = BlendMode.luminosity;
 
     this.shadowPaint = shadowPaint ?? Paint()
-      ..color = Colors.black.withOpacity(0.5)
+      ..color = Colors.black.withAlpha(128)
       ..imageFilter = ImageFilter.blur(sigmaX: 0.3, sigmaY: 0.3);
 
     this.onTap = onTap;

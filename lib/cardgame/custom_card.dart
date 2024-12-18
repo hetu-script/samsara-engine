@@ -1,19 +1,23 @@
+import 'dart:ui';
+
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
-import 'package:flutter/material.dart';
-import 'package:samsara/components/border_component.dart';
-import 'package:samsara/extensions.dart';
+import 'package:flame/text.dart';
 
+import '../components/border_component.dart';
+import '../extensions.dart';
 import 'card.dart';
 import '../types.dart';
 import '../paint/paint.dart';
-import '../rich_text_builder.dart';
+import '../richtext/richtext_builder.dart';
 
 class CustomGameCard extends GameCard {
   Vector2? preferredSize;
 
-  String? title, description;
-  List<TextSpan>? richDescription;
+  String? title, description, extraDescription;
+  double extraDescriptionWidth;
+  DocumentRoot? _descriptionDocument;
+  GroupElement? _descriptionElement;
   ScreenTextConfig? titleConfig,
       descriptionConfig,
       costNumberTextStyle,
@@ -21,6 +25,7 @@ class CustomGameCard extends GameCard {
 
   bool showTitle;
   bool showDescription;
+  bool showExtraDescription;
   bool showStackIcon;
   bool showStackNumber;
   bool showCostIcon;
@@ -31,12 +36,14 @@ class CustomGameCard extends GameCard {
   int modifiedCost;
 
   /// the sprite id of this card, should be unique among all cards
-  final String? illustrationSpriteId,
+  final String? maskSpriteId,
+      illustrationSpriteId,
       backSpriteId,
       stackIconSpriteId,
       costIconSpriteId,
       rarityIconSpriteId;
-  Sprite? illustrationSprite,
+  Sprite? maskSprite,
+      illustrationSprite,
       backSprite,
       stackIconSprite,
       costIconSprite,
@@ -58,7 +65,7 @@ class CustomGameCard extends GameCard {
 
   CustomGameCard({
     required super.id,
-    required super.deckId,
+    super.deckId,
     super.script,
     super.kind,
     super.enablePreview,
@@ -83,6 +90,7 @@ class CustomGameCard extends GameCard {
     super.isFlipped,
     super.isRotated,
     super.isRotatable,
+    super.isEnabled,
     super.anchor,
     super.focusAnimationDuration,
     super.onFocused,
@@ -92,7 +100,10 @@ class CustomGameCard extends GameCard {
     this.preferredSize,
     this.title,
     this.description,
-    String? richDescription,
+    this.extraDescription,
+    this.extraDescriptionWidth = 280.0,
+    this.maskSpriteId,
+    this.maskSprite,
     this.illustrationSpriteId,
     this.illustrationSprite,
     this.backSpriteId,
@@ -117,22 +128,23 @@ class CustomGameCard extends GameCard {
     this.costIconRelativePaddings = EdgeInsets.zero,
     bool? showTitle,
     bool? showDescription,
+    bool? showExtraDescription,
     bool? showStackIcon,
     this.showStackNumber = false,
     bool? showCostIcon,
     this.showCostNumber = false,
     bool? showRarityIcon,
   })  : showTitle = showTitle ?? title != null,
-        showDescription =
-            showDescription ?? description != null || richDescription != null,
+        showDescription = showDescription ?? description != null,
+        showExtraDescription = showExtraDescription ?? extraDescription != null,
         showStackIcon = (stackIconSpriteId != null || stackIconSprite != null),
         showCostIcon = (costIconSpriteId != null || costIconSprite != null),
         showRarityIcon =
             (rarityIconSpriteId != null || rarityIconSprite != null) {
-    if (richDescription != null) {
-      this.richDescription =
-          buildRichText(richDescription, style: descriptionConfig?.textStyle);
-    }
+    // if (extraDescription != null) {
+    //   _extraDescriptionDocument = buildFlameRichText(extraDescription!,
+    //       style: descriptionConfig?.textStyle);
+    // }
   }
 
   /// 复制这个卡牌对象，但不会复制onTap之类的交互事件，也不会复制index属性
@@ -164,11 +176,14 @@ class CustomGameCard extends GameCard {
       isFlipped: isFlipped,
       isRotated: isRotated,
       isRotatable: isRotatable,
+      isEnabled: isEnabled,
       anchor: anchor,
       focusAnimationDuration: focusAnimationDuration,
       preferredSize: preferredSize,
       title: title,
       description: description,
+      extraDescription: extraDescription,
+      extraDescriptionWidth: extraDescriptionWidth,
       illustrationSpriteId: illustrationSpriteId,
       illustrationSprite: illustrationSprite,
       backSpriteId: backSpriteId,
@@ -193,6 +208,7 @@ class CustomGameCard extends GameCard {
       costIconRelativePaddings: costIconRelativePaddings,
       showTitle: showTitle,
       showDescription: showDescription,
+      showExtraDescription: showExtraDescription,
       showStackIcon: showStackIcon,
       showStackNumber: showStackNumber,
       showCostIcon: showCostIcon,
@@ -205,6 +221,9 @@ class CustomGameCard extends GameCard {
   void onLoad() async {
     super.onLoad();
 
+    if (maskSpriteId != null) {
+      maskSprite = Sprite(await Flame.images.load(maskSpriteId!));
+    }
     if (illustrationSpriteId != null) {
       illustrationSprite =
           Sprite(await Flame.images.load(illustrationSpriteId!));
@@ -305,6 +324,67 @@ class CustomGameCard extends GameCard {
     descriptionConfig = descriptionConfig?.copyWith(
         size: _descriptionRect.size.toVector2(),
         scale: preferredSize != null ? width / preferredSize!.x : 1.0);
+
+    if (description != null) {
+      _descriptionDocument =
+          buildFlameRichText(description!, style: descriptionConfig?.textStyle);
+      final descriptionAnchor = descriptionConfig?.anchor ?? Anchor.topLeft;
+      TextAlign descriptionAlign = TextAlign.left;
+      if (descriptionAnchor.x == 0.5) {
+        descriptionAlign = TextAlign.center;
+      } else if (descriptionAnchor.x == 1.0) {
+        descriptionAlign = TextAlign.right;
+      }
+
+      _descriptionElement = _descriptionDocument!.format(DocumentStyle(
+        paragraph:
+            BlockStyle(margin: EdgeInsets.zero, textAlign: descriptionAlign),
+        width: _descriptionRect.width,
+        height: _descriptionRect.height,
+      ));
+      final descriptionBoundingBox = _descriptionElement!.boundingBox;
+      // 文本区域的左中右对齐已经由document.format的textAlign处理
+      // 下面只是单独处理垂直方向的对齐
+      switch (descriptionAnchor) {
+        case Anchor.topLeft:
+          _descriptionElement!
+              .translate(_descriptionRect.left, _descriptionRect.top);
+        case Anchor.topCenter:
+          _descriptionElement!
+              .translate(_descriptionRect.left, _descriptionRect.top);
+        case Anchor.topRight:
+          _descriptionElement!
+              .translate(_descriptionRect.left, _descriptionRect.top);
+        case Anchor.centerLeft:
+          _descriptionElement!.translate(
+              _descriptionRect.left,
+              _descriptionRect.top +
+                  (_descriptionRect.height - descriptionBoundingBox.height) /
+                      2);
+        case Anchor.center:
+          _descriptionElement!.translate(
+              _descriptionRect.left,
+              _descriptionRect.top +
+                  (_descriptionRect.height - descriptionBoundingBox.height) /
+                      2);
+        case Anchor.centerRight:
+          _descriptionElement!.translate(
+              _descriptionRect.left,
+              _descriptionRect.top +
+                  (_descriptionRect.height - descriptionBoundingBox.height) /
+                      2);
+        case Anchor.bottomLeft:
+          _descriptionElement!.translate(_descriptionRect.left,
+              _descriptionRect.bottom - descriptionBoundingBox.height);
+        case Anchor.bottomCenter:
+          _descriptionElement!.translate(_descriptionRect.left,
+              _descriptionRect.bottom - descriptionBoundingBox.height);
+        case Anchor.bottomRight:
+          _descriptionElement!.translate(_descriptionRect.left,
+              _descriptionRect.bottom - descriptionBoundingBox.height);
+        default:
+      }
+    }
   }
 
   @override
@@ -316,56 +396,52 @@ class CustomGameCard extends GameCard {
       backSprite?.renderRect(canvas, border);
     } else {
       illustrationSprite?.renderRect(canvas, _illustrationRect,
-          overridePaint: isEnabled ? paint : invalidPaint);
-      sprite?.renderRect(canvas, border,
-          overridePaint: isEnabled ? paint : invalidPaint);
+          overridePaint: paint);
+      sprite?.renderRect(canvas, border, overridePaint: paint);
 
       if (showTitle && title != null && title?.isNotEmpty == true) {
         drawScreenText(canvas, title!,
-            position: _titleRect.topLeft, config: titleConfig);
+            alpha: isEnabled ? 255 : 128,
+            position: _titleRect.topLeft,
+            config: titleConfig);
       }
 
       if (showDescription) {
-        if (description != null && description?.isNotEmpty == true) {
-          drawScreenText(canvas, description!,
-              position: _descriptionRect.topLeft, config: descriptionConfig);
-        } else if (richDescription != null) {
-          drawScreenRichText(
-            canvas,
-            richDescription!,
-            position: _descriptionRect.topLeft,
-            config: descriptionConfig,
-            // debugMode: true,
-          );
+        if (_descriptionElement != null) {
+          _descriptionElement!.draw(canvas);
         }
       }
 
       if (showRarityIcon) {
         rarityIconSprite?.renderRect(canvas, _rarityIconRect,
-            overridePaint: isEnabled ? paint : invalidPaint);
+            overridePaint: paint);
       }
 
       if (stack > 1) {
         if (showStackIcon) {
           stackIconSprite?.renderRect(canvas, _stackIconRect,
-              overridePaint: isEnabled ? paint : invalidPaint);
+              overridePaint: paint);
         }
 
         if (showStackNumber) {
           drawScreenText(canvas, '×$stack',
-              position: _stackIconRect.topLeft, config: stackNumberTextStyle);
+              alpha: isEnabled ? 255 : 128,
+              position: _stackIconRect.topLeft,
+              config: stackNumberTextStyle);
         }
       }
 
       if (cost > 0) {
         if (showCostIcon) {
           costIconSprite?.renderRect(canvas, _costIconRect,
-              overridePaint: isEnabled ? paint : invalidPaint);
+              overridePaint: paint);
         }
 
         if (showCostNumber) {
           drawScreenText(canvas, '$cost',
-              position: _costIconRect.topLeft, config: costNumberTextStyle);
+              alpha: isEnabled ? 255 : 128,
+              position: _costIconRect.topLeft,
+              config: costNumberTextStyle);
         }
       }
     }

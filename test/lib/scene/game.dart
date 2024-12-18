@@ -48,7 +48,7 @@ class GameScene extends Scene {
       ),
     );
 
-    world.add(condensedCenter);
+    background.add(condensedCenter);
 
     final button = SpriteButton(
       anchor: Anchor.center,
@@ -57,16 +57,18 @@ class GameScene extends Scene {
       useSpriteSrcSize: true,
       position: Vector2(center.x, size.y - 100),
     );
-    camera.viewport.add(button);
+    // camera.viewport.add(button);
+    background.add(button);
 
     button.onMouseEnter = () {
       Tooltip.show(
         scene: this,
         target: button,
-        preferredDirection: TooltipDirection.topCenter,
-        title: '野堂',
-        description:
-            '''宋代：陆游\n\n野堂萧飒雪侵冠，历尽人间行路难。病马不收烟草暝，孤桐半落井床寒。长瓶浊酒犹堪醉，败箧残编更细看。此兴不随年共老，未容城角动忧端。''',
+        direction: TooltipDirection.bottomCenter,
+        width: 360,
+        content:
+            '''<yellow>野堂</>\n\n<yellow>宋代：陆游</>\n\n野堂萧飒雪侵冠，历尽人间行路难。\n病马不收烟草暝，孤桐半落井床寒。\n长瓶浊酒犹堪醉，败箧残编更细看。\n此兴不随年共老，未容城角动忧端。''',
+        config: ScreenTextConfig(anchor: Anchor.topCenter),
       );
     };
     button.onMouseExit = () {
@@ -192,12 +194,12 @@ class GameScene extends Scene {
         deckId: cardId,
         preferredSize: cardSize,
         illustrationRelativePaddings:
-            const EdgeInsets.fromLTRB(0.06, 0.04, 0.06, 0.42),
+            const EdgeInsets.fromLTRB(0.06, 0.04, 0.06, 0.388),
         illustrationSpriteId: 'attack_normal.png',
-        spriteId: 'border2.png',
-        title: '卡牌名字',
+        spriteId: 'border3.png',
+        title: '无名剑法',
         titleRelativePaddings:
-            const EdgeInsets.fromLTRB(0.08, 0.469, 0.08, 0.469),
+            const EdgeInsets.fromLTRB(0.08, 0.625, 0.08, 0.469),
         titleConfig: const ScreenTextConfig(
           anchor: Anchor.topCenter,
           outlined: true,
@@ -207,14 +209,13 @@ class GameScene extends Scene {
             // fontWeight: FontWeight.bold,
           ),
         ),
-        // description: '这是一段很长的文字用来测试大段文字在指定区域的自动换行和对齐',
-        richDescription: '造成<red>5点</>伤害',
+        description: '类型：攻击\n流派：通用\n等级：1',
         descriptionRelativePaddings:
-            const EdgeInsets.fromLTRB(0.08, 0.581, 0.08, 0.08),
+            const EdgeInsets.fromLTRB(0.08, 0.735, 0.08, 0.08),
         descriptionConfig: const ScreenTextConfig(
-          anchor: Anchor.topLeft,
+          anchor: Anchor.center,
           // outlined: true,
-          textStyle: TextStyle(fontSize: 18.0, color: Colors.black),
+          textStyle: TextStyle(fontSize: 14.0, color: Colors.black),
           overflow: ScreenTextOverflow.wordwrap,
         ),
       );

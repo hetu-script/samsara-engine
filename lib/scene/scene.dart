@@ -1,13 +1,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
-import 'package:samsara/components/game_component.dart';
-import 'package:samsara/extensions.dart';
 import 'package:flame_audio/bgm.dart';
-// import 'package:samsara/lighting/lighting_config.dart';
 
+// import '../lighting/lighting_config.dart';
+import '../components/game_component.dart';
+import '../extensions.dart';
 import 'scene_controller.dart';
-import '../widget/pointer_detector.dart';
+import '../widgets/pointer_detector.dart';
 import '../gestures/gesture_mixin.dart';
 // import '../components/border_component.dart';
 import '../lighting/camera2.dart';

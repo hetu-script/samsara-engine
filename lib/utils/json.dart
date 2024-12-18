@@ -20,7 +20,7 @@ dynamic jsonCopy(dynamic data) {
       result[key] = jsonCopy(data[key]);
     }
     return result;
-  } else if (data is List) {
+  } else if (data is Iterable) {
     final result = [];
     for (final item in data) {
       result.add(jsonCopy(item));
@@ -28,5 +28,7 @@ dynamic jsonCopy(dynamic data) {
     return result;
   } else if (data is HTStruct) {
     return data.toJSON();
+  } else {
+    return data;
   }
 }

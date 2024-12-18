@@ -92,7 +92,7 @@ class _MainGameOverlayState extends State<MainGameOverlay>
                                 _isDisposing = true;
                                 Navigator.of(context).pop();
                                 break;
-                              default:
+                              // default:
                             }
                           },
                         ),

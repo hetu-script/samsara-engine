@@ -3,8 +3,9 @@ import 'package:window_manager/window_manager.dart';
 import 'package:samsara/ui/loading_screen.dart';
 import 'package:samsara/ui/label.dart';
 // import 'package:json5/json5.dart';
-import 'package:samsara/widget/markdown_wiki.dart';
-import 'package:samsara/rich_text_builder.dart';
+import 'package:samsara/widgets/markdown_wiki.dart';
+import 'package:samsara/richtext.dart';
+// import 'package:flame/flame.dart';
 
 import '../global.dart';
 import '../scene/game.dart';
@@ -39,6 +40,8 @@ class _MainMenuState extends State<MainMenu> {
     // engine.loadLocale(localeData);
 
     engine.hetu.evalFile('main.ht', globallyImport: true);
+
+    // await Flame.images.load('text/sword.png');
 
     return true;
   }
@@ -96,7 +99,7 @@ class _MainMenuState extends State<MainMenu> {
                                           vertical: 5.0, horizontal: 10.0),
                                       child: RichText(
                                         text: TextSpan(
-                                          children: buildRichText(
+                                          children: buildFlutterRichText(
                                             richText,
                                             style: const TextStyle(
                                               color: Colors.white,

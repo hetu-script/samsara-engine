@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart' hide Tooltip, Viewport;
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
-import 'package:samsara/effect/fade_effect.dart';
 // import 'package:flame/experimental.dart';
 import 'package:flame/camera.dart';
 
+import '../effect/fade_effect.dart';
 import '../effect/advanced_move_effect.dart';
 import '../scene/scene.dart';
 import '../gestures/gesture_mixin.dart';
@@ -56,9 +56,9 @@ abstract class GameComponent extends PositionComponent
     bool isVisible = true,
   }) : _isVisible = isVisible {
     this.opacity = opacity;
-    this.paint = paint ?? Paint()
-      ..filterQuality = FilterQuality.high
-      ..color = Colors.white.withOpacity(opacity);
+    this.paint = paint ?? Paint();
+
+    setPaint('default', this.paint);
   }
 
   @override

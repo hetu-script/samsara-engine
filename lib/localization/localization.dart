@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:samsara/extensions.dart';
 
 class GameLocalization {
   List<String> errors = [];
@@ -71,17 +72,27 @@ class GameLocalization {
 
   bool hasLocaleString(String? key) => current.containsKey(key);
 
-  String getLocaleString(String key, {List? interpolations}) {
+  /// 通过一个key获取对应的本地化字符串。
+  /// 如果key本身是字符串，就直接获取
+  /// 如果key是一个列表，就分别获取对应的字符串，再用 ', ' 拼接起来
+  String getLocaleString(dynamic key, {List? interpolations}) {
     // if (text is List) {
     //   text = text.elementAt(Random().nextInt(text.length));
     // }
-
-    String text = current[key] ?? '"$key"';
-    if (interpolations != null) {
-      for (var i = 0; i < interpolations.length; ++i) {
-        text = text.replaceAll('{$i}', '${interpolations[i]}');
+    if (key is String) {
+      String text = current[key] ?? '"$key"';
+      if (interpolations != null) {
+        text = text.interpolate(interpolations);
       }
+      return text;
+    } else if (key is List) {
+      List<String> result = [];
+      for (final k in key) {
+        result.add(getLocaleString(k));
+      }
+      return result.join(', ');
     }
-    return text;
+
+    return '"$key"';
   }
 }

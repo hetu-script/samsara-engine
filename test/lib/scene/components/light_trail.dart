@@ -7,7 +7,7 @@ import 'package:samsara/samsara.dart';
 import 'package:samsara/utils/math.dart' as math;
 
 const _kVibrateSize = 10.0;
-const _kMoveSpeed = 10.0;
+// const _kMoveSpeed = 10.0;
 const _kLightRadius = 25.0;
 
 class LightTrail extends BorderComponent with HandlesGesture {

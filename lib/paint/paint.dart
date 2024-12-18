@@ -6,11 +6,13 @@ import 'package:flame/text.dart';
 
 import 'package:colorfilter_generator/colorfilter_generator.dart';
 import 'package:colorfilter_generator/addons.dart';
-import 'package:samsara/extensions.dart';
-import 'package:samsara/widget/sprite_widget.dart';
+
 // import 'package:colorfilter_generator/presets.dart';
 
-export '../../extensions.dart' show Vector2Ex;
+import '../extensions.dart';
+// import '../widgets/sprite_widget.dart';
+
+export '../extensions.dart' show Vector2Ex;
 export 'package:flame/extensions.dart' show Vector2Extension;
 
 // import 'text_paint2.dart';
@@ -27,6 +29,75 @@ abstract class PresetFilters {
         name: 'brightnessTint',
         filters: [ColorFilterAddons.brightness(value)]).matrix);
   }
+}
+
+// a matrix definition of a greyscale filter
+// see https://api.flutter.dev/flutter/dart-ui/ColorFilter/ColorFilter.matrix.html
+// see https://www.w3.org/TR/filter-effects-1/#grayscaleEquivalent
+const ColorFilter kColorFilterGreyscale = ColorFilter.matrix(<double>[
+  0.2126,
+  0.7152,
+  0.0722,
+  0,
+  0,
+  0.2126,
+  0.7152,
+  0.0722,
+  0,
+  0,
+  0.2126,
+  0.7152,
+  0.0722,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+]);
+
+// https://developer.squareup.com/blog/welcome-to-the-color-matrix/
+ColorFilter getColorFilterTintMatrix({
+  Color tintColor = Colors.grey,
+  double scale = 1,
+}) {
+  final double r = tintColor.r;
+  final double g = tintColor.g;
+  final double b = tintColor.b;
+
+  final double rTint = r / 255;
+  final double gTint = g / 255;
+  final double bTint = b / 255;
+
+  final double rL = 0.2126;
+  final double gL = 0.7152;
+  final double bL = 0.0722;
+
+  final double translate = 1 - scale * 0.5;
+
+  return ColorFilter.matrix(<double>[
+    (rL * rTint * scale),
+    (gL * rTint * scale),
+    (bL * rTint * scale),
+    (0),
+    (r * translate),
+    (rL * gTint * scale),
+    (gL * gTint * scale),
+    (bL * gTint * scale),
+    (0),
+    (g * translate),
+    (rL * bTint * scale),
+    (gL * bTint * scale),
+    (bL * bTint * scale),
+    (0),
+    (b * translate),
+    (0),
+    (0),
+    (0),
+    (1),
+    (0),
+  ]);
 }
 
 abstract class PresetColors {
@@ -197,7 +268,6 @@ class ScreenTextConfig {
   final Vector2? size;
   final Anchor? anchor;
   final EdgeInsets? padding;
-  final double? opacity;
   final bool? outlined;
   final double? scale;
   final ScreenTextOverflow? overflow;
@@ -207,7 +277,6 @@ class ScreenTextConfig {
     this.size,
     this.anchor,
     this.padding,
-    this.opacity,
     this.outlined,
     this.scale,
     this.overflow,
@@ -229,7 +298,6 @@ class ScreenTextConfig {
       size: size ?? this.size,
       anchor: anchor ?? this.anchor,
       padding: padding ?? this.padding,
-      opacity: opacity ?? this.opacity,
       outlined: outlined ?? this.outlined,
       scale: scale ?? this.scale,
       overflow: overflow ?? this.overflow,
@@ -252,7 +320,6 @@ class ScreenTextConfig {
       size: this.size ?? size,
       anchor: this.anchor ?? anchor,
       padding: this.padding ?? padding,
-      opacity: this.opacity ?? opacity,
       outlined: this.outlined ?? outlined,
       scale: this.scale ?? scale,
       overflow: this.overflow ?? overflow,
@@ -266,7 +333,6 @@ class ScreenTextConfig {
       size: other?.size ?? size,
       anchor: other?.anchor ?? anchor,
       padding: other?.padding ?? padding,
-      opacity: other?.opacity ?? opacity,
       outlined: other?.outlined ?? outlined,
       scale: other?.scale ?? scale,
       overflow: other?.overflow ?? overflow,
@@ -280,7 +346,6 @@ class ScreenTextConfig {
       size: size ?? other?.size,
       anchor: anchor ?? other?.anchor,
       padding: padding ?? other?.padding,
-      opacity: opacity ?? other?.opacity,
       outlined: outlined ?? other?.outlined,
       scale: scale ?? other?.scale,
       overflow: overflow ?? other?.overflow,
@@ -292,15 +357,21 @@ class ScreenTextConfig {
 TextPaint getTextPaint({
   TextStyle? style,
   ScreenTextConfig? config,
+  int alpha = 255,
 }) {
   if (config == null) {
     return PresetTextPaints.light;
   } else {
+    TextStyle inputStyle = (style ?? config.textStyle ?? TextStyle());
+    if (inputStyle.color != null) {
+      inputStyle =
+          inputStyle.copyWith(color: inputStyle.color!.withAlpha(alpha));
+    } else {
+      inputStyle =
+          inputStyle.copyWith(color: PresetColors.light.withAlpha(alpha));
+    }
     return TextPaint(
-      style: (style ??
-              config.textStyle ??
-              const TextStyle(color: PresetColors.light))
-          .merge(
+      style: inputStyle.merge(
         TextStyle(
           fontSize: (style?.fontSize ??
                   config.textStyle?.fontSize ??
@@ -311,19 +382,19 @@ TextPaint getTextPaint({
                   Shadow(
                       // bottomLeft
                       offset: const Offset(-1, -1),
-                      color: Colors.black.withOpacity(config.opacity ?? 1.0)),
+                      color: Colors.black.withAlpha(alpha)),
                   Shadow(
                       // bottomRight
                       offset: const Offset(1, -1),
-                      color: Colors.black.withOpacity(config.opacity ?? 1.0)),
+                      color: Colors.black.withAlpha(alpha)),
                   Shadow(
                       // topRight
                       offset: const Offset(1, 1),
-                      color: Colors.black.withOpacity(config.opacity ?? 1.0)),
+                      color: Colors.black.withAlpha(alpha)),
                   Shadow(
                       // topLeft
                       offset: const Offset(-1, 1),
-                      color: Colors.black.withOpacity(config.opacity ?? 1.0)),
+                      color: Colors.black.withAlpha(alpha)),
                 ]
               : null,
         ),
@@ -501,6 +572,7 @@ Offset drawMultilineText(
 void drawScreenText(
   Canvas canvas,
   String text, {
+  int alpha = 255,
   Offset position = Offset.zero,
   TextPaint? textPaint,
   ScreenTextConfig? config,
@@ -508,7 +580,7 @@ void drawScreenText(
 }) {
   text = text.replaceAllEscapedLineBreaks();
 
-  textPaint ??= getTextPaint(config: config);
+  textPaint ??= getTextPaint(config: config, alpha: alpha);
 
   double maxWidth = config?.size?.x ?? 0.0;
   final overflow = config?.overflow ?? ScreenTextOverflow.visible;
@@ -552,128 +624,64 @@ void drawScreenText(
   // }
 }
 
-/// 接受一个处理过的富文本，按照一个固定宽度计算出换行后的多行文本
-/// 文本中可能存在的硬换行'\n'也会被考虑在内
-/// 计算出多行文字的总体高度，用于垂直区域的对齐
-List<TextSpan> getWrappedRichText(
-  List<TextSpan> richText, {
-  required double maxWidth,
-  double iconSize = 24.0,
-  ScreenTextConfig? config,
-}) {
-  final result = <TextSpan>[];
-  for (final paragraph in richText) {
-    if (paragraph.children?.isEmpty == true) continue;
-    final wrappedParagraphChild = <InlineSpan>[];
-    // 遍历一遍每个段落，获得整个文本的宽度
-    double paragraphWidth = 0.0;
-    for (var i = 0; i < paragraph.children!.length; ++i) {
-      final span = paragraph.children![i];
-      if (span is TextSpan && span.text?.isNotEmpty == true) {
-        final textPaint = getTextPaint(style: span.style, config: config);
-        final m = textPaint.getLineMetrics(span.text!);
-        paragraphWidth += m.width;
-        if (paragraphWidth < maxWidth) {
-          wrappedParagraphChild.add(span);
-        } else {
-          String textBefore, textAfter;
-          String current = span.text!;
-          do {
-            LineMetrics lm = textPaint.getLineMetrics(current);
-            int currentLength = current.length;
-            do {
-              textBefore = current.substring(0, currentLength);
-              textAfter = current.substring(currentLength);
-              lm = textPaint.getLineMetrics(textBefore);
-              --currentLength;
-            } while (lm.width > maxWidth && currentLength > 1);
-            result.add(TextSpan(text: textBefore));
-            current = textAfter;
-          } while (textAfter.isNotEmpty);
-        }
-      } else if (span is WidgetSpan && span.child is Sprite) {
-        paragraphWidth += iconSize;
-        if (paragraphWidth < maxWidth) {
-        } else {}
-      }
-    }
-
-    final wrappedParagraph = <List<InlineSpan>>[];
-    List<InlineSpan> spanBefore, spanAfter;
-    List<InlineSpan> current = paragraph.toList();
-    do {
-      LineMetrics lm = textPaint.getLineMetrics(current);
-      int currentLength = current.length;
-      do {
-        textBefore = current.substring(0, currentLength);
-        textAfter = current.substring(currentLength);
-        lm = textPaint.getLineMetrics(textBefore);
-        --currentLength;
-      } while (lm.width > maxWidth && currentLength > 1);
-      lines.add(textBefore);
-      current = textAfter;
-    } while (textAfter.isNotEmpty);
-  }
-  return lines;
-}
-
 /// position代表文本区域的位置
-void drawScreenRichText(
-  Canvas canvas,
-  List<TextSpan> richText, {
-  Offset position = Offset.zero,
-  ScreenTextConfig? config,
-  bool debugMode = false,
-}) {
-  List<TextPaint> textPaints = [];
-  double currentOffsetX = 0.0, currentOffsetY = 0.0;
-  for (var i = 0; i < richText.length; ++i) {
-    final paragraph = richText[i];
-    // 遍历一遍每个段落，获得整个文本的高度
-    double paragraphHeight = 0.0;
-    for (var j = 0; j < paragraph.length; ++j) {
-      final span = paragraph[j];
-      final textPaint = getTextPaint(style: span.style, config: config);
-      textPaints.add(textPaint);
-      if (span is TextSpan && span.text?.isNotEmpty == true) {
-        final m = textPaint.getLineMetrics(span.text!);
-        paragraphWidth += m.width;
-        paragraphHeight += m.height;
-      }
-    }
+// void drawScreenRichText(
+//   Canvas canvas,
+//   String richText, {
+//   Offset position = Offset.zero,
+//   ScreenTextConfig? config,
+//   bool debugMode = false,
+// }) {
+//   List<TextPaint> textPaints = [];
+//   double currentOffsetX = 0.0, currentOffsetY = 0.0;
+//   for (var i = 0; i < richTextParagraphs.length; ++i) {
+//     final paragraph = richTextParagraphs[i];
+//     // 遍历一遍每个段落，获得整个文本的高度
+//     double paragraphHeight = 0.0;
+//     double paragraphWidth = 0.0;
+//     for (var j = 0; j < paragraph.children!.length; ++j) {
+//       final span = paragraph.children![j];
+//       final textPaint = getTextPaint(style: span.style, config: config);
+//       textPaints.add(textPaint);
+//       if (span is TextSpan && span.text?.isNotEmpty == true) {
+//         final m = textPaint.getLineMetrics(span.text!);
+//         paragraphWidth += m.width;
+//         paragraphHeight += m.height;
+//       }
+//     }
 
-    Offset currentOffset = Offset.zero;
-    double? ascent;
-    for (var j = 0; j < paragraph.length; ++j) {
-      final span = paragraph[j];
-      if (span is TextSpan && span.text?.isNotEmpty == true) {
-        final text = span.text!;
-        final textPaint = textPaints[j];
-        final offset = drawMultilineText(
-          canvas,
-          [text],
-          textPaint,
-          position: position,
-          config: config,
-          offsetX: currentOffset.dx,
-          offsetY: currentOffset.dy,
-          previousAscent: ascent,
-          debugMode: debugMode,
-        );
-        ascent = textPaint.getLineMetrics(text).ascent;
-        currentOffset += offset;
-      } else if (span is WidgetSpan) {
-        if (span.child is SpriteWidget) {
-          // final sprite = (span.child as SpriteWidget).sprite;
-          // sprite.renderRect(
-          //   canvas,
-          //   Rect.fromLTWH(config!.rect!.left, config.rect!.top),
-          // );
-        }
-      }
-    }
-  }
-}
+//     Offset currentOffset = Offset.zero;
+//     double? ascent;
+//     for (var j = 0; j < paragraph.length; ++j) {
+//       final span = paragraph[j];
+//       if (span is TextSpan && span.text?.isNotEmpty == true) {
+//         final text = span.text!;
+//         final textPaint = textPaints[j];
+//         final offset = drawMultilineText(
+//           canvas,
+//           [text],
+//           textPaint,
+//           position: position,
+//           config: config,
+//           offsetX: currentOffset.dx,
+//           offsetY: currentOffset.dy,
+//           previousAscent: ascent,
+//           debugMode: debugMode,
+//         );
+//         ascent = textPaint.getLineMetrics(text).ascent;
+//         currentOffset += offset;
+//       } else if (span is WidgetSpan) {
+//         // if (span.child is SpriteWidget) {
+//         // final sprite = (span.child as SpriteWidget).sprite;
+//         // sprite.renderRect(
+//         //   canvas,
+//         //   Rect.fromLTWH(config!.rect!.left, config.rect!.top),
+//         // );
+//         // }
+//       }
+//     }
+//   }
+// }
 
 void drawDottedLine(
   Canvas canvas,

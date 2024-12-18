@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 
 import 'scene.dart';
-import '../widget/pointer_detector.dart';
+import '../widgets/pointer_detector.dart';
 
 class SceneWidget<T extends Scene> extends StatelessWidget {
   final T scene;

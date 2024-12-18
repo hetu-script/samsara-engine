@@ -4,8 +4,7 @@ import 'package:meta/meta.dart';
 import 'package:flutter/gestures.dart';
 
 import '../extensions.dart';
-import '../../widget/pointer_detector.dart'
-    show TouchDetails, MouseScrollDetails;
+import '../widgets/pointer_detector.dart' show TouchDetails, MouseScrollDetails;
 import '../components/game_component.dart';
 
 export 'package:flutter/gestures.dart'
@@ -17,7 +16,7 @@ export 'package:flutter/gestures.dart'
         ScaleStartDetails,
         ScaleUpdateDetails,
         LongPressStartDetails;
-export '../../widget/pointer_detector.dart'
+export '../widgets/pointer_detector.dart'
     show TouchDetails, PointerMoveUpdateDetails;
 
 class TappingDetails {
