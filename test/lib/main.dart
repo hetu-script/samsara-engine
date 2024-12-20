@@ -32,7 +32,7 @@ void main() async {
     await windowManager.setMaximizable(false);
     await windowManager.setResizable(false);
     const windowSize = Size(1440.0, 900.0);
-    windowManager.waitUntilReadyToShow(
+    await windowManager.waitUntilReadyToShow(
         const WindowOptions(
           title: 'Samsara Engine Tests',
           // fullScreen: true,

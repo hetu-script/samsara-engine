@@ -76,7 +76,11 @@ abstract class Scene extends FlameGame {
   @override
   void onLoad() async {
     fitScreen();
-    bgm.initialize();
+    if (bgm.isPlaying) {
+      bgm.stop();
+    } else {
+      bgm.initialize();
+    }
     if (bgmFile != null) {
       try {
         await bgm.play('audio/music/$bgmFile', volume: bgmVolume);
@@ -84,6 +88,12 @@ abstract class Scene extends FlameGame {
         controller.error(e.toString());
       }
     }
+  }
+
+  @mustCallSuper
+  @override
+  void onDispose() async {
+    bgm.stop();
   }
 
   @override
@@ -204,10 +214,16 @@ abstract class Scene extends FlameGame {
     }
   }
 
+  HandlesGesture? hoveringComponent;
+
   @mustCallSuper
   void onMouseHover(PointerHoverEvent details) {
     for (final c in gestureComponents) {
-      if (c.handleMouseHover(details)) {
+      final HandlesGesture? hoveringChild = c.handleMouseHover(details);
+      if (hoveringChild != null) {
+        if (hoveringComponent != null && hoveringComponent != hoveringChild) {
+          hoveringComponent!.onMouseExit?.call();
+        }
         return;
       }
     }

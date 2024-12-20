@@ -75,12 +75,19 @@ class GameLocalization {
   /// 通过一个key获取对应的本地化字符串。
   /// 如果key本身是字符串，就直接获取
   /// 如果key是一个列表，就分别获取对应的字符串，再用 ', ' 拼接起来
+  /// 如果取到的是List，就从List中随机选一个
+  /// 如果取到的是字符串，就按interpolations替换后返回
   String getLocaleString(dynamic key, {List? interpolations}) {
-    // if (text is List) {
-    //   text = text.elementAt(Random().nextInt(text.length));
-    // }
     if (key is String) {
-      String text = current[key] ?? '"$key"';
+      dynamic text = current[key];
+      if (text is List) {
+        text = text.random;
+      }
+
+      if (text is! String) {
+        text = '"$key"';
+      }
+
       if (interpolations != null) {
         text = text.interpolate(interpolations);
       }
@@ -91,8 +98,8 @@ class GameLocalization {
         result.add(getLocaleString(k));
       }
       return result.join(', ');
+    } else {
+      return '"$key"';
     }
-
-    return '"$key"';
   }
 }

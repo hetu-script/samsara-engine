@@ -123,7 +123,10 @@ mixin HandlesGesture on GameComponent {
   @mustCallSuper
   bool handleTapUp(int pointer, int buttons, TapUpDetails details) {
     for (final c in gestureComponents) {
-      c.handleTapUp(pointer, buttons, details);
+      if (c.handleTapUp(pointer, buttons, details) &&
+          !tappingDetails.containsKey(pointer)) {
+        return true;
+      }
     }
 
     if (!enableGesture || !isVisible) return false;
@@ -345,14 +348,15 @@ mixin HandlesGesture on GameComponent {
   }
 
   @mustCallSuper
-  bool handleMouseHover(PointerHoverEvent details) {
+  HandlesGesture? handleMouseHover(PointerHoverEvent details) {
     for (final c in gestureComponents) {
-      if (c.handleMouseHover(details)) {
-        return true;
+      final hoveringChild = c.handleMouseHover(details);
+      if (hoveringChild != null) {
+        return hoveringChild;
       }
     }
 
-    if (!enableGesture || !isVisible) return false;
+    if (!enableGesture || !isVisible) return null;
 
     final pointerPosition = details.position.toVector2();
     final convertedPointerPosition =
@@ -364,13 +368,13 @@ mixin HandlesGesture on GameComponent {
       }
       final positionWithinComponent = convertedPointerPosition - position;
       onMouseHover?.call(positionWithinComponent);
-      return true;
+      return this;
     } else {
       if (isHovering) {
-        onMouseExit?.call();
         isHovering = false;
+        onMouseExit?.call();
       }
-      return false;
+      return null;
     }
   }
 

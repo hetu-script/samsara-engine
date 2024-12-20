@@ -60,9 +60,9 @@ class SamsaraEngineClassBinding extends HTExternalClass {
       case 'play':
         return ({positionalArgs, namedArgs}) =>
             engine.play(positionalArgs.first);
-      case 'loop':
+      case 'playBGM':
         return ({positionalArgs, namedArgs}) =>
-            engine.loop(positionalArgs.first);
+            engine.playBGM(positionalArgs.first);
       default:
         if (!ignoreUndefined) throw HTError.undefined(id);
     }

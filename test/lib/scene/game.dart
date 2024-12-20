@@ -50,12 +50,53 @@ class GameScene extends Scene {
 
     background.add(condensedCenter);
 
+    final cardSize = Vector2(250, 250 * 1.382);
+
+    piledZone = PiledZone(
+      piledCardSize: cardSize,
+    );
+
     final button = SpriteButton(
       anchor: Anchor.center,
       text: 'Condense',
       spriteId: 'button.png',
       useSpriteSrcSize: true,
       position: Vector2(center.x, size.y - 100),
+      onTap: (buttons, position) async {
+        final cardId = utils.randomUID();
+        final card = CustomGameCard(
+          id: cardId,
+          deckId: cardId,
+          preferredSize: cardSize,
+          illustrationRelativePaddings:
+              const EdgeInsets.fromLTRB(0.06, 0.04, 0.06, 0.388),
+          illustrationSpriteId: 'attack_normal.png',
+          spriteId: 'border3.png',
+          title: '无名剑法',
+          titleRelativePaddings:
+              const EdgeInsets.fromLTRB(0.08, 0.625, 0.08, 0.469),
+          titleConfig: const ScreenTextConfig(
+            anchor: Anchor.topCenter,
+            outlined: true,
+            textStyle: TextStyle(
+              fontSize: 18.0,
+              // color: Colors.orange,
+              // fontWeight: FontWeight.bold,
+            ),
+          ),
+          description: '类型：攻击\n流派：通用\n等级：1',
+          descriptionRelativePaddings:
+              const EdgeInsets.fromLTRB(0.08, 0.735, 0.08, 0.08),
+          descriptionConfig: const ScreenTextConfig(
+            anchor: Anchor.center,
+            // outlined: true,
+            textStyle: TextStyle(fontSize: 14.0, color: Colors.black),
+            overflow: ScreenTextOverflow.wordwrap,
+          ),
+        );
+        world.add(card);
+        piledZone.placeCard(card);
+      },
     );
     // camera.viewport.add(button);
     background.add(button);
@@ -179,49 +220,6 @@ class GameScene extends Scene {
     //     ),
     //   ]);
     // };
-
-    final cardSize = Vector2(250, 250 * 1.382);
-
-    piledZone = PiledZone(
-      piledCardSize: cardSize,
-    );
-
-    final cardId = utils.randomUID();
-
-    button.onTap = (buttons, position) async {
-      final card = CustomGameCard(
-        id: cardId,
-        deckId: cardId,
-        preferredSize: cardSize,
-        illustrationRelativePaddings:
-            const EdgeInsets.fromLTRB(0.06, 0.04, 0.06, 0.388),
-        illustrationSpriteId: 'attack_normal.png',
-        spriteId: 'border3.png',
-        title: '无名剑法',
-        titleRelativePaddings:
-            const EdgeInsets.fromLTRB(0.08, 0.625, 0.08, 0.469),
-        titleConfig: const ScreenTextConfig(
-          anchor: Anchor.topCenter,
-          outlined: true,
-          textStyle: TextStyle(
-            fontSize: 18.0,
-            // color: Colors.orange,
-            // fontWeight: FontWeight.bold,
-          ),
-        ),
-        description: '类型：攻击\n流派：通用\n等级：1',
-        descriptionRelativePaddings:
-            const EdgeInsets.fromLTRB(0.08, 0.735, 0.08, 0.08),
-        descriptionConfig: const ScreenTextConfig(
-          anchor: Anchor.center,
-          // outlined: true,
-          textStyle: TextStyle(fontSize: 14.0, color: Colors.black),
-          overflow: ScreenTextOverflow.wordwrap,
-        ),
-      );
-      world.add(card);
-      piledZone.placeCard(card);
-    };
   }
 
   @override

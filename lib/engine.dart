@@ -7,7 +7,6 @@ import 'package:hetu_script_flutter/hetu_script_flutter.dart';
 // import 'package:path_provider/path_provider.dart';
 // import 'package:path/path.dart' as path;
 import 'package:flame_audio/flame_audio.dart';
-import 'package:flame_audio/bgm.dart';
 
 import 'binding/engine_binding.dart';
 import '../event.dart';
@@ -60,8 +59,6 @@ class SamsaraEngine extends SceneController with EventAggregator {
   late final GameLocalization _locale;
 
   bool hasLocaleKey(String? key) => _locale.hasLocaleString(key);
-
-  String get localeId => _locale.languageId;
 
   String locale(dynamic key, {dynamic interpolations}) {
     if (interpolations != null && interpolations is! List) {
@@ -132,7 +129,6 @@ class SamsaraEngine extends SceneController with EventAggregator {
       key,
       module: module,
       globallyImport: isMainMod,
-      invoke: 'main',
       positionalArgs: positionalArgs,
       namedArgs: namedArgs,
     );
@@ -151,7 +147,6 @@ class SamsaraEngine extends SceneController with EventAggregator {
       bytes: bytes,
       module: moduleName,
       globallyImport: isMainMod,
-      invoke: 'main',
       positionalArgs: positionalArgs,
       namedArgs: namedArgs,
     );
@@ -351,7 +346,17 @@ class SamsaraEngine extends SceneController with EventAggregator {
     }
   }
 
-  void loop(String fileName, {double? volume}) async {
+  String? _currentBGMName;
+  String? get currentBGMName => _currentBGMName;
+
+  bool get isBGMPlaying => FlameAudio.bgm.isPlaying;
+
+  void initBGM() {
+    FlameAudio.bgm.initialize();
+  }
+
+  void playBGM(String fileName, {double? volume}) async {
+    _currentBGMName = fileName;
     try {
       await FlameAudio.bgm.play('music/$fileName', volume: config.musicVolume);
     } catch (e) {
@@ -363,5 +368,20 @@ class SamsaraEngine extends SceneController with EventAggregator {
     }
   }
 
-  Bgm get bgm => FlameAudio.bgm;
+  void pauseBGM() {
+    FlameAudio.bgm.pause();
+  }
+
+  void resumeBGM() {
+    FlameAudio.bgm.resume();
+  }
+
+  void stopBGM() {
+    FlameAudio.bgm.stop();
+    _currentBGMName = null;
+  }
+
+  void disposeBGM() {
+    FlameAudio.bgm.dispose();
+  }
 }

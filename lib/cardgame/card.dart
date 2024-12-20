@@ -47,6 +47,7 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
 
   /// 卡牌位置索引，一般由父组件管理。
   int index = 0;
+  int oldPriority = 0;
 
   /// 堆叠数量，一张卡牌可以代表一叠同名卡牌。
   int stack;
@@ -134,7 +135,9 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
     _savedSize = size.clone();
     preferredPriority = priority;
 
-    final invalidPaint = Paint()..colorFilter = kColorFilterGreyscale;
+    final invalidPaint = Paint()
+      ..color = Colors.white.withAlpha(128)
+      ..colorFilter = kColorFilterGreyscale;
     setPaint('invalid', invalidPaint);
     this.isEnabled = isEnabled;
 
@@ -143,15 +146,21 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
         onPreviewed?.call();
         if (focusOnPreviewing) {
           schedule(() => setFocused(true));
+        } else {
+          oldPriority = priority;
+          priority = 2000;
         }
       }
     };
 
     onMouseExit = () {
       if (enablePreview) {
+        priority = oldPriority;
         onUnpreviewed?.call();
         if (focusOnPreviewing) {
           schedule(() => setFocused(false));
+        } else {
+          priority = oldPriority;
         }
       }
     };

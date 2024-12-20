@@ -339,6 +339,8 @@ class CustomGameCard extends GameCard {
       _descriptionElement = _descriptionDocument!.format(DocumentStyle(
         paragraph:
             BlockStyle(margin: EdgeInsets.zero, textAlign: descriptionAlign),
+        text: InlineTextStyle(
+            fontScale: preferredSize != null ? width / preferredSize!.x : 1.0),
         width: _descriptionRect.width,
         height: _descriptionRect.height,
       ));
