@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
+import 'package:samsara/extensions.dart';
 
 import '../components/game_component.dart';
 import 'tile_mixin.dart';
@@ -38,10 +39,6 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   final SpriteSheet terrainSpriteSheet;
 
-  final borderPath = Path();
-  final shadowPath = Path();
-  late Rect rect;
-
   bool isSelected = false;
   bool isHovered = false;
 
@@ -66,14 +63,14 @@ class TileMapTerrain extends GameComponent with TileInfo {
   final String? _locationId;
   String? get locationId => _locationId;
 
-  bool _isNonInteractable, _isLighted;
+  bool _isNonEnterable, _isLighted;
 
-  set isNonInteractable(value) {
-    _isNonInteractable = value;
-    data?['isNonInteractable'] = value;
+  set isNonEnterable(value) {
+    _isNonEnterable = value;
+    data?['isNonEnterable'] = value;
   }
 
-  bool get isNonInteractable => _isNonInteractable;
+  bool get isNonEnterable => _isNonEnterable;
 
   set isLighted(value) {
     _isLighted = value;
@@ -239,7 +236,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     this.data,
     required int left,
     required int top,
-    bool isNonInteractable = false,
+    bool isNonEnterable = false,
     bool isLighted = true,
     required Vector2 srcSize,
     required Vector2 gridSize,
@@ -283,7 +280,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
           ),
         ),
         _kind = kind,
-        _isNonInteractable = isNonInteractable,
+        _isNonEnterable = isNonEnterable,
         _isLighted = isLighted,
         _zoneIndex = zoneId,
         _nationId = nationId,
@@ -297,105 +294,26 @@ class TileMapTerrain extends GameComponent with TileInfo {
     this.offset = offset ?? Vector2.zero();
 
     tilePosition = TilePosition(left, top);
-    generateRect();
 
     _overlayAnimationOffset = math.Random().nextDouble() * 5;
   }
 
-  void generateRect() {
-    double bleendingPixelHorizontal = srcSize.x * 0.04;
-    double bleendingPixelVertical = srcSize.y * 0.04;
-    if (bleendingPixelHorizontal > 2) {
-      bleendingPixelHorizontal = 2;
-    }
-    if (bleendingPixelVertical > 2) {
-      bleendingPixelVertical = 2;
-    }
-
-    late final double l, t; // l, t,
-    switch (tileShape) {
-      case TileShape.orthogonal:
-        l = (left - 1) * gridSize.x;
-        t = (top - 1) * gridSize.y;
-        final border = Rect.fromLTWH(l, t, gridSize.x, gridSize.y);
-        borderPath.addRect(border);
-        break;
-      case TileShape.hexagonalVertical:
-        l = (left - 1) * gridSize.x * (3 / 4);
-        t = left.isOdd
-            ? (top - 1) * gridSize.y
-            : (top - 1) * gridSize.y + gridSize.y / 2;
-        borderPath.moveTo(l, t + gridSize.y / 2);
-        borderPath.relativeLineTo(gridSize.x / 4, -gridSize.y / 2);
-        borderPath.relativeLineTo(gridSize.x / 2, 0);
-        borderPath.relativeLineTo(gridSize.x / 4, gridSize.y / 2);
-        borderPath.relativeLineTo(-gridSize.x / 4, gridSize.y / 2);
-        borderPath.relativeLineTo(-gridSize.x / 2, 0);
-        borderPath.relativeLineTo(-gridSize.x / 4, -gridSize.y / 2);
-        borderPath.close();
-        shadowPath.moveTo(l - bleendingPixelHorizontal + offset.x,
-            t + gridSize.y / 2 + offset.y);
-        shadowPath.relativeLineTo(gridSize.x / 4 + bleendingPixelHorizontal,
-            -gridSize.y / 2 - bleendingPixelVertical);
-        shadowPath.relativeLineTo(gridSize.x / 2, 0);
-        shadowPath.relativeLineTo(gridSize.x / 4 + bleendingPixelHorizontal,
-            gridSize.y / 2 + bleendingPixelVertical);
-        shadowPath.relativeLineTo(-gridSize.x / 4 - bleendingPixelHorizontal,
-            gridSize.y / 2 + bleendingPixelVertical);
-        shadowPath.relativeLineTo(-gridSize.x / 2, 0);
-        shadowPath.relativeLineTo(-gridSize.x / 4 - bleendingPixelHorizontal,
-            -gridSize.y / 2 - bleendingPixelVertical);
-        shadowPath.close();
-        break;
-      case TileShape.isometric:
-        throw 'Isometric map tile is not supported yet!';
-      case TileShape.hexagonalHorizontal:
-        throw 'Vertical hexagonal map tile is not supported yet!';
-    }
-    // switch (renderDirection) {
-    //   case TileRenderDirection.bottomRight:
-    //     l = bl - (width - gridSize.x);
-    //     t = bt - (height - gridSize.y);
-    //     break;
-    //   case TileRenderDirection.bottomLeft:
-    //     l = bl;
-    //     t = bt - (height - gridSize.y);
-    //     break;
-    //   case TileRenderDirection.topRight:
-    //     l = bl - (width - gridSize.x);
-    //     t = bt;
-    //     break;
-    //   case TileRenderDirection.topLeft:
-    //     l = bl;
-    //     t = bt;
-    //     break;
-    //   case TileRenderDirection.bottomCenter:
-    //     break;
-    // }
-    rect = Rect.fromLTWH(
-        l -
-            (srcSize.x - gridSize.x) / 2 -
-            bleendingPixelHorizontal / 2 +
-            offset.x,
-        t - (srcSize.y - gridSize.y) - bleendingPixelVertical / 2 + offset.y,
-        srcSize.x + bleendingPixelHorizontal,
-        srcSize.y + bleendingPixelVertical);
-  }
-
   @override
   void render(Canvas canvas) {
-    _sprite?.renderRect(canvas, rect);
-    _animation?.ticker.currentFrame.sprite.renderRect(canvas, rect);
-    _overlaySprite?.renderRect(canvas, rect);
-    _overlayAnimation?.ticker.currentFrame.sprite.renderRect(canvas, rect);
+    _sprite?.renderRect(canvas, renderRect);
+    _animation?.ticker.currentFrame.sprite.renderRect(canvas, renderRect);
+    _overlaySprite?.renderRect(canvas, renderRect);
+    _overlayAnimation?.ticker.currentFrame.sprite
+        .renderRect(canvas, renderRect);
 
     if (caption != null) {
       drawScreenText(
         canvas,
         caption!,
+        position: renderRect.topLeft,
         textPaint: _captionPaint,
         config: ScreenTextConfig(
-          size: size,
+          size: renderRect.size.toVector2(),
           outlined: true,
           anchor: Anchor.center,
           padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),

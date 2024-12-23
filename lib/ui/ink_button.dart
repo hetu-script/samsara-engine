@@ -6,7 +6,12 @@ class InkButton extends StatelessWidget {
     required this.size,
     this.color,
     this.border,
-    this.selectedBorder,
+    this.selectedBorder = const Border.fromBorderSide(
+      BorderSide(
+        color: Colors.white,
+        width: 1.0,
+      ),
+    ),
     this.borderRadius,
     this.image,
     this.child,

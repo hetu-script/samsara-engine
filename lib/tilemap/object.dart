@@ -54,22 +54,24 @@ class TileMapMovingObject extends GameComponent
   bool _isWalking = false;
   bool get isWalking => _isWalking;
   bool _isStopping = false;
-  bool _isBackward = false;
+  // bool _isBackward = false;
 
   Vector2 _movingTargetRenderPosition = Vector2.zero();
   TilePosition _movingTargetTilePosition = TilePosition.leftTop();
   Vector2 _velocity = Vector2.zero();
 
-  void Function(int left, int top)? onMoved;
+  // void Function(int left, int top)? onMoved;
 
   // 下面这些是公开属性，由 tilemap 直接修改和管理
   bool isOnWater = false;
   bool isMovingCanceled = false;
   List<TileMapRouteNode>? currentRoute;
-  TileMapRouteNode? lastRouteNode;
+  TileMapRouteNode? prevRouteNode;
   bool backwardMoving = false;
-  void Function(TileMapTerrain tile)? onDestinationCallback;
-  OrthogonalDirection? endDirection;
+  void Function(TileMapTerrain tile, [TileMapTerrain? nonEnterableDestination])?
+      onAfterMoveCallback;
+  void Function()? onFinishMoveCallback;
+  OrthogonalDirection? finishMoveDirection;
 
   /// states passed in there must contains all kObjectMovingStates
   TileMapMovingObject({
@@ -80,7 +82,7 @@ class TileMapMovingObject extends GameComponent
     required Vector2 srcSize,
     Vector2? offset,
     this.velocityFactor = 0.8,
-    this.onMoved,
+    // this.onMoved,
     this.hasSwimAnimation = false,
     required Map<String, SpriteAnimationWithTicker> states,
   }) {
@@ -151,10 +153,10 @@ class TileMapMovingObject extends GameComponent
     // 这里要先取消移动，再调用事件
     // 检查isBackward的目的，是为了在英雄倒退到entity上时，不触发
     // 只有玩家自己主动经过某个entity，才触发事件
-    if (!_isBackward) {
-      onMoved?.call(tilePosition.left, tilePosition.top);
-    }
-    _isBackward = false;
+    // if (!_isBackward) {
+    //   onMoved?.call(tilePosition.left, tilePosition.top);
+    // }
+    // _isBackward = false;
     _movingTargetRenderPosition = Vector2.zero();
     _velocity = Vector2.zero();
     _movingTargetTilePosition = TilePosition.leftTop();
@@ -169,7 +171,7 @@ class TileMapMovingObject extends GameComponent
     assert(tilePosition != target);
     _movingTargetTilePosition = target;
     _isWalking = true;
-    _isBackward = backward;
+    // _isBackward = backward;
     _movingTargetRenderPosition = targetRenderPosition + offset;
     direction = targetDirection;
 

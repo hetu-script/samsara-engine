@@ -60,9 +60,9 @@ class DynamicColorProgressIndicator extends BorderComponent
 
   int get value => _value;
 
-  set value(int newValue) {
+  void setValue(int newValue, {bool animated = true}) {
     _value = newValue;
-    if (newValue > _currentValue && animated) {
+    if (animated) {
       _elasped = 0;
       _isAnimating = true;
     } else {
@@ -79,7 +79,8 @@ class DynamicColorProgressIndicator extends BorderComponent
         _isAnimating = false;
         _currentValue = _value.toDouble();
       } else {
-        _currentValue = _elasped / animationDuration * (_value - _currentValue);
+        final diff = _elasped / animationDuration * (_value - _currentValue);
+        _currentValue += diff;
       }
     }
   }

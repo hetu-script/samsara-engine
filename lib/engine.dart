@@ -355,10 +355,15 @@ class SamsaraEngine extends SceneController with EventAggregator {
     FlameAudio.bgm.initialize();
   }
 
-  void playBGM(String fileName, {double? volume}) async {
-    _currentBGMName = fileName;
+  void playBGM(String fileName, {double? volume}) {
     try {
-      await FlameAudio.bgm.play('music/$fileName', volume: config.musicVolume);
+      if (_currentBGMName == fileName) {
+        FlameAudio.bgm.resume();
+      } else {
+        _currentBGMName = fileName;
+        FlameAudio.bgm.stop();
+        FlameAudio.bgm.play('music/$fileName', volume: config.musicVolume);
+      }
     } catch (e) {
       if (kDebugMode) {
         error(e.toString());

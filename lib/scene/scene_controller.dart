@@ -39,8 +39,7 @@ abstract class SceneController implements HTLogger {
   }
 
   void leaveScene(String sceneId, {bool clearCache = false}) {
-    assert(_cachedScenes.containsKey(sceneId));
-    if (_currentScene?.id == _cachedScenes[sceneId]!.id) {
+    if (_currentScene?.id == sceneId) {
       _currentScene = null;
     }
     if (clearCache) {

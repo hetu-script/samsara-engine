@@ -47,7 +47,6 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
 
   /// 卡牌位置索引，一般由父组件管理。
   int index = 0;
-  int oldPriority = 0;
 
   /// 堆叠数量，一张卡牌可以代表一叠同名卡牌。
   int stack;
@@ -56,8 +55,10 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
   /// 也可能是 null，例如资源牌这种情况。
   final dynamic data;
 
+  GameCard? prev, next;
+
   Vector2? focusedOffset, focusedPosition, focusedSize;
-  int? focusedPriority;
+  int focusedPriority = 0, previewPriority = 0;
 
   bool focusOnPreviewing;
   bool showBorder;
@@ -113,7 +114,7 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
     this.focusedOffset,
     this.focusedPosition,
     this.focusedSize,
-    this.focusedPriority,
+    this.focusedPriority = 0,
     this.focusOnPreviewing = false,
     this.showBorder = false,
     this.isFocused = false,
@@ -129,11 +130,12 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
     this.onUnpreviewed,
     // this.isEnabled = true,
     bool isEnabled = true,
+    int? preferredPriority,
   })  : deckId = deckId ?? id,
         tags = tags ?? {} {
     _savedPosition = position.clone();
     _savedSize = size.clone();
-    preferredPriority = priority;
+    preferredPriority = preferredPriority ?? priority;
 
     final invalidPaint = Paint()
       ..color = Colors.white.withAlpha(128)
@@ -147,20 +149,18 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
         if (focusOnPreviewing) {
           schedule(() => setFocused(true));
         } else {
-          oldPriority = priority;
-          priority = 2000;
+          priority += previewPriority;
         }
       }
     };
 
     onMouseExit = () {
       if (enablePreview) {
-        priority = oldPriority;
         onUnpreviewed?.call();
         if (focusOnPreviewing) {
           schedule(() => setFocused(false));
         } else {
-          priority = oldPriority;
+          resetPriority();
         }
       }
     };
@@ -217,9 +217,7 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
     if (isFocused == value) return;
     isFocused = value;
     if (value) {
-      if (focusedPriority != null) {
-        priority = focusedPriority!;
-      }
+      priority += focusedPriority;
 
       _savedPosition = position.clone();
       _savedSize = size.clone();

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:quiver/core.dart';
 
 import '../components/game_component.dart';
@@ -50,11 +52,14 @@ mixin TileInfo on GameComponent {
   // int tileMapWidth = 0;
   Vector2 offset = Vector2.zero();
   TilePosition tilePosition = TilePosition.leftTop();
-  Vector2 renderPosition = Vector2.zero();
+  Rect renderRect = Rect.zero;
 
   /// 画布位置，不要和tilemap的tile坐标混淆
   Vector2 centerPosition = Vector2.zero();
 
   int get left => tilePosition.left;
   int get top => tilePosition.top;
+
+  final borderPath = Path();
+  final shadowPath = Path();
 }

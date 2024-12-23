@@ -36,6 +36,8 @@ class Tooltip extends BorderComponent {
       textStyle: TextStyle(fontSize: 14.0),
       overflow: ScreenTextOverflow.wordwrap);
 
+  static bool _doHide = false;
+
   static show({
     required Scene scene,
     required GameComponent target,
@@ -44,6 +46,8 @@ class Tooltip extends BorderComponent {
     TooltipDirection direction = TooltipDirection.topLeft,
     double width = 280.0,
   }) {
+    _doHide = false;
+
     instance.removeFromParent();
     instance.setContent(content: content, config: config, width: width);
 
@@ -106,7 +110,16 @@ class Tooltip extends BorderComponent {
     scene.camera.viewport.add(instance);
   }
 
-  static hide() => instance.removeFromParent();
+  /// hide其实会等待半秒。
+  /// 如果半秒之内没有其他代码执行show()，才会最终隐藏窗口。
+  /// 这是为了避免某些时候不同Future中的的隐藏和显示窗口的命令互相冲突。
+  static void hide() async {
+    _doHide = true;
+    await Future.delayed(Duration(milliseconds: 500));
+    if (_doHide == true) {
+      instance.removeFromParent();
+    }
+  }
 
   String _content = '';
   DocumentRoot? _contentDocument;
