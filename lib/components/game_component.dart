@@ -49,6 +49,7 @@ abstract class GameComponent extends PositionComponent
     super.angle,
     super.anchor,
     super.priority,
+    super.nativeAngle,
     double opacity = 1.0,
     super.children,
     this.lightConfig,

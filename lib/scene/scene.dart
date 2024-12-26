@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
@@ -12,6 +14,10 @@ import '../gestures/gesture_mixin.dart';
 // import '../components/border_component.dart';
 import '../lighting/camera2.dart';
 import '../lighting/world2.dart';
+import '../components/fading_text.dart';
+import '../paint/paint.dart';
+
+const kHintTextPriority = 1000000;
 
 abstract class Scene extends FlameGame {
   static const overlayUIBuilderMapKey = 'overlayUI';
@@ -59,6 +65,44 @@ abstract class Scene extends FlameGame {
         ) {
     // camera.viewfinder.anchor = Anchor.topLeft;
     bgm = Bgm();
+  }
+
+  void addHintText(
+    String text, {
+    Vector2? position,
+    GameComponent? target,
+    Color? color,
+    TextStyle? textStyle,
+    double duration = 2,
+    double offsetY = 100.0,
+    double horizontalVariation = 30.0,
+    double verticalVariation = 30.0,
+  }) {
+    assert(position != null || target != null);
+    Vector2 p = position ?? target!.position;
+
+    final r = math.Random();
+    final c = FadingText(
+      text,
+      position: Vector2(
+        p.x + r.nextDouble() * horizontalVariation - horizontalVariation / 2,
+        p.y + r.nextDouble() * verticalVariation - verticalVariation,
+      ),
+      movingUpOffset: offsetY,
+      duration: duration,
+      config: ScreenTextConfig(
+        anchor: Anchor.center,
+        textStyle: TextStyle(
+          color: color ?? Colors.white,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ).merge(
+          (textStyle ?? TextStyle()),
+        ),
+      ),
+      priority: kHintTextPriority,
+    );
+    world.add(c);
   }
 
   void leave({bool clearCache = false}) async {

@@ -13,7 +13,7 @@ class SpriteButton extends BorderComponent with HandlesGesture {
     outlined: true,
   );
 
-  late Paint hoverTintPaint, invalidPaint, shadowPaint;
+  late Paint hoverTintPaint, unselectedPaint, invalidPaint; // shadowPaint;
 
   Sprite? sprite;
   String? spriteId;
@@ -28,6 +28,9 @@ class SpriteButton extends BorderComponent with HandlesGesture {
   Sprite? pressSprite;
   String? pressSpriteId;
 
+  Sprite? unselectedSprite;
+  String? unselectedSpriteId;
+
   String? text;
   late ScreenTextConfig textConfig;
 
@@ -38,6 +41,10 @@ class SpriteButton extends BorderComponent with HandlesGesture {
   }
 
   bool get isEnabled => _isEnabled;
+
+  bool isSelectable;
+
+  bool isSelected;
 
   void customRender(Canvas canvas) {}
 
@@ -53,29 +60,29 @@ class SpriteButton extends BorderComponent with HandlesGesture {
     super.position,
     super.opacity,
     super.children,
-    super.paint,
     super.scale,
     super.angle,
     void Function(int buttons, Vector2 position)? onTap,
     super.borderRadius,
     bool isEnabled = true,
+    this.isSelectable = false,
+    this.isSelected = false,
     Image? image,
     this.sprite,
     this.spriteId,
     this.useSpriteSrcSize = false,
-    Image? borderImage,
     this.borderSprite,
     this.borderSpriteId,
-    Image? hoverImage,
     this.hoverSprite,
     this.hoverSpriteId,
-    Image? pressImage,
     this.pressSprite,
     this.pressSpriteId,
-    Paint? darkenedPaint,
+    this.unselectedSprite,
+    this.unselectedSpriteId,
+    super.paint,
     Paint? hoverTintPaint,
     Paint? invalidPaint,
-    Paint? shadowPaint,
+    // Paint? shadowPaint,
     this.useDefaultRender = true,
     this.useSimpleStyle = false,
     super.lightConfig,
@@ -109,31 +116,31 @@ class SpriteButton extends BorderComponent with HandlesGesture {
       }
     }
 
-    if (borderImage != null) {
-      borderSprite = Sprite(borderImage);
-    }
+    // if (borderImage != null) {
+    //   borderSprite = Sprite(borderImage);
+    // }
 
-    if (hoverImage != null) {
-      hoverSprite = Sprite(hoverImage);
-    }
+    // if (hoverImage != null) {
+    //   hoverSprite = Sprite(hoverImage);
+    // }
 
-    if (pressImage != null) {
-      pressSprite = Sprite(pressImage);
-    }
+    // if (pressImage != null) {
+    //   pressSprite = Sprite(pressImage);
+    // }
 
     this.hoverTintPaint = hoverTintPaint ?? Paint()
-      ..filterQuality = FilterQuality.medium
-      ..color = Colors.white.withAlpha((opacity * 255).round())
+      // ..filterQuality = FilterQuality.medium
       ..colorFilter = PresetFilters.brightness(0.3);
     setPaint('hoverTintPaint', this.hoverTintPaint);
 
     this.invalidPaint = invalidPaint ?? Paint()
-      ..color = Colors.black.withAlpha((opacity * 255).round())
-      ..blendMode = BlendMode.luminosity;
+      ..color = Colors.white.withAlpha(100)
+      ..colorFilter = kColorFilterGreyscale;
+    setPaint('invalidPaint', this.invalidPaint);
 
-    this.shadowPaint = shadowPaint ?? Paint()
-      ..color = Colors.black.withAlpha(128)
-      ..imageFilter = ImageFilter.blur(sigmaX: 0.3, sigmaY: 0.3);
+    // this.shadowPaint = shadowPaint ?? Paint()
+    //   ..color = Colors.black.withAlpha(128)
+    //   ..imageFilter = ImageFilter.blur(sigmaX: 0.3, sigmaY: 0.3);
 
     this.onTap = onTap;
   }
@@ -155,6 +162,9 @@ class SpriteButton extends BorderComponent with HandlesGesture {
     }
     if (pressSpriteId != null) {
       pressSprite = Sprite(await Flame.images.load(pressSpriteId!));
+    }
+    if (unselectedSpriteId != null) {
+      unselectedSprite = Sprite(await Flame.images.load(unselectedSpriteId!));
     }
   }
 
@@ -186,7 +196,12 @@ class SpriteButton extends BorderComponent with HandlesGesture {
           } else if (hoverSprite != null) {
             hoverSprite?.render(canvas, size: size, overridePaint: paint);
           } else if (sprite != null) {
-            sprite?.render(canvas, size: size, overridePaint: paint);
+            if (isSelectable && !isSelected) {
+              unselectedSprite?.render(canvas,
+                  size: size, overridePaint: paint);
+            } else {
+              sprite?.render(canvas, size: size, overridePaint: paint);
+            }
           } else if (useSimpleStyle) {
             canvas.drawRRect(
               roundBorder,
@@ -198,29 +213,35 @@ class SpriteButton extends BorderComponent with HandlesGesture {
             hoverSprite?.render(canvas,
                 size: size, overridePaint: hoverTintPaint);
           } else if (sprite != null) {
-            sprite?.render(canvas, size: size, overridePaint: hoverTintPaint);
+            if (isSelectable && !isSelected) {
+              unselectedSprite?.render(canvas,
+                  size: size, overridePaint: hoverTintPaint);
+            } else {
+              sprite?.render(canvas, size: size, overridePaint: hoverTintPaint);
+            }
           } else if (useSimpleStyle) {
             canvas.drawRRect(roundBorder, PresetPaints.lightGreenFill);
           }
         } else {
           if (sprite != null) {
-            sprite?.render(canvas, size: size, overridePaint: paint);
+            if (isSelectable && !isSelected) {
+              unselectedSprite?.render(canvas,
+                  size: size, overridePaint: paint);
+            } else {
+              sprite?.render(canvas, size: size, overridePaint: paint);
+            }
           } else if (useSimpleStyle) {
             canvas.drawRRect(roundBorder, PresetPaints.successFill);
           }
         }
       } else {
         if (borderSprite != null) {
-          if (opacity != 1) {
-            borderSprite?.render(canvas, size: size, overridePaint: paint);
-          } else {
-            borderSprite?.render(canvas,
-                size: size, overridePaint: invalidPaint);
-          }
+          borderSprite?.render(canvas, size: size, overridePaint: invalidPaint);
         }
         if (sprite != null) {
-          if (opacity != 1) {
-            sprite?.render(canvas, size: size, overridePaint: paint);
+          if (isSelectable && !isSelected) {
+            unselectedSprite?.render(canvas,
+                size: size, overridePaint: invalidPaint);
           } else {
             sprite?.render(canvas, size: size, overridePaint: invalidPaint);
           }

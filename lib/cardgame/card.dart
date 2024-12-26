@@ -138,9 +138,10 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
     preferredPriority = preferredPriority ?? priority;
 
     final invalidPaint = Paint()
-      ..color = Colors.white.withAlpha(128)
+      ..color = Colors.white.withAlpha(100)
       ..colorFilter = kColorFilterGreyscale;
     setPaint('invalid', invalidPaint);
+
     this.isEnabled = isEnabled;
 
     onMouseEnter = () {

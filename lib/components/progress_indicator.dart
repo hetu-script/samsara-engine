@@ -6,8 +6,6 @@ import '../gestures/gesture_mixin.dart';
 
 class DynamicColorProgressIndicator extends BorderComponent
     with HandlesGesture {
-  late final ScreenTextConfig textStyle;
-
   int _value, max;
 
   bool showNumber, showNumberAsPercentage;
@@ -23,6 +21,9 @@ class DynamicColorProgressIndicator extends BorderComponent
 
   bool animated;
 
+  String? label;
+  late ScreenTextConfig labelConfig;
+
   DynamicColorProgressIndicator({
     super.position,
     super.size,
@@ -30,6 +31,7 @@ class DynamicColorProgressIndicator extends BorderComponent
     super.borderRadius = 3.5,
     required int value,
     required this.max,
+    this.label,
     this.showNumber = false,
     this.showNumberAsPercentage = false,
     required this.colors,
@@ -37,9 +39,10 @@ class DynamicColorProgressIndicator extends BorderComponent
     super.borderPaint,
     this.animated = true,
     this.animationDuration = 4,
+    ScreenTextConfig? labelConfig,
   })  : _value = value,
         _currentValue = value.toDouble() {
-    textStyle = ScreenTextConfig(
+    this.labelConfig = (labelConfig ?? ScreenTextConfig()).copyWith(
       size: border.size.toVector2(),
       anchor: Anchor.center,
       outlined: true,
@@ -115,8 +118,8 @@ class DynamicColorProgressIndicator extends BorderComponent
 
     canvas.drawRRect(roundBorder, borderPaint);
 
-    final text = '${_currentValue.toInt()}/$max';
+    final text = '${label ?? ''}${_currentValue.toInt()}/$max';
 
-    drawScreenText(canvas, text, config: textStyle);
+    drawScreenText(canvas, text, config: labelConfig);
   }
 }

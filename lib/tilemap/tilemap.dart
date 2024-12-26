@@ -149,7 +149,7 @@ class TileMap extends GameComponent with HandlesGesture {
         assert(!tileObjectSpriteSrcSize.isZero()) {
     onMouseHover = (Vector2 position) {
       final tilePosition = worldPosition2Tile(position);
-      final terrain = getTerrainByPosition(tilePosition);
+      final terrain = getTerrain(tilePosition.left, tilePosition.top);
       if (terrain != null && terrain != hoveredTerrain) {
         terrain.isHovered = true;
         hoveredTerrain?.isHovered = false;
@@ -474,6 +474,12 @@ class TileMap extends GameComponent with HandlesGesture {
     }
   }
 
+  void moveCameraToHero({bool animated = true}) {
+    if (hero != null) {
+      moveCameraToTilePosition(hero!.left, hero!.top, animated: animated);
+    }
+  }
+
   void setCameraFollowHero(bool value) {
     if (hero != null) {
       if (value) {
@@ -529,10 +535,6 @@ class TileMap extends GameComponent with HandlesGesture {
         throw 'Get neighbors of Vertical hexagonal map tile is not supported yet!';
     }
     return positions;
-  }
-
-  TileMapTerrain? getTerrainByPosition(TilePosition position) {
-    return getTerrain(position.left, position.top);
   }
 
   Vector2 getRandomTerrainPosition() {

@@ -58,23 +58,41 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   final String? _zoneIndex;
   String? get zoneId => _zoneIndex;
-  final String? _nationId;
+
+  String? _nationId;
   String? get nationId => _nationId;
-  final String? _locationId;
+  set nationId(value) {
+    _nationId = value;
+    if (data != null) {
+      data?['nationId'] = value;
+    }
+  }
+
+  String? _locationId;
   String? get locationId => _locationId;
+  set locationId(value) {
+    _locationId = value;
+    if (data != null) {
+      data?['locationId'] = value;
+    }
+  }
 
   bool _isNonEnterable, _isLighted;
 
   set isNonEnterable(value) {
     _isNonEnterable = value;
-    data?['isNonEnterable'] = value;
+    if (data != null) {
+      data?['isNonEnterable'] = value;
+    }
   }
 
   bool get isNonEnterable => _isNonEnterable;
 
   set isLighted(value) {
     _isLighted = value;
-    data?['isLighted'] = value;
+    if (data != null) {
+      data?['isLighted'] = value;
+    }
   }
 
   bool get isLighted => _isLighted;
@@ -89,7 +107,9 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   set objectId(value) {
     _objectId = value;
-    data?['objectId'] = value;
+    if (data != null) {
+      data?['objectId'] = value;
+    }
   }
 
   String? get objectId => _objectId;
@@ -104,9 +124,13 @@ class TileMapTerrain extends GameComponent with TileInfo {
   SpriteAnimationWithTicker? _animation, _overlayAnimation;
 
   set spriteIndex(int? value) {
-    data?['spriteIndex'] = value;
-    if (value != null) {
-      _sprite = terrainSpriteSheet.getSpriteById(value);
+    if (data != null) {
+      data?['spriteIndex'] = value;
+      if (value != null) {
+        _sprite = terrainSpriteSheet.getSpriteById(value);
+      } else {
+        _sprite = null;
+      }
     }
   }
 
@@ -129,10 +153,10 @@ class TileMapTerrain extends GameComponent with TileInfo {
   double _overlayAnimationOffsetValue = 0;
 
   Future<void> _tryLoadSpriteFromData({bool overlay = false}) async {
-    if (data == null) return;
+    // if (data == null) return;
 
     final d = overlay ? (data?['overlaySprite']) : data;
-    assert(d != null);
+    // assert(d != null);
 
     Sprite? sprite;
     final String? spritePath = d?['sprite'];
@@ -141,6 +165,8 @@ class TileMapTerrain extends GameComponent with TileInfo {
       sprite = await Sprite.load(spritePath, srcSize: srcSize);
     } else if (spriteIndex != null) {
       sprite = terrainSpriteSheet.getSpriteById(spriteIndex);
+    } else {
+      sprite = null;
     }
     if (!overlay) {
       _sprite = sprite;
@@ -152,7 +178,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
   Future<void> _tryLoadAnimationFromData({bool overlay = false}) async {
     final d =
         overlay ? data?['overlaySprite']?['animation'] : data?['animation'];
-    if (d == null) return;
+    // if (d == null) return;
 
     SpriteAnimationWithTicker? animation;
     final String? path = d?['path'];
@@ -184,6 +210,8 @@ class TileMapTerrain extends GameComponent with TileInfo {
           to: to,
         ),
       );
+    } else {
+      animation = null;
     }
     if (!overlay) {
       _animation = animation;

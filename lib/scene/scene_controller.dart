@@ -18,24 +18,28 @@ abstract class SceneController implements HTLogger {
 
   bool containsScene(String id) => _cachedScenes.containsKey(id);
 
+  T? switchScene<T extends Scene>(String sceneId) {
+    final cached = _cachedScenes[sceneId];
+    if (cached != null) {
+      _currentScene = cached;
+      return cached as T;
+    } else {
+      return null;
+    }
+  }
+
   @mustCallSuper
   Future<T> createScene<T extends Scene>({
     required String contructorKey,
     required String sceneId,
     dynamic arg,
   }) async {
-    final cached = _cachedScenes[sceneId];
-    if (cached != null) {
-      _currentScene = cached;
-      return cached as T;
-    } else {
-      final constructor = _sceneConstructors[contructorKey];
-      assert(constructor != null);
-      final T scene = (await constructor!(arg)) as T;
-      _cachedScenes[sceneId] = scene;
-      _currentScene = scene;
-      return scene;
-    }
+    final constructor = _sceneConstructors[contructorKey];
+    assert(constructor != null);
+    final T scene = (await constructor!(arg)) as T;
+    _cachedScenes[sceneId] = scene;
+    _currentScene = scene;
+    return scene;
   }
 
   void leaveScene(String sceneId, {bool clearCache = false}) {
@@ -55,5 +59,10 @@ abstract class SceneController implements HTLogger {
       }
       _cachedScenes.remove(sceneId);
     }
+  }
+
+  void clearAllCache() {
+    _currentScene = null;
+    _cachedScenes.clear();
   }
 }

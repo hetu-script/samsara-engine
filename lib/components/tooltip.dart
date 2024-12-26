@@ -51,45 +51,60 @@ class Tooltip extends BorderComponent {
     instance.removeFromParent();
     instance.setContent(content: content, config: config, width: width);
 
-    final left = target.topLeftPosition.x -
-        (scene.camera.viewfinder.position.x - scene.camera.viewport.size.x / 2);
-    final top = target.topLeftPosition.y -
-        (scene.camera.viewfinder.position.y - scene.camera.viewport.size.y / 2);
+    final targetPosition = target.absoluteTopLeftPosition;
+    final targetPositionGlobal = scene.camera.localToGlobal(targetPosition);
+    final targetSizeGlobal = target.size * scene.camera.zoom;
 
     Vector2 calculatedPosition;
     switch (direction) {
       case TooltipDirection.topLeft:
-        calculatedPosition = Vector2(left, top - 10 - instance.height);
+        calculatedPosition = Vector2(
+            targetSizeGlobal.x, targetPositionGlobal.y - 10 - instance.height);
       case TooltipDirection.topCenter:
-        calculatedPosition = Vector2(left - (instance.width - target.width) / 2,
-            top - 10 - instance.height);
+        calculatedPosition = Vector2(
+            targetPositionGlobal.x - (instance.width - targetSizeGlobal.x) / 2,
+            targetPositionGlobal.y - 10 - instance.height);
       case TooltipDirection.topRight:
         calculatedPosition = Vector2(
-            left + target.width - instance.width, top - 10 - instance.height);
+            targetPositionGlobal.x + targetSizeGlobal.x - instance.width,
+            targetPositionGlobal.y - 10 - instance.height);
       case TooltipDirection.leftTop:
-        calculatedPosition = Vector2(left - 10 - instance.width, top);
+        calculatedPosition = Vector2(
+            targetPositionGlobal.x - 10 - instance.width,
+            targetPositionGlobal.y);
       case TooltipDirection.leftCenter:
-        calculatedPosition = Vector2(left - 10 - instance.width,
-            top - (instance.height - target.height) / 2);
+        calculatedPosition = Vector2(
+            targetPositionGlobal.x - 10 - instance.width,
+            targetPositionGlobal.y -
+                (instance.height - targetSizeGlobal.y) / 2);
       case TooltipDirection.leftBottom:
         calculatedPosition = Vector2(
-            left - 10 - instance.width, top + target.height - instance.height);
+            targetPositionGlobal.x - 10 - instance.width,
+            targetPositionGlobal.y + targetSizeGlobal.y - instance.height);
       case TooltipDirection.rightTop:
-        calculatedPosition = Vector2(left + target.width + 10, top);
+        calculatedPosition = Vector2(
+            targetPositionGlobal.x + targetSizeGlobal.x + 10,
+            targetPositionGlobal.y);
       case TooltipDirection.rightCenter:
-        calculatedPosition = Vector2(left + target.width + 10,
-            top - (instance.height - target.height) / 2);
+        calculatedPosition = Vector2(
+            targetPositionGlobal.x + targetSizeGlobal.x + 10,
+            targetPositionGlobal.y -
+                (instance.height - targetSizeGlobal.y) / 2);
       case TooltipDirection.rightBottom:
         calculatedPosition = Vector2(
-            left + target.width + 10, top + target.height - instance.height);
+            targetPositionGlobal.x + targetSizeGlobal.x + 10,
+            targetPositionGlobal.y + targetSizeGlobal.y - instance.height);
       case TooltipDirection.bottomLeft:
-        calculatedPosition = Vector2(left, top + target.height + 10);
+        calculatedPosition = Vector2(targetPositionGlobal.x,
+            targetPositionGlobal.y + targetSizeGlobal.y + 10);
       case TooltipDirection.bottomCenter:
-        calculatedPosition = Vector2(left - (instance.width - target.width) / 2,
-            top + target.height + 10);
+        calculatedPosition = Vector2(
+            targetPositionGlobal.x - (instance.width - targetSizeGlobal.x) / 2,
+            targetPositionGlobal.y + targetSizeGlobal.y + 10);
       case TooltipDirection.bottomRight:
         calculatedPosition = Vector2(
-            left + target.width - instance.width, top + target.height + 10);
+            targetPositionGlobal.x + targetSizeGlobal.x - instance.width,
+            targetPositionGlobal.y + targetSizeGlobal.y + 10);
     }
 
     // 检查是否超出了游戏屏幕
@@ -111,11 +126,11 @@ class Tooltip extends BorderComponent {
   }
 
   /// hide其实会等待半秒。
-  /// 如果半秒之内没有其他代码执行show()，才会最终隐藏窗口。
+  /// 如果 50ms 之内没有其他代码执行show()，才会最终隐藏窗口。
   /// 这是为了避免某些时候不同Future中的的隐藏和显示窗口的命令互相冲突。
   static void hide() async {
     _doHide = true;
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 50));
     if (_doHide == true) {
       instance.removeFromParent();
     }
