@@ -56,4 +56,17 @@ class BorderComponent extends GameComponent {
         height + borderWidth * 2,
         Radius.circular(borderRadius));
   }
+
+  // @override
+  // void renderTree(Canvas canvas) {
+  //   canvas.save();
+  //   if (borderRadius > 0) {
+  //     canvas.clipRRect(clipRRect);
+  //   } else {
+  //     canvas.clipRect(border);
+  //   }
+
+  //   canvas.restore();
+  //   super.renderTree(canvas);
+  // }
 }

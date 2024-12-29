@@ -370,10 +370,10 @@ mixin HandlesGesture on GameComponent {
       onMouseHover?.call(positionWithinComponent);
       return this;
     } else {
-      if (isHovering) {
-        isHovering = false;
-        onMouseExit?.call();
-      }
+      // if (isHovering) {
+      //   isHovering = false;
+      //   onMouseExit?.call();
+      // }
       return null;
     }
   }

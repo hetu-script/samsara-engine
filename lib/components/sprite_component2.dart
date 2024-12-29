@@ -2,9 +2,10 @@ import 'package:flame/components.dart';
 import 'package:meta/meta.dart';
 
 import 'game_component.dart';
+import '../gestures.dart';
 
 /// A modification of Flame's SpriteComponent that allows for visibility control.
-class SpriteComponent2 extends GameComponent {
+class SpriteComponent2 extends GameComponent with HandlesGesture {
   /// When set to true, the component is auto-resized to match the
   /// size of underlying sprite.
   bool _autoResize;
@@ -19,6 +20,7 @@ class SpriteComponent2 extends GameComponent {
     Paint? paint,
     super.position,
     Vector2? size,
+    super.isVisible,
     super.scale,
     super.angle,
     super.nativeAngle,
@@ -26,6 +28,7 @@ class SpriteComponent2 extends GameComponent {
     super.children,
     super.priority,
     super.key,
+    super.lightConfig,
   })  : assert(
           (size == null) == (autoResize ?? size == null),
           '''If size is set, autoResize should be false or size should be null when autoResize is true.''',

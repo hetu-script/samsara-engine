@@ -57,7 +57,8 @@ abstract class GameComponent extends PositionComponent
     bool isVisible = true,
   }) : _isVisible = isVisible {
     this.opacity = opacity;
-    this.paint = paint ?? Paint();
+    this.paint = paint ?? Paint()
+      ..filterQuality = FilterQuality.high;
 
     setPaint('default', this.paint);
   }

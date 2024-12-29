@@ -69,17 +69,18 @@ class GameScene extends Scene {
           deckId: cardId,
           preferredSize: cardSize,
           illustrationRelativePaddings:
-              const EdgeInsets.fromLTRB(0.06, 0.04, 0.06, 0.388),
+              const EdgeInsets.fromLTRB(0.046, 0.1225, 0.046, 0.214),
           illustrationSpriteId: 'attack_normal.png',
-          spriteId: 'border3.png',
+          spriteId: 'border4.png',
           title: '无名剑法',
           titleRelativePaddings:
-              const EdgeInsets.fromLTRB(0.08, 0.625, 0.08, 0.469),
+              const EdgeInsets.fromLTRB(0.16, 0.046, 0.16, 0.8775),
           titleConfig: const ScreenTextConfig(
-            anchor: Anchor.topCenter,
-            outlined: true,
+            anchor: Anchor.center,
             textStyle: TextStyle(
-              fontSize: 18.0,
+              color: Colors.black,
+              fontSize: 16.0,
+              fontWeight: FontWeight.bold,
               // color: Colors.orange,
               // fontWeight: FontWeight.bold,
             ),
@@ -113,7 +114,7 @@ class GameScene extends Scene {
       );
     };
     button.onMouseExit = () {
-      Tooltip.hide();
+      Tooltip.hide(button);
     };
     button.onDragUpdate = (int buttons, Vector2 offset) {
       button.position += offset;

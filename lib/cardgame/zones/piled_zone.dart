@@ -55,10 +55,10 @@ class PiledZone extends BorderComponent {
   Vector2? focusedOffset, focusedPosition, focusedSize;
 
   /// [pileMargin] : 堆叠时第一张牌相对区域的x和y的位移
-  late final Vector2 pileMargin;
+  late Vector2 pileMargin;
 
   /// [pileOffset] : 堆叠时每张牌相比上一张牌的位移
-  late final Vector2 pileOffset; //, focusOffset;
+  late Vector2 pileOffset; //, focusOffset;
 
   final PileStructure pileStructure;
   final bool reverseX, reverseY;
@@ -71,6 +71,16 @@ class PiledZone extends BorderComponent {
   // final String? cardState;
 
   // int _largestIndex = 0;
+
+  void Function()? onPileChanged;
+
+  @override
+  set isVisible(bool value) {
+    super.isVisible = value;
+    for (final card in cards) {
+      card.isVisible = value;
+    }
+  }
 
   /// [pileMargin] : 堆叠时第一张牌相对区域的x和y的位移
   ///
@@ -99,6 +109,7 @@ class PiledZone extends BorderComponent {
     this.titleAnchor = Anchor.topLeft,
     this.titlePadding = EdgeInsets.zero,
     // this.cardState,
+    this.onPileChanged,
   }) {
     pileMargin ??= Vector2(10.0, 10.0);
     pileOffset ??= Vector2(50.0, 0.0);
@@ -210,6 +221,7 @@ class PiledZone extends BorderComponent {
 
     // card.onAddedToPileZone?.call(this);
 
+    onPileChanged?.call();
     return sortCards(animated: animated, onComplete: onComplete);
   }
 
@@ -265,7 +277,7 @@ class PiledZone extends BorderComponent {
     void Function()? onComplete,
   }) async {
     final completer = Completer();
-
+    bool isCompleted = false;
     void onSortComplete() {
       onComplete?.call();
       completer.complete();
@@ -304,21 +316,26 @@ class PiledZone extends BorderComponent {
             pileMargin.y,
       );
 
-      if (card.position == endPosition && card.size == piledCardSize) continue;
+      if (card.position == endPosition && card.size == piledCardSize) {
+        if (i == cards.length - 1) {
+          isCompleted = true;
+        }
+        continue;
+      }
 
       if (focusedOffset != null) card.focusedOffset = focusedOffset;
       if (focusedPosition != null) card.focusedPosition ??= focusedPosition;
       if (focusedSize != null) card.focusedSize ??= focusedSize;
 
       if (animated) {
-        card.enableGesture = false;
+        // card.enableGesture = false;
         card.moveTo(
           toPosition: endPosition,
           toSize: piledCardSize,
           duration: 0.5,
           curve: Curves.decelerate,
           onComplete: () {
-            card.enableGesture = true;
+            // card.enableGesture = true;
             if (i == cards.length - 1) {
               onSortComplete();
             }
@@ -330,7 +347,7 @@ class PiledZone extends BorderComponent {
       }
     }
 
-    if (!animated) {
+    if (!animated || isCompleted) {
       onSortComplete();
     }
 
@@ -359,6 +376,8 @@ class PiledZone extends BorderComponent {
     if (sort) {
       sortCards();
     }
+
+    onPileChanged?.call();
     return true;
   }
 

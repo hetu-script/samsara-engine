@@ -178,11 +178,6 @@ class SpriteButton extends BorderComponent with HandlesGesture {
   void render(Canvas canvas) {
     if (!isVisible) return;
 
-    if (borderRadius > 0) {
-      canvas.save();
-      canvas.clipRRect(roundBorder);
-    }
-
     if (!useDefaultRender) {
       customRender(canvas);
     } else {
@@ -273,10 +268,6 @@ class SpriteButton extends BorderComponent with HandlesGesture {
         //   );
         // }
       }
-    }
-
-    if (borderRadius > 0) {
-      canvas.restore();
     }
   }
 }

@@ -204,7 +204,7 @@ abstract class PresetPaints {
     ..color = Colors.grey.shade300;
 }
 
-// final Map<TextPaint, TextPaint> _cachedOutline = {};
+final Map<TextPaint, TextPaint> _cachedOutline = {};
 
 abstract class PresetTextPaints {
   static final TextPaint light = TextPaint(
@@ -377,46 +377,30 @@ TextPaint getTextPaint({
                   config.textStyle?.fontSize ??
                   kDefaultRichTextFontSize) *
               (config.scale ?? 1.0),
-          shadows: config.outlined == true
-              ? [
-                  Shadow(
-                      // bottomLeft
-                      offset: const Offset(-1, -1),
-                      color: Colors.black.withAlpha(alpha)),
-                  Shadow(
-                      // bottomRight
-                      offset: const Offset(1, -1),
-                      color: Colors.black.withAlpha(alpha)),
-                  Shadow(
-                      // topRight
-                      offset: const Offset(1, 1),
-                      color: Colors.black.withAlpha(alpha)),
-                  Shadow(
-                      // topLeft
-                      offset: const Offset(-1, 1),
-                      color: Colors.black.withAlpha(alpha)),
-                ]
-              : null,
+          // shadows: config.outlined == true
+          //     ? [
+          //         Shadow(
+          //             // bottomLeft
+          //             offset: const Offset(-1, -1),
+          //             color: Colors.black.withAlpha(128)),
+          //         Shadow(
+          //             // bottomRight
+          //             offset: const Offset(1, -1),
+          //             color: Colors.black.withAlpha(128)),
+          //         Shadow(
+          //             // topRight
+          //             offset: const Offset(1, 1),
+          //             color: Colors.black.withAlpha(128)),
+          //         Shadow(
+          //             // topLeft
+          //             offset: const Offset(-1, 1),
+          //             color: Colors.black.withAlpha(128)),
+          //       ]
+          //     : null,
         ),
       ),
     );
   }
-
-  // another way to draw text shadows, obseleted due to low efficiency
-  //   TextPaint? outlinePaint = _cachedOutline[textPaint];
-  //   if (outlinePaint == null) {
-  //     outlinePaint = textPaint.copyWith(
-  //       (textStyle) => textStyle.copyWith(
-  //         foreground: Paint()
-  //           ..strokeWidth = 2
-  //           ..color = Colors.black.withOpacity(opacity)
-  //           ..style = PaintingStyle.stroke,
-  //       ),
-  //     );
-  //     _cachedOutline[textPaint] = outlinePaint;
-  //   }
-
-  //   outlinePaint.render(canvas, text, style!.position!);
 }
 
 double getLinesHeight(int length, TextPaint textPaint) {
@@ -550,6 +534,23 @@ Offset drawMultilineText(
         lastCharacterPosition =
             Offset(lineWidth, currentLineOffsetY + baseLineFix);
       }
+
+      // another way to draw text shadows, obseleted due to low efficiency
+      TextPaint? outlinePaint = _cachedOutline[textPaint];
+      if (outlinePaint == null) {
+        outlinePaint = textPaint.copyWith(
+          (textStyle) => textStyle.copyWith(
+            foreground: Paint()
+              ..strokeWidth = 3
+              ..color = Colors.black
+              ..style = PaintingStyle.stroke,
+          ),
+        );
+        _cachedOutline[textPaint] = outlinePaint;
+      }
+
+      outlinePaint.render(canvas, currentLine,
+          Vector2(lineLeft + offsetX, lineTop + offsetY + baseLineFix));
 
       textPaint.render(
         canvas,

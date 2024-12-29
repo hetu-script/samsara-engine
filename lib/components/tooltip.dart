@@ -28,15 +28,14 @@ const kTooltipContentIndent = 10.0;
 const kTooltipBackgroundBorderRadius = 5.0;
 
 class Tooltip extends BorderComponent {
-  static Tooltip instance = Tooltip();
+  static Map<GameComponent, Tooltip> _instances = {};
+  // static Tooltip instance = Tooltip();
 
   static const defaultContentConfig = ScreenTextConfig(
       anchor: Anchor.topLeft,
       padding: EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
       textStyle: TextStyle(fontSize: 14.0),
       overflow: ScreenTextOverflow.wordwrap);
-
-  static bool _doHide = false;
 
   static show({
     required Scene scene,
@@ -46,10 +45,9 @@ class Tooltip extends BorderComponent {
     TooltipDirection direction = TooltipDirection.topLeft,
     double width = 280.0,
   }) {
-    _doHide = false;
-
-    instance.removeFromParent();
+    final instance = Tooltip();
     instance.setContent(content: content, config: config, width: width);
+    _instances[target] = instance;
 
     final targetPosition = target.absoluteTopLeftPosition;
     final targetPositionGlobal = scene.camera.localToGlobal(targetPosition);
@@ -128,11 +126,11 @@ class Tooltip extends BorderComponent {
   /// hide其实会等待半秒。
   /// 如果 50ms 之内没有其他代码执行show()，才会最终隐藏窗口。
   /// 这是为了避免某些时候不同Future中的的隐藏和显示窗口的命令互相冲突。
-  static void hide() async {
-    _doHide = true;
-    await Future.delayed(Duration(milliseconds: 50));
-    if (_doHide == true) {
-      instance.removeFromParent();
+  static void hide(GameComponent target) async {
+    if (_instances.containsKey(target)) {
+      final instance = _instances[target];
+      instance!.removeFromParent();
+      _instances.remove(target);
     }
   }
 
@@ -219,13 +217,19 @@ class Tooltip extends BorderComponent {
             .translate(kTooltipContentIndent, kTooltipContentIndent);
       case Anchor.centerLeft:
         _contentElement!.translate(
-            0, kTooltipContentIndent + (height - boundingBox.height) / 2);
+            0,
+            kTooltipContentIndent +
+                (height - boundingBox.height - kTooltipContentIndent * 2) / 2);
       case Anchor.center:
         _contentElement!.translate(
-            0, kTooltipContentIndent + (height - boundingBox.height) / 2);
+            0,
+            kTooltipContentIndent +
+                (height - boundingBox.height - kTooltipContentIndent * 2) / 2);
       case Anchor.centerRight:
         _contentElement!.translate(
-            0, kTooltipContentIndent + (height - boundingBox.height) / 2);
+            0,
+            kTooltipContentIndent +
+                (height - boundingBox.height - kTooltipContentIndent * 2) / 2);
       case Anchor.bottomLeft:
         _contentElement!.translate(kTooltipContentIndent,
             height - kTooltipContentIndent - boundingBox.height);

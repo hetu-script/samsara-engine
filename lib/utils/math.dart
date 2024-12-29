@@ -14,7 +14,7 @@ class PointOnCircle {
   );
 }
 
-List<PointOnCircle> getDividingPointsFromCircle(
+List<PointOnCircle> generateDividingPointsFromCircle(
     double x0, double y0, double radius, int number,
     {double angleOffset = 0.0}) {
   assert(number > 1);
@@ -32,4 +32,23 @@ List<PointOnCircle> getDividingPointsFromCircle(
   }
 
   return coordinates;
+}
+
+/// 使用极坐标生成随机点
+/// 可以将 exponent 调整为更靠近小的值来增加靠近圆心的概率
+Vector2 generateRandomPointInCircle(
+  Vector2 center,
+  double radius, {
+  double exponent = 0.5,
+}) {
+  final random = math.Random();
+
+  final r = radius * (1 - math.pow(random.nextDouble(), exponent));
+
+  final theta = random.nextDouble() * 2 * math.pi;
+
+  final x = center.x + r * math.cos(theta);
+  final y = center.y + r * math.sin(theta);
+
+  return Vector2(x, y);
 }

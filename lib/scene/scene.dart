@@ -196,7 +196,9 @@ abstract class Scene extends FlameGame {
   @mustCallSuper
   void onTapUp(int pointer, int buttons, TapUpDetails details) {
     for (final c in gestureComponents) {
-      c.handleTapUp(pointer, buttons, details);
+      if (c.handleTapUp(pointer, buttons, details)) {
+        return;
+      }
     }
   }
 
@@ -262,15 +264,24 @@ abstract class Scene extends FlameGame {
 
   @mustCallSuper
   void onMouseHover(PointerHoverEvent details) {
+    HandlesGesture? hoveringChild;
+
+    void exitPreviousHoveringComponent() {
+      hoveringComponent?.onMouseExit?.call();
+      hoveringComponent?.isHovering = false;
+      hoveringComponent = hoveringChild;
+    }
+
     for (final c in gestureComponents) {
-      final HandlesGesture? hoveringChild = c.handleMouseHover(details);
+      hoveringChild = c.handleMouseHover(details);
       if (hoveringChild != null) {
-        if (hoveringComponent != null && hoveringComponent != hoveringChild) {
-          hoveringComponent!.onMouseExit?.call();
+        if (hoveringComponent != hoveringChild) {
+          exitPreviousHoveringComponent();
         }
         return;
       }
     }
+    exitPreviousHoveringComponent();
   }
 
   @mustCallSuper

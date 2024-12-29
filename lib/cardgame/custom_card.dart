@@ -391,13 +391,6 @@ class CustomGameCard extends GameCard {
 
   @override
   void render(Canvas canvas) {
-    canvas.save();
-    if (borderRadius > 0) {
-      canvas.clipRRect(clipRRect);
-    } else {
-      canvas.clipRect(border);
-    }
-
     if (isFlipped) {
       backSprite?.renderRect(canvas, border);
     } else {
@@ -451,7 +444,5 @@ class CustomGameCard extends GameCard {
         }
       }
     }
-
-    canvas.restore();
   }
 }

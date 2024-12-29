@@ -387,7 +387,8 @@ class TileMap extends GameComponent with HandlesGesture {
 
   Future<TileMapMovingObject> _loadMovingObjectFromData(dynamic data,
       [void Function(int left, int top)? onMoved]) async {
-    final String skinId = data!['skin'];
+    final String skinId = data!['characterSkin'];
+    final String shipSkinId = data!['shipSkin'];
 
     late SpriteSheet moveAnimationSpriteSheet, swimAnimationSpriteSheet;
 
@@ -396,16 +397,17 @@ class TileMap extends GameComponent with HandlesGesture {
     } else {
       cachedMovingObjectSpriteSheet[skinId] =
           moveAnimationSpriteSheet = SpriteSheet(
-        image: await Flame.images.load('animation/$skinId/tile_character.png'),
+        image: await Flame.images
+            .load('animation/$skinId/tilemap_moving_animation.png'),
         srcSize: tileObjectSpriteSrcSize,
       );
     }
-    if (cachedMovingObjectSpriteSheet.containsKey('_ship')) {
-      swimAnimationSpriteSheet = cachedMovingObjectSpriteSheet['_ship']!;
+    if (cachedMovingObjectSpriteSheet.containsKey(shipSkinId)) {
+      swimAnimationSpriteSheet = cachedMovingObjectSpriteSheet[shipSkinId]!;
     } else {
-      cachedMovingObjectSpriteSheet['_ship'] =
+      cachedMovingObjectSpriteSheet[shipSkinId] =
           swimAnimationSpriteSheet = SpriteSheet(
-        image: await Flame.images.load('animation/tile_ship.png'),
+        image: await Flame.images.load('animation/$shipSkinId.png'),
         srcSize: tileObjectSpriteSrcSize,
       );
     }
