@@ -10,6 +10,7 @@ class RichTextComponent extends BorderComponent {
 
   String? _text;
   DocumentRoot? _ducument;
+  GroupElement? _outlinedElement;
   GroupElement? _element;
 
   String? get text => _text;
@@ -18,6 +19,7 @@ class RichTextComponent extends BorderComponent {
     super.size,
     super.position,
     super.anchor,
+    super.isVisible,
     super.priority,
     String? text,
     this.config = const ScreenTextConfig(),
@@ -52,28 +54,53 @@ class RichTextComponent extends BorderComponent {
           width: width,
           height: height,
         ));
+        if (config.outlined == true) {
+          _outlinedElement = _ducument!.format(DocumentStyle(
+            paragraph:
+                BlockStyle(margin: EdgeInsets.zero, textAlign: contentAlign),
+            text: (config.textStyle ?? TextStyle())
+                .copyWith(
+                  foreground: Paint()
+                    ..strokeWidth = 3
+                    ..color = Colors.black
+                    ..style = PaintingStyle.stroke,
+                )
+                .toInlineTextStyle(),
+            width: width,
+            height: height,
+          ));
+        }
         final boundingBox = _element!.boundingBox;
         // 文本区域的左中右对齐已经由document.format的textAlign处理
         // 下面只是单独处理垂直方向的对齐
         switch (contentAnchor) {
           case Anchor.topLeft:
             _element!.translate(0, 0);
+            _outlinedElement?.translate(0, 0);
           case Anchor.topCenter:
             _element!.translate(0, 0);
+            _outlinedElement?.translate(0, 0);
           case Anchor.topRight:
             _element!.translate(0, 0);
+            _outlinedElement?.translate(0, 0);
           case Anchor.centerLeft:
             _element!.translate(0, (height - boundingBox.height) / 2);
+            _outlinedElement?.translate(0, (height - boundingBox.height) / 2);
           case Anchor.center:
             _element!.translate(0, (height - boundingBox.height) / 2);
+            _outlinedElement?.translate(0, (height - boundingBox.height) / 2);
           case Anchor.centerRight:
             _element!.translate(0, (height - boundingBox.height) / 2);
+            _outlinedElement?.translate(0, (height - boundingBox.height) / 2);
           case Anchor.bottomLeft:
             _element!.translate(0, height - boundingBox.height);
+            _outlinedElement?.translate(0, height - boundingBox.height);
           case Anchor.bottomCenter:
             _element!.translate(0, height - boundingBox.height);
+            _outlinedElement?.translate(0, height - boundingBox.height);
           case Anchor.bottomRight:
             _element!.translate(0, height - boundingBox.height);
+            _outlinedElement?.translate(0, height - boundingBox.height);
           default:
         }
       }
@@ -84,8 +111,7 @@ class RichTextComponent extends BorderComponent {
   void render(Canvas canvas) {
     if (!isVisible || text == null) return;
 
-    if (_element != null) {
-      _element!.draw(canvas);
-    }
+    _outlinedElement?.draw(canvas);
+    _element?.draw(canvas);
   }
 }

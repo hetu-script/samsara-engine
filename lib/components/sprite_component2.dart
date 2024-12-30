@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flame/components.dart';
 import 'package:meta/meta.dart';
 
@@ -10,11 +12,14 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
   /// size of underlying sprite.
   bool _autoResize;
 
+  String? spriteId;
+
   /// The [sprite] to be rendered by this component.
   Sprite? _sprite;
 
   /// Creates a component with an empty sprite which can be set later
   SpriteComponent2({
+    this.spriteId,
     Sprite? sprite,
     bool? autoResize,
     Paint? paint,
@@ -104,13 +109,21 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
   }
 
   @override
-  @mustCallSuper
-  void onMount() {
-    assert(
-      sprite != null,
-      'You have to set the sprite in either the constructor or in onLoad',
-    );
+  FutureOr<void> onLoad() async {
+    if (spriteId != null) {
+      _sprite = await Sprite.load(spriteId!);
+    }
+    _resizeToSprite();
   }
+
+  // @override
+  // @mustCallSuper
+  // void onMount() {
+  //   assert(
+  //     sprite != null,
+  //     'You have to set the sprite in either the constructor or in onLoad',
+  //   );
+  // }
 
   @mustCallSuper
   @override
@@ -126,7 +139,7 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
 
   /// Updates the size [sprite]'s srcSize if [autoResize] is true.
   void _resizeToSprite() {
-    if (_autoResize) {
+    if (_autoResize && _sprite != null) {
       _isAutoResizing = true;
 
       final newX = _sprite?.srcSize.x ?? 0;

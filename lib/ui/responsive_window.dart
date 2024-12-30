@@ -11,6 +11,7 @@ class ResponsiveWindow extends StatelessWidget {
     this.isPortraitMode = false,
     this.borderRadius = const BorderRadius.all(Radius.circular(5.0)),
     Color? color,
+    this.stackChildren = const [],
   }) : color = color ?? Colors.black;
 
   final Widget? child;
@@ -20,6 +21,7 @@ class ResponsiveWindow extends StatelessWidget {
   final bool isPortraitMode;
   final BorderRadius borderRadius;
   final Color color;
+  final List<Widget> stackChildren;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +46,7 @@ class ResponsiveWindow extends StatelessWidget {
               child: child,
             ),
           ),
+          ...stackChildren,
         ],
       ),
     );

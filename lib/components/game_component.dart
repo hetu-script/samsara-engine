@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart' hide Tooltip, Viewport;
+import 'package:flutter/material.dart' hide Viewport;
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 // import 'package:flame/experimental.dart';
@@ -150,13 +150,14 @@ abstract class GameComponent extends PositionComponent
       return;
     }
 
-    if (position == toPosition &&
-        size == toSize &&
+    if ((toPosition == null || (position == toPosition)) &&
+        (toSize == null || (size == toSize)) &&
         (toAngle == null || (angle == toAngle))) {
+      onComplete?.call();
       return;
-    }
-
-    if (_toPosition == toPosition && _toSize == toSize && _toAngle == toAngle) {
+    } else if (_toPosition == toPosition &&
+        _toSize == toSize &&
+        _toAngle == toAngle) {
       return;
     }
 

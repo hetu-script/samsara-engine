@@ -391,6 +391,8 @@ class CustomGameCard extends GameCard {
 
   @override
   void render(Canvas canvas) {
+    if (!isVisible) return;
+
     if (isFlipped) {
       backSprite?.renderRect(canvas, border);
     } else {

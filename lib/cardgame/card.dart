@@ -310,6 +310,8 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
 
   @override
   void render(Canvas canvas) {
+    if (!isVisible) return;
+
     sprite?.render(canvas, size: size, overridePaint: paint);
   }
 }

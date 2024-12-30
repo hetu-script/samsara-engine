@@ -9,7 +9,7 @@ import 'border_component.dart';
 import '../paint/paint.dart';
 import '../richtext.dart';
 
-enum TooltipDirection {
+enum HovertipDirection {
   topLeft,
   topCenter,
   topRight,
@@ -24,12 +24,11 @@ enum TooltipDirection {
   bottomRight,
 }
 
-const kTooltipContentIndent = 10.0;
-const kTooltipBackgroundBorderRadius = 5.0;
+const kHovertipContentIndent = 10.0;
+const kHovertipBackgroundBorderRadius = 5.0;
 
-class Tooltip extends BorderComponent {
-  static Map<GameComponent, Tooltip> _instances = {};
-  // static Tooltip instance = Tooltip();
+class Hovertip extends BorderComponent {
+  static final Map<GameComponent, Hovertip> _instances = {};
 
   static const defaultContentConfig = ScreenTextConfig(
       anchor: Anchor.topLeft,
@@ -42,10 +41,10 @@ class Tooltip extends BorderComponent {
     required GameComponent target,
     String? content,
     ScreenTextConfig? config,
-    TooltipDirection direction = TooltipDirection.topLeft,
+    HovertipDirection direction = HovertipDirection.topLeft,
     double width = 280.0,
   }) {
-    final instance = Tooltip();
+    final instance = Hovertip();
     instance.setContent(content: content, config: config, width: width);
     _instances[target] = instance;
 
@@ -55,51 +54,51 @@ class Tooltip extends BorderComponent {
 
     Vector2 calculatedPosition;
     switch (direction) {
-      case TooltipDirection.topLeft:
+      case HovertipDirection.topLeft:
         calculatedPosition = Vector2(
             targetSizeGlobal.x, targetPositionGlobal.y - 10 - instance.height);
-      case TooltipDirection.topCenter:
+      case HovertipDirection.topCenter:
         calculatedPosition = Vector2(
             targetPositionGlobal.x - (instance.width - targetSizeGlobal.x) / 2,
             targetPositionGlobal.y - 10 - instance.height);
-      case TooltipDirection.topRight:
+      case HovertipDirection.topRight:
         calculatedPosition = Vector2(
             targetPositionGlobal.x + targetSizeGlobal.x - instance.width,
             targetPositionGlobal.y - 10 - instance.height);
-      case TooltipDirection.leftTop:
+      case HovertipDirection.leftTop:
         calculatedPosition = Vector2(
             targetPositionGlobal.x - 10 - instance.width,
             targetPositionGlobal.y);
-      case TooltipDirection.leftCenter:
+      case HovertipDirection.leftCenter:
         calculatedPosition = Vector2(
             targetPositionGlobal.x - 10 - instance.width,
             targetPositionGlobal.y -
                 (instance.height - targetSizeGlobal.y) / 2);
-      case TooltipDirection.leftBottom:
+      case HovertipDirection.leftBottom:
         calculatedPosition = Vector2(
             targetPositionGlobal.x - 10 - instance.width,
             targetPositionGlobal.y + targetSizeGlobal.y - instance.height);
-      case TooltipDirection.rightTop:
+      case HovertipDirection.rightTop:
         calculatedPosition = Vector2(
             targetPositionGlobal.x + targetSizeGlobal.x + 10,
             targetPositionGlobal.y);
-      case TooltipDirection.rightCenter:
+      case HovertipDirection.rightCenter:
         calculatedPosition = Vector2(
             targetPositionGlobal.x + targetSizeGlobal.x + 10,
             targetPositionGlobal.y -
                 (instance.height - targetSizeGlobal.y) / 2);
-      case TooltipDirection.rightBottom:
+      case HovertipDirection.rightBottom:
         calculatedPosition = Vector2(
             targetPositionGlobal.x + targetSizeGlobal.x + 10,
             targetPositionGlobal.y + targetSizeGlobal.y - instance.height);
-      case TooltipDirection.bottomLeft:
+      case HovertipDirection.bottomLeft:
         calculatedPosition = Vector2(targetPositionGlobal.x,
             targetPositionGlobal.y + targetSizeGlobal.y + 10);
-      case TooltipDirection.bottomCenter:
+      case HovertipDirection.bottomCenter:
         calculatedPosition = Vector2(
             targetPositionGlobal.x - (instance.width - targetSizeGlobal.x) / 2,
             targetPositionGlobal.y + targetSizeGlobal.y + 10);
-      case TooltipDirection.bottomRight:
+      case HovertipDirection.bottomRight:
         calculatedPosition = Vector2(
             targetPositionGlobal.x + targetSizeGlobal.x - instance.width,
             targetPositionGlobal.y + targetSizeGlobal.y + 10);
@@ -142,7 +141,7 @@ class Tooltip extends BorderComponent {
 
   late final Paint backgroundPaint;
 
-  Tooltip({
+  Hovertip({
     ScreenTextConfig? contentConfig,
     super.borderRadius = 5.0,
     super.borderWidth = 5.0,
@@ -187,7 +186,7 @@ class Tooltip extends BorderComponent {
     //       contentConfig.copyWith(size: _contentRect.size.toVector2());
     // }
 
-    double contentWidth = width - kTooltipContentIndent * 2;
+    double contentWidth = width - kHovertipContentIndent * 2;
     final contentAnchor = contentConfig.anchor ?? Anchor.topLeft;
     TextAlign contentAlign = TextAlign.left;
     if (contentAnchor.x == 0.5) {
@@ -202,43 +201,43 @@ class Tooltip extends BorderComponent {
       width: contentWidth,
     ));
     final boundingBox = _contentElement!.boundingBox;
-    size = Vector2(width, boundingBox.height + kTooltipContentIndent * 2);
+    size = Vector2(width, boundingBox.height + kHovertipContentIndent * 2);
     // 文本区域的左中右对齐已经由document.format的textAlign处理
     // 下面只是单独处理垂直方向的对齐
     switch (contentAnchor) {
       case Anchor.topLeft:
         _contentElement!
-            .translate(kTooltipContentIndent, kTooltipContentIndent);
+            .translate(kHovertipContentIndent, kHovertipContentIndent);
       case Anchor.topCenter:
         _contentElement!
-            .translate(kTooltipContentIndent, kTooltipContentIndent);
+            .translate(kHovertipContentIndent, kHovertipContentIndent);
       case Anchor.topRight:
         _contentElement!
-            .translate(kTooltipContentIndent, kTooltipContentIndent);
+            .translate(kHovertipContentIndent, kHovertipContentIndent);
       case Anchor.centerLeft:
         _contentElement!.translate(
             0,
-            kTooltipContentIndent +
-                (height - boundingBox.height - kTooltipContentIndent * 2) / 2);
+            kHovertipContentIndent +
+                (height - boundingBox.height - kHovertipContentIndent * 2) / 2);
       case Anchor.center:
         _contentElement!.translate(
             0,
-            kTooltipContentIndent +
-                (height - boundingBox.height - kTooltipContentIndent * 2) / 2);
+            kHovertipContentIndent +
+                (height - boundingBox.height - kHovertipContentIndent * 2) / 2);
       case Anchor.centerRight:
         _contentElement!.translate(
             0,
-            kTooltipContentIndent +
-                (height - boundingBox.height - kTooltipContentIndent * 2) / 2);
+            kHovertipContentIndent +
+                (height - boundingBox.height - kHovertipContentIndent * 2) / 2);
       case Anchor.bottomLeft:
-        _contentElement!.translate(kTooltipContentIndent,
-            height - kTooltipContentIndent - boundingBox.height);
+        _contentElement!.translate(kHovertipContentIndent,
+            height - kHovertipContentIndent - boundingBox.height);
       case Anchor.bottomCenter:
-        _contentElement!.translate(kTooltipContentIndent,
-            height - kTooltipContentIndent - boundingBox.height);
+        _contentElement!.translate(kHovertipContentIndent,
+            height - kHovertipContentIndent - boundingBox.height);
       case Anchor.bottomRight:
-        _contentElement!.translate(kTooltipContentIndent,
-            height - kTooltipContentIndent - boundingBox.height);
+        _contentElement!.translate(kHovertipContentIndent,
+            height - kHovertipContentIndent - boundingBox.height);
       default:
     }
   }

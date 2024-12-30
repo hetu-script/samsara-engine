@@ -2,6 +2,7 @@
 import 'package:flame/src/text/nodes/inline_text_node.dart';
 import 'package:flame/text.dart';
 import 'package:flutter/material.dart';
+import 'inline_text_style2.dart';
 
 /// An [InlineTextNode] representing rich text.
 class RichTextNode extends InlineTextNode {
@@ -25,7 +26,7 @@ class RichTextNode extends InlineTextNode {
 
 class _RichTextLayoutBuilder extends TextNodeLayoutBuilder {
   _RichTextLayoutBuilder(this.node)
-      : renderer = node.style.asTextRenderer(),
+      : renderer = node.style.asTextRenderer2(),
         words = node.text.characters.toList();
 
   final RichTextNode node;

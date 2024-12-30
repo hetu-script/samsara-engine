@@ -8,15 +8,14 @@ class Label extends StatelessWidget {
     this.height = 20.0,
     this.padding = const EdgeInsets.symmetric(horizontal: 5.0),
     this.textAlign = TextAlign.left,
+    this.backgroundColor,
   });
 
   final String text;
-
   final double? width, height;
-
   final EdgeInsetsGeometry padding;
-
   final TextAlign textAlign;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +23,7 @@ class Label extends StatelessWidget {
       width: width,
       height: height,
       padding: padding,
+      color: backgroundColor,
       child: Text(
         text,
         textAlign: textAlign,

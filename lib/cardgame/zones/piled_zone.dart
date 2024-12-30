@@ -23,7 +23,7 @@ class PiledZone extends BorderComponent {
     return ownedBy == player;
   }
 
-  final String? title;
+  String? title;
 
   ScreenTextConfig? titleStyle;
 
@@ -277,10 +277,19 @@ class PiledZone extends BorderComponent {
     void Function()? onComplete,
   }) async {
     final completer = Completer();
-    bool isCompleted = false;
     void onSortComplete() {
       onComplete?.call();
       completer.complete();
+    }
+
+    void setCardPriority(GameCard card, int index) {
+      // pile.add(card.id);
+      if (pileStructure == PileStructure.queue) {
+        card.preferredPriority = priority + pileTopPriority - index;
+      } else if (pileStructure == PileStructure.stack) {
+        card.preferredPriority = priority + 1 + index;
+      }
+      card.resetPriority();
     }
 
     cards.sort((c1, c2) => c1.index.compareTo(c2.index));
@@ -288,16 +297,11 @@ class PiledZone extends BorderComponent {
     // calculate the new position of each hand cards.
     for (var i = 0; i < cards.length; ++i) {
       final card = cards[i];
-      // pile.add(card.id);
-      if (pileStructure == PileStructure.queue) {
-        card.preferredPriority = priority + pileTopPriority - i;
-      } else if (pileStructure == PileStructure.stack) {
-        card.preferredPriority = priority + 1 + i;
-      }
-      card.resetPriority();
 
       // TODO: 有empty slots时，不重新赋值index
       card.index = i;
+
+      setCardPriority(card, i);
 
       final endPosition = Vector2(
         // 如果堆叠方向是向右，则从区域左侧开始计算x偏移
@@ -315,13 +319,6 @@ class PiledZone extends BorderComponent {
             card.index * pileOffset.y +
             pileMargin.y,
       );
-
-      if (card.position == endPosition && card.size == piledCardSize) {
-        if (i == cards.length - 1) {
-          isCompleted = true;
-        }
-        continue;
-      }
 
       if (focusedOffset != null) card.focusedOffset = focusedOffset;
       if (focusedPosition != null) card.focusedPosition ??= focusedPosition;
@@ -347,7 +344,7 @@ class PiledZone extends BorderComponent {
       }
     }
 
-    if (!animated || isCompleted) {
+    if (!animated) {
       onSortComplete();
     }
 
@@ -387,12 +384,12 @@ class PiledZone extends BorderComponent {
     return removeCardByIndex(index, sort: sort);
   }
 
-  @override
-  void render(Canvas canvas) {
-    // if (title != null) {
-    //   drawScreenText(canvas, '$title：${cards.length}', config: titleStyle);
-    // }
+  // @override
+  // void render(Canvas canvas) {
+  //   // if (title != null) {
+  //   //   drawScreenText(canvas, '$title：${cards.length}', config: titleStyle);
+  //   // }
 
-    // canvas.drawRRect(rborder, DefaultBorderPaint.light);
-  }
+  //   // canvas.drawRRect(rborder, DefaultBorderPaint.light);
+  // }
 }

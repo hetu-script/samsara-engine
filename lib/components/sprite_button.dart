@@ -92,7 +92,7 @@ class SpriteButton extends BorderComponent with HandlesGesture {
 
     if (textConfig != null) {
       this.textConfig =
-          textConfig.fillFrom(defaultTextConfig).fillWith(size: size);
+          textConfig.fillFrom(defaultTextConfig).copyWith(size: size);
     } else {
       this.textConfig = defaultTextConfig.copyWith(size: size);
     }

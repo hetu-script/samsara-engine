@@ -9,5 +9,5 @@ export 'components/progress_indicator.dart';
 export 'components/sprite_button.dart';
 export 'components/rich_text_component.dart';
 export 'components/timer.dart';
-export 'components/tooltip.dart';
+export 'components/hovertip.dart';
 export 'components/value_generator.dart';

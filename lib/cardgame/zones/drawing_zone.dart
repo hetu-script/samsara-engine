@@ -92,20 +92,20 @@ class DrawingZone extends BorderComponent with HandlesGesture {
     );
   }
 
-  @override
-  void render(Canvas canvas) {
-    // if (isHovering) {
-    //   drawScreenText(canvas, '数量：${cards.length}', config: piledNumberStyle);
-    //   // canvas.drawRRect(border, borderPaintFocused);
-    // }
-    //  else {
-    canvas.drawRRect(roundBorder, PresetPaints.light);
-    // }
+  // @override
+  // void render(Canvas canvas) {
+  //   // if (isHovering) {
+  //   //   drawScreenText(canvas, '数量：${cards.length}', config: piledNumberStyle);
+  //   //   // canvas.drawRRect(border, borderPaintFocused);
+  //   // }
+  //   //  else {
+  //   canvas.drawRRect(roundBorder, PresetPaints.light);
+  //   // }
 
-    // for (final card in cards) {
-    //   card.render(canvas, position: card.position);
-    // }
-  }
+  //   // for (final card in cards) {
+  //   //   card.render(canvas, position: card.position);
+  //   // }
+  // }
 
   // @override
   // void onTap(int buttons, Vector2 position) {

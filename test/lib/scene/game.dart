@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
-import 'package:samsara/components/tooltip.dart';
+import 'package:samsara/components/hovertip.dart';
 import 'package:flame/flame.dart';
 import 'package:samsara/components/sprite_button.dart';
 import 'package:flame/components.dart';
@@ -103,10 +103,10 @@ class GameScene extends Scene {
     background.add(button);
 
     button.onMouseEnter = () {
-      Tooltip.show(
+      Hovertip.show(
         scene: this,
         target: button,
-        direction: TooltipDirection.bottomCenter,
+        direction: HovertipDirection.bottomCenter,
         width: 360,
         content:
             '''<yellow>野堂</>\n\n<yellow>宋代：陆游</>\n\n野堂萧飒雪侵冠，历尽人间行路难。\n病马不收烟草暝，孤桐半落井床寒。\n长瓶浊酒犹堪醉，败箧残编更细看。\n此兴不随年共老，未容城角动忧端。''',
@@ -114,7 +114,7 @@ class GameScene extends Scene {
       );
     };
     button.onMouseExit = () {
-      Tooltip.hide(button);
+      Hovertip.hide(button);
     };
     button.onDragUpdate = (int buttons, Vector2 offset) {
       button.position += offset;
