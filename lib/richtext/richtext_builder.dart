@@ -10,6 +10,23 @@ import '../extensions.dart';
 
 export 'package:flame/src/text/elements/group_element.dart';
 
+abstract class _FontSize {
+  static const double t1 = 8;
+  static const double t2 = 10;
+  static const double t3 = 12;
+  static const double t4 = 14;
+  static const double t5 = 16;
+  static const double t6 = 18;
+  static const double t7 = 20;
+  static const double h1 = 24;
+  static const double h2 = 28;
+  static const double h3 = 32;
+  static const double h4 = 36;
+  static const double h5 = 40;
+  static const double h6 = 44;
+  static const double h7 = 48;
+}
+
 RegExp _tagPattern = RegExp(
   r"<.*?>([^<\/>]*)<\/>",
   caseSensitive: false,
@@ -60,6 +77,7 @@ class TagResolveResult {
 TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
   bool isBold = false;
   bool isItalic = false;
+  double? fontSize;
   // bool isIcon = false;
   Color? textColor;
   String? icon;
@@ -70,6 +88,34 @@ TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
       isBold = true;
     } else if (currentTag == 'italic') {
       isItalic = true;
+    } else if (currentTag == 't1') {
+      fontSize = _FontSize.t1;
+    } else if (currentTag == 't2') {
+      fontSize = _FontSize.t2;
+    } else if (currentTag == 't3') {
+      fontSize = _FontSize.t3;
+    } else if (currentTag == 't4') {
+      fontSize = _FontSize.t4;
+    } else if (currentTag == 't5') {
+      fontSize = _FontSize.t5;
+    } else if (currentTag == 't6') {
+      fontSize = _FontSize.t6;
+    } else if (currentTag == 't7') {
+      fontSize = _FontSize.t7;
+    } else if (currentTag == 'h1') {
+      fontSize = _FontSize.h1;
+    } else if (currentTag == 'h2') {
+      fontSize = _FontSize.h2;
+    } else if (currentTag == 'h3') {
+      fontSize = _FontSize.h3;
+    } else if (currentTag == 'h4') {
+      fontSize = _FontSize.h4;
+    } else if (currentTag == 'h5') {
+      fontSize = _FontSize.h5;
+    } else if (currentTag == 'h6') {
+      fontSize = _FontSize.h6;
+    } else if (currentTag == 'h7') {
+      fontSize = _FontSize.h7;
     } else if (currentTag == 'white') {
       textColor = Colors.white;
     } else if (currentTag == 'black') {
@@ -153,6 +199,7 @@ TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
   final resolvedStyle = TextStyle(
     fontWeight: isBold ? FontWeight.bold : null,
     fontStyle: isItalic ? FontStyle.italic : null,
+    fontSize: fontSize,
     color: textColor,
   );
   return TagResolveResult(icon: icon, link: link, style: resolvedStyle);
@@ -174,12 +221,15 @@ TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
 ///
 /// 这个函数生成的TextSpan并非树形结构，而是扁平列表
 List<TextSpan> buildFlutterRichText(
-  String source, {
+  String? source, {
   TextStyle? style,
   // final void Function(String id, String? arg)? onTap,
 }) {
-  final paragraphs = source.split(RegExp(r'\n'));
   final List<TextSpan> result = [];
+  if (source == null && source!.isEmpty) {
+    return result;
+  }
+  final paragraphs = source.split(RegExp(r'\n'));
   for (final paragraph in paragraphs) {
     final List<InlineSpan> spanList = [];
     String processingText = paragraph;
@@ -226,7 +276,7 @@ List<TextSpan> buildFlutterRichText(
       spanList.add(TextSpan(
           text: processingText.replaceAllEscapedLineBreaks(), style: style));
     }
-    spanList.add(const TextSpan(text: '\n'));
+    // spanList.add(const TextSpan(text: '\n'));
     result.add(TextSpan(children: spanList));
   }
 

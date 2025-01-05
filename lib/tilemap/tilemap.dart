@@ -448,7 +448,7 @@ class TileMap extends GameComponent with HandlesGesture {
       srcSize: tileObjectSpriteSrcSize,
       offset: tileOffset,
       // onMoved: onMoved,
-      states: states,
+      animations: states,
     );
     refreshTileInfo(object);
     add(object);

@@ -15,7 +15,7 @@ import 'zones/piled_zone.dart';
 import '../task.dart';
 import '../gestures.dart';
 
-class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
+class GameCard extends BorderComponent with HandlesGesture, TaskController {
   late Vector2 _savedPosition, _savedSize;
 
   /// 卡牌id，不同的id对应不同的插画和标题。
@@ -51,10 +51,6 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
   /// 堆叠数量，一张卡牌可以代表一叠同名卡牌。
   int stack;
 
-  /// 卡牌的原始数据，可能是一个Json，或者一个河图struct对象，
-  /// 也可能是 null，例如资源牌这种情况。
-  final dynamic data;
-
   GameCard? prev, next;
 
   Vector2? focusedOffset, focusedPosition, focusedSize;
@@ -73,7 +69,10 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
 
   GameComponent? zone;
 
-  void Function()? onFocused, onUnfocused, onPreviewed, onUnpreviewed;
+  void Function(GameCard component)? onFocused,
+      onUnfocused,
+      onPreviewed,
+      onUnpreviewed;
   double focusAnimationDuration;
   int preferredPriority = 0;
 
@@ -101,7 +100,6 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
     this.script,
     this.kind,
     this.enablePreview = false,
-    this.data,
     this.ownedByRole,
     this.stack = 1,
     this.spriteId,
@@ -146,7 +144,7 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
 
     onMouseEnter = () {
       if (enablePreview) {
-        onPreviewed?.call();
+        onPreviewed?.call(this);
         if (focusOnPreviewing) {
           schedule(() => setFocused(true));
         } else {
@@ -157,7 +155,7 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
 
     onMouseExit = () {
       if (enablePreview) {
-        onUnpreviewed?.call();
+        onUnpreviewed?.call(this);
         if (focusOnPreviewing) {
           schedule(() => setFocused(false));
         } else {
@@ -175,7 +173,6 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
       script: script,
       kind: kind,
       enablePreview: enablePreview,
-      data: data,
       ownedByRole: ownedByRole,
       sprite: sprite,
       tags: tags,
@@ -235,7 +232,7 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
         duration: focusAnimationDuration,
       );
 
-      onFocused?.call();
+      onFocused?.call(this);
     } else {
       enableGesture = true;
       // if (!stayFocused) {
@@ -246,7 +243,7 @@ class GameCard extends BorderComponent with HandlesGesture, HasTaskController {
       );
 
       resetPriority();
-      onUnfocused?.call();
+      onUnfocused?.call(this);
       // }
     }
   }

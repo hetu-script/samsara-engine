@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/text.dart';
+import 'package:hetu_script/utils/collection.dart';
 
 import '../components/border_component.dart';
 import '../extensions.dart';
@@ -12,9 +13,21 @@ import '../paint/paint.dart';
 import '../richtext/richtext_builder.dart';
 
 class CustomGameCard extends GameCard {
+  /// 卡牌的原始数据，可能是一个Json，或者一个河图struct对象，
+  /// 也可能是 null，例如资源牌这种情况。
+  dynamic data;
+
   Vector2? preferredSize;
 
-  String? title, description, extraDescription;
+  String? title, extraDescription;
+
+  String? _description;
+  String? get description => _description;
+  set description(String? value) {
+    _description = value;
+    _generateDescription();
+  }
+
   double extraDescriptionWidth;
   DocumentRoot? _descriptionDocument;
   GroupElement? _descriptionElement;
@@ -69,7 +82,7 @@ class CustomGameCard extends GameCard {
     super.script,
     super.kind,
     super.enablePreview,
-    super.data,
+    this.data,
     super.ownedByRole,
     super.stack,
     super.spriteId,
@@ -99,7 +112,7 @@ class CustomGameCard extends GameCard {
     super.onUnpreviewed,
     this.preferredSize,
     this.title,
-    this.description,
+    String? description,
     this.extraDescription,
     this.extraDescriptionWidth = 280.0,
     this.maskSpriteId,
@@ -141,6 +154,8 @@ class CustomGameCard extends GameCard {
         showCostIcon = (costIconSpriteId != null || costIconSprite != null),
         showRarityIcon =
             (rarityIconSpriteId != null || rarityIconSprite != null) {
+    this.description = description;
+
     // if (extraDescription != null) {
     //   _extraDescriptionDocument = buildFlameRichText(extraDescription!,
     //       style: descriptionConfig?.textStyle);
@@ -149,14 +164,15 @@ class CustomGameCard extends GameCard {
 
   /// 复制这个卡牌对象，但不会复制onTap之类的交互事件，也不会复制index属性
   @override
-  CustomGameCard clone() {
+  CustomGameCard clone({bool deepCopyData = false}) {
     return CustomGameCard(
       id: id,
       deckId: deckId,
       script: script,
       kind: kind,
       enablePreview: enablePreview,
-      data: data,
+      // 拷贝的卡牌的底层数据也会被拷贝，这样在对局中可以修改卡牌的数据而不影响原始卡牌
+      data: deepCopyData ? deepCopy(data) : data,
       ownedByRole: ownedByRole,
       sprite: sprite,
       tags: tags,
@@ -181,7 +197,7 @@ class CustomGameCard extends GameCard {
       focusAnimationDuration: focusAnimationDuration,
       preferredSize: preferredSize,
       title: title,
-      description: description,
+      description: _description,
       extraDescription: extraDescription,
       extraDescriptionWidth: extraDescriptionWidth,
       illustrationSpriteId: illustrationSpriteId,
@@ -235,6 +251,68 @@ class CustomGameCard extends GameCard {
     //   countDecorSprite =
     //       Sprite(await Flame.images.load('$countDecorSpriteId.png'));
     // }
+  }
+
+  void _generateDescription() {
+    if (_description == null) return;
+
+    _descriptionDocument =
+        buildFlameRichText(_description!, style: descriptionConfig?.textStyle);
+    final descriptionAnchor = descriptionConfig?.anchor ?? Anchor.topLeft;
+    TextAlign descriptionAlign = TextAlign.left;
+    if (descriptionAnchor.x == 0.5) {
+      descriptionAlign = TextAlign.center;
+    } else if (descriptionAnchor.x == 1.0) {
+      descriptionAlign = TextAlign.right;
+    }
+
+    _descriptionElement = _descriptionDocument!.format(DocumentStyle(
+      paragraph:
+          BlockStyle(margin: EdgeInsets.zero, textAlign: descriptionAlign),
+      text: InlineTextStyle(
+          fontScale: preferredSize != null ? width / preferredSize!.x : 1.0),
+      width: _descriptionRect.width,
+      height: _descriptionRect.height,
+    ));
+    final descriptionBoundingBox = _descriptionElement!.boundingBox;
+    // 文本区域的左中右对齐已经由document.format的textAlign处理
+    // 下面只是单独处理垂直方向的对齐
+    switch (descriptionAnchor) {
+      case Anchor.topLeft:
+        _descriptionElement!
+            .translate(_descriptionRect.left, _descriptionRect.top);
+      case Anchor.topCenter:
+        _descriptionElement!
+            .translate(_descriptionRect.left, _descriptionRect.top);
+      case Anchor.topRight:
+        _descriptionElement!
+            .translate(_descriptionRect.left, _descriptionRect.top);
+      case Anchor.centerLeft:
+        _descriptionElement!.translate(
+            _descriptionRect.left,
+            _descriptionRect.top +
+                (_descriptionRect.height - descriptionBoundingBox.height) / 2);
+      case Anchor.center:
+        _descriptionElement!.translate(
+            _descriptionRect.left,
+            _descriptionRect.top +
+                (_descriptionRect.height - descriptionBoundingBox.height) / 2);
+      case Anchor.centerRight:
+        _descriptionElement!.translate(
+            _descriptionRect.left,
+            _descriptionRect.top +
+                (_descriptionRect.height - descriptionBoundingBox.height) / 2);
+      case Anchor.bottomLeft:
+        _descriptionElement!.translate(_descriptionRect.left,
+            _descriptionRect.bottom - descriptionBoundingBox.height);
+      case Anchor.bottomCenter:
+        _descriptionElement!.translate(_descriptionRect.left,
+            _descriptionRect.bottom - descriptionBoundingBox.height);
+      case Anchor.bottomRight:
+        _descriptionElement!.translate(_descriptionRect.left,
+            _descriptionRect.bottom - descriptionBoundingBox.height);
+      default:
+    }
   }
 
   @override
@@ -325,67 +403,8 @@ class CustomGameCard extends GameCard {
         size: _descriptionRect.size.toVector2(),
         scale: preferredSize != null ? width / preferredSize!.x : 1.0);
 
-    if (description != null) {
-      _descriptionDocument =
-          buildFlameRichText(description!, style: descriptionConfig?.textStyle);
-      final descriptionAnchor = descriptionConfig?.anchor ?? Anchor.topLeft;
-      TextAlign descriptionAlign = TextAlign.left;
-      if (descriptionAnchor.x == 0.5) {
-        descriptionAlign = TextAlign.center;
-      } else if (descriptionAnchor.x == 1.0) {
-        descriptionAlign = TextAlign.right;
-      }
-
-      _descriptionElement = _descriptionDocument!.format(DocumentStyle(
-        paragraph:
-            BlockStyle(margin: EdgeInsets.zero, textAlign: descriptionAlign),
-        text: InlineTextStyle(
-            fontScale: preferredSize != null ? width / preferredSize!.x : 1.0),
-        width: _descriptionRect.width,
-        height: _descriptionRect.height,
-      ));
-      final descriptionBoundingBox = _descriptionElement!.boundingBox;
-      // 文本区域的左中右对齐已经由document.format的textAlign处理
-      // 下面只是单独处理垂直方向的对齐
-      switch (descriptionAnchor) {
-        case Anchor.topLeft:
-          _descriptionElement!
-              .translate(_descriptionRect.left, _descriptionRect.top);
-        case Anchor.topCenter:
-          _descriptionElement!
-              .translate(_descriptionRect.left, _descriptionRect.top);
-        case Anchor.topRight:
-          _descriptionElement!
-              .translate(_descriptionRect.left, _descriptionRect.top);
-        case Anchor.centerLeft:
-          _descriptionElement!.translate(
-              _descriptionRect.left,
-              _descriptionRect.top +
-                  (_descriptionRect.height - descriptionBoundingBox.height) /
-                      2);
-        case Anchor.center:
-          _descriptionElement!.translate(
-              _descriptionRect.left,
-              _descriptionRect.top +
-                  (_descriptionRect.height - descriptionBoundingBox.height) /
-                      2);
-        case Anchor.centerRight:
-          _descriptionElement!.translate(
-              _descriptionRect.left,
-              _descriptionRect.top +
-                  (_descriptionRect.height - descriptionBoundingBox.height) /
-                      2);
-        case Anchor.bottomLeft:
-          _descriptionElement!.translate(_descriptionRect.left,
-              _descriptionRect.bottom - descriptionBoundingBox.height);
-        case Anchor.bottomCenter:
-          _descriptionElement!.translate(_descriptionRect.left,
-              _descriptionRect.bottom - descriptionBoundingBox.height);
-        case Anchor.bottomRight:
-          _descriptionElement!.translate(_descriptionRect.left,
-              _descriptionRect.bottom - descriptionBoundingBox.height);
-        default:
-      }
+    if (_description != null) {
+      _generateDescription();
     }
   }
 

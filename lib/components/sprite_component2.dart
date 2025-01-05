@@ -45,6 +45,8 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
       this.paint = paint;
     }
 
+    enableGesture = false;
+
     /// Register a listener to differentiate between size modification done by
     /// external calls v/s the ones done by [_resizeToSprite].
     this.size.addListener(_handleAutoResizeState);

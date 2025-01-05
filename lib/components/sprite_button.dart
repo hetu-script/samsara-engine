@@ -186,62 +186,63 @@ class SpriteButton extends BorderComponent with HandlesGesture {
           borderSprite?.render(canvas, size: size, overridePaint: paint);
         }
         if (isPressing) {
-          if (pressSprite != null) {
+          if (useSimpleStyle) {
+            canvas.drawRRect(
+              roundBorder,
+              PresetPaints.successFill,
+            );
+          } else if (pressSprite != null) {
             pressSprite?.render(canvas, size: size, overridePaint: paint);
           } else if (hoverSprite != null) {
             hoverSprite?.render(canvas, size: size, overridePaint: paint);
-          } else if (sprite != null) {
+          } else {
             if (isSelectable && !isSelected) {
               unselectedSprite?.render(canvas,
                   size: size, overridePaint: paint);
             } else {
               sprite?.render(canvas, size: size, overridePaint: paint);
             }
-          } else if (useSimpleStyle) {
-            canvas.drawRRect(
-              roundBorder,
-              PresetPaints.successFill,
-            );
           }
         } else if (isHovering) {
-          if (hoverSprite != null) {
+          if (useSimpleStyle) {
+            canvas.drawRRect(roundBorder, PresetPaints.lightGreenFill);
+          } else if (hoverSprite != null) {
             hoverSprite?.render(canvas,
                 size: size, overridePaint: hoverTintPaint);
-          } else if (sprite != null) {
+          } else {
             if (isSelectable && !isSelected) {
               unselectedSprite?.render(canvas,
                   size: size, overridePaint: hoverTintPaint);
             } else {
               sprite?.render(canvas, size: size, overridePaint: hoverTintPaint);
             }
-          } else if (useSimpleStyle) {
-            canvas.drawRRect(roundBorder, PresetPaints.lightGreenFill);
           }
         } else {
-          if (sprite != null) {
+          if (useSimpleStyle) {
+            canvas.drawRRect(roundBorder, PresetPaints.successFill);
+          } else {
             if (isSelectable && !isSelected) {
               unselectedSprite?.render(canvas,
                   size: size, overridePaint: paint);
             } else {
               sprite?.render(canvas, size: size, overridePaint: paint);
             }
-          } else if (useSimpleStyle) {
-            canvas.drawRRect(roundBorder, PresetPaints.successFill);
           }
         }
       } else {
         if (borderSprite != null) {
           borderSprite?.render(canvas, size: size, overridePaint: invalidPaint);
         }
-        if (sprite != null) {
+
+        if (useSimpleStyle) {
+          canvas.drawRRect(roundBorder, PresetPaints.invalidFill);
+        } else {
           if (isSelectable && !isSelected) {
             unselectedSprite?.render(canvas,
                 size: size, overridePaint: invalidPaint);
           } else {
             sprite?.render(canvas, size: size, overridePaint: invalidPaint);
           }
-        } else if (useSimpleStyle) {
-          canvas.drawRRect(roundBorder, PresetPaints.invalidFill);
         }
       }
 

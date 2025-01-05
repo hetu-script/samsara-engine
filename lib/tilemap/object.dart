@@ -3,13 +3,14 @@ import 'dart:math' as math;
 // import 'package:flutter/foundation.dart';
 
 import '../tilemap/terrain.dart';
-import '../components/game_component.dart';
+// import '../components/game_component.dart';
 import 'tile_mixin.dart';
 import 'direction.dart';
 import '../animation/sprite_animation.dart';
 import 'route.dart';
 import '../animation/animation_state_controller.dart';
 import '../extensions.dart';
+import '../components/task_component.dart';
 
 enum AnimationDirection {
   south,
@@ -36,7 +37,7 @@ const kObjectMovingStatesWithSwim = {
   'swim_west',
 };
 
-class TileMapMovingObject extends GameComponent
+class TileMapMovingObject extends TaskComponent
     with TileInfo, AnimationStateController {
   static const defaultAnimationStepTime = 0.2;
 
@@ -84,7 +85,7 @@ class TileMapMovingObject extends GameComponent
     this.velocityFactor = 0.8,
     // this.onMoved,
     this.hasSwimAnimation = false,
-    required Map<String, SpriteAnimationWithTicker> states,
+    required Map<String, SpriteAnimationWithTicker> animations,
   }) {
     this.srcSize = srcSize;
     assert(!srcSize.isZero());
@@ -93,15 +94,18 @@ class TileMapMovingObject extends GameComponent
 
     if (hasSwimAnimation) {
       for (final key in kObjectMovingStatesWithSwim) {
-        assert(states.containsKey(key));
+        assert(animations.containsKey(key));
       }
     }
 
     for (final key in kObjectMovingStates) {
-      assert(states.containsKey(key));
+      assert(animations.containsKey(key));
     }
 
-    addStates(states);
+    for (final key in animations.keys) {
+      addState(key, animations[key]!);
+    }
+
     direction = OrthogonalDirection.south;
 
     stopAnimation();
@@ -110,9 +114,9 @@ class TileMapMovingObject extends GameComponent
   set direction(OrthogonalDirection value) {
     _direction = value;
     if (hasSwimAnimation && isOnWater) {
-      setState('swim_${_direction.name}');
+      setAnimationState('swim_${_direction.name}');
     } else {
-      setState('move_${_direction.name}');
+      setAnimationState('move_${_direction.name}');
     }
   }
 
@@ -121,9 +125,9 @@ class TileMapMovingObject extends GameComponent
     if (frameData != null) {
       direction = OrthogonalDirection.values
           .singleWhere((element) => element.name == frameData['direction']);
-      currentAnimation.ticker.currentIndex = frameData['currentIndex'];
-      currentAnimation.ticker.clock = frameData['clock'];
-      currentAnimation.ticker.elapsed = frameData['elapsed'];
+      currentAnimation?.ticker.currentIndex = frameData['currentIndex'];
+      currentAnimation?.ticker.clock = frameData['clock'];
+      currentAnimation?.ticker.elapsed = frameData['elapsed'];
     }
   }
 
@@ -134,16 +138,16 @@ class TileMapMovingObject extends GameComponent
       'top': top,
       'animation': {
         'direction': _direction.name,
-        'currentIndex': currentAnimation.ticker.currentIndex,
-        'clock': currentAnimation.ticker.clock,
-        'elapsed': currentAnimation.ticker.elapsed,
+        'currentIndex': currentAnimation?.ticker.currentIndex,
+        'clock': currentAnimation?.ticker.clock,
+        'elapsed': currentAnimation?.ticker.elapsed,
       }
     };
   }
 
   void stopAnimation() {
-    currentAnimation.ticker.paused = true;
-    currentAnimation.ticker.setToLast();
+    currentAnimation?.ticker.paused = true;
+    currentAnimation?.ticker.setToLast();
   }
 
   void stop() {
@@ -195,7 +199,7 @@ class TileMapMovingObject extends GameComponent
       _isWalking = false;
       _isStopping = false;
     } else if (_isWalking) {
-      currentAnimation.ticker.update(dt);
+      currentAnimation?.ticker.update(dt);
 
       position += _velocity;
 
@@ -216,6 +220,6 @@ class TileMapMovingObject extends GameComponent
 
   @override
   void render(Canvas canvas) {
-    currentAnimation.render(canvas);
+    currentAnimation?.render(canvas);
   }
 }

@@ -4,6 +4,8 @@ import 'package:hetu_script/utils/math.dart' as math;
 
 import '../types.dart' show Vector2;
 
+export 'package:hetu_script/utils/math.dart';
+
 class PointOnCircle {
   Vector2 position;
   double angle;

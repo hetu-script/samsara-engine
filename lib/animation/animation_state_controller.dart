@@ -1,28 +1,40 @@
-import '../components/game_component.dart';
+import 'dart:async';
 
+import '../components/game_component.dart';
 import 'sprite_animation.dart';
+// import '../task.dart';
 
 mixin AnimationStateController on GameComponent {
   final Map<String, SpriteAnimationWithTicker> _animations = {};
-  String currentState = '';
+  final Map<String, SpriteAnimationWithTicker> _overlayAnimations = {};
 
-  SpriteAnimationWithTicker get currentAnimation {
-    if (!_animations.containsKey(currentState)) {
-      throw 'Could not find animation state: [$currentState]';
+  String? currentAnimationState;
+  String? currentOverlayAnimationState;
+
+  SpriteAnimationWithTicker? get currentAnimation {
+    return _animations[currentAnimationState];
+  }
+
+  SpriteAnimationWithTicker? get currentOverlayAnimation {
+    return _overlayAnimations[currentOverlayAnimationState];
+  }
+
+  void addState(String state, SpriteAnimationWithTicker anim,
+      {bool isOverlay = false}) {
+    Map<String, SpriteAnimationWithTicker> collection =
+        isOverlay ? _overlayAnimations : _animations;
+
+    if (collection.containsKey(state)) {
+      throw 'State already exists: $state';
     }
-    return _animations[currentState]!;
-  }
-
-  void addState(String state, SpriteAnimationWithTicker anim) {
-    _animations[state] = anim;
-  }
-
-  void addStates(Map<String, SpriteAnimationWithTicker> anims) {
-    _animations.addAll(anims);
+    collection[state] = anim;
   }
 
   Future<void> loadStates() async {
     for (final anim in _animations.values) {
+      await anim.load();
+    }
+    for (final anim in _overlayAnimations.values) {
       await anim.load();
     }
   }
@@ -32,30 +44,71 @@ mixin AnimationStateController on GameComponent {
     return _animations.containsKey(stateId);
   }
 
-  Future<void> setState(
-    String state, {
-    bool pauseOnLastFrame = false,
-    String? resetOnComplete,
-    void Function()? onComplete,
-  }) {
-    // engine.info('${isHero ? 'hero' : 'enemy'} new state: $state');
-    // state = '${state}_$skinId';
-    if (currentState != state) {
-      currentState = state;
+  SpriteAnimationWithTicker _setState(
+      {required String state, bool isOverlay = false}) {
+    Map<String, SpriteAnimationWithTicker> collection =
+        isOverlay ? _overlayAnimations : _animations;
+    if (!collection.containsKey(state)) {
+      throw 'State not found: $state';
     }
-    final anim = currentAnimation;
-    if (pauseOnLastFrame) {
+    if (isOverlay) {
+      currentOverlayAnimationState = state;
+    } else {
+      currentOverlayAnimationState = null;
+      currentAnimationState = state;
+    }
+    return collection[state]!;
+  }
+
+  Future<void> setAnimationState(
+    String state, {
+    String? recoveryState,
+    String? overlayState,
+    String? completeState,
+    bool jumpToLastFrame = false,
+    void Function()? onComplete,
+    bool isOverlay = false,
+  }) async {
+    if (isOverlay) {
+      if (currentOverlayAnimationState == state) {
+        return;
+      }
+    } else {
+      if (currentAnimationState == state) {
+        return;
+      }
+    }
+
+    // final Completer completer = Completer();
+
+    final anim = _setState(state: state, isOverlay: isOverlay);
+    anim.ticker.reset();
+    if (jumpToLastFrame) {
       anim.ticker.paused = true;
       anim.ticker.setToLast();
+      onComplete?.call();
+      // completer.complete();
     } else {
-      anim.ticker.reset();
-      anim.ticker.onComplete = () {
-        onComplete?.call();
-        if (resetOnComplete != null) {
-          setState(resetOnComplete);
+      Future result = anim.ticker.completed;
+
+      if (overlayState != null) {
+        result = result
+            .then((_) => setAnimationState(overlayState, isOverlay: true));
+      }
+
+      if (recoveryState != null) {
+        result.then((_) => setAnimationState(recoveryState));
+      }
+
+      result = result.then((_) {
+        if (completeState != null) {
+          setAnimationState(completeState);
         }
-      };
+        onComplete?.call();
+        // completer.complete();
+      });
+
+      return result;
     }
-    return anim.ticker.completed;
   }
 }

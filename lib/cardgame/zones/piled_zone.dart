@@ -34,7 +34,7 @@ class PiledZone extends BorderComponent {
   int limit;
 
   /// 是否达到了卡牌数量上限
-  bool get reachedLimit => !allowStack && limit >= 0 && cards.length >= limit;
+  bool get isFull => !allowStack && limit >= 0 && cards.length >= limit;
 
   /// 不允许堆叠时，可设置是否为非紧凑型牌堆
   /// 即卡牌摆放时允许中间有空位
@@ -177,7 +177,7 @@ class PiledZone extends BorderComponent {
     }
 
     if (index == null) {
-      if (reachedLimit) return;
+      if (isFull) return;
 
       index = cards.length;
     } else {
@@ -194,7 +194,7 @@ class PiledZone extends BorderComponent {
       // }
       // } else {
       if (index >= cards.length) {
-        if (reachedLimit) return;
+        if (isFull) return;
         index = cards.length;
       } else {
         for (var i = index; i < cards.length; ++i) {
@@ -351,8 +351,8 @@ class PiledZone extends BorderComponent {
     return completer.future;
   }
 
-  bool removeCardByIndex(int index, {bool sort = true}) {
-    if (index < 0 || index >= cards.length) return false;
+  GameCard? removeCardByIndex(int index, {bool sort = true}) {
+    if (index < 0 || index >= cards.length) return null;
 
     final card = cards[index];
     if (allowStack && card.stack > 1) {
@@ -375,10 +375,10 @@ class PiledZone extends BorderComponent {
     }
 
     onPileChanged?.call();
-    return true;
+    return card;
   }
 
-  bool removeCardById(String id, {bool sort = true}) {
+  GameCard? removeCardById(String id, {bool sort = true}) {
     final index = cards.indexWhere((card) => card.id == id);
 
     return removeCardByIndex(index, sort: sort);

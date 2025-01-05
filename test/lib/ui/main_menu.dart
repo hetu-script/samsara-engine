@@ -11,7 +11,7 @@ import '../global.dart';
 import '../scene/game.dart';
 import '../scene/game_overlay.dart';
 
-const richText = 'rich text is <yellow italic>awesome</> !!!';
+const richTextSource = 'rich text is <yellow italic>awesome</> !!!';
 
 class MainMenu extends StatefulWidget {
   const MainMenu({super.key});
@@ -100,7 +100,7 @@ class _MainMenuState extends State<MainMenu> {
                                       child: RichText(
                                         text: TextSpan(
                                           children: buildFlutterRichText(
-                                            richText,
+                                            richTextSource,
                                             style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 24,

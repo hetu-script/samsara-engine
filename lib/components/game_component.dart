@@ -1,5 +1,6 @@
 import 'dart:async';
 
+// import 'package:flame/game.dart';
 import 'package:flutter/material.dart' hide Viewport;
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
@@ -184,4 +185,20 @@ abstract class GameComponent extends PositionComponent
     _toAngle = toAngle;
     return completer.future;
   }
+
+  // @override
+  // void renderTree(Canvas canvas) {
+  //   decorator.applyChain((canvas) {
+  //     render(canvas);
+  //     for (var c in children) {
+  //       if (c is GameComponent && !c.isVisible) continue;
+  //       c.renderTree(canvas);
+  //     }
+
+  //     // Any debug rendering should be rendered on top of everything
+  //     if (debugMode) {
+  //       renderDebugMode(canvas);
+  //     }
+  //   }, canvas);
+  // }
 }

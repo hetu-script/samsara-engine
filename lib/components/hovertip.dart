@@ -10,6 +10,7 @@ import '../paint/paint.dart';
 import '../richtext.dart';
 
 enum HovertipDirection {
+  none,
   topLeft,
   topCenter,
   topRight,
@@ -24,17 +25,19 @@ enum HovertipDirection {
   bottomRight,
 }
 
+const kHovertipScreenIndent = 10.0;
 const kHovertipContentIndent = 10.0;
 const kHovertipBackgroundBorderRadius = 5.0;
 
 class Hovertip extends BorderComponent {
   static final Map<GameComponent, Hovertip> _instances = {};
 
-  static const defaultContentConfig = ScreenTextConfig(
-      anchor: Anchor.topLeft,
-      padding: EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
-      textStyle: TextStyle(fontSize: 14.0),
-      overflow: ScreenTextOverflow.wordwrap);
+  static ScreenTextConfig defaultContentConfig = ScreenTextConfig(
+    anchor: Anchor.topLeft,
+    padding: EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
+    textStyle: TextStyle(fontSize: 14.0),
+    overflow: ScreenTextOverflow.wordwrap,
+  );
 
   static show({
     required Scene scene,
@@ -44,6 +47,8 @@ class Hovertip extends BorderComponent {
     HovertipDirection direction = HovertipDirection.topLeft,
     double width = 280.0,
   }) {
+    hide(target);
+
     final instance = Hovertip();
     instance.setContent(content: content, config: config, width: width);
     _instances[target] = instance;
@@ -55,53 +60,64 @@ class Hovertip extends BorderComponent {
     Vector2 calculatedPosition;
     switch (direction) {
       case HovertipDirection.topLeft:
-        calculatedPosition = Vector2(
-            targetSizeGlobal.x, targetPositionGlobal.y - 10 - instance.height);
+        calculatedPosition = Vector2(targetPositionGlobal.x,
+            targetPositionGlobal.y - kHovertipScreenIndent - instance.height);
       case HovertipDirection.topCenter:
         calculatedPosition = Vector2(
             targetPositionGlobal.x - (instance.width - targetSizeGlobal.x) / 2,
-            targetPositionGlobal.y - 10 - instance.height);
+            targetPositionGlobal.y - kHovertipScreenIndent - instance.height);
       case HovertipDirection.topRight:
         calculatedPosition = Vector2(
             targetPositionGlobal.x + targetSizeGlobal.x - instance.width,
-            targetPositionGlobal.y - 10 - instance.height);
+            targetPositionGlobal.y - kHovertipScreenIndent - instance.height);
       case HovertipDirection.leftTop:
         calculatedPosition = Vector2(
-            targetPositionGlobal.x - 10 - instance.width,
+            targetPositionGlobal.x - kHovertipScreenIndent - instance.width,
             targetPositionGlobal.y);
       case HovertipDirection.leftCenter:
         calculatedPosition = Vector2(
-            targetPositionGlobal.x - 10 - instance.width,
+            targetPositionGlobal.x - kHovertipScreenIndent - instance.width,
             targetPositionGlobal.y -
                 (instance.height - targetSizeGlobal.y) / 2);
       case HovertipDirection.leftBottom:
         calculatedPosition = Vector2(
-            targetPositionGlobal.x - 10 - instance.width,
+            targetPositionGlobal.x - kHovertipScreenIndent - instance.width,
             targetPositionGlobal.y + targetSizeGlobal.y - instance.height);
       case HovertipDirection.rightTop:
         calculatedPosition = Vector2(
-            targetPositionGlobal.x + targetSizeGlobal.x + 10,
+            targetPositionGlobal.x + targetSizeGlobal.x + kHovertipScreenIndent,
             targetPositionGlobal.y);
       case HovertipDirection.rightCenter:
         calculatedPosition = Vector2(
-            targetPositionGlobal.x + targetSizeGlobal.x + 10,
+            targetPositionGlobal.x + targetSizeGlobal.x + kHovertipScreenIndent,
             targetPositionGlobal.y -
                 (instance.height - targetSizeGlobal.y) / 2);
       case HovertipDirection.rightBottom:
         calculatedPosition = Vector2(
-            targetPositionGlobal.x + targetSizeGlobal.x + 10,
+            targetPositionGlobal.x + targetSizeGlobal.x + kHovertipScreenIndent,
             targetPositionGlobal.y + targetSizeGlobal.y - instance.height);
       case HovertipDirection.bottomLeft:
-        calculatedPosition = Vector2(targetPositionGlobal.x,
-            targetPositionGlobal.y + targetSizeGlobal.y + 10);
+        calculatedPosition = Vector2(
+            targetPositionGlobal.x,
+            targetPositionGlobal.y +
+                targetSizeGlobal.y +
+                kHovertipScreenIndent);
       case HovertipDirection.bottomCenter:
         calculatedPosition = Vector2(
             targetPositionGlobal.x - (instance.width - targetSizeGlobal.x) / 2,
-            targetPositionGlobal.y + targetSizeGlobal.y + 10);
+            targetPositionGlobal.y +
+                targetSizeGlobal.y +
+                kHovertipScreenIndent);
       case HovertipDirection.bottomRight:
         calculatedPosition = Vector2(
             targetPositionGlobal.x + targetSizeGlobal.x - instance.width,
-            targetPositionGlobal.y + targetSizeGlobal.y + 10);
+            targetPositionGlobal.y +
+                targetSizeGlobal.y +
+                kHovertipScreenIndent);
+      case HovertipDirection.none:
+        final targetCenter = target.absoluteCenter;
+        final targetCenterGlobal = scene.camera.localToGlobal(targetCenter);
+        calculatedPosition = targetCenterGlobal;
     }
 
     // 检查是否超出了游戏屏幕
@@ -122,15 +138,29 @@ class Hovertip extends BorderComponent {
     scene.camera.viewport.add(instance);
   }
 
-  /// hide其实会等待半秒。
-  /// 如果 50ms 之内没有其他代码执行show()，才会最终隐藏窗口。
-  /// 这是为了避免某些时候不同Future中的的隐藏和显示窗口的命令互相冲突。
   static void hide(GameComponent target) async {
     if (_instances.containsKey(target)) {
       final instance = _instances[target];
       instance!.removeFromParent();
       _instances.remove(target);
     }
+  }
+
+  static void toogle(GameComponent target,
+      {required Scene scene, bool justShow = false}) async {
+    assert(_instances.containsKey(target));
+    final instance = _instances[target];
+    if (instance!.isMounted) {
+      if (!justShow) {
+        instance.removeFromParent();
+      }
+    } else {
+      scene.camera.viewport.add(_instances[target]!);
+    }
+  }
+
+  static bool hastip(GameComponent target) {
+    return _instances.containsKey(target);
   }
 
   String _content = '';

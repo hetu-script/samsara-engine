@@ -26,11 +26,10 @@ String trimStackTrace(StackTrace stackTrace) {
 }
 
 // 对于Flutter没有捕捉到的错误，弹出系统原生对话框
-void alertNativeError(error, stackTrace) {
-  final stack = trimStackTrace(stackTrace);
+void alertNativeError(err, stackTrace) {
   FlutterPlatformAlert.showAlert(
     windowTitle: 'An unexpected error happened!',
-    text: '$error\n$stack',
+    text: '$err\n$stackTrace',
     alertStyle: AlertButtonStyle.ok,
     iconStyle: IconStyle.error,
   );
