@@ -88,7 +88,7 @@ class _MainGameOverlayState extends State<MainGameOverlay>
                                 ).then((_) => setState(() {}));
                                 break;
                               case MainGameDropMenuItems.quit:
-                                engine.leaveScene(_scene.id, clearCache: true);
+                                engine.clearCache(_scene.id);
                                 _isDisposing = true;
                                 Navigator.of(context).pop();
                                 break;

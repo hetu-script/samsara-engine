@@ -1,32 +1,55 @@
 import 'package:flutter/material.dart';
+// import 'package:flutter/gestures.dart';
+
+import '../richtext.dart';
+import 'mouse_region2.dart';
 
 class Label extends StatelessWidget {
-  const Label(
-    this.text, {
-    super.key,
+  Label(
+    this.richTextSource, {
     this.width,
     this.height = 20.0,
     this.padding = const EdgeInsets.symmetric(horizontal: 5.0),
-    this.textAlign = TextAlign.left,
+    this.textAlign = TextAlign.center,
+    this.textStyle,
     this.backgroundColor,
-  });
+    this.cursor = MouseCursor.defer,
+    this.onMouseEnter,
+    this.onMouseExit,
+  }) : super(key: GlobalKey());
 
-  final String text;
+  final String richTextSource;
   final double? width, height;
   final EdgeInsetsGeometry padding;
   final TextAlign textAlign;
+  final TextStyle? textStyle;
   final Color? backgroundColor;
+
+  final MouseCursor cursor;
+  final void Function(Rect rect)? onMouseEnter;
+  final void Function()? onMouseExit;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      padding: padding,
-      color: backgroundColor,
-      child: Text(
-        text,
-        textAlign: textAlign,
+    return MouseRegion2(
+      cursor: cursor,
+      onMouseEnter: onMouseEnter,
+      onMouseExit: onMouseExit,
+      child: Container(
+        width: width,
+        height: height,
+        padding: padding,
+        color: backgroundColor,
+        child: RichText(
+          textAlign: textAlign,
+          text: TextSpan(
+            children: buildFlutterRichText(
+              richTextSource,
+              style: (Theme.of(context).textTheme.bodyMedium ?? TextStyle())
+                  .merge(textStyle),
+            ),
+          ),
+        ),
       ),
     );
   }

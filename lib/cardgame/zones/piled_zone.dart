@@ -158,6 +158,24 @@ class PiledZone extends BorderComponent {
     }
   }
 
+  /// 某些时候会在加入卡牌之前进行一些预操作，例如修改卡牌大小样式，移除过多的卡牌等。
+  /// 返回false表示加入失败
+  /// override 这个函数时，可以修改返回类型，比如改成String 用来返回具体原因
+  dynamic tryAddCard(
+    GameCard card, {
+    int? index,
+    bool animated = true,
+    bool clone = false,
+  }) {
+    if (clone) {
+      card = card.clone();
+      game.world.add(card);
+    }
+    placeCard(card, index: index, animated: animated);
+
+    return true;
+  }
+
   /// TODO: [insertAndRearrangeAll]如果为真，并且[allowEmptySlots]为真。并且目前有空位，则在向已经有卡牌的位置插入新卡牌时，会将已有的卡牌向后移动让出位置
   Future<void> placeCard(
     GameCard card, {

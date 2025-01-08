@@ -364,7 +364,6 @@ mixin HandlesGesture on GameComponent {
     if (containsPoint(convertedPointerPosition)) {
       if (!isHovering) {
         isHovering = true;
-        onMouseEnter?.call();
       }
       final positionWithinComponent = convertedPointerPosition - position;
       onMouseHover?.call(positionWithinComponent);

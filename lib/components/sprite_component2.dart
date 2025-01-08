@@ -34,6 +34,7 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
     super.priority,
     super.key,
     super.lightConfig,
+    bool enableGesture = false,
   })  : assert(
           (size == null) == (autoResize ?? size == null),
           '''If size is set, autoResize should be false or size should be null when autoResize is true.''',
@@ -45,7 +46,7 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
       this.paint = paint;
     }
 
-    enableGesture = false;
+    this.enableGesture = enableGesture;
 
     /// Register a listener to differentiate between size modification done by
     /// external calls v/s the ones done by [_resizeToSprite].

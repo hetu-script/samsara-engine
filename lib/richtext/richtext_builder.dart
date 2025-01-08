@@ -158,7 +158,7 @@ TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
       textColor = Colors.brown;
     } else if (currentTag == 'blueGrey') {
       textColor = Colors.blueGrey;
-    } else if (currentTag == 'rank0' || currentTag == 'other') {
+    } else if (currentTag == 'rank0' || currentTag == 'unknown') {
       textColor = HexColor.fromString('#A3A3A3');
     } else if (currentTag == 'rank1' || currentTag == 'common') {
       textColor = HexColor.fromString('#CCCCCC');
@@ -230,7 +230,8 @@ List<TextSpan> buildFlutterRichText(
     return result;
   }
   final paragraphs = source.split(RegExp(r'\n'));
-  for (final paragraph in paragraphs) {
+  for (var i = 0; i < paragraphs.length; ++i) {
+    final paragraph = paragraphs[i];
     final List<InlineSpan> spanList = [];
     String processingText = paragraph;
     if (_tagPattern.hasMatch(processingText)) {
@@ -276,7 +277,9 @@ List<TextSpan> buildFlutterRichText(
       spanList.add(TextSpan(
           text: processingText.replaceAllEscapedLineBreaks(), style: style));
     }
-    // spanList.add(const TextSpan(text: '\n'));
+    if (i < paragraphs.length - 1) {
+      spanList.add(const TextSpan(text: '\n'));
+    }
     result.add(TextSpan(children: spanList));
   }
 

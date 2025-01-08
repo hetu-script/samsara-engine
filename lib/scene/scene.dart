@@ -106,7 +106,9 @@ abstract class Scene extends FlameGame {
   }
 
   void leave({bool clearCache = false}) async {
-    controller.leaveScene(id, clearCache: clearCache);
+    if (clearCache) {
+      controller.clearCache(id);
+    }
     if (bgm.isPlaying) {
       try {
         await bgm.stop();
@@ -264,20 +266,20 @@ abstract class Scene extends FlameGame {
 
   @mustCallSuper
   void onMouseHover(PointerHoverEvent details) {
-    HandlesGesture? hoveringChild;
+    void exitPreviousHoveringComponent([HandlesGesture? component]) {
+      if (hoveringComponent == component) return;
 
-    void exitPreviousHoveringComponent() {
       hoveringComponent?.onMouseExit?.call();
       hoveringComponent?.isHovering = false;
-      hoveringComponent = hoveringChild;
+      hoveringComponent = component;
+
+      component?.onMouseEnter?.call();
     }
 
     for (final c in gestureComponents) {
-      hoveringChild = c.handleMouseHover(details);
-      if (hoveringChild != null) {
-        if (hoveringComponent != hoveringChild) {
-          exitPreviousHoveringComponent();
-        }
+      final enteredComponent = c.handleMouseHover(details);
+      if (enteredComponent != null) {
+        exitPreviousHoveringComponent(enteredComponent);
         return;
       }
     }

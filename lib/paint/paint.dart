@@ -301,7 +301,7 @@ class ScreenTextConfig {
       outlined: outlined ?? this.outlined,
       scale: scale ?? this.scale,
       overflow: overflow ?? this.overflow,
-      textStyle: textStyle ?? this.textStyle,
+      textStyle: (textStyle ?? TextStyle()).merge(this.textStyle),
     );
   }
 
@@ -323,7 +323,7 @@ class ScreenTextConfig {
       outlined: this.outlined ?? outlined,
       scale: this.scale ?? scale,
       overflow: this.overflow ?? overflow,
-      textStyle: this.textStyle ?? textStyle,
+      textStyle: (this.textStyle ?? TextStyle()).merge(textStyle),
     );
   }
 
@@ -336,7 +336,7 @@ class ScreenTextConfig {
       outlined: other?.outlined ?? outlined,
       scale: other?.scale ?? scale,
       overflow: other?.overflow ?? overflow,
-      textStyle: other?.textStyle ?? textStyle,
+      textStyle: (other?.textStyle ?? TextStyle()).merge(textStyle),
     );
   }
 
@@ -349,7 +349,7 @@ class ScreenTextConfig {
       outlined: outlined ?? other?.outlined,
       scale: scale ?? other?.scale,
       overflow: overflow ?? other?.overflow,
-      textStyle: textStyle ?? other?.textStyle,
+      textStyle: (textStyle ?? TextStyle()).merge(other?.textStyle),
     );
   }
 }

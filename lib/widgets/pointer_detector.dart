@@ -120,8 +120,11 @@ class PointerDetector extends StatefulWidget {
     this.onScaleEnd,
     this.onLongPress,
     this.longPressTickTimeConsider = 400,
+    this.onMouseEnter,
     this.onMouseHover,
+    this.onMouseExit,
     this.onMouseScroll,
+    this.cursor = MouseCursor.defer,
   });
 
   /// The widget below this widget in the tree.
@@ -177,9 +180,13 @@ class PointerDetector extends StatefulWidget {
   /// A specific duration to detect long press
   final int longPressTickTimeConsider;
 
+  final void Function(PointerEnterEvent details)? onMouseEnter;
   final void Function(PointerHoverEvent details)? onMouseHover;
+  final void Function(PointerExitEvent details)? onMouseExit;
 
   final void Function(MouseScrollDetails details)? onMouseScroll;
+
+  final MouseCursor cursor;
 
   @override
   PointerDetectorState createState() => PointerDetectorState();
@@ -210,6 +217,9 @@ class PointerDetectorState extends State<PointerDetector> {
       onPointerCancel: onPointerUp,
       onPointerSignal: onPointerSignal,
       child: MouseRegion(
+        cursor: widget.cursor,
+        onEnter: onMouseEnter,
+        onExit: onMouseExit,
         onHover: onMouseHover,
         child: widget.child,
       ),
@@ -222,20 +232,16 @@ class PointerDetectorState extends State<PointerDetector> {
 
     if (touchCount == 1) {
       _gestureState = _GestureState.pointerDown;
-      if (widget.onTapDown != null) {
-        widget.onTapDown!(
-            event.pointer,
-            event.buttons,
-            TapDownDetails(
-                globalPosition: event.position,
-                localPosition: event.localPosition,
-                kind: event.kind));
-      }
+      widget.onTapDown?.call(
+          event.pointer,
+          event.buttons,
+          TapDownDetails(
+              globalPosition: event.position,
+              localPosition: event.localPosition,
+              kind: event.kind));
 
       if (widget.onLongPress != null) {
-        if (_longPressTimer != null) {
-          _longPressTimer!.cancel();
-        }
+        _longPressTimer?.cancel();
         _longPressTimer =
             Timer(Duration(milliseconds: widget.longPressTickTimeConsider), () {
           if (touchCount == 1 && _touchDetails[0].pointer == event.pointer) {
@@ -274,9 +280,7 @@ class PointerDetectorState extends State<PointerDetector> {
 
     detail.currentLocalPosition = event.localPosition;
     detail.currentGlobalPosition = event.position;
-    if (_longPressTimer != null) {
-      _longPressTimer!.cancel();
-    }
+    _longPressTimer?.cancel();
 
     switch (_gestureState) {
       case _GestureState.pointerDown:
@@ -285,15 +289,13 @@ class PointerDetectorState extends State<PointerDetector> {
           _gestureState = _GestureState.dragStart;
           detail.startGlobalPosition = event.position;
           detail.startLocalPosition = event.localPosition;
-          if (widget.onDragStart != null) {
-            widget.onDragStart!(
-                event.pointer,
-                event.buttons,
-                DragStartDetails(
-                    sourceTimeStamp: event.timeStamp,
-                    globalPosition: event.position,
-                    localPosition: event.localPosition));
-          }
+          widget.onDragStart?.call(
+              event.pointer,
+              event.buttons,
+              DragStartDetails(
+                  sourceTimeStamp: event.timeStamp,
+                  globalPosition: event.position,
+                  localPosition: event.localPosition));
         }
         break;
       case _GestureState.dragStart:
@@ -409,10 +411,16 @@ class PointerDetectorState extends State<PointerDetector> {
     widget.onMouseScroll?.call(mouseScrollDetail);
   }
 
+  void onMouseEnter(PointerEnterEvent event) {
+    widget.onMouseEnter?.call(event);
+  }
+
   void onMouseHover(PointerHoverEvent event) {
-    if (widget.onMouseHover != null) {
-      widget.onMouseHover!(event);
-    }
+    widget.onMouseHover?.call(event);
+  }
+
+  void onMouseExit(PointerExitEvent event) {
+    widget.onMouseExit?.call(event);
   }
 
   get touchCount => _touchDetails.length;

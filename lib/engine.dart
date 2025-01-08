@@ -61,11 +61,11 @@ class SamsaraEngine extends SceneController with EventAggregator {
   bool hasLocaleKey(String? key) => _locale.hasLocaleString(key);
 
   String locale(dynamic key, {dynamic interpolations}) {
+    if (key == null) return 'null';
     if (interpolations != null && interpolations is! List) {
       interpolations = [interpolations];
     }
-    return _locale.getLocaleString(key ?? 'null',
-        interpolations: interpolations);
+    return _locale.getLocaleString(key, interpolations: interpolations);
   }
 
   late final String? _mainModName;

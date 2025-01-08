@@ -5,9 +5,9 @@ export 'package:flutter/foundation.dart' show Key;
 class EventHandler {
   final Key widgetKey;
 
-  final void Function(String id, dynamic args, String? scene) handle;
+  final void Function(String id, dynamic args, String? scene) callback;
 
-  EventHandler({required this.widgetKey, required this.handle});
+  EventHandler({required this.widgetKey, required this.callback});
 }
 
 mixin EventAggregator {
@@ -30,7 +30,7 @@ mixin EventAggregator {
     final listeners = _eventHandlers[id];
     if (listeners != null) {
       for (final listener in listeners) {
-        listener.handle(id, args, scene);
+        listener.callback(id, args, scene);
       }
     }
   }

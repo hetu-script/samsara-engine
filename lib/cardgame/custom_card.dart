@@ -19,7 +19,7 @@ class CustomGameCard extends GameCard {
 
   Vector2? preferredSize;
 
-  String? title, extraDescription;
+  String? title;
 
   String? _description;
   String? get description => _description;
@@ -28,7 +28,6 @@ class CustomGameCard extends GameCard {
     _generateDescription();
   }
 
-  double extraDescriptionWidth;
   DocumentRoot? _descriptionDocument;
   GroupElement? _descriptionElement;
   ScreenTextConfig? titleConfig,
@@ -38,7 +37,6 @@ class CustomGameCard extends GameCard {
 
   bool showTitle;
   bool showDescription;
-  bool showExtraDescription;
   bool showStackIcon;
   bool showStackNumber;
   bool showCostIcon;
@@ -113,8 +111,6 @@ class CustomGameCard extends GameCard {
     this.preferredSize,
     this.title,
     String? description,
-    this.extraDescription,
-    this.extraDescriptionWidth = 280.0,
     this.maskSpriteId,
     this.maskSprite,
     this.illustrationSpriteId,
@@ -141,7 +137,6 @@ class CustomGameCard extends GameCard {
     this.costIconRelativePaddings = EdgeInsets.zero,
     bool? showTitle,
     bool? showDescription,
-    bool? showExtraDescription,
     bool? showStackIcon,
     this.showStackNumber = false,
     bool? showCostIcon,
@@ -149,17 +144,11 @@ class CustomGameCard extends GameCard {
     bool? showRarityIcon,
   })  : showTitle = showTitle ?? title != null,
         showDescription = showDescription ?? description != null,
-        showExtraDescription = showExtraDescription ?? extraDescription != null,
         showStackIcon = (stackIconSpriteId != null || stackIconSprite != null),
         showCostIcon = (costIconSpriteId != null || costIconSprite != null),
         showRarityIcon =
             (rarityIconSpriteId != null || rarityIconSprite != null) {
     this.description = description;
-
-    // if (extraDescription != null) {
-    //   _extraDescriptionDocument = buildFlameRichText(extraDescription!,
-    //       style: descriptionConfig?.textStyle);
-    // }
   }
 
   /// 复制这个卡牌对象，但不会复制onTap之类的交互事件，也不会复制index属性
@@ -198,8 +187,6 @@ class CustomGameCard extends GameCard {
       preferredSize: preferredSize,
       title: title,
       description: _description,
-      extraDescription: extraDescription,
-      extraDescriptionWidth: extraDescriptionWidth,
       illustrationSpriteId: illustrationSpriteId,
       illustrationSprite: illustrationSprite,
       backSpriteId: backSpriteId,
@@ -224,7 +211,6 @@ class CustomGameCard extends GameCard {
       costIconRelativePaddings: costIconRelativePaddings,
       showTitle: showTitle,
       showDescription: showDescription,
-      showExtraDescription: showExtraDescription,
       showStackIcon: showStackIcon,
       showStackNumber: showStackNumber,
       showCostIcon: showCostIcon,

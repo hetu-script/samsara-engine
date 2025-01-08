@@ -1,5 +1,4 @@
-// import 'dart:math';
-import 'dart:ui';
+import 'package:flutter/material.dart';
 
 import '../extensions.dart';
 
@@ -30,14 +29,31 @@ const kHovertipContentIndent = 10.0;
 const kHovertipBackgroundBorderRadius = 5.0;
 
 class Hovertip extends BorderComponent {
+  static final Map<String, Hovertip> _cached = {};
+
   static final Map<GameComponent, Hovertip> _instances = {};
 
   static ScreenTextConfig defaultContentConfig = ScreenTextConfig(
     anchor: Anchor.topLeft,
     padding: EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
-    textStyle: TextStyle(fontSize: 14.0),
     overflow: ScreenTextOverflow.wordwrap,
   );
+
+  static clearAll([List<GameComponent>? list]) {
+    if (list == null) {
+      for (final instance in _instances.values) {
+        instance.removeFromParent();
+      }
+      _instances.clear();
+    } else {
+      for (final target in list) {
+        if (_instances.containsKey(target)) {
+          _instances[target]!.removeFromParent();
+          _instances.remove(target);
+        }
+      }
+    }
+  }
 
   static show({
     required Scene scene,
@@ -49,8 +65,22 @@ class Hovertip extends BorderComponent {
   }) {
     hide(target);
 
-    final instance = Hovertip();
-    instance.setContent(content: content, config: config, width: width);
+    final escapedContent =
+        (content?.trim() ?? '').replaceAllEscapedLineBreaks();
+
+    Hovertip instance;
+    if (_cached[escapedContent] != null) {
+      instance = _cached[escapedContent]!;
+    } else {
+      instance = Hovertip();
+      _cached[escapedContent] = instance;
+    }
+    instance.setContent(
+      escapedContent,
+      config: (config ?? ScreenTextConfig())
+          .copyWith(textStyle: Theme.of(scene.context).textTheme.bodySmall),
+      width: width,
+    );
     _instances[target] = instance;
 
     final targetPosition = target.absoluteTopLeftPosition;
@@ -164,6 +194,7 @@ class Hovertip extends BorderComponent {
   }
 
   String _content = '';
+  String get content => _content;
   DocumentRoot? _contentDocument;
   GroupElement? _contentElement;
   late ScreenTextConfig contentConfig;
@@ -186,16 +217,13 @@ class Hovertip extends BorderComponent {
       ..color = Colors.black.withAlpha(200);
   }
 
-  void setContent(
-      {String? content, ScreenTextConfig? config, required double width}) {
-    final escapedContent = content?.replaceAllEscapedLineBreaks() ?? '';
-    if (_content != escapedContent) {
-      _content = escapedContent;
-      contentConfig = contentConfig.copyFrom(config);
-      _contentDocument =
-          buildFlameRichText(escapedContent, style: contentConfig.textStyle);
-      _calculateSize(width: width);
-    }
+  void setContent(String content,
+      {ScreenTextConfig? config, required double width}) {
+    _content = content;
+    contentConfig = contentConfig.copyFrom(config);
+    _contentDocument =
+        buildFlameRichText(_content, style: contentConfig.textStyle);
+    _calculateSize(width: width);
   }
 
   void _calculateSize({required double width}) {
