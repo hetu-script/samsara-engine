@@ -8,14 +8,14 @@ import 'package:flame_audio/bgm.dart';
 // import '../lighting/lighting_config.dart';
 import '../components/game_component.dart';
 import '../extensions.dart';
-import 'scene_controller.dart';
-import '../widgets/pointer_detector.dart';
+// import 'scene_controller.dart';
+import '../pointer_detector.dart';
 import '../gestures/gesture_mixin.dart';
 // import '../components/border_component.dart';
 import '../lighting/camera2.dart';
 import '../lighting/world2.dart';
 import '../components/fading_text.dart';
-import '../paint/paint.dart';
+import 'scene_widget.dart';
 
 const kHintTextPriority = 1000000;
 
@@ -23,11 +23,12 @@ abstract class Scene extends FlameGame {
   static const overlayUIBuilderMapKey = 'overlayUI';
 
   final String id;
-  final SceneController controller;
+  // final SceneController controller;
   final BuildContext context;
 
   Rect bounds = Rect.zero;
 
+  final Bgm? bgm;
   String? bgmFile;
   double bgmVolume;
 
@@ -43,15 +44,14 @@ abstract class Scene extends FlameGame {
       bottomCenter = Vector2.zero(),
       bottomRight = Vector2.zero();
 
-  late final Bgm bgm;
-
   bool get enableLighting => (camera as Camera2).enableLighting;
   set enableLighting(bool value) => (camera as Camera2).enableLighting = value;
 
   Scene({
     required this.id,
-    required this.controller,
+    // required this.controller,
     required this.context,
+    this.bgm,
     this.bgmFile,
     this.bgmVolume = 0.5,
     bool enableLighting = false,
@@ -64,7 +64,6 @@ abstract class Scene extends FlameGame {
           world: World2(),
         ) {
     // camera.viewfinder.anchor = Anchor.topLeft;
-    bgm = Bgm();
   }
 
   void addHintText(
@@ -90,30 +89,41 @@ abstract class Scene extends FlameGame {
       ),
       movingUpOffset: offsetY,
       duration: duration,
-      config: ScreenTextConfig(
-        anchor: Anchor.center,
-        textStyle: TextStyle(
-          color: color ?? Colors.white,
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-        ).merge(
-          (textStyle ?? TextStyle()),
-        ),
-      ),
+      textStyle: TextStyle(
+        color: color ?? Colors.white,
+      ).merge(textStyle),
       priority: kHintTextPriority,
     );
     world.add(c);
   }
 
-  void leave({bool clearCache = false}) async {
-    if (clearCache) {
-      controller.clearCache(id);
+  /// 这个函数在进入场景时被调用，通常用来进行恢复之前冻结和终止的一些操作
+  /// 注意因为场景本身始终存在与缓存中，因此这个函数的机制和 onLoad 不同
+  @mustCallSuper
+  void onStart(dynamic arguments) async {
+    if (bgm != null) {
+      if (bgmFile != null) {
+        if (bgm!.isPlaying) {
+          await bgm!.stop();
+        }
+        await bgm!.play('music/$bgmFile', volume: bgmVolume);
+      }
     }
-    if (bgm.isPlaying) {
-      try {
-        await bgm.stop();
-      } catch (e) {
-        controller.error(e.toString());
+  }
+
+  /// 这个函数在退出场景时被调用，通常用来清理数据等
+  /// 注意此时场景的资源并未被施放，场景本身仍然存在于缓存中
+  /// 如果要释放资源，应在调用 controller.popScene() 时带上参数 clearCache: true
+  @mustCallSuper
+  void onEnd() async {
+    // if (clearCache) {
+    //   controller.clearCachedScene(id);
+    // }
+    if (bgm != null) {
+      if (bgmFile != null) {
+        if (bgm!.isPlaying) {
+          await bgm!.stop();
+        }
       }
     }
   }
@@ -122,25 +132,10 @@ abstract class Scene extends FlameGame {
   @override
   void onLoad() async {
     fitScreen();
-    if (bgm.isPlaying) {
-      bgm.stop();
-    } else {
-      bgm.initialize();
-    }
-    if (bgmFile != null) {
-      try {
-        await bgm.play('audio/music/$bgmFile', volume: bgmVolume);
-      } catch (e) {
-        controller.error(e.toString());
-      }
-    }
   }
 
-  @mustCallSuper
   @override
-  void onDispose() async {
-    bgm.stop();
-  }
+  void onDispose() async {}
 
   @override
   @mustCallSuper
@@ -292,4 +287,6 @@ abstract class Scene extends FlameGame {
       c.handleMouseScroll(details);
     }
   }
+
+  Widget build(BuildContext context) => SceneWidget(scene: this);
 }

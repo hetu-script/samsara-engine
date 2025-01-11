@@ -7,6 +7,7 @@ import 'package:hetu_script_flutter/hetu_script_flutter.dart';
 // import 'package:path_provider/path_provider.dart';
 // import 'package:path/path.dart' as path;
 import 'package:flame_audio/flame_audio.dart';
+import 'package:flame_audio/bgm.dart';
 
 import 'binding/engine_binding.dart';
 import '../event.dart';
@@ -33,7 +34,9 @@ class EngineConfig {
   });
 }
 
-class SamsaraEngine extends SceneController with EventAggregator {
+class SamsaraEngine extends SceneController
+    with EventAggregator
+    implements HTLogger {
   static const modeFileExtension = '.mod';
 
   final EngineConfig config;
@@ -231,20 +234,12 @@ class SamsaraEngine extends SceneController with EventAggregator {
 
     /// add engine class binding into script.
     hetu.interpreter.bindExternalClass(SamsaraEngineClassBinding());
-    try {
-      hetu.eval(
-        kHetuEngineBindingSource,
-        // filename: 'engine.ht',
-        globallyImport: true,
-        type: HTResourceType.hetuModule,
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      } else {
-        rethrow;
-      }
-    }
+    hetu.eval(
+      kHetuEngineBindingSource,
+      // filename: 'engine.ht',
+      globallyImport: true,
+      type: HTResourceType.hetuModule,
+    );
 
     // if (modules.contains('cardGame')) {
     //   /// add playing card class binding into script.
@@ -332,61 +327,10 @@ class SamsaraEngine extends SceneController with EventAggregator {
   @override
   void error(String message) => log(message, severity: MessageSeverity.error);
 
+  Bgm get bgm => FlameAudio.bgm;
+
   Future<AudioPlayer?> play(String fileName, {double? volume}) async {
-    try {
-      return FlameAudio.play('sound/$fileName',
-          volume: volume ?? config.musicVolume);
-    } catch (e) {
-      if (kDebugMode) {
-        error(e.toString());
-        return null;
-      } else {
-        rethrow;
-      }
-    }
-  }
-
-  String? _currentBGMName;
-  String? get currentBGMName => _currentBGMName;
-
-  bool get isBGMPlaying => FlameAudio.bgm.isPlaying;
-
-  void initBGM() {
-    FlameAudio.bgm.initialize();
-  }
-
-  void playBGM(String fileName, {double? volume}) {
-    try {
-      if (_currentBGMName == fileName) {
-        FlameAudio.bgm.resume();
-      } else {
-        _currentBGMName = fileName;
-        FlameAudio.bgm.stop();
-        FlameAudio.bgm.play('music/$fileName', volume: config.musicVolume);
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        error(e.toString());
-      } else {
-        rethrow;
-      }
-    }
-  }
-
-  void pauseBGM() {
-    FlameAudio.bgm.pause();
-  }
-
-  void resumeBGM() {
-    FlameAudio.bgm.resume();
-  }
-
-  void stopBGM() {
-    FlameAudio.bgm.stop();
-    _currentBGMName = null;
-  }
-
-  void disposeBGM() {
-    FlameAudio.bgm.dispose();
+    return FlameAudio.play('sound/$fileName',
+        volume: volume ?? config.musicVolume);
   }
 }

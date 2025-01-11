@@ -8,7 +8,7 @@ import 'game.dart';
 import '../ui/drop_menu.dart';
 
 class MainGameOverlay extends StatefulWidget {
-  MainGameOverlay() : super(key: UniqueKey());
+  const MainGameOverlay({super.key});
 
   @override
   State<MainGameOverlay> createState() => _MainGameOverlayState();
@@ -25,7 +25,7 @@ class _MainGameOverlayState extends State<MainGameOverlay>
 
   @override
   void dispose() {
-    engine.removeEventListener(widget.key!);
+    engine.removeEventListener('game');
 
     _scene.detach();
     super.dispose();
@@ -33,8 +33,7 @@ class _MainGameOverlayState extends State<MainGameOverlay>
 
   Future<Scene?> _getScene() async {
     if (_isDisposing) return null;
-    final scene = await engine.createScene(
-        contructorKey: 'game', sceneId: 'game') as GameScene;
+    final scene = await engine.createScene('game') as GameScene;
     return scene;
   }
 
@@ -88,7 +87,7 @@ class _MainGameOverlayState extends State<MainGameOverlay>
                                 ).then((_) => setState(() {}));
                                 break;
                               case MainGameDropMenuItems.quit:
-                                engine.clearCache(_scene.id);
+                                engine.clearCachedScene(_scene.id);
                                 _isDisposing = true;
                                 Navigator.of(context).pop();
                                 break;

@@ -21,8 +21,9 @@ class GameScene extends Scene {
 
   GameScene({
     required super.id,
-    required super.controller,
+    // required super.controller,
     required super.context,
+    required super.bgm,
   }) : super(enableLighting: false);
 
   @override

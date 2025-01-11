@@ -7,11 +7,7 @@ import '../gestures.dart';
 import '../paint/paint.dart';
 
 class SpriteButton extends BorderComponent with HandlesGesture {
-  static const defaultTextConfig = ScreenTextConfig(
-    anchor: Anchor.center,
-    textStyle: TextStyle(fontSize: 16),
-    outlined: true,
-  );
+  static ScreenTextConfig defaultTextConfig = ScreenTextConfig();
 
   late Paint hoverTintPaint, unselectedPaint, invalidPaint; // shadowPaint;
 

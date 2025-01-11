@@ -1,36 +1,35 @@
 import 'package:flutter/foundation.dart';
 
-export 'package:flutter/foundation.dart' show Key;
-
-class EventHandler {
-  final Key widgetKey;
-
-  final void Function(String id, dynamic args, String? scene) callback;
-
-  EventHandler({required this.widgetKey, required this.callback});
-}
+typedef EventCallback = void Function(String sceneId, dynamic args);
 
 mixin EventAggregator {
-  final _eventHandlers = <String, List<EventHandler>>{};
+  // 第一层 key 是 eventId, 第二层 key 是 sceneId, value 是 callback
+  final Map<String, Map<String, EventCallback>> _eventHandlers = {};
 
-  void addEventListener(String eventId, EventHandler eventHandler) {
+  void setEventListener(
+      String sceneId, String eventId, EventCallback callback) {
     if (_eventHandlers[eventId] == null) {
-      _eventHandlers[eventId] = [];
+      _eventHandlers[eventId] = <String, EventCallback>{};
     }
-    _eventHandlers[eventId]!.add(eventHandler);
+    final listeners = _eventHandlers[eventId]!;
+    listeners[sceneId] = callback;
   }
 
-  void removeEventListener(Key key) {
-    for (final list in _eventHandlers.values) {
-      list.removeWhere((handler) => handler.widgetKey == key);
+  void removeEventListener(String sceneId) {
+    for (final handlers in _eventHandlers.values) {
+      handlers.removeWhere((registeredId, callback) => registeredId == sceneId);
     }
   }
 
-  void emit(String id, {dynamic args, String? scene}) {
-    final listeners = _eventHandlers[id];
+  void emit(String eventId, [dynamic args]) {
+    if (kDebugMode) {
+      print('samsara - event: [$eventId], args: [$args]');
+    }
+
+    final listeners = _eventHandlers[eventId];
     if (listeners != null) {
-      for (final listener in listeners) {
-        listener.callback(id, args, scene);
+      for (final callback in listeners.values) {
+        callback.call(eventId, args);
       }
     }
   }

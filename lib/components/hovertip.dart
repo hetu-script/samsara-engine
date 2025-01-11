@@ -33,11 +33,7 @@ class Hovertip extends BorderComponent {
 
   static final Map<GameComponent, Hovertip> _instances = {};
 
-  static ScreenTextConfig defaultContentConfig = ScreenTextConfig(
-    anchor: Anchor.topLeft,
-    padding: EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
-    overflow: ScreenTextOverflow.wordwrap,
-  );
+  static ScreenTextConfig defaultContentConfig = ScreenTextConfig();
 
   static clearAll([List<GameComponent>? list]) {
     if (list == null) {
@@ -75,12 +71,7 @@ class Hovertip extends BorderComponent {
       instance = Hovertip();
       _cached[escapedContent] = instance;
     }
-    instance.setContent(
-      escapedContent,
-      config: (config ?? ScreenTextConfig())
-          .copyWith(textStyle: Theme.of(scene.context).textTheme.bodySmall),
-      width: width,
-    );
+    instance.setContent(escapedContent, config: config, width: width);
     _instances[target] = instance;
 
     final targetPosition = target.absoluteTopLeftPosition;

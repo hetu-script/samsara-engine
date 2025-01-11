@@ -6,22 +6,21 @@ class ResponsiveWindow extends StatelessWidget {
     this.child,
     this.alignment = AlignmentDirectional.topStart,
     this.size,
-    this.margin = const EdgeInsets.all(0.0),
-    this.padding = const EdgeInsets.all(0.0),
+    this.margin,
     this.isPortraitMode = false,
     this.borderRadius = const BorderRadius.all(Radius.circular(5.0)),
     Color? color,
-    this.stackChildren = const [],
+    this.children = const [],
   }) : color = color ?? Colors.black;
 
   final Widget? child;
   final AlignmentGeometry alignment;
   final Size? size;
-  final EdgeInsetsGeometry margin, padding;
+  final EdgeInsetsGeometry? margin;
   final bool isPortraitMode;
   final BorderRadius borderRadius;
   final Color color;
-  final List<Widget> stackChildren;
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +35,6 @@ class ResponsiveWindow extends StatelessWidget {
               width: size?.width,
               height: size?.height,
               margin: margin,
-              padding: padding,
               decoration: BoxDecoration(
                 color: color,
                 borderRadius: borderRadius,
@@ -46,7 +44,7 @@ class ResponsiveWindow extends StatelessWidget {
               child: child,
             ),
           ),
-          ...stackChildren,
+          ...children,
         ],
       ),
     );

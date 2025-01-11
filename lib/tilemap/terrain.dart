@@ -290,19 +290,19 @@ class TileMapTerrain extends GameComponent with TileInfo {
             shadows: const [
               Shadow(
                   // bottomLeft
-                  offset: Offset(-0.5, -0.5),
+                  offset: Offset(-0.1, -0.1),
                   color: Colors.black),
               Shadow(
                   // bottomRight
-                  offset: Offset(0.5, -0.5),
+                  offset: Offset(0.1, -0.1),
                   color: Colors.black),
               Shadow(
                   // topRight
-                  offset: Offset(0.5, 0.5),
+                  offset: Offset(0.1, 0.1),
                   color: Colors.black),
               Shadow(
                   // topLeft
-                  offset: Offset(-0.5, 0.5),
+                  offset: Offset(-0.1, 0.1),
                   color: Colors.black),
             ],
           ),

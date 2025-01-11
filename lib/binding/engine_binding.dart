@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hetu_script/hetu_script.dart';
 import 'package:hetu_script/binding.dart';
 
@@ -11,6 +12,8 @@ class SamsaraEngineClassBinding extends HTExternalClass {
       {bool ignoreUndefined = false}) {
     var engine = instance as SamsaraEngine;
     switch (id) {
+      case 'debugMode':
+        return kDebugMode || engine.config.debugMode;
       case 'loadLocaleDataFromJSON':
         return ({positionalArgs, namedArgs}) =>
             engine.loadLocaleDataFromJSON(positionalArgs.first);
@@ -36,7 +39,7 @@ class SamsaraEngineClassBinding extends HTExternalClass {
       //       onIncident(positionalArgs.first);
       case 'emit':
         return ({positionalArgs, namedArgs}) =>
-            engine.emit(positionalArgs[0], args: positionalArgs[1]);
+            engine.emit(positionalArgs[0], positionalArgs[1]);
       case 'log':
         return ({positionalArgs, namedArgs}) => engine.log(positionalArgs
             .map((object) => engine.hetu.lexicon.stringify(object))
@@ -62,7 +65,7 @@ class SamsaraEngineClassBinding extends HTExternalClass {
             engine.play(positionalArgs.first);
       case 'playBGM':
         return ({positionalArgs, namedArgs}) =>
-            engine.playBGM(positionalArgs.first);
+            engine.bgm.play(positionalArgs.first);
       default:
         if (!ignoreUndefined) throw HTError.undefined(id);
     }
@@ -71,6 +74,7 @@ class SamsaraEngineClassBinding extends HTExternalClass {
 
 const kHetuEngineBindingSource = r'''
 external class SamsaraEngine {
+  get debugMode
   fun loadLocaleDataFromJSON(data: Map)
   fun setLanguage(languageId: string)
   fun hasLocaleKey(key)

@@ -54,7 +54,13 @@ class PiledZone extends BorderComponent {
   final Vector2 piledCardSize;
   Vector2? focusedOffset, focusedPosition, focusedSize;
 
-  /// [pileMargin] : 堆叠时第一张牌相对区域的x和y的位移
+  /// [pileStartPosition] : 堆叠时的起始位置
+  /// 如果此值为 null，则根据如下规则设定：
+  /// 如果卡牌被添加到 zone 上，则起始位置为 (0,0)
+  /// 否则起始位置为 zone 自己的位置
+  Vector2? pileStartPosition;
+
+  /// [pileMargin] : 堆叠时第一张牌相对起始点的x和y的位移
   late Vector2 pileMargin;
 
   /// [pileOffset] : 堆叠时每张牌相比上一张牌的位移
@@ -100,6 +106,7 @@ class PiledZone extends BorderComponent {
     this.focusedOffset,
     this.focusedPosition,
     this.focusedSize,
+    this.pileStartPosition,
     Vector2? pileMargin,
     Vector2? pileOffset,
     this.pileStructure = PileStructure.stack,
@@ -316,21 +323,35 @@ class PiledZone extends BorderComponent {
     for (var i = 0; i < cards.length; ++i) {
       final card = cards[i];
 
+      Vector2 startPosition;
+
+      if (pileStartPosition != null) {
+        startPosition = pileStartPosition!;
+      } else {
+        if (card.parent == this) {
+          startPosition = Vector2.zero();
+        } else {
+          startPosition = Vector2(
+              // 如果堆叠方向是向右，则从区域左侧开始计算x偏移
+              (pileOffset.x.sign >= 0 ? position.x : position.x + width),
+              // 如果堆叠方向是向上，则从区域下侧开始计算y偏移
+              (pileOffset.y.sign >= 0 ? position.y : position.y + height));
+        }
+      }
+
       // TODO: 有empty slots时，不重新赋值index
       card.index = i;
 
       setCardPriority(card, i);
 
       final endPosition = Vector2(
-        // 如果堆叠方向是向右，则从区域左侧开始计算x偏移
-        (pileOffset.x.sign >= 0 ? x : x + width) +
+        startPosition.x +
             piledCardSize.x *
                 (pileOffset.x.sign >= 0 ? card.anchor.x : (1 - card.anchor.x)) *
                 (pileOffset.x.sign >= 0 ? 1 : -1) +
             card.index * pileOffset.x +
             pileMargin.x,
-        // 如果堆叠方向是向上，则从区域下侧开始计算y偏移
-        (pileOffset.y.sign >= 0 ? y : y + height) +
+        startPosition.y +
             piledCardSize.y *
                 (pileOffset.y.sign >= 0 ? card.anchor.y : (1 - card.anchor.y)) *
                 (pileOffset.y.sign >= 0 ? 1 : -1) +

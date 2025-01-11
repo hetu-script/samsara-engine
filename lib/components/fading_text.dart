@@ -8,8 +8,10 @@ import '../effect/advanced_move_effect.dart';
 // import '../extensions.dart';
 
 class FadingText extends GameComponent {
+  static TextStyle defaultTextStyle = TextStyle();
+
   // late TextPaint _textPaint;
-  late ScreenTextConfig config;
+  ScreenTextConfig _textConfig = ScreenTextConfig(textStyle: defaultTextStyle);
 
   final String text;
 
@@ -30,13 +32,15 @@ class FadingText extends GameComponent {
     super.angle,
     super.priority,
     super.opacity,
-    this.config = const ScreenTextConfig(),
+    TextStyle? textStyle,
     this.onComplete,
   }) : super(anchor: Anchor.center) {
-    // _textPaint = getTextPaint(config: config);
-    // final metric = _textPaint.getLineMetrics(text);
-    // width = metric.width;
-    // height = metric.height;
+    if (textStyle != null) {
+      _textConfig =
+          _textConfig.fillWith(textStyle: textStyle).copyWith(size: size);
+    } else {
+      _textConfig = _textConfig.copyWith(size: size);
+    }
 
     assert(fadeOutAfterDuration < duration);
   }
@@ -66,6 +70,6 @@ class FadingText extends GameComponent {
 
   @override
   void render(Canvas canvas) {
-    drawScreenText(canvas, text, config: config);
+    drawScreenText(canvas, text, config: _textConfig);
   }
 }

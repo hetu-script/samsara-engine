@@ -11,9 +11,13 @@ class Console extends StatefulWidget {
   const Console({
     super.key,
     required this.engine,
+    this.margin,
+    this.backgroundColor,
   });
 
   final SamsaraEngine engine;
+  final EdgeInsetsGeometry? margin;
+  final Color? backgroundColor;
 
   @override
   State<Console> createState() => _ConsoleState();
@@ -57,6 +61,8 @@ class _ConsoleState extends State<Console> {
     _consoleOutputTextController.text = widget.engine.getLogs().join('\n');
     return ResponsiveWindow(
       alignment: AlignmentDirectional.center,
+      margin: widget.margin,
+      color: widget.backgroundColor,
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
@@ -81,6 +87,8 @@ class _ConsoleState extends State<Console> {
               onKeyEvent: (KeyEvent key) {
                 if (key is KeyUpEvent) {
                   switch (key.logicalKey) {
+                    case LogicalKeyboardKey.escape:
+                      Navigator.maybePop(context, null);
                     case LogicalKeyboardKey.arrowUp: // up
                       if (_commandHistoryIndex > 0) {
                         --_commandHistoryIndex;

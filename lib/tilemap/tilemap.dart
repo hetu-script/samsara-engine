@@ -247,7 +247,7 @@ class TileMap extends GameComponent with HandlesGesture {
 
   /// 修改 tile 的位置会连带影响很多其他属性，这里一并将其纠正
   /// 一些信息涉及到地图本身，所以不能放在tile对象上进行
-  void refreshTileInfo(TileInfo tile) {
+  void updateTileInfo(TileInfo tile) {
     tile.index = tilePosition2Index(tile.left, tile.top);
     // tile.renderPosition = tilePosition2RenderPosition(tile.left, tile.top);
     tile.centerPosition = tilePosition2TileCenter(tile.left, tile.top);
@@ -352,7 +352,7 @@ class TileMap extends GameComponent with HandlesGesture {
           captionStyle: captionStyle,
           offset: tileOffset,
         );
-        refreshTileInfo(tile);
+        updateTileInfo(tile);
         tile.tryLoadSprite();
 
         final overlaySpriteData = terrainData['overlaySprite'];
@@ -450,7 +450,7 @@ class TileMap extends GameComponent with HandlesGesture {
       // onMoved: onMoved,
       animations: states,
     );
-    refreshTileInfo(object);
+    updateTileInfo(object);
     add(object);
     return object;
   }
@@ -857,6 +857,10 @@ class TileMap extends GameComponent with HandlesGesture {
         }
       }
     }
+  }
+
+  Future<void> moveCameraToTileMapCenter() async {
+    await moveCameraToTilePosition(tileMapWidth ~/ 2, tileMapHeight ~/ 2);
   }
 
   Future<void> moveCameraToTilePosition(

@@ -2,16 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 
 import 'scene.dart';
-import '../widgets/pointer_detector.dart';
+import '../pointer_detector.dart';
 
 class SceneWidget<T extends Scene> extends StatelessWidget {
   final T scene;
+  final GameLoadingWidgetBuilder? loadingBuilder;
   final Map<String, OverlayWidgetBuilder<T>>? overlayBuilderMap;
+  final List<String>? initialActiveOverlays;
 
   const SceneWidget({
     super.key,
     required this.scene,
+    this.loadingBuilder,
     this.overlayBuilderMap,
+    this.initialActiveOverlays,
   });
 
   @override
@@ -33,7 +37,9 @@ class SceneWidget<T extends Scene> extends StatelessWidget {
         onMouseScroll: scene.onMouseScroll,
         child: GameWidget(
           game: scene,
+          loadingBuilder: loadingBuilder,
           overlayBuilderMap: overlayBuilderMap,
+          initialActiveOverlays: initialActiveOverlays,
         ),
       ),
     );

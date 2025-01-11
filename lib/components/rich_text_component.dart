@@ -1,11 +1,13 @@
 import 'dart:ui';
 
+import 'package:samsara/gestures.dart';
+
 import 'border_component.dart';
 import '../paint/paint.dart';
 import '../extensions.dart';
 import '../richtext.dart';
 
-class RichTextComponent extends BorderComponent {
+class RichTextComponent extends BorderComponent with HandlesGesture {
   ScreenTextConfig config;
 
   String? _text;
@@ -23,8 +25,10 @@ class RichTextComponent extends BorderComponent {
     super.priority,
     String? text,
     this.config = const ScreenTextConfig(),
+    bool enableGesture = false,
   }) {
     this.text = text;
+    this.enableGesture = enableGesture;
   }
 
   set text(String? value) {

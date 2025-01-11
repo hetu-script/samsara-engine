@@ -26,7 +26,11 @@ class _MainMenuState extends State<MainMenu> {
     super.initState();
 
     engine.registerSceneConstructor('game', ([dynamic data]) async {
-      return GameScene(controller: engine, id: 'game', context: context);
+      return GameScene(
+        id: 'game',
+        context: context,
+        bgm: engine.bgm,
+      );
     });
   }
 

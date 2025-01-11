@@ -158,7 +158,7 @@ TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
       textColor = Colors.brown;
     } else if (currentTag == 'blueGrey') {
       textColor = Colors.blueGrey;
-    } else if (currentTag == 'rank0' || currentTag == 'unknown') {
+    } else if (currentTag == 'rank0' || currentTag == 'basic') {
       textColor = HexColor.fromString('#A3A3A3');
     } else if (currentTag == 'rank1' || currentTag == 'common') {
       textColor = HexColor.fromString('#CCCCCC');
