@@ -1,35 +1,43 @@
 import 'dart:math' as math;
 
+import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
-import 'package:samsara/components/hovertip.dart';
 import 'package:flame/flame.dart';
 import 'package:samsara/components/sprite_button.dart';
 import 'package:flame/components.dart';
 // import 'package:samsara/utils/math.dart' as math;
 import 'package:samsara/cardgame/cardgame.dart';
 import 'package:hetu_script/utils/uid.dart' as utils;
+import 'package:window_manager/window_manager.dart';
+import 'package:samsara/ui/label.dart';
+import 'package:samsara/widgets/markdown_wiki.dart';
+import 'package:samsara/richtext.dart';
 
-// import '../global.dart';
-// import 'components/light_trail.dart';
+import 'ui/drop_menu.dart';
+import '../app.dart';
+
+const richTextSource = 'rich text is <yellow italic>awesome</> !!!';
 
 class GameScene extends Scene {
   final random = math.Random();
 
-  late final SpriteButton condensedCenter;
   late final PiledZone piledZone;
+
+  CustomGameCard? card;
 
   GameScene({
     required super.id,
     // required super.controller,
     required super.context,
-    required super.bgm,
+    super.bgm,
+    super.bgmFile,
+    super.bgmVolume = 0.5,
   }) : super(enableLighting: false);
 
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    fitScreen();
 
     final SpriteComponent background = SpriteComponent(
       sprite: Sprite(await Flame.images.load('main2-small.png')),
@@ -37,21 +45,7 @@ class GameScene extends Scene {
     );
     world.add(background);
 
-    condensedCenter = SpriteButton(
-      anchor: Anchor.center,
-      position: center,
-      useSimpleStyle: true,
-      spriteId: 'light_point.png',
-      size: Vector2(50, 50),
-      lightConfig: LightConfig(
-        radius: 250,
-        blurBorder: 500,
-      ),
-    );
-
-    background.add(condensedCenter);
-
-    final cardSize = Vector2(250, 250 * 1.382);
+    final cardSize = Vector2(350 * 0.74, 350);
 
     piledZone = PiledZone(
       piledCardSize: cardSize,
@@ -62,61 +56,83 @@ class GameScene extends Scene {
       text: 'Condense',
       spriteId: 'button.png',
       useSpriteSrcSize: true,
-      position: Vector2(center.x, size.y - 100),
+      position: center,
       onTap: (buttons, position) async {
-        final cardId = utils.randomUID();
-        final card = CustomGameCard(
-          id: cardId,
-          deckId: cardId,
-          preferredSize: cardSize,
-          illustrationRelativePaddings:
-              const EdgeInsets.fromLTRB(0.046, 0.1225, 0.046, 0.214),
-          illustrationSpriteId: 'attack_normal.png',
-          spriteId: 'border4.png',
-          title: '无名剑法',
-          titleRelativePaddings:
-              const EdgeInsets.fromLTRB(0.16, 0.046, 0.16, 0.8775),
-          titleConfig: const ScreenTextConfig(
-            anchor: Anchor.center,
-            textStyle: TextStyle(
-              color: Colors.black,
-              fontSize: 16.0,
-              fontWeight: FontWeight.bold,
-              // color: Colors.orange,
-              // fontWeight: FontWeight.bold,
+        if (card == null) {
+          card = CustomGameCard(
+            position: center,
+            preferredSize: cardSize,
+            id: utils.randomUID(),
+            illustrationRelativePaddings:
+                const EdgeInsets.fromLTRB(0.074, 0.135, 0.074, 0.235),
+            illustrationSpriteId: 'attack_normal.png',
+            spriteId: 'border4.png',
+            title: '无名剑法',
+            titleRelativePaddings:
+                const EdgeInsets.fromLTRB(0.2, 0.05, 0.2, 0.865),
+            titleConfig: ScreenTextConfig(
+              anchor: Anchor.center,
+              outlined: true,
+              textStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 15.0,
+              ),
             ),
-          ),
-          description: '类型：攻击\n流派：通用\n等级：1',
-          descriptionRelativePaddings:
-              const EdgeInsets.fromLTRB(0.08, 0.735, 0.08, 0.08),
-          descriptionConfig: const ScreenTextConfig(
-            anchor: Anchor.center,
-            // outlined: true,
-            textStyle: TextStyle(fontSize: 14.0, color: Colors.black),
-            overflow: ScreenTextOverflow.wordwrap,
-          ),
-        );
-        world.add(card);
-        piledZone.placeCard(card);
+            description: '卡牌描述\n词条 2',
+            descriptionRelativePaddings:
+                const EdgeInsets.fromLTRB(0.108, 0.735, 0.108, 0.08),
+            descriptionConfig: const ScreenTextConfig(
+              anchor: Anchor.center,
+              textStyle: TextStyle(
+                fontFamily: 'NotoSansMono',
+                // fontFamily: GameUI.fontFamily,
+                fontSize: 16.0,
+                color: Colors.black,
+              ),
+              overflow: ScreenTextOverflow.wordwrap,
+            ),
+            glowSpriteId: 'glow2.png',
+            showGlow: true,
+          );
+          world.add(card!);
+          // piledZone.placeCard(card!);
+          card!.moveTo(
+            duration: 0.5,
+            toPosition: Vector2.zero(),
+            toSize: cardSize * 1.5,
+          );
+        } else {
+          card!
+              .moveTo(
+            duration: 0.5,
+            toPosition: center,
+            toSize: Vector2.zero(),
+          )
+              .then((_) {
+            card!.removeFromParent();
+            // piledZone.removeCardById(card!.id);
+            card = null;
+          });
+        }
       },
     );
     // camera.viewport.add(button);
     background.add(button);
 
-    button.onMouseEnter = () {
-      Hovertip.show(
-        scene: this,
-        target: button,
-        direction: HovertipDirection.bottomCenter,
-        width: 360,
-        content:
-            '''<yellow>野堂</>\n\n<yellow>宋代：陆游</>\n\n野堂萧飒雪侵冠，历尽人间行路难。\n病马不收烟草暝，孤桐半落井床寒。\n长瓶浊酒犹堪醉，败箧残编更细看。\n此兴不随年共老，未容城角动忧端。''',
-        config: ScreenTextConfig(anchor: Anchor.topCenter),
-      );
-    };
-    button.onMouseExit = () {
-      Hovertip.hide(button);
-    };
+    // button.onMouseEnter = () {
+    //   Hovertip.show(
+    //     scene: this,
+    //     target: button,
+    //     direction: HovertipDirection.topCenter,
+    //     width: 360,
+    //     content:
+    //         '''<yellow>野堂</>\n\n<yellow>宋代：陆游</>\n\n野堂萧飒雪侵冠，历尽人间行路难。\n病马不收烟草暝，孤桐半落井床寒。\n长瓶浊酒犹堪醉，败箧残编更细看。\n此兴不随年共老，未容城角动忧端。''',
+    //     config: ScreenTextConfig(anchor: Anchor.topCenter),
+    //   );
+    // };
+    // button.onMouseExit = () {
+    //   Hovertip.hide(button);
+    // };
     button.onDragUpdate = (int buttons, Vector2 offset) {
       button.position += offset;
     };
@@ -231,5 +247,103 @@ class GameScene extends Scene {
     if (buttons == kSecondaryButton) {
       camera.moveBy(-details.delta.toVector2());
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          SceneWidget(scene: this),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(top: 20.0, bottom: 20.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return Scaffold(
+                            appBar: AppBar(actions: const []),
+                            body: Center(
+                              child: Container(
+                                color: Colors.blueGrey,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 5.0, horizontal: 10.0),
+                                child: RichText(
+                                  text: TextSpan(
+                                    children: buildFlutterRichText(
+                                      richTextSource,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 24,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    child: const Text('embeded text'),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20.0, bottom: 20.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => MarkdownWiki(
+                          resourceManager: AssetManager(),
+                        ),
+                      );
+                    },
+                    child: const Text('markdown_wiki'),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20.0, bottom: 100.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      windowManager.close();
+                    },
+                    child: Label(
+                      engine.locale('exit'),
+                      width: 100.0,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            right: 0,
+            top: 0,
+            child: MainGameDropMenu(
+              onSelected: (MainGameDropMenuItems item) async {
+                switch (item) {
+                  case MainGameDropMenuItems.console:
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) => Console(
+                        engine: engine,
+                      ),
+                    );
+                  case MainGameDropMenuItems.quit:
+                    windowManager.close();
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

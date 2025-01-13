@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../global.dart';
+import '../../global.dart';
 
 enum MainGameDropMenuItems { console, quit }
 

@@ -376,7 +376,7 @@ TextPaint getTextPaint({
           fontSize: (style?.fontSize ??
                   config.textStyle?.fontSize ??
                   kDefaultRichTextFontSize) *
-              (config.scale ?? 1.0),
+              (config.scale ?? (1.0)),
           // shadows: config.outlined == true
           //     ? [
           //         Shadow(

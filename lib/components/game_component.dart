@@ -18,29 +18,29 @@ export '../types.dart';
 abstract class GameComponent extends PositionComponent
     with HasGameRef<Scene>, HasPaint
     implements SizeProvider, OpacityProvider {
-  bool _isHud = false;
-  bool get isHud => _isHud;
+  bool? _isHud;
+  bool get isHud => _isHud ?? false;
 
   Vector2? _toPosition;
   Vector2? _toSize;
   double? _toAngle;
 
-  bool _isVisible = true;
   bool _isMoving = false;
   bool get isMoving => _isMoving;
 
+  bool _isVisible = true;
   @mustCallSuper
   set isVisible(bool value) => _isVisible = value;
-
-  LightConfig? lightConfig;
-
   bool get isVisible {
     if (!_isVisible) return false;
-    if (!isHud && !size.isZero()) {
-      return gameRef.camera.canSee(this);
+    // if (size.isZero()) return false;
+    if (!isHud) {
+      return game.camera.canSee(this);
     }
     return true;
   }
+
+  LightConfig? lightConfig;
 
   GameComponent({
     super.key,
@@ -59,8 +59,7 @@ abstract class GameComponent extends PositionComponent
   }) : _isVisible = isVisible {
     this.opacity = opacity;
     this.paint = paint ?? Paint()
-      ..filterQuality = FilterQuality.high;
-
+      ..filterQuality = FilterQuality.medium;
     setPaint('default', this.paint);
   }
 
@@ -186,19 +185,21 @@ abstract class GameComponent extends PositionComponent
     return completer.future;
   }
 
-  // @override
-  // void renderTree(Canvas canvas) {
-  //   decorator.applyChain((canvas) {
-  //     render(canvas);
-  //     for (var c in children) {
-  //       if (c is GameComponent && !c.isVisible) continue;
-  //       c.renderTree(canvas);
-  //     }
+  @override
+  void renderTree(Canvas canvas) {
+    if (!isVisible) return;
 
-  //     // Any debug rendering should be rendered on top of everything
-  //     if (debugMode) {
-  //       renderDebugMode(canvas);
-  //     }
-  //   }, canvas);
-  // }
+    decorator.applyChain((canvas) {
+      render(canvas);
+      for (var c in children) {
+        if (c is GameComponent && !c.isVisible) continue;
+        c.renderTree(canvas);
+      }
+
+      // Any debug rendering should be rendered on top of everything
+      if (debugMode) {
+        renderDebugMode(canvas);
+      }
+    }, canvas);
+  }
 }

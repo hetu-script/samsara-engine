@@ -27,6 +27,7 @@ enum HovertipDirection {
 const kHovertipScreenIndent = 10.0;
 const kHovertipContentIndent = 10.0;
 const kHovertipBackgroundBorderRadius = 5.0;
+const kHovertipDefautWidth = 300.0;
 
 class Hovertip extends BorderComponent {
   static final Map<String, Hovertip> _cached = {};
@@ -57,7 +58,7 @@ class Hovertip extends BorderComponent {
     String? content,
     ScreenTextConfig? config,
     HovertipDirection direction = HovertipDirection.topLeft,
-    double width = 280.0,
+    double width = kHovertipDefautWidth,
   }) {
     hide(target);
 

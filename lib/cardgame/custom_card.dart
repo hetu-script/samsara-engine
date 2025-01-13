@@ -30,11 +30,12 @@ class CustomGameCard extends GameCard {
 
   DocumentRoot? _descriptionDocument;
   GroupElement? _descriptionElement;
-  ScreenTextConfig? titleConfig,
-      descriptionConfig,
-      costNumberTextStyle,
-      stackNumberTextStyle;
+  ScreenTextConfig? titleConfig;
+  ScreenTextConfig? descriptionConfig;
+  ScreenTextConfig? costNumberTextStyle;
+  ScreenTextConfig? stackNumberTextStyle;
 
+  bool showGlow;
   bool showTitle;
   bool showDescription;
   bool showStackIcon;
@@ -47,32 +48,32 @@ class CustomGameCard extends GameCard {
   int modifiedCost;
 
   /// the sprite id of this card, should be unique among all cards
-  final String? maskSpriteId,
-      illustrationSpriteId,
-      backSpriteId,
-      stackIconSpriteId,
-      costIconSpriteId,
-      rarityIconSpriteId;
-  Sprite? maskSprite,
-      illustrationSprite,
-      backSprite,
-      stackIconSprite,
-      costIconSprite,
-      rarityIconSprite;
+  final String? glowSpriteId;
+  final String? illustrationSpriteId;
+  final String? backSpriteId;
+  final String? stackIconSpriteId;
+  final String? costIconSpriteId;
+  final String? rarityIconSpriteId;
+  Sprite? glowSprite;
+  Sprite? illustrationSprite;
+  Sprite? backSprite;
+  Sprite? stackIconSprite;
+  Sprite? costIconSprite;
+  Sprite? rarityIconSprite;
 
   /// the relative padding of the illustration, the actual padding will be calculated from the size
-  final EdgeInsets illustrationRelativePaddings,
-      rarityIconRelativePaddings,
-      titleRelativePaddings,
-      descriptionRelativePaddings,
-      stackIconRelativePaddings,
-      costIconRelativePaddings;
-  late Rect _illustrationRect,
-      _rarityIconRect,
-      _stackIconRect,
-      _costIconRect,
-      _titleRect,
-      _descriptionRect;
+  final EdgeInsets titleRelativePaddings;
+  final EdgeInsets descriptionRelativePaddings;
+  final EdgeInsets illustrationRelativePaddings;
+  final EdgeInsets stackIconRelativePaddings;
+  final EdgeInsets costIconRelativePaddings;
+  final EdgeInsets rarityIconRelativePaddings;
+  late Rect _titleRect;
+  late Rect _descriptionRect;
+  late Rect _illustrationRect;
+  late Rect _stackIconRect;
+  late Rect _costIconRect;
+  late Rect _rarityIconRect;
 
   CustomGameCard({
     required super.id,
@@ -111,8 +112,8 @@ class CustomGameCard extends GameCard {
     this.preferredSize,
     this.title,
     String? description,
-    this.maskSpriteId,
-    this.maskSprite,
+    this.glowSpriteId,
+    this.glowSprite,
     this.illustrationSpriteId,
     this.illustrationSprite,
     this.backSpriteId,
@@ -135,6 +136,7 @@ class CustomGameCard extends GameCard {
     this.descriptionRelativePaddings = EdgeInsets.zero,
     this.stackIconRelativePaddings = EdgeInsets.zero,
     this.costIconRelativePaddings = EdgeInsets.zero,
+    this.showGlow = false,
     bool? showTitle,
     bool? showDescription,
     bool? showStackIcon,
@@ -223,8 +225,8 @@ class CustomGameCard extends GameCard {
   void onLoad() async {
     super.onLoad();
 
-    if (maskSpriteId != null) {
-      maskSprite = Sprite(await Flame.images.load(maskSpriteId!));
+    if (glowSpriteId != null) {
+      glowSprite = Sprite(await Flame.images.load(glowSpriteId!));
     }
     if (illustrationSpriteId != null) {
       illustrationSprite =
@@ -242,6 +244,11 @@ class CustomGameCard extends GameCard {
   void _generateDescription() {
     if (_description == null) return;
 
+    double fontScale = preferredSize != null ? width / preferredSize!.x : 1.0;
+    if (fontScale < 0) {
+      fontScale = 0;
+    }
+
     _descriptionDocument =
         buildFlameRichText(_description!, style: descriptionConfig?.textStyle);
     final descriptionAnchor = descriptionConfig?.anchor ?? Anchor.topLeft;
@@ -255,8 +262,7 @@ class CustomGameCard extends GameCard {
     _descriptionElement = _descriptionDocument!.format(DocumentStyle(
       paragraph:
           BlockStyle(margin: EdgeInsets.zero, textAlign: descriptionAlign),
-      text: InlineTextStyle(
-          fontScale: preferredSize != null ? width / preferredSize!.x : 1.0),
+      text: InlineTextStyle(fontScale: fontScale),
       width: _descriptionRect.width,
       height: _descriptionRect.height,
     ));
@@ -305,6 +311,11 @@ class CustomGameCard extends GameCard {
   void generateBorder() {
     super.generateBorder();
 
+    double fontScale = preferredSize != null ? width / preferredSize!.x : 1.0;
+    if (fontScale < 0) {
+      fontScale = 0;
+    }
+
     _illustrationRect = Rect.fromLTWH(
       illustrationRelativePaddings.left * width,
       illustrationRelativePaddings.top * height,
@@ -352,14 +363,10 @@ class CustomGameCard extends GameCard {
     );
 
     stackNumberTextStyle = (stackNumberTextStyle ?? const ScreenTextConfig())
-        .copyWith(
-            size: _stackIconRect.size.toVector2(),
-            scale: preferredSize != null ? width / preferredSize!.x : 1.0);
+        .copyWith(size: _stackIconRect.size.toVector2(), scale: fontScale);
 
     costNumberTextStyle = (costNumberTextStyle ?? const ScreenTextConfig())
-        .copyWith(
-            size: _costIconRect.size.toVector2(),
-            scale: preferredSize != null ? width / preferredSize!.x : 1.0);
+        .copyWith(size: _costIconRect.size.toVector2(), scale: fontScale);
 
     _titleRect = Rect.fromLTWH(
       titleRelativePaddings.left * width,
@@ -370,8 +377,7 @@ class CustomGameCard extends GameCard {
           (titleRelativePaddings.top + titleRelativePaddings.bottom) * height,
     );
     titleConfig = titleConfig?.copyWith(
-        size: _titleRect.size.toVector2(),
-        scale: preferredSize != null ? width / preferredSize!.x : 1.0);
+        size: _titleRect.size.toVector2(), scale: fontScale);
 
     _descriptionRect = Rect.fromLTWH(
       descriptionRelativePaddings.left * width,
@@ -386,8 +392,7 @@ class CustomGameCard extends GameCard {
               height,
     );
     descriptionConfig = descriptionConfig?.copyWith(
-        size: _descriptionRect.size.toVector2(),
-        scale: preferredSize != null ? width / preferredSize!.x : 1.0);
+        size: _descriptionRect.size.toVector2(), scale: fontScale);
 
     if (_description != null) {
       _generateDescription();
@@ -397,6 +402,10 @@ class CustomGameCard extends GameCard {
   @override
   void render(Canvas canvas) {
     if (!isVisible) return;
+
+    if (showGlow) {
+      glowSprite?.renderRect(canvas, border, overridePaint: paint);
+    }
 
     if (isFlipped) {
       backSprite?.renderRect(canvas, border);

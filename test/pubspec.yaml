@@ -27,6 +27,7 @@ dependencies:
   json5: ^0.8.0
   vector_math: ^2.1.4
   window_manager: ^0.4.3
+  provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:

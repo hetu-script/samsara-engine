@@ -97,10 +97,16 @@ abstract class Scene extends FlameGame {
     world.add(c);
   }
 
+  /// 这个函数在场景参数被改变时触发
+  /// 意味着某些事件试图进入此场景，但其实当前已经在此场景中了
+  /// 此时只是调用此函数，让场景进行某些播放动画之类的操作，而不涉及场景切换
+  void onTrigger(dynamic arguments) {}
+
   /// 这个函数在进入场景时被调用，通常用来进行恢复之前冻结和终止的一些操作
-  /// 注意因为场景本身始终存在与缓存中，因此这个函数的机制和 onLoad 不同
+  /// 注意因为场景本身始终存在于缓存中，因此这个函数的机制和 onLoad 不同，可能会反复触发
+  /// 不要在这里进行涉及 component 的操作，因为这个函数第一次执行时 onLoad 尚未加载完毕
   @mustCallSuper
-  void onStart(dynamic arguments) async {
+  void onStart([Map<String, dynamic> arguments = const {}]) async {
     if (bgm != null) {
       if (bgmFile != null) {
         if (bgm!.isPlaying) {
@@ -133,9 +139,6 @@ abstract class Scene extends FlameGame {
   void onLoad() async {
     fitScreen();
   }
-
-  @override
-  void onDispose() async {}
 
   @override
   @mustCallSuper

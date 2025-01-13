@@ -17,10 +17,13 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
   /// The [sprite] to be rendered by this component.
   Sprite? _sprite;
 
+  Color? color;
+
   /// Creates a component with an empty sprite which can be set later
   SpriteComponent2({
     this.spriteId,
     Sprite? sprite,
+    this.color,
     bool? autoResize,
     Paint? paint,
     super.position,
@@ -138,6 +141,10 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
       size: size,
       overridePaint: paint,
     );
+
+    if (color != null) {
+      canvas.drawColor(color!, BlendMode.srcATop);
+    }
   }
 
   /// Updates the size [sprite]'s srcSize if [autoResize] is true.

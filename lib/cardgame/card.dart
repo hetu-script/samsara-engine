@@ -69,10 +69,10 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
 
   GameComponent? zone;
 
-  void Function(GameCard component)? onFocused,
-      onUnfocused,
-      onPreviewed,
-      onUnpreviewed;
+  void Function()? onFocused;
+  void Function()? onUnfocused;
+  void Function()? onPreviewed;
+  void Function()? onUnpreviewed;
   double focusAnimationDuration;
   int preferredPriority = 0;
 
@@ -144,7 +144,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
 
     onMouseEnter = () {
       if (enablePreview) {
-        onPreviewed?.call(this);
+        onPreviewed?.call();
         if (focusOnPreviewing) {
           schedule(() => setFocused(true));
         } else {
@@ -155,7 +155,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
 
     onMouseExit = () {
       if (enablePreview) {
-        onUnpreviewed?.call(this);
+        onUnpreviewed?.call();
         if (focusOnPreviewing) {
           schedule(() => setFocused(false));
         } else {
@@ -232,7 +232,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
         duration: focusAnimationDuration,
       );
 
-      onFocused?.call(this);
+      onFocused?.call();
     } else {
       enableGesture = true;
       // if (!stayFocused) {
@@ -243,7 +243,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
       );
 
       resetPriority();
-      onUnfocused?.call(this);
+      onUnfocused?.call();
       // }
     }
   }

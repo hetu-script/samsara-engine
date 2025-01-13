@@ -215,8 +215,8 @@ mixin HandlesGesture on GameComponent {
         isHud ? dragPosition : gameRef.camera.globalToLocal(dragPosition);
 
     if (isDragging) {
-      onDragUpdate?.call(
-          buttons, details.delta.toVector2() / gameRef.camera.zoom);
+      final delta = game.camera.globalToLocal(details.delta.toVector2());
+      onDragUpdate?.call(buttons, delta);
     } else if (containsPoint(convertedDraggingPosition)) {
       onDragOver?.call(buttons, draggingComponent);
     }

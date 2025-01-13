@@ -15,20 +15,24 @@ abstract class SceneController {
   /// 如果没有使用 pushScene，则此值为 null
   Scene? get currentScene => _sequence.isEmpty ? null : _cached[_sequence.last];
 
-  final _constructors = <String, Future<Scene> Function([dynamic arg])>{};
+  final _constructors =
+      <String, Future<Scene> Function([Map<String, dynamic> arguments])>{};
 
   /// 注册一个场景构造器
   /// 一个场景可能会存在多个实例，此时用 sceneId 区分它们
-  void registerSceneConstructor(
-      String constructorId, Future<Scene> Function([dynamic arg]) constructor) {
+  void registerSceneConstructor(String constructorId,
+      Future<Scene> Function([Map<String, dynamic> arguments]) constructor) {
     _constructors[constructorId] = constructor;
   }
 
   bool hasScene(String id) => _cached.containsKey(id);
 
   /// 利用场景序列创造场景，可以实现场景的回退
-  Future<Scene> pushScene(String sceneId,
-      {String? constructorId, dynamic arguments}) async {
+  Future<Scene> pushScene(
+    String sceneId, {
+    String? constructorId,
+    Map<String, dynamic> arguments = const {},
+  }) async {
     if (_sequence.isNotEmpty) {
       final current = _cached[_sequence.last]!;
       current.onEnd();
@@ -58,7 +62,10 @@ abstract class SceneController {
 
   /// 获取一个之前已经构建过的场景
   /// 使用此方法不会改变场景序列
-  Scene switchScene(String sceneId, [dynamic arguments]) {
+  Scene switchScene(
+    String sceneId, {
+    Map<String, dynamic> arguments = const {},
+  }) {
     assert(_cached.containsKey(sceneId), 'Scene [$sceneId] not found!');
     final scene = _cached[sceneId]!;
     scene.onStart(arguments);
@@ -71,8 +78,11 @@ abstract class SceneController {
   /// 构建一个场景，或者从缓存中取出之前已经构建过的场景。
   /// 如果不提供 构造ID ，则使用 sceneId 作为构造ID，这意味着这个场景的实例是唯一的。
   /// 使用此方法不会改变场景序列
-  Future<Scene> createScene(String sceneId,
-      {String? constructorId, dynamic arguments}) async {
+  Future<Scene> createScene(
+    String sceneId, {
+    String? constructorId,
+    Map<String, dynamic> arguments = const {},
+  }) async {
     late Scene scene;
     if (_cached.containsKey(sceneId)) {
       scene = _cached[sceneId]!;

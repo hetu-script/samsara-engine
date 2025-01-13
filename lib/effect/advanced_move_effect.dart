@@ -30,6 +30,10 @@ class AdvancedMoveEffect extends Effect with EffectTarget<GameComponent> {
         _clockwise = clockwise,
         super(controller) {
     this.target = target;
+
+    if (_endSize != null) {
+      assert(_endSize!.x >= 0 && _endSize!.y >= 0);
+    }
   }
 
   @override
@@ -67,7 +71,15 @@ class AdvancedMoveEffect extends Effect with EffectTarget<GameComponent> {
     }
 
     if (_diffSize != null && !_diffSize!.isZero()) {
-      target.size += _diffSize! * dProgress;
+      Vector2 dSize = target.size.clone();
+      dSize += _diffSize! * dProgress;
+      if (dSize.x < 0) {
+        dSize.x = 0;
+      }
+      if (dSize.y < 0) {
+        dSize.y = 0;
+      }
+      target.size = dSize;
     }
 
     if (_diffAngle != null) {
