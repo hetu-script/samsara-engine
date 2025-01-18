@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
-class ResponsiveWindow extends StatelessWidget {
-  const ResponsiveWindow({
+class ResponsivePanel extends StatelessWidget {
+  const ResponsivePanel({
     super.key,
     this.child,
-    this.alignment = AlignmentDirectional.topStart,
-    this.size,
+    this.alignment = AlignmentDirectional.center,
+    this.width,
+    this.height,
     this.margin,
     this.isPortraitMode = false,
     this.borderRadius = const BorderRadius.all(Radius.circular(5.0)),
@@ -15,7 +16,7 @@ class ResponsiveWindow extends StatelessWidget {
 
   final Widget? child;
   final AlignmentGeometry alignment;
-  final Size? size;
+  final double? width, height;
   final EdgeInsetsGeometry? margin;
   final bool isPortraitMode;
   final BorderRadius borderRadius;
@@ -32,8 +33,8 @@ class ResponsiveWindow extends StatelessWidget {
           ClipRRect(
             borderRadius: borderRadius,
             child: Container(
-              width: size?.width,
-              height: size?.height,
+              width: width,
+              height: height,
               margin: margin,
               decoration: BoxDecoration(
                 color: color,

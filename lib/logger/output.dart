@@ -22,33 +22,51 @@ class CustomLoggerOutput extends LogOutput {
       if (kDebugMode) {
         logs.addAll(splited);
         if (splited.length > 1) {
-          if (event.level == Level.warning) {
-            print(
-                '${kConsoleColorYellow}samsara - ${event.level.name}:$kConsoleColorReset');
-          } else if (event.level == Level.error) {
+          if (event.level == Level.error) {
             print(
                 '${kConsoleColorRed}samsara - ${event.level.name}:$kConsoleColorReset');
+          } else if (event.level == Level.warning) {
+            print(
+                '${kConsoleColorYellow}samsara - ${event.level.name}:$kConsoleColorReset');
+          } else if (event.level == Level.info) {
+            print(
+                '${kConsoleColorWhite}samsara - ${event.level.name}:$kConsoleColorReset');
+          } else if (event.level == Level.debug) {
+            print(
+                '${kConsoleColorGreen}samsara - ${event.level.name}:$kConsoleColorReset');
           } else {
-            print('samsara - ${event.level.name}:');
+            print(
+                '${kConsoleColorBlue}samsara - ${event.level.name}:$kConsoleColorReset');
           }
           for (final line in splited) {
-            if (event.level == Level.warning) {
-              print('$kConsoleColorYellow$line$kConsoleColorReset');
-            } else if (event.level == Level.error) {
+            if (event.level == Level.error) {
               print('$kConsoleColorRed$line$kConsoleColorReset');
+            } else if (event.level == Level.warning) {
+              print('$kConsoleColorYellow$line$kConsoleColorReset');
+            } else if (event.level == Level.info) {
+              print('$kConsoleColorWhite$line$kConsoleColorReset');
+            } else if (event.level == Level.debug) {
+              print('$kConsoleColorGreen$line$kConsoleColorReset');
             } else {
-              print(line);
+              print('$kConsoleColorBlue$line$kConsoleColorReset');
             }
           }
         } else {
-          if (event.level == Level.warning) {
-            print(
-                '${kConsoleColorYellow}samsara - ${event.level.name}: $message$kConsoleColorReset');
-          } else if (event.level == Level.error) {
+          if (event.level == Level.error) {
             print(
                 '${kConsoleColorRed}samsara - ${event.level.name}: $message$kConsoleColorReset');
+          } else if (event.level == Level.warning) {
+            print(
+                '${kConsoleColorYellow}samsara - ${event.level.name}: $message$kConsoleColorReset');
+          } else if (event.level == Level.info) {
+            print(
+                '${kConsoleColorWhite}samsara - ${event.level.name}: $message$kConsoleColorReset');
+          } else if (event.level == Level.debug) {
+            print(
+                '${kConsoleColorGreen}samsara - ${event.level.name}: $message$kConsoleColorReset');
           } else {
-            print('samsara - ${event.level.name}: $message');
+            print(
+                '${kConsoleColorBlue}samsara - ${event.level.name}: $message$kConsoleColorReset');
           }
         }
       } else {

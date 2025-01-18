@@ -79,7 +79,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   bool _isNonEnterable, _isLighted;
 
-  set isNonEnterable(value) {
+  set isNonEnterable(bool value) {
     _isNonEnterable = value;
     if (data != null) {
       data?['isNonEnterable'] = value;
@@ -123,44 +123,47 @@ class TileMapTerrain extends GameComponent with TileInfo {
   Sprite? _sprite, _overlaySprite;
   SpriteAnimationWithTicker? _animation, _overlayAnimation;
 
-  set spriteIndex(int? value) {
-    if (data != null) {
-      data?['spriteIndex'] = value;
-      if (value != null) {
-        _sprite = terrainSpriteSheet.getSpriteById(value);
-      } else {
-        _sprite = null;
-      }
-    }
-  }
+  // set spriteIndex(int? value) {
+  //   if (data != null) {
+  //     data?['spriteIndex'] = value;
+  //     if (value != null) {
+  //       _sprite = terrainSpriteSheet.getSpriteById(value);
+  //     } else {
+  //       _sprite = null;
+  //     }
+  //   }
+  // }
 
-  int? get spriteIndex {
-    return data?['spriteIndex'];
-  }
+  // int? get spriteIndex {
+  //   return data?['spriteIndex'];
+  // }
 
-  set overlaySprite(dynamic spriteData) {
-    assert(spriteData != null);
-    jsonLikeDataAssign(data?['overlaySprite'], spriteData);
-    tryLoadSprite(overlay: true);
-  }
+  // set overlaySprite(dynamic overlayData) {
+  //   // assert(spriteData != null);
+  //   // jsonLikeDataAssign(data?['overlaySprite'], spriteData);
+  //   if (data != null) {
+  //     data['overlaySprite'] = overlayData;
+  //     tryLoadSprite(overlay: true);
+  //   }
+  // }
 
-  dynamic get overlaySprite {
-    return data?['overlaySprite'];
-  }
+  // dynamic get overlaySprite {
+  //   return data?['overlaySprite'];
+  // }
 
   // 随机数，用来让多个 tile 的贴图动画错开播放
   late final double _overlayAnimationOffset;
   double _overlayAnimationOffsetValue = 0;
 
-  Future<void> _tryLoadSpriteFromData({bool overlay = false}) async {
+  Future<void> _tryLoadSpriteFromData({bool isOverlay = false}) async {
     // if (data == null) return;
 
-    final d = overlay ? (data?['overlaySprite']) : data;
+    final spriteData = isOverlay ? (data?['overlaySprite']) : data;
     // assert(d != null);
 
     Sprite? sprite;
-    final String? spritePath = d?['sprite'];
-    final int? spriteIndex = d?['spriteIndex'];
+    final String? spritePath = spriteData?['sprite'];
+    final int? spriteIndex = spriteData?['spriteIndex'];
     if (spritePath != null) {
       sprite = await Sprite.load(spritePath, srcSize: srcSize);
     } else if (spriteIndex != null) {
@@ -168,16 +171,16 @@ class TileMapTerrain extends GameComponent with TileInfo {
     } else {
       sprite = null;
     }
-    if (!overlay) {
+    if (!isOverlay) {
       _sprite = sprite;
     } else {
       _overlaySprite = sprite;
     }
   }
 
-  Future<void> _tryLoadAnimationFromData({bool overlay = false}) async {
+  Future<void> _tryLoadAnimationFromData({bool isOverlay = false}) async {
     final d =
-        overlay ? data?['overlaySprite']?['animation'] : data?['animation'];
+        isOverlay ? data?['overlaySprite']?['animation'] : data?['animation'];
     // if (d == null) return;
 
     SpriteAnimationWithTicker? animation;
@@ -213,46 +216,52 @@ class TileMapTerrain extends GameComponent with TileInfo {
     } else {
       animation = null;
     }
-    if (!overlay) {
+    if (!isOverlay) {
       _animation = animation;
     } else {
       _overlayAnimation = animation;
     }
   }
 
-  void tryLoadSprite({bool overlay = false}) async {
-    await _tryLoadSpriteFromData(overlay: overlay);
-    await _tryLoadAnimationFromData(overlay: overlay);
+  void tryLoadSprite({bool isOverlay = false}) async {
+    await _tryLoadSpriteFromData(isOverlay: isOverlay);
+    await _tryLoadAnimationFromData(isOverlay: isOverlay);
+  }
+
+  void overrideSpriteData(dynamic spriteData, {bool isOverlay = false}) {
+    jsonLikeDataAssign(data, spriteData);
+    tryLoadSprite(isOverlay: isOverlay);
   }
 
   void clearAllSprite() {
-    data.remove('spriteIndex');
+    data['sprite'] = null;
+    data['spriteIndex'] = null;
+    data['overlaySprite'] = null;
     _sprite = null;
     _animation = null;
-    data['overlaySprite'].clear();
     _overlaySprite = null;
     _overlayAnimation = null;
   }
 
   void clearSprite() {
-    data.remove('sprite');
-    data.remove('spriteIndex');
+    data['sprite'] = null;
+    data['spriteIndex'] = null;
     _sprite = null;
   }
 
-  void clearOverlaySprite() {
-    data?['overlaySprite']?.remove('sprite');
-    data?['overlaySprite']?.remove('spriteIndex');
-    _overlaySprite = null;
-  }
-
   void clearAnimation() {
-    data.remove('animation');
+    data['animation'] = null;
     _animation = null;
   }
 
+  void clearOverlaySprite() {
+    data?['overlaySprite']?['sprite'] = null;
+    data?['overlaySprite']?['spriteIndex'] = null;
+    _overlaySprite = null;
+  }
+
   void clearOverlayAnimation() {
-    data?['overlaySprite']?.remove('animation');
+    data?['overlaySprite']?['animation'] = null;
     _overlayAnimation = null;
   }
 
@@ -290,19 +299,19 @@ class TileMapTerrain extends GameComponent with TileInfo {
             shadows: const [
               Shadow(
                   // bottomLeft
-                  offset: Offset(-0.1, -0.1),
+                  offset: Offset(-0.01, -0.01),
                   color: Colors.black),
               Shadow(
                   // bottomRight
-                  offset: Offset(0.1, -0.1),
+                  offset: Offset(0.01, -0.01),
                   color: Colors.black),
               Shadow(
                   // topRight
-                  offset: Offset(0.1, 0.1),
+                  offset: Offset(0.01, 0.01),
                   color: Colors.black),
               Shadow(
                   // topLeft
-                  offset: Offset(-0.1, 0.1),
+                  offset: Offset(-0.01, 0.01),
                   color: Colors.black),
             ],
           ),
@@ -349,6 +358,10 @@ class TileMapTerrain extends GameComponent with TileInfo {
       );
     }
   }
+
+  // TODO:计算是否在屏幕上可见
+  @override
+  bool get isVisible => true;
 
   @override
   void update(double dt) {

@@ -29,6 +29,8 @@ dependencies:
   colorfilter_generator: ^0.0.8
   meta: ^1.10.0
   quiver: ^3.2.1
+  flutter_custom_cursor: ^0.0.4
+  image: ^4.5.2
 
 dev_dependencies:
   flutter_test:

@@ -357,7 +357,7 @@ class TileMap extends GameComponent with HandlesGesture {
 
         final overlaySpriteData = terrainData['overlaySprite'];
         if (overlaySpriteData != null) {
-          tile.tryLoadSprite(overlay: true);
+          tile.tryLoadSprite(isOverlay: true);
         }
 
         terrains.add(tile);
@@ -1069,6 +1069,9 @@ class TileMap extends GameComponent with HandlesGesture {
       }
     }
   }
+
+  @override
+  bool get isVisible => true;
 
   @override
   void renderTree(Canvas canvas) {

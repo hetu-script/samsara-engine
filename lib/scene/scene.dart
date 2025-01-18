@@ -78,7 +78,7 @@ abstract class Scene extends FlameGame {
     double verticalVariation = 30.0,
   }) {
     assert(position != null || target != null);
-    Vector2 p = position ?? target!.position;
+    Vector2 p = position ?? target!.absolutePosition;
 
     final r = math.Random();
     final c = FadingText(
@@ -94,7 +94,7 @@ abstract class Scene extends FlameGame {
       ).merge(textStyle),
       priority: kHintTextPriority,
     );
-    world.add(c);
+    camera.viewport.add(c);
   }
 
   /// 这个函数在场景参数被改变时触发

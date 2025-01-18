@@ -218,6 +218,10 @@ class TileMapMovingObject extends TaskComponent
     }
   }
 
+  // TODO:计算是否在屏幕上可见
+  @override
+  bool get isVisible => true;
+
   @override
   void render(Canvas canvas) {
     currentAnimation?.render(canvas);

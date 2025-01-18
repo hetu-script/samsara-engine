@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:samsara/samsara.dart';
+import 'package:flutter_custom_cursor/flutter_custom_cursor.dart';
 
 import 'app.dart';
 
@@ -67,6 +68,13 @@ void main() {
       engine.info('系统版本：${Platform.operatingSystemVersion}');
     });
 
+    final cursorName = await engine.registerCursor(
+      name: 'default',
+      assetPath: 'assets/images/sword.png',
+    );
+
+    await engine.setCursor(cursorName);
+
     runApp(
       MultiProvider(
         providers: [
@@ -75,7 +83,10 @@ void main() {
         child: MaterialApp(
           scrollBehavior: DesktopScrollBehavior(),
           debugShowCheckedModeBanner: false,
-          home: GameApp(key: mainKey),
+          home: MouseRegion(
+            cursor: FlutterCustomMemoryImageCursor(key: cursorName),
+            child: GameApp(key: mainKey),
+          ),
           // 控件绘制时发生错误，用一个显示错误信息的控件替代
           builder: (context, widget) {
             ErrorWidget.builder = (FlutterErrorDetails details) {

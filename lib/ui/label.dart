@@ -82,7 +82,10 @@ class LabelsWrap extends StatelessWidget {
       ),
       child: Wrap(
         children: [
-          Label(text),
+          Label(
+            text,
+            textAlign: TextAlign.left,
+          ),
           ...children,
         ],
       ),

@@ -1,6 +1,7 @@
 import 'dart:ui';
+import 'dart:io';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:hetu_script/hetu_script.dart';
 import 'package:hetu_script_flutter/hetu_script_flutter.dart';
@@ -8,6 +9,8 @@ import 'package:hetu_script_flutter/hetu_script_flutter.dart';
 // import 'package:path/path.dart' as path;
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_audio/bgm.dart';
+import 'package:flutter_custom_cursor/cursor_manager.dart';
+import 'package:image/image.dart' as img2;
 
 import 'binding/engine_binding.dart';
 import '../event.dart';
@@ -24,6 +27,7 @@ class EngineConfig {
   final bool isOnDesktop;
   final double musicVolume;
   final double soundEffectVolume;
+  final Map<String, String> cursors;
 
   const EngineConfig({
     this.name = 'A Samsara Engine Game',
@@ -31,6 +35,7 @@ class EngineConfig {
     this.debugMode = false,
     this.musicVolume = 0.5,
     this.soundEffectVolume = 0.5,
+    this.cursors = const {},
   });
 }
 
@@ -64,10 +69,10 @@ class SamsaraEngine extends SceneController
   bool hasLocaleKey(String? key) => _locale.hasLocaleString(key);
 
   String locale(dynamic key, {dynamic interpolations}) {
-    if (key == null) return 'null';
     if (interpolations != null && interpolations is! List) {
       interpolations = [interpolations];
     }
+    key ??= 'null';
     return _locale.getLocaleString(key, interpolations: interpolations);
   }
 
@@ -260,6 +265,15 @@ class SamsaraEngine extends SceneController
 
     await _locale.init();
 
+    if (config.cursors.isNotEmpty) {
+      for (final name in config.cursors.keys) {
+        await registerCursor(
+          name: name,
+          assetPath: config.cursors[name]!,
+        );
+      }
+    }
+
     _isInitted = true;
   }
 
@@ -332,5 +346,35 @@ class SamsaraEngine extends SceneController
   Future<AudioPlayer?> play(String fileName, {double? volume}) async {
     return FlameAudio.play('sound/$fileName',
         volume: volume ?? config.musicVolume);
+  }
+
+  final _cursorManager = CursorManager.instance;
+
+  Future<String> registerCursor({
+    required String name,
+    required String assetPath,
+    int? width,
+    int? height,
+  }) async {
+    final byte = await rootBundle.load(assetPath);
+    final memoryCursorDataRawPNG = byte.buffer.asUint8List();
+    final img = img2.decodePng(memoryCursorDataRawPNG)!;
+    final memoryCursorDataRawBGRA =
+        (img.getBytes(order: img2.ChannelOrder.bgra)).buffer.asUint8List();
+    // register this cursor
+    final cursorName = await CursorManager.instance.registerCursor(CursorData()
+      ..name = name
+      ..buffer =
+          Platform.isWindows ? memoryCursorDataRawBGRA : memoryCursorDataRawPNG
+      ..height = width ?? img.height
+      ..width = height ?? img.width
+      ..hotX = 0
+      ..hotY = 0);
+
+    return cursorName;
+  }
+
+  Future<void> setCursor(String name) async {
+    await _cursorManager.setSystemCursor(name);
   }
 }

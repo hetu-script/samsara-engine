@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
-// import 'package:meta/meta.dart';
+import 'package:hetu_script/hetu_script.dart';
 
 import 'scene.dart';
 
-abstract class SceneController {
+abstract class SceneController implements HTLogger {
   // Scene? _scene;
   // Scene? get scene => _scene;
 
@@ -48,7 +48,7 @@ abstract class SceneController {
   Future<Scene?> popScene({bool clearCache = false}) async {
     assert(_sequence.length > 1, 'Cannot pop the last scene!');
     if (kDebugMode) {
-      print('samsara - leaving scene: [${_sequence.last}]');
+      info('samsara - leaving scene: [${_sequence.last}]');
     }
     final current = _cached[_sequence.last]!;
     current.onEnd();
@@ -70,7 +70,7 @@ abstract class SceneController {
     final scene = _cached[sceneId]!;
     scene.onStart(arguments);
     if (kDebugMode) {
-      print('samsara - switched to scene: [$sceneId]');
+      info('samsara - switched to scene: [$sceneId]');
     }
     return scene;
   }
@@ -87,7 +87,7 @@ abstract class SceneController {
     if (_cached.containsKey(sceneId)) {
       scene = _cached[sceneId]!;
       if (kDebugMode) {
-        print('samsara - resumed scene: [$sceneId]');
+        info('samsara - resumed scene: [$sceneId]');
       }
     } else {
       final constructor = _constructors[constructorId ?? sceneId];
@@ -98,7 +98,7 @@ abstract class SceneController {
           'Created scene ID [${created.id}] mismatch the function call [$sceneId]!');
       scene = created;
       if (kDebugMode) {
-        print('samsara - created scene: [$sceneId]');
+        info('samsara - created scene: [$sceneId]');
       }
     }
     return scene;
@@ -112,7 +112,7 @@ abstract class SceneController {
   //     _cachedScenes.remove(sceneId);
   //   }
   //   if (kDebugMode) {
-  //     print('ended scene: $sceneId');
+  //     info('ended scene: $sceneId');
   //   }
   // }
 
@@ -125,7 +125,7 @@ abstract class SceneController {
     scene.onDispose();
     _cached.remove(sceneId);
     if (kDebugMode) {
-      print('samsara - cleared scene: [$sceneId]');
+      info('samsara - cleared scene: [$sceneId]');
     }
   }
 
@@ -149,7 +149,7 @@ abstract class SceneController {
       _sequence.clear();
     }
     if (kDebugMode) {
-      print('samsara - cleared all scenes.');
+      info('samsara - cleared all scenes.');
     }
   }
 }

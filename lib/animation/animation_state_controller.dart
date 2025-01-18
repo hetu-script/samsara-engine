@@ -3,6 +3,7 @@ import 'dart:async';
 import '../components/game_component.dart';
 import 'sprite_animation.dart';
 // import '../task.dart';
+import 'package:samsara/engine.dart';
 
 mixin AnimationStateController on GameComponent {
   final Map<String, SpriteAnimationWithTicker> _animations = {};
@@ -10,6 +11,8 @@ mixin AnimationStateController on GameComponent {
 
   String? currentAnimationState;
   String? currentOverlayAnimationState;
+
+  SamsaraEngine? engine;
 
   SpriteAnimationWithTicker? get currentAnimation {
     return _animations[currentAnimationState];
@@ -60,8 +63,11 @@ mixin AnimationStateController on GameComponent {
     return collection[state]!;
   }
 
+  /// 如果进入动画，则返回一个双元素元组
+  /// 第一个是前摇动画的 Future，第二个是整个动画的 Future
   Future<void> setAnimationState(
     String state, {
+    String? sound,
     String? recoveryState,
     String? overlayState,
     String? completeState,
@@ -88,27 +94,36 @@ mixin AnimationStateController on GameComponent {
       anim.ticker.setToLast();
       onComplete?.call();
       // completer.complete();
+      return;
     } else {
-      Future result = anim.ticker.completed;
+      Future startUpResult = anim.ticker.completed;
+      if (sound != null) {
+        startUpResult.then((_) {
+          engine?.play(sound);
+        });
+      }
+
+      Future? overlayResult;
 
       if (overlayState != null) {
-        result = result
+        overlayResult = startUpResult
             .then((_) => setAnimationState(overlayState, isOverlay: true));
       }
 
+      Future finalResult = (overlayResult ?? startUpResult);
+
       if (recoveryState != null) {
-        result.then((_) => setAnimationState(recoveryState));
+        finalResult = finalResult.then((_) => setAnimationState(recoveryState));
       }
 
-      result = result.then((_) {
+      finalResult.then((_) {
         if (completeState != null) {
           setAnimationState(completeState);
         }
         onComplete?.call();
-        // completer.complete();
       });
 
-      return result;
+      return finalResult;
     }
   }
 }

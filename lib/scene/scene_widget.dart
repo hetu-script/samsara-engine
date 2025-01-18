@@ -9,6 +9,7 @@ class SceneWidget<T extends Scene> extends StatelessWidget {
   final GameLoadingWidgetBuilder? loadingBuilder;
   final Map<String, OverlayWidgetBuilder<T>>? overlayBuilderMap;
   final List<String>? initialActiveOverlays;
+  final MouseCursor cursor;
 
   const SceneWidget({
     super.key,
@@ -16,6 +17,7 @@ class SceneWidget<T extends Scene> extends StatelessWidget {
     this.loadingBuilder,
     this.overlayBuilderMap,
     this.initialActiveOverlays,
+    this.cursor = MouseCursor.defer,
   });
 
   @override
@@ -37,6 +39,7 @@ class SceneWidget<T extends Scene> extends StatelessWidget {
         onMouseScroll: scene.onMouseScroll,
         child: GameWidget(
           game: scene,
+          mouseCursor: cursor,
           loadingBuilder: loadingBuilder,
           overlayBuilderMap: overlayBuilderMap,
           initialActiveOverlays: initialActiveOverlays,

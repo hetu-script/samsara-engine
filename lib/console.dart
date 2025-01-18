@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 // import 'package:hetu_script/errors.dart';
 
 import 'engine.dart';
-import 'ui/close_button.dart';
-import 'ui/responsive_window.dart';
+import 'ui/close_button2.dart';
+import 'ui/responsive_panel.dart';
 import 'extensions.dart';
 
 class Console extends StatefulWidget {
@@ -50,7 +50,6 @@ class _ConsoleState extends State<Console> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
     jumpToEnd();
@@ -59,7 +58,7 @@ class _ConsoleState extends State<Console> {
   @override
   Widget build(BuildContext context) {
     _consoleOutputTextController.text = widget.engine.getLogs().join('\n');
-    return ResponsiveWindow(
+    return ResponsivePanel(
       alignment: AlignmentDirectional.center,
       margin: widget.margin,
       color: widget.backgroundColor,

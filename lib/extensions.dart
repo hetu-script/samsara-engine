@@ -32,7 +32,10 @@ extension StringEx on String {
 
   String? get nonEmptyValueOrNull => isBlank ? null : this;
 
-  String interpolate(List interpolations) {
+  String interpolate(List? interpolations) {
+    if (interpolations == null) {
+      return this;
+    }
     String result = this;
     for (var i = 0; i < interpolations.length; ++i) {
       result = result.replaceAll('{$i}', interpolations[i].toString());

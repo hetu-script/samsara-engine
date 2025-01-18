@@ -44,8 +44,6 @@ class InkButton extends StatelessWidget {
     return Padding(
       padding: padding,
       child: MouseRegion(
-        cursor:
-            isEnabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
         child: Material(
           type: MaterialType.transparency,
           child: Ink(

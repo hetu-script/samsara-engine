@@ -124,12 +124,9 @@ class PointerDetector extends StatefulWidget {
     this.onMouseHover,
     this.onMouseExit,
     this.onMouseScroll,
-    this.cursor = MouseCursor.defer,
   });
 
   /// The widget below this widget in the tree.
-  ///
-  /// {@macro flutter.widgets.child}
   final Widget child;
 
   final void Function(int pointer, int buttons, TapDownDetails details)?
@@ -186,8 +183,6 @@ class PointerDetector extends StatefulWidget {
 
   final void Function(MouseScrollDetails details)? onMouseScroll;
 
-  final MouseCursor cursor;
-
   @override
   PointerDetectorState createState() => PointerDetectorState();
 }
@@ -217,7 +212,6 @@ class PointerDetectorState extends State<PointerDetector> {
       onPointerCancel: onPointerUp,
       onPointerSignal: onPointerSignal,
       child: MouseRegion(
-        cursor: widget.cursor,
         onEnter: onMouseEnter,
         onExit: onMouseExit,
         onHover: onMouseHover,

@@ -22,7 +22,14 @@ class DynamicColorProgressIndicator extends BorderComponent
   bool animated;
 
   String? label;
-  late ScreenTextConfig labelConfig;
+
+  late ScreenTextConfig _labelConfig;
+
+  set labelColor(Color color) {
+    _labelConfig = _labelConfig.copyWith(
+      textStyle: TextStyle(color: color),
+    );
+  }
 
   DynamicColorProgressIndicator({
     super.position,
@@ -39,11 +46,18 @@ class DynamicColorProgressIndicator extends BorderComponent
     super.borderPaint,
     this.animated = true,
     this.animationDuration = 4,
-    ScreenTextConfig? labelConfig,
+    Color? labelColor,
+    double labelFontSize = 16.0,
+    String? labelFontFamily,
   })  : _value = value,
         _currentValue = value.toDouble() {
-    this.labelConfig = (labelConfig ?? ScreenTextConfig()).copyWith(
-      size: border.size.toVector2(),
+    _labelConfig = ScreenTextConfig(
+      textStyle: TextStyle(
+        color: labelColor,
+        fontSize: labelFontSize,
+        fontFamily: labelFontFamily,
+      ),
+      size: size,
       anchor: Anchor.center,
       outlined: true,
     );
@@ -59,6 +73,10 @@ class DynamicColorProgressIndicator extends BorderComponent
       assert(stops.length == colors.length);
       this.stops = stops;
     }
+
+    size.addListener(() {
+      _labelConfig = _labelConfig.copyWith(size: size);
+    });
   }
 
   int get value => _value;
@@ -120,6 +138,6 @@ class DynamicColorProgressIndicator extends BorderComponent
 
     final text = '${label ?? ''}${_currentValue.toInt()}/$max';
 
-    drawScreenText(canvas, text, config: labelConfig);
+    drawScreenText(canvas, text, config: _labelConfig);
   }
 }
