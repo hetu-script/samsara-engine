@@ -2,30 +2,22 @@ import 'package:flutter/material.dart';
 
 import 'outlined_text.dart';
 import '../extensions.dart';
-// import '../utils/color.dart';
+import 'mouse_region2.dart';
 
 class DynamicColorProgressBar extends StatelessWidget {
-  final String? title;
-
   final double width;
-
   final double height;
-
   final num value, max;
-
   final bool showNumber, showNumberAsPercentage;
-
   final List<Color> colors;
-
   final List<double> stops = [];
-
   final double borderRadius;
-
   final bool useVerticalStyle;
+  final void Function(Rect)? onMouseEnter;
+  final void Function()? onMouseExit;
 
   DynamicColorProgressBar({
     super.key,
-    this.title,
     required this.width,
     required this.height,
     required this.value,
@@ -36,6 +28,8 @@ class DynamicColorProgressBar extends StatelessWidget {
     List<double>? stops,
     this.borderRadius = 2.5,
     this.useVerticalStyle = false,
+    this.onMouseEnter,
+    this.onMouseExit,
   }) : assert(colors.length > 1) {
     if (stops == null || stops.isEmpty) {
       final d = 1.0 / (colors.length - 1);
@@ -52,8 +46,9 @@ class DynamicColorProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final valueString = '${value.truncate()}/${max.truncate()}';
-    return Tooltip(
-      message: '$title $valueString',
+    return MouseRegion2(
+      onMouseEnter: onMouseEnter,
+      onMouseExit: onMouseExit,
       child: Row(
         children: [
           Container(

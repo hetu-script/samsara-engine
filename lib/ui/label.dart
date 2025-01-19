@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter/gestures.dart';
 
 import '../richtext.dart';
 import 'mouse_region2.dart';

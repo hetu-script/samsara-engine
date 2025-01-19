@@ -51,10 +51,7 @@ class _GameAppState extends State<GameApp> {
       await _initGame();
       _isInitted = true;
 
-      assert(mounted);
-      if (mounted) {
-        context.read<SceneControllerState>().push('game');
-      }
+      engine.pushScene('game');
     } else {
       // 游戏已经初始化完毕，此时根据当前状态读取或切换场景
       assert(engine.isInitted);
@@ -77,7 +74,7 @@ class _GameAppState extends State<GameApp> {
             text: engine.isInitted ? engine.locale('loading') : 'Loading...',
           );
         } else {
-          final scene = context.watch<SceneControllerState>().scene;
+          final scene = context.watch<SamsaraEngine>().scene;
           return Scaffold(body: scene?.build(context));
         }
       },

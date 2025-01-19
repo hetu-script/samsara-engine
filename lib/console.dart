@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'engine.dart';
 import 'ui/close_button2.dart';
-import 'ui/responsive_panel.dart';
+import 'ui/responsive_view.dart';
 import 'extensions.dart';
 
 class Console extends StatefulWidget {
@@ -58,7 +58,7 @@ class _ConsoleState extends State<Console> {
   @override
   Widget build(BuildContext context) {
     _consoleOutputTextController.text = widget.engine.getLogs().join('\n');
-    return ResponsivePanel(
+    return ResponsiveView(
       alignment: AlignmentDirectional.center,
       margin: widget.margin,
       color: widget.backgroundColor,

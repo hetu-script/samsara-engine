@@ -3,7 +3,6 @@ export 'localization/localization.dart';
 export 'scene/scene_widget.dart';
 export 'scene/scene.dart';
 export 'scene/scene_controller.dart';
-export 'scene/scene_controller_state.dart';
 export 'components/game_component.dart';
 export 'components/border_component.dart';
 export 'effect/advanced_move_effect.dart';

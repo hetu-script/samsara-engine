@@ -189,23 +189,23 @@ class TileMap extends GameComponent with HandlesGesture {
         tile.borderPath.relativeLineTo(-gridSize.x / 2, 0);
         tile.borderPath.relativeLineTo(-gridSize.x / 4, -gridSize.y / 2);
         tile.borderPath.close();
-        tile.shadowPath.moveTo(l - bleendingPixelHorizontal + tile.offset.x,
-            t + gridSize.y / 2 + tile.offset.y);
-        tile.shadowPath.relativeLineTo(
-            gridSize.x / 4 + bleendingPixelHorizontal,
-            -gridSize.y / 2 - bleendingPixelVertical);
-        tile.shadowPath.relativeLineTo(gridSize.x / 2, 0);
-        tile.shadowPath.relativeLineTo(
-            gridSize.x / 4 + bleendingPixelHorizontal,
-            gridSize.y / 2 + bleendingPixelVertical);
-        tile.shadowPath.relativeLineTo(
-            -gridSize.x / 4 - bleendingPixelHorizontal,
-            gridSize.y / 2 + bleendingPixelVertical);
-        tile.shadowPath.relativeLineTo(-gridSize.x / 2, 0);
-        tile.shadowPath.relativeLineTo(
-            -gridSize.x / 4 - bleendingPixelHorizontal,
-            -gridSize.y / 2 - bleendingPixelVertical);
-        tile.shadowPath.close();
+        // tile.shadowPath.moveTo(l - bleendingPixelHorizontal + tile.offset.x,
+        //     t + gridSize.y / 2 + tile.offset.y);
+        // tile.shadowPath.relativeLineTo(
+        //     gridSize.x / 4 + bleendingPixelHorizontal,
+        //     -gridSize.y / 2 - bleendingPixelVertical);
+        // tile.shadowPath.relativeLineTo(gridSize.x / 2, 0);
+        // tile.shadowPath.relativeLineTo(
+        //     gridSize.x / 4 + bleendingPixelHorizontal,
+        //     gridSize.y / 2 + bleendingPixelVertical);
+        // tile.shadowPath.relativeLineTo(
+        //     -gridSize.x / 4 - bleendingPixelHorizontal,
+        //     gridSize.y / 2 + bleendingPixelVertical);
+        // tile.shadowPath.relativeLineTo(-gridSize.x / 2, 0);
+        // tile.shadowPath.relativeLineTo(
+        //     -gridSize.x / 4 - bleendingPixelHorizontal,
+        //     -gridSize.y / 2 - bleendingPixelVertical);
+        // tile.shadowPath.close();
         break;
       case TileShape.isometric:
         throw 'Isometric map tile is not supported yet!';
@@ -326,6 +326,8 @@ class TileMap extends GameComponent with HandlesGesture {
         final index = tilePosition2Index(i + 1, j + 1);
         final terrainData = data['terrains'][index];
         final bool isLighted = terrainData['isLighted'] ?? false;
+        // final bool isOnLightPerimeter =
+        //     terrainData['isOnLightPerimeter'] ?? false;
         final bool isNonEnterable = terrainData['isNonEnterable'] ?? false;
         final String? kindString = terrainData['kind'];
         final String? zoneId = terrainData['zoneId'];
@@ -334,6 +336,7 @@ class TileMap extends GameComponent with HandlesGesture {
         final String? objectId = terrainData['objectId'];
         // 这里不载入图片和动画，而是交给terrain自己从data中读取
         final tile = TileMapTerrain(
+          map: this,
           mapId: id,
           terrainSpriteSheet: terrainSpriteSheet,
           tileShape: tileShape,
@@ -341,6 +344,7 @@ class TileMap extends GameComponent with HandlesGesture {
           left: i + 1,
           top: j + 1,
           isLighted: isLighted,
+          // isOnLightPerimeter: isOnLightPerimeter,
           isNonEnterable: isNonEnterable,
           srcSize: tileSpriteSrcSize,
           gridSize: gridSize,
@@ -492,9 +496,14 @@ class TileMap extends GameComponent with HandlesGesture {
     }
   }
 
-  bool isTileVisible(int left, int top) {
-    final tile = getTerrain(left, top);
-    return (tile?.isLighted ?? false) || (tile?.isOnVisiblePerimeter ?? false);
+  // TODO: 计算tile是否在屏幕上
+  bool isTileVisibleOnScreen(TileMapTerrain tile) {
+    return true;
+  }
+
+  bool isTileWithinSight(TileMapTerrain tile) {
+    // return (tile?.isLighted ?? false) || (tile?.isOnLightPerimeter ?? false);
+    return _tilesWithinSight.contains(tile);
   }
 
   // 从索引得到坐标
@@ -575,40 +584,81 @@ class TileMap extends GameComponent with HandlesGesture {
   //   );
   // }
 
+  // void lightUpAroundTile(TilePosition tilePosition,
+  //     {int size = 1, List<dynamic> excludeTerrainKinds = const []}) {
+  //   final start = getTerrain(tilePosition.left, tilePosition.top);
+  //   assert(start != null);
+  //   List<TileMapTerrain> pendingTiles = [start!];
+  //   List<TileMapTerrain> nextPendingTiles = [];
+
+  //   int lightedLayers = 0;
+  //   do {
+  //     for (final tile in pendingTiles) {
+  //       if (excludeTerrainKinds.isEmpty ||
+  //           !excludeTerrainKinds.contains(tile.kind)) {
+  //         tile.isLighted = true;
+  //         tile.isOnVisiblePerimeter = false;
+  //         final neighbors = getNeighborTilePositions(tile.left, tile.top);
+  //         for (final neighbor in neighbors) {
+  //           final neighborTile = getTerrain(neighbor.left, neighbor.top);
+  //           if (neighborTile == null) continue;
+  //           if (!neighborTile.isLighted) {
+  //             nextPendingTiles.add(neighborTile);
+  //           }
+  //         }
+  //       }
+  //     }
+
+  //     pendingTiles = nextPendingTiles;
+  //     nextPendingTiles = [];
+
+  //     ++lightedLayers;
+  //   } while (lightedLayers < (size + 1));
+
+  //   for (final tile in pendingTiles) {
+  //     tile.isOnVisiblePerimeter = true;
+  //   }
+  // }
+
+  final Set<TileMapTerrain> _tilesWithinSight = {};
+
   void lightUpAroundTile(TilePosition tilePosition,
       {int size = 1, List<dynamic> excludeTerrainKinds = const []}) {
     final start = getTerrain(tilePosition.left, tilePosition.top);
     assert(start != null);
-    List<TileMapTerrain> pendingTiles = [start!];
-    List<TileMapTerrain> nextPendingTiles = [];
-
+    _tilesWithinSight.clear();
+    Set<TileMapTerrain> peremeterTiles = {start!};
+    Set<TileMapTerrain> pendingTiles = {};
     int lightedLayers = 0;
     do {
-      for (final tile in pendingTiles) {
-        if (excludeTerrainKinds.isEmpty ||
-            !excludeTerrainKinds.contains(tile.kind)) {
+      for (final tile in peremeterTiles) {
+        if (!excludeTerrainKinds.contains(tile.kind)) {
           tile.isLighted = true;
-          tile.isOnVisiblePerimeter = false;
-          final neighbors = getNeighborTilePositions(tile.left, tile.top);
-          for (final neighbor in neighbors) {
-            final neighborTile = getTerrain(neighbor.left, neighbor.top);
-            if (neighborTile == null) continue;
-            if (!neighborTile.isLighted) {
-              nextPendingTiles.add(neighborTile);
+
+          if (lightedLayers < size) {
+            _tilesWithinSight.add(tile);
+          }
+        }
+        final neighbors = getNeighborTilePositions(tile.left, tile.top);
+        for (final neighbor in neighbors) {
+          final neighborTile = getTerrain(neighbor.left, neighbor.top);
+          if (neighborTile != null) {
+            if (_tilesWithinSight.contains(neighborTile) ||
+                peremeterTiles.contains(neighborTile)) {
+              continue;
             }
+            pendingTiles.add(neighborTile);
           }
         }
       }
-
-      pendingTiles = nextPendingTiles;
-      nextPendingTiles = [];
-
+      peremeterTiles.clear();
+      peremeterTiles.addAll(pendingTiles);
+      pendingTiles.clear();
       ++lightedLayers;
-    } while (lightedLayers < (size + 1));
-
-    for (final tile in pendingTiles) {
-      tile.isOnVisiblePerimeter = true;
-    }
+      if (lightedLayers > size) {
+        break;
+      }
+    } while (peremeterTiles.isNotEmpty);
   }
 
   Vector2 worldPosition2Screen(Vector2 position) {
@@ -1094,14 +1144,12 @@ class TileMap extends GameComponent with HandlesGesture {
 
     for (final tile in terrains) {
       if (showFogOfWar) {
-        if (!tile.isLighted && tile.terrainKind != TileMapTerrainKind.empty) {
-          if (tile.isOnVisiblePerimeter) {
-            canvas.drawPath(tile.borderPath, visiblePerimeterPaint);
-            // canvas.drawShadow(tile.shadowPath, Colors.black, 0, true);
-            // shadowSprite?.render(canvas,
-            //     position: tile.renderPosition, overridePaint: halfShadowPaint);
+        if (tile.terrainKind != TileMapTerrainKind.empty) {
+          if (tile.isLighted) {
+            if (!_tilesWithinSight.contains(tile)) {
+              canvas.drawPath(tile.borderPath, visiblePerimeterPaint);
+            }
           } else {
-            // canvas.drawPath(tile.shadowPath, fogPaint);
             fogSprite?.renderRect(
                 canvas,
                 Rect.fromLTWH(

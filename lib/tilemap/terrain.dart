@@ -11,6 +11,7 @@ import 'tile_mixin.dart';
 import '../animation/sprite_animation.dart';
 import '../utils/json.dart';
 import '../paint/paint.dart';
+import 'tilemap.dart';
 
 enum TileMapTerrainKind {
   none,
@@ -31,6 +32,8 @@ TileMapTerrainKind getTerrainKind(String? kind) =>
 
 class TileMapTerrain extends GameComponent with TileInfo {
   static const defaultAnimationStepTime = 0.2;
+
+  final TileMap map;
 
   /// internal data of this tile, possible json or other user-defined data form.
   final dynamic data;
@@ -77,8 +80,9 @@ class TileMapTerrain extends GameComponent with TileInfo {
     }
   }
 
-  bool _isNonEnterable, _isLighted;
+  bool _isNonEnterable, _isLighted; //, _isOnLightPerimeter;
 
+  bool get isNonEnterable => _isNonEnterable;
   set isNonEnterable(bool value) {
     _isNonEnterable = value;
     if (data != null) {
@@ -86,8 +90,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     }
   }
 
-  bool get isNonEnterable => _isNonEnterable;
-
+  bool get isLighted => _isLighted;
   set isLighted(value) {
     _isLighted = value;
     if (data != null) {
@@ -95,9 +98,13 @@ class TileMapTerrain extends GameComponent with TileInfo {
     }
   }
 
-  bool get isLighted => _isLighted;
-
-  bool isOnVisiblePerimeter = false;
+  // bool get isOnLightPerimeter => _isOnLightPerimeter;
+  // set isOnLightPerimeter(value) {
+  //   _isOnLightPerimeter = value;
+  //   if (data != null) {
+  //     data?['isOnLightPerimeter'] = value;
+  //   }
+  // }
 
   /// 此地块上的物体
   /// 此属性代表一些通常固定不移动的可互动对象，例如传送门、开关、地牢入口等等
@@ -266,6 +273,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
   }
 
   TileMapTerrain({
+    required this.map,
     required this.mapId,
     required this.terrainSpriteSheet,
     required TileShape tileShape,
@@ -275,6 +283,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     required int top,
     bool isNonEnterable = false,
     bool isLighted = true,
+    // bool isOnLightPerimeter = false,
     required Vector2 srcSize,
     required Vector2 gridSize,
     String? kind,
@@ -319,6 +328,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
         _kind = kind,
         _isNonEnterable = isNonEnterable,
         _isLighted = isLighted,
+        // _isOnLightPerimeter = isOnLightPerimeter,
         _zoneIndex = zoneId,
         _nationId = nationId,
         _locationId = locationId,
@@ -337,11 +347,16 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   @override
   void render(Canvas canvas) {
+    if (!map.isTileVisibleOnScreen(this)) return;
+
     _sprite?.renderRect(canvas, renderRect);
     _animation?.ticker.currentFrame.sprite.renderRect(canvas, renderRect);
     _overlaySprite?.renderRect(canvas, renderRect);
-    _overlayAnimation?.ticker.currentFrame.sprite
-        .renderRect(canvas, renderRect);
+
+    if (map.isTileWithinSight(this)) {
+      _overlayAnimation?.ticker.currentFrame.sprite
+          .renderRect(canvas, renderRect);
+    }
 
     if (caption != null) {
       drawScreenText(
@@ -366,14 +381,16 @@ class TileMapTerrain extends GameComponent with TileInfo {
   @override
   void update(double dt) {
     super.update(dt);
-    _animation?.ticker.update(dt);
-    if (_overlayAnimation != null) {
-      _overlayAnimation?.ticker.update(dt);
-      if (_overlayAnimation!.ticker.done()) {
-        _overlayAnimationOffsetValue += dt;
-        if (_overlayAnimationOffsetValue >= _overlayAnimationOffset) {
-          _overlayAnimationOffsetValue = 0;
-          _overlayAnimation!.ticker.reset();
+    if (map.isTileVisibleOnScreen(this)) {
+      _animation?.ticker.update(dt);
+      if (_overlayAnimation != null) {
+        _overlayAnimation?.ticker.update(dt);
+        if (_overlayAnimation!.ticker.done()) {
+          _overlayAnimationOffsetValue += dt;
+          if (_overlayAnimationOffsetValue >= _overlayAnimationOffset) {
+            _overlayAnimationOffsetValue = 0;
+            _overlayAnimation!.ticker.reset();
+          }
         }
       }
     }

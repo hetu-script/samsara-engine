@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class ResponsivePanel extends StatelessWidget {
-  const ResponsivePanel({
+class ResponsiveView extends StatelessWidget {
+  const ResponsiveView({
     super.key,
     this.child,
     this.alignment = AlignmentDirectional.center,

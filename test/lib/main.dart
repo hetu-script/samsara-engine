@@ -78,7 +78,7 @@ void main() {
     runApp(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => SceneControllerState(engine)),
+          ChangeNotifierProvider(create: (_) => engine),
         ],
         child: MaterialApp(
           scrollBehavior: DesktopScrollBehavior(),

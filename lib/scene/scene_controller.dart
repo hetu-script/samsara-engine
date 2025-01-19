@@ -3,7 +3,7 @@ import 'package:hetu_script/hetu_script.dart';
 
 import 'scene.dart';
 
-abstract class SceneController implements HTLogger {
+abstract class SceneController with ChangeNotifier implements HTLogger {
   // Scene? _scene;
   // Scene? get scene => _scene;
 
@@ -11,9 +11,12 @@ abstract class SceneController implements HTLogger {
 
   final _sequence = <String>[];
 
+  /// 当前场景
+  Scene? scene;
+
   /// 取出当前场景序列的最后一个场景
-  /// 如果没有使用 pushScene，则此值为 null
-  Scene? get currentScene => _sequence.isEmpty ? null : _cached[_sequence.last];
+  /// 如果没有使用场景序列，则此值为 null
+  Scene? get lastScene => _sequence.isEmpty ? null : _cached[_sequence.last];
 
   final _constructors =
       <String, Future<Scene> Function([Map<String, dynamic> arguments])>{};
@@ -33,15 +36,22 @@ abstract class SceneController implements HTLogger {
     String? constructorId,
     Map<String, dynamic> arguments = const {},
   }) async {
-    if (_sequence.isNotEmpty) {
-      final current = _cached[_sequence.last]!;
-      current.onEnd();
+    if (scene == null || scene?.id != sceneId) {
+      if (_sequence.isNotEmpty) {
+        final current = _cached[_sequence.last]!;
+        current.onEnd();
+      }
+      _sequence.add(sceneId);
+      scene = await createScene(sceneId,
+          constructorId: constructorId, arguments: arguments);
+      scene!.onStart(arguments);
+
+      notifyListeners();
+    } else {
+      scene!.onTrigger(arguments);
     }
-    _sequence.add(sceneId);
-    final scene = await createScene(sceneId,
-        constructorId: constructorId, arguments: arguments);
-    scene.onStart(arguments);
-    return scene;
+
+    return scene!;
   }
 
   /// 回退到当前场景序列的上一个场景
@@ -57,22 +67,31 @@ abstract class SceneController implements HTLogger {
     }
     _sequence.removeLast();
     final scene = switchScene(_sequence.last);
+
+    notifyListeners();
     return scene;
   }
 
   /// 获取一个之前已经构建过的场景
   /// 使用此方法不会改变场景序列
+  /// 在明确已经创建该场景的资源，并且不需要使用场景序列时，使用此函数
+  /// 因为此函数不会改变场景序列，因此在之后再次调用 pop 时
+  /// 无论切换到了什么场景都会正确的回到场景序列上的前一个场景
   Scene switchScene(
     String sceneId, {
     Map<String, dynamic> arguments = const {},
   }) {
-    assert(_cached.containsKey(sceneId), 'Scene [$sceneId] not found!');
-    final scene = _cached[sceneId]!;
-    scene.onStart(arguments);
-    if (kDebugMode) {
-      info('samsara - switched to scene: [$sceneId]');
+    if (scene?.id != sceneId) {
+      assert(_cached.containsKey(sceneId), 'Scene [$sceneId] not found!');
+      scene = _cached[sceneId];
+      scene!.onStart(arguments);
+      if (kDebugMode) {
+        info('samsara - switched to scene: [$sceneId]');
+      }
+
+      notifyListeners();
     }
-    return scene;
+    return scene!;
   }
 
   /// 构建一个场景，或者从缓存中取出之前已经构建过的场景。
@@ -83,25 +102,28 @@ abstract class SceneController implements HTLogger {
     String? constructorId,
     Map<String, dynamic> arguments = const {},
   }) async {
-    late Scene scene;
-    if (_cached.containsKey(sceneId)) {
-      scene = _cached[sceneId]!;
-      if (kDebugMode) {
-        info('samsara - resumed scene: [$sceneId]');
+    if (scene?.id != sceneId) {
+      if (_cached.containsKey(sceneId)) {
+        scene = _cached[sceneId]!;
+        if (kDebugMode) {
+          info('samsara - resumed scene: [$sceneId]');
+        }
+      } else {
+        final constructor = _constructors[constructorId ?? sceneId];
+        assert(constructor != null, 'Constructor [$constructorId] not found!');
+        final Scene created = (await constructor!(arguments));
+        _cached[sceneId] = created;
+        assert(created.id == sceneId,
+            'Created scene ID [${created.id}] mismatch the function call [$sceneId]!');
+        scene = created;
+        if (kDebugMode) {
+          info('samsara - created scene: [$sceneId]');
+        }
       }
-    } else {
-      final constructor = _constructors[constructorId ?? sceneId];
-      assert(constructor != null, 'Constructor [$constructorId] not found!');
-      final Scene created = (await constructor!(arguments));
-      _cached[sceneId] = created;
-      assert(created.id == sceneId,
-          'Created scene ID [${created.id}] mismatch the function call [$sceneId]!');
-      scene = created;
-      if (kDebugMode) {
-        info('samsara - created scene: [$sceneId]');
-      }
+
+      notifyListeners();
     }
-    return scene;
+    return scene!;
   }
 
   // void leaveScene(String sceneId, {bool clearCache = false}) {
@@ -120,16 +142,26 @@ abstract class SceneController implements HTLogger {
   void clearCachedScene(String sceneId) {
     assert(_cached.containsKey(sceneId), 'Scene [$sceneId] not found!');
 
-    final scene = _cached[sceneId]!;
-    scene.onEnd();
-    scene.onDispose();
+    final cached = _cached[sceneId]!;
+    cached.onEnd();
+    cached.onDispose();
+
     _cached.remove(sceneId);
+
+    if (scene?.id == sceneId) {
+      scene = null;
+      notifyListeners();
+    }
+
     if (kDebugMode) {
       info('samsara - cleared scene: [$sceneId]');
     }
   }
 
-  void clearAllCachedScene({String? except}) {
+  void clearAllCachedScene({
+    String? except,
+    Map<String, dynamic> arguments = const {},
+  }) {
     assert(_cached.isNotEmpty, 'No scene to clear!');
     assert(except == null || _cached.containsKey(except),
         'Scene [$except] not found!');
@@ -142,14 +174,20 @@ abstract class SceneController implements HTLogger {
       scene.onDispose();
     }
     if (except != null) {
+      assert(_cached.containsKey(except), 'Scene [$except] not found!');
+      scene = switchScene(except, arguments: arguments);
       _cached.removeWhere((key, value) => key != except);
       _sequence.removeWhere((key) => key != except);
     } else {
       _cached.clear();
       _sequence.clear();
     }
+
+    notifyListeners();
+
     if (kDebugMode) {
-      info('samsara - cleared all scenes.');
+      info(
+          'samsara - cleared all scenes${except != null ? ', except [$except]' : ''}');
     }
   }
 }

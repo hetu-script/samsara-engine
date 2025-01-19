@@ -110,6 +110,7 @@ class PointerDetector extends StatefulWidget {
   const PointerDetector({
     super.key,
     required this.child,
+    this.cursor = MouseCursor.defer,
     this.onTapDown,
     this.onTapUp,
     this.onDragStart,
@@ -128,6 +129,8 @@ class PointerDetector extends StatefulWidget {
 
   /// The widget below this widget in the tree.
   final Widget child;
+
+  final MouseCursor cursor;
 
   final void Function(int pointer, int buttons, TapDownDetails details)?
       onTapDown;
@@ -212,6 +215,7 @@ class PointerDetectorState extends State<PointerDetector> {
       onPointerCancel: onPointerUp,
       onPointerSignal: onPointerSignal,
       child: MouseRegion(
+        cursor: widget.cursor,
         onEnter: onMouseEnter,
         onExit: onMouseExit,
         onHover: onMouseHover,
