@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
-import 'effect/zoom_effect.dart';
+import 'effect/zoom.dart';
 
 export 'package:flame/extensions.dart';
 

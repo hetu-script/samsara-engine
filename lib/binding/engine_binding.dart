@@ -15,16 +15,16 @@ class SamsaraEngineClassBinding extends HTExternalClass {
       case 'debugMode':
         return kDebugMode || engine.config.debugMode;
       case 'loadLocaleDataFromJSON':
-        return ({positionalArgs, namedArgs}) =>
+        return ({object, positionalArgs, namedArgs}) =>
             engine.loadLocaleDataFromJSON(positionalArgs.first);
       case 'setLanguage':
-        return ({positionalArgs, namedArgs}) =>
+        return ({object, positionalArgs, namedArgs}) =>
             engine.setLanguage(positionalArgs.first);
       case 'hasLocaleKey':
-        return ({positionalArgs, namedArgs}) =>
+        return ({object, positionalArgs, namedArgs}) =>
             engine.hasLocaleKey(positionalArgs.first);
       case 'locale':
-        return ({positionalArgs, namedArgs}) => engine.locale(
+        return ({object, positionalArgs, namedArgs}) => engine.locale(
               positionalArgs.first,
               interpolations: namedArgs['interpolations'],
             );
@@ -38,33 +38,38 @@ class SamsaraEngineClassBinding extends HTExternalClass {
       //   return ({positionalArgs, namedArgs}) =>
       //       onIncident(positionalArgs.first);
       case 'emit':
-        return ({positionalArgs, namedArgs}) =>
+        return ({object, positionalArgs, namedArgs}) =>
             engine.emit(positionalArgs[0], positionalArgs[1]);
       case 'log':
-        return ({positionalArgs, namedArgs}) => engine.log(positionalArgs
-            .map((object) => engine.hetu.lexicon.stringify(object))
-            .join(' '));
+        return ({object, positionalArgs, namedArgs}) => engine.log(
+            positionalArgs
+                .map((object) => engine.hetu.lexicon.stringify(object))
+                .join(' '));
       case 'debug':
-        return ({positionalArgs, namedArgs}) => engine.debug(positionalArgs
-            .map((object) => engine.hetu.lexicon.stringify(object))
-            .join(' '));
+        return ({object, positionalArgs, namedArgs}) => engine.debug(
+            positionalArgs
+                .map((object) => engine.hetu.lexicon.stringify(object))
+                .join(' '));
       case 'info':
-        return ({positionalArgs, namedArgs}) => engine.info(positionalArgs
-            .map((object) => engine.hetu.lexicon.stringify(object))
-            .join(' '));
+        return ({object, positionalArgs, namedArgs}) => engine.info(
+            positionalArgs
+                .map((object) => engine.hetu.lexicon.stringify(object))
+                .join(' '));
       case 'warn':
-        return ({positionalArgs, namedArgs}) => engine.warn(positionalArgs
-            .map((object) => engine.hetu.lexicon.stringify(object))
-            .join(' '));
+        return ({object, positionalArgs, namedArgs}) => engine.warn(
+            positionalArgs
+                .map((object) => engine.hetu.lexicon.stringify(object))
+                .join(' '));
       case 'error':
-        return ({positionalArgs, namedArgs}) => engine.error(positionalArgs
-            .map((object) => engine.hetu.lexicon.stringify(object))
-            .join(' '));
+        return ({object, positionalArgs, namedArgs}) => engine.error(
+            positionalArgs
+                .map((object) => engine.hetu.lexicon.stringify(object))
+                .join(' '));
       case 'play':
-        return ({positionalArgs, namedArgs}) =>
+        return ({object, positionalArgs, namedArgs}) =>
             engine.play(positionalArgs.first);
       case 'playBGM':
-        return ({positionalArgs, namedArgs}) =>
+        return ({object, positionalArgs, namedArgs}) =>
             engine.bgm.play(positionalArgs.first);
       default:
         if (!ignoreUndefined) throw HTError.undefined(id);

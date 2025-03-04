@@ -63,8 +63,6 @@ mixin AnimationStateController on GameComponent {
     return collection[state]!;
   }
 
-  /// 如果进入动画，则返回一个双元素元组
-  /// 第一个是前摇动画的 Future，第二个是整个动画的 Future
   Future<void> setAnimationState(
     String state, {
     String? sound,
@@ -96,34 +94,30 @@ mixin AnimationStateController on GameComponent {
       // completer.complete();
       return;
     } else {
-      Future startUpResult = anim.ticker.completed;
+      Future result = anim.ticker.completed;
       if (sound != null) {
-        startUpResult.then((_) {
+        result.then((_) {
           engine?.play(sound);
         });
       }
 
-      Future? overlayResult;
-
       if (overlayState != null) {
-        overlayResult = startUpResult
+        result = result
             .then((_) => setAnimationState(overlayState, isOverlay: true));
       }
 
-      Future finalResult = (overlayResult ?? startUpResult);
-
       if (recoveryState != null) {
-        finalResult = finalResult.then((_) => setAnimationState(recoveryState));
+        result = result.then((_) => setAnimationState(recoveryState));
       }
 
-      finalResult.then((_) {
+      result.then((_) {
         if (completeState != null) {
           setAnimationState(completeState);
         }
         onComplete?.call();
       });
 
-      return finalResult;
+      return result;
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+// import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -12,8 +13,8 @@ import '../extensions.dart';
 import '../pointer_detector.dart';
 import '../gestures/gesture_mixin.dart';
 // import '../components/border_component.dart';
-import '../lighting/camera2.dart';
-import '../lighting/world2.dart';
+import '../camera/camera2.dart';
+import '../camera/world2.dart';
 import '../components/fading_text.dart';
 import 'scene_widget.dart';
 
@@ -46,6 +47,9 @@ abstract class Scene extends FlameGame {
 
   bool get enableLighting => (camera as Camera2).enableLighting;
   set enableLighting(bool value) => (camera as Camera2).enableLighting = value;
+
+  /// 此参数由 SceneController 管理
+  // Completer? completer;
 
   Scene({
     required this.id,
@@ -97,14 +101,9 @@ abstract class Scene extends FlameGame {
     camera.viewport.add(c);
   }
 
-  /// 这个函数在场景参数被改变时触发
-  /// 意味着某些事件试图进入此场景，但其实当前已经在此场景中了
-  /// 此时只是调用此函数，让场景进行某些播放动画之类的操作，而不涉及场景切换
-  void onTrigger(dynamic arguments) {}
-
   /// 这个函数在进入场景时被调用，通常用来进行恢复之前冻结和终止的一些操作
-  /// 注意因为场景本身始终存在于缓存中，因此这个函数的机制和 onLoad 不同，可能会反复触发
-  /// 不要在这里进行涉及 component 的操作，因为这个函数第一次执行时 onLoad 尚未加载完毕
+  /// 不要在这里进行涉及 component 的操作，这个函数执行时机在 onLoad 之前
+  /// 注意因为场景本身始终存在于缓存中，因此这个函数可能会反复触发
   @mustCallSuper
   void onStart([Map<String, dynamic> arguments = const {}]) async {
     if (bgm != null) {
@@ -117,14 +116,15 @@ abstract class Scene extends FlameGame {
     }
   }
 
+  /// 这个函数在场景参数被改变时触发
+  /// 通常意味着当前已经在此场景中时，某些事件试图调用此场景的某些功能
+  void onTrigger(dynamic arguments) {}
+
   /// 这个函数在退出场景时被调用，通常用来清理数据等
   /// 注意此时场景的资源并未被施放，场景本身仍然存在于缓存中
   /// 如果要释放资源，应在调用 controller.popScene() 时带上参数 clearCache: true
   @mustCallSuper
   void onEnd() async {
-    // if (clearCache) {
-    //   controller.clearCachedScene(id);
-    // }
     if (bgm != null) {
       if (bgmFile != null) {
         if (bgm!.isPlaying) {

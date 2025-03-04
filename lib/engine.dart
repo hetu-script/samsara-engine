@@ -81,13 +81,13 @@ class SamsaraEngine extends SceneController
   String get languageId => _locale.languageId;
 
   void loadLocaleDataFromJSON(Map localeData) {
-    info('载入本地化字符串……');
     _locale.loadData(localeData);
     if (_locale.errors.isNotEmpty) {
       for (final error in _locale.errors) {
         warn(error);
       }
     }
+    debug('loaded ${localeData.length} locale strings...');
   }
 
   void setLanguage(String localeId) {

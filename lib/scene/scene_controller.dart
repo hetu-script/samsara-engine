@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:hetu_script/hetu_script.dart';
 
@@ -35,17 +37,18 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     String sceneId, {
     String? constructorId,
     Map<String, dynamic> arguments = const {},
+    // Completer? completer,
   }) async {
     if (scene == null || scene?.id != sceneId) {
       if (_sequence.isNotEmpty) {
+        assert(sceneId != _sequence.last, 'Cannot push the same scene again!');
         final current = _cached[_sequence.last]!;
         current.onEnd();
       }
       _sequence.add(sceneId);
       scene = await createScene(sceneId,
           constructorId: constructorId, arguments: arguments);
-      scene!.onStart(arguments);
-
+      // scene!.completer = completer;
       notifyListeners();
     } else {
       scene!.onTrigger(arguments);
@@ -67,7 +70,6 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     }
     _sequence.removeLast();
     final scene = switchScene(_sequence.last);
-
     notifyListeners();
     return scene;
   }
@@ -88,7 +90,6 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
       if (kDebugMode) {
         info('samsara - switched to scene: [$sceneId]');
       }
-
       notifyListeners();
     }
     return scene!;
@@ -102,27 +103,27 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     String? constructorId,
     Map<String, dynamic> arguments = const {},
   }) async {
-    if (scene?.id != sceneId) {
-      if (_cached.containsKey(sceneId)) {
-        scene = _cached[sceneId]!;
-        if (kDebugMode) {
-          info('samsara - resumed scene: [$sceneId]');
-        }
-      } else {
-        final constructor = _constructors[constructorId ?? sceneId];
-        assert(constructor != null, 'Constructor [$constructorId] not found!');
-        final Scene created = (await constructor!(arguments));
-        _cached[sceneId] = created;
-        assert(created.id == sceneId,
-            'Created scene ID [${created.id}] mismatch the function call [$sceneId]!');
-        scene = created;
-        if (kDebugMode) {
-          info('samsara - created scene: [$sceneId]');
-        }
-      }
+    if (scene?.id == sceneId) return scene!;
 
-      notifyListeners();
+    if (_cached.containsKey(sceneId)) {
+      scene = _cached[sceneId]!;
+      if (kDebugMode) {
+        info('samsara - resumed scene: [$sceneId]');
+      }
+    } else {
+      final constructor = _constructors[constructorId ?? sceneId];
+      assert(constructor != null, 'Constructor [$constructorId] not found!');
+      final Scene created = (await constructor!(arguments));
+      _cached[sceneId] = created;
+      assert(created.id == sceneId,
+          'Created scene ID [${created.id}] mismatch the function call [$sceneId]!');
+      scene = created;
+      if (kDebugMode) {
+        info('samsara - created scene: [$sceneId]');
+      }
     }
+    scene!.onStart(arguments);
+    notifyListeners();
     return scene!;
   }
 
@@ -145,16 +146,13 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     final cached = _cached[sceneId]!;
     cached.onEnd();
     cached.onDispose();
-
     _cached.remove(sceneId);
-
+    if (kDebugMode) {
+      info('samsara - cleared scene: [$sceneId]');
+    }
     if (scene?.id == sceneId) {
       scene = null;
       notifyListeners();
-    }
-
-    if (kDebugMode) {
-      info('samsara - cleared scene: [$sceneId]');
     }
   }
 
@@ -183,11 +181,10 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
       _sequence.clear();
     }
 
-    notifyListeners();
-
     if (kDebugMode) {
       info(
           'samsara - cleared all scenes${except != null ? ', except [$except]' : ''}');
     }
+    notifyListeners();
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -107,9 +108,8 @@ class TileMapTerrain extends GameComponent with TileInfo {
   // }
 
   /// 此地块上的物体
-  /// 此属性代表一些通常固定不移动的可互动对象，例如传送门、开关、地牢入口等等
-  /// 对于可以在地图上移动的物体，地块本身并不保存，
-  /// 由 tilemap 上的 movingObjects 维护
+  /// 通常用此属性代表一些固定不移动的可互动对象，例如传送门、开关、地牢入口等等
+  /// 这些对象不一定是地图渲染时的component，可能纯是脚本数据
   String? _objectId;
 
   set objectId(value) {
@@ -227,6 +227,14 @@ class TileMapTerrain extends GameComponent with TileInfo {
       _animation = animation;
     } else {
       _overlayAnimation = animation;
+    }
+  }
+
+  @override
+  FutureOr<void> onLoad() {
+    tryLoadSprite();
+    if (data['overlaySprite'] != null) {
+      tryLoadSprite(isOverlay: true);
     }
   }
 
@@ -353,25 +361,27 @@ class TileMapTerrain extends GameComponent with TileInfo {
     _animation?.ticker.currentFrame.sprite.renderRect(canvas, renderRect);
     _overlaySprite?.renderRect(canvas, renderRect);
 
-    if (map.isTileWithinSight(this)) {
+    if (map.isEditorMode || map.isTileWithinSight(this)) {
       _overlayAnimation?.ticker.currentFrame.sprite
           .renderRect(canvas, renderRect);
     }
+  }
 
-    if (caption != null) {
-      drawScreenText(
-        canvas,
-        caption!,
-        position: renderRect.topLeft,
-        textPaint: _captionPaint,
-        config: ScreenTextConfig(
-          size: renderRect.size.toVector2(),
-          outlined: true,
-          anchor: Anchor.center,
-          padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
-        ),
-      );
-    }
+  void drawCaption(Canvas canvas) {
+    if (caption == null) return;
+
+    drawScreenText(
+      canvas,
+      caption!,
+      position: renderRect.topLeft,
+      textPaint: _captionPaint,
+      config: ScreenTextConfig(
+        size: renderRect.size.toVector2(),
+        outlined: true,
+        anchor: Anchor.center,
+        padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
+      ),
+    );
   }
 
   // TODO:计算是否在屏幕上可见

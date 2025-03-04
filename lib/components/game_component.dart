@@ -7,8 +7,8 @@ import 'package:flame/effects.dart';
 // import 'package:flame/experimental.dart';
 import 'package:flame/camera.dart';
 
-import '../effect/fade_effect.dart';
-import '../effect/advanced_move_effect.dart';
+import '../effect/fade.dart';
+import '../effect/advanced_move.dart';
 import '../scene/scene.dart';
 import '../gestures/gesture_mixin.dart';
 import '../lighting/light_config.dart';

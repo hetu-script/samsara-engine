@@ -5,7 +5,11 @@ import 'package:hetu_script/utils/json.dart';
 
 void jsonLikeDataAssign(dynamic target, dynamic source) {
   for (final key in source.keys) {
-    target[key] = source[key];
+    if (target[key] is Map || target[key] is HTStruct) {
+      jsonLikeDataAssign(target[key], source[key]);
+    } else {
+      target[key] = source[key];
+    }
   }
 }
 

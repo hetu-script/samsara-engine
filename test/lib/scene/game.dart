@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
@@ -13,6 +14,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:samsara/ui/label.dart';
 import 'package:samsara/widgets/markdown_wiki.dart';
 import 'package:samsara/richtext.dart';
+import 'package:samsara/effect/camera_shake.dart';
 
 import 'ui/drop_menu.dart';
 import '../app.dart';
@@ -116,8 +118,6 @@ class GameScene extends Scene {
         }
       },
     );
-    // camera.viewport.add(button);
-    background.add(button);
 
     // button.onMouseEnter = () {
     //   Hovertip.show(
@@ -136,6 +136,23 @@ class GameScene extends Scene {
     button.onDragUpdate = (int buttons, Vector2 offset) {
       button.position += offset;
     };
+    // camera.viewport.add(button);
+    background.add(button);
+
+    final button2 = SpriteButton(
+      anchor: Anchor.center,
+      text: 'Shake',
+      spriteId: 'button.png',
+      useSpriteSrcSize: true,
+      position: center + Vector2(0, 50),
+      onTap: (buttons, position) async {
+        add(CameraShakeEffect(
+          frequency: 10,
+          controller: EffectController(duration: 4.0),
+        ));
+      },
+    );
+    background.add(button2);
 
     // button.onTap = (buttons, position) async {
     //   final coordinates1 =

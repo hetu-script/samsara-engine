@@ -12,12 +12,14 @@ class BorderedIconButton extends StatelessWidget {
     this.onTapUp,
     this.onMouseEnter,
     this.onMouseExit,
+    this.isSelected = false,
   }) : super(key: GlobalKey());
 
   final Size size;
   final Widget? child;
   final EdgeInsetsGeometry padding;
   final double borderRadius;
+  final bool isSelected;
 
   final Function()? onTapDown;
   final Function()? onTapUp;
@@ -45,6 +47,8 @@ class BorderedIconButton extends StatelessWidget {
               height: size.height,
               alignment: Alignment.center,
               decoration: BoxDecoration(
+                color:
+                    isSelected ? Theme.of(context).colorScheme.primary : null,
                 borderRadius: BorderRadius.circular(borderRadius),
                 border:
                     Border.all(color: Theme.of(context).colorScheme.onSurface),

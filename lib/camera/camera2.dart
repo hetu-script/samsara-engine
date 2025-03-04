@@ -1,7 +1,7 @@
 import 'package:flame/components.dart';
 import '../components/game_component.dart';
 import '../extensions.dart';
-import 'light_config.dart';
+import '../lighting/light_config.dart';
 import 'world2.dart';
 
 class Camera2 extends CameraComponent {
