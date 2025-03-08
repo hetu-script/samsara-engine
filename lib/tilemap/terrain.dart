@@ -16,10 +16,10 @@ import 'tilemap.dart';
 
 enum TileMapTerrainKind {
   none,
-  empty,
   plain,
   forest,
   mountain,
+  seashelf,
   shore,
   lake,
   sea,
@@ -27,9 +27,14 @@ enum TileMapTerrainKind {
   road,
 }
 
-TileMapTerrainKind getTerrainKind(String? kind) =>
-    TileMapTerrainKind.values.firstWhere((element) => element.name == kind,
-        orElse: () => TileMapTerrainKind.none);
+bool isWaterTerrain(TileMapTerrainKind? kind) =>
+    kind == TileMapTerrainKind.sea ||
+    kind == TileMapTerrainKind.seashelf ||
+    kind == TileMapTerrainKind.river ||
+    kind == TileMapTerrainKind.lake;
+
+bool isEmptyTerrain(TileMapTerrainKind? kind) =>
+    kind == TileMapTerrainKind.none;
 
 class TileMapTerrain extends GameComponent with TileInfo {
   static const defaultAnimationStepTime = 0.2;
@@ -48,17 +53,17 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   // final TileRenderDirection renderDirection;
 
-  TileMapTerrainKind get terrainKind => getTerrainKind(_kind);
+  /// TODO: kind可能并不直接对应一种类型
+  TileMapTerrainKind get terrainKind =>
+      TileMapTerrainKind.values.firstWhere((element) => element.name == _kind,
+          orElse: () => TileMapTerrainKind.none);
+
   String? _kind;
   String? get kind => _kind;
   set kind(String? value) {
     _kind = value;
     data?['kind'] = value;
   }
-
-  bool get isWater =>
-      terrainKind == TileMapTerrainKind.sea ||
-      terrainKind == TileMapTerrainKind.lake;
 
   final String? _zoneIndex;
   String? get zoneId => _zoneIndex;

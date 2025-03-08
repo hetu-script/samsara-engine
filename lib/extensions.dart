@@ -26,7 +26,7 @@ extension StringEx on String {
     return replaceAll(r'\n', '\n');
   }
 
-  bool get isBlank => trim() == '';
+  bool get isBlank => trim().isEmpty;
 
   bool get isNotBlank => !isBlank;
 

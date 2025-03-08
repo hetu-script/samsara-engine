@@ -384,7 +384,13 @@ class TileMap extends GameComponent with HandlesGesture {
           data['id'] = (data['name'] ?? '') + randomUID(withTime: true);
     }
 
-    if (components.containsKey(componentId)) return components[componentId]!;
+    if (components.containsKey(componentId)) {
+      return components[componentId]!;
+    } else if (hero?.id == componentId) {
+      add(hero!);
+      components[hero!.id] = hero!;
+      return hero!;
+    }
 
     final Map<String, SpriteAnimationWithTicker> states = {};
 
@@ -1049,7 +1055,7 @@ class TileMap extends GameComponent with HandlesGesture {
     final pos = prevRouteNode.tilePosition;
     final terrain = getTerrain(pos.left, pos.top);
     assert(terrain != null);
-    if (terrain!.isWater) {
+    if (isWaterTerrain(terrain?.terrainKind)) {
       component.isOnWater = true;
     } else {
       component.isOnWater = false;
@@ -1076,7 +1082,7 @@ class TileMap extends GameComponent with HandlesGesture {
     }
 
     if (component.prevRouteNode != null) {
-      component.onAfterStepCallback?.call(terrain);
+      component.onAfterStepCallback?.call(terrain!);
     }
 
     // 这里要多检查一次，因为有可能在 onAfterMoveCallback 中被取消移动
@@ -1139,20 +1145,18 @@ class TileMap extends GameComponent with HandlesGesture {
 
     for (final tile in terrains) {
       if (showFogOfWar) {
-        if (tile.terrainKind != TileMapTerrainKind.empty) {
-          if (tile.isLighted) {
-            if (!_tilesWithinSight.contains(tile)) {
-              canvas.drawPath(tile.borderPath, visiblePerimeterPaint);
-            }
-          } else {
-            fogSprite?.renderRect(
-                canvas,
-                Rect.fromLTWH(
-                    tile.renderRect.left + tileFogOffset.x,
-                    tile.renderRect.top + tileFogOffset.y,
-                    tile.renderRect.width + -tileFogOffset.x * 2,
-                    tile.renderRect.height + -tileFogOffset.y * 2));
+        if (tile.isLighted) {
+          if (!_tilesWithinSight.contains(tile)) {
+            canvas.drawPath(tile.borderPath, visiblePerimeterPaint);
           }
+        } else {
+          fogSprite?.renderRect(
+              canvas,
+              Rect.fromLTWH(
+                  tile.renderRect.left + tileFogOffset.x,
+                  tile.renderRect.top + tileFogOffset.y,
+                  tile.renderRect.width + -tileFogOffset.x * 2,
+                  tile.renderRect.height + -tileFogOffset.y * 2));
         }
       }
     }
@@ -1161,7 +1165,9 @@ class TileMap extends GameComponent with HandlesGesture {
       if (showGrids) {
         canvas.drawPath(tile.borderPath, gridPaint);
       }
-      tile.drawCaption(canvas);
+      if (tile.isLighted) {
+        tile.drawCaption(canvas);
+      }
     }
 
     if (showSelected && selectedTerrain != null) {
@@ -1169,7 +1175,9 @@ class TileMap extends GameComponent with HandlesGesture {
     }
 
     if (showHover && hoveredTerrain != null) {
-      canvas.drawPath(hoveredTerrain!.borderPath, hoverPaint);
+      if (_tilesWithinSight.contains(hoveredTerrain)) {
+        canvas.drawPath(hoveredTerrain!.borderPath, hoverPaint);
+      }
     }
 
     canvas.restore();

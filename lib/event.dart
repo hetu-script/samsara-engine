@@ -1,23 +1,24 @@
 import 'package:flutter/foundation.dart';
 
-typedef EventCallback = void Function(String sceneId, dynamic args);
+typedef EventCallback = void Function(String listenerId, dynamic args);
 
 mixin EventAggregator {
-  // 第一层 key 是 eventId, 第二层 key 是 sceneId, value 是 callback
+  // 第一层 key 是 eventId, 第二层 key 是 listenerId, value 是 callback
   final Map<String, Map<String, EventCallback>> _eventHandlers = {};
 
-  void setEventListener(
-      String sceneId, String eventId, EventCallback callback) {
+  void addEventListener(
+      String listenerId, String eventId, EventCallback callback) {
     if (_eventHandlers[eventId] == null) {
       _eventHandlers[eventId] = <String, EventCallback>{};
     }
     final listeners = _eventHandlers[eventId]!;
-    listeners[sceneId] = callback;
+    listeners[listenerId] = callback;
   }
 
-  void removeEventListener(String sceneId) {
+  void removeEventListener(String listenerId) {
     for (final handlers in _eventHandlers.values) {
-      handlers.removeWhere((registeredId, callback) => registeredId == sceneId);
+      handlers
+          .removeWhere((registeredId, callback) => registeredId == listenerId);
     }
   }
 
