@@ -979,8 +979,7 @@ class TileMap extends GameComponent with HandlesGesture {
     TileMapComponent component,
     List<int> route, {
     OrthogonalDirection? finishMoveDirection,
-    void Function(TileMapTerrain tile,
-            [TileMapTerrain? nonEnterableDestination])?
+    void Function(TileMapTerrain terrain, [TileMapTerrain? targetTerrain])?
         onAfterStepCallback,
     void Function()? onFinishCallback,
     bool backwardMoving = false,
@@ -1026,9 +1025,9 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   void componentFinishWalk(TileMapComponent component,
-      [TileMapTerrain? terrain, TileMapTerrain? nonEnterableDestination]) {
+      [TileMapTerrain? terrain, TileMapTerrain? targetTerrain]) {
     if (component.prevRouteNode != null && terrain != null) {
-      component.onAfterStepCallback?.call(terrain, nonEnterableDestination);
+      component.onAfterStepCallback?.call(terrain, targetTerrain);
     }
     component.onAfterStepCallback = null;
     component.onFinishWalkCallback?.call();
@@ -1175,7 +1174,7 @@ class TileMap extends GameComponent with HandlesGesture {
     }
 
     if (showHover && hoveredTerrain != null) {
-      if (_tilesWithinSight.contains(hoveredTerrain)) {
+      if (hoveredTerrain!.isLighted) {
         canvas.drawPath(hoveredTerrain!.borderPath, hoverPaint);
       }
     }

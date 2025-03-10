@@ -75,7 +75,7 @@ class TileMapComponent extends TaskComponent
   List<TileMapRouteNode>? currentRoute;
   TileMapRouteNode? prevRouteNode;
   bool isBackwardWalking = false;
-  void Function(TileMapTerrain tile, [TileMapTerrain? nonEnterableDestination])?
+  void Function(TileMapTerrain terrain, [TileMapTerrain? targetTerrain])?
       onAfterStepCallback;
   void Function()? onFinishWalkCallback;
   OrthogonalDirection? finishWalkDirection;

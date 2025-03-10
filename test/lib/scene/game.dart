@@ -15,6 +15,7 @@ import 'package:samsara/ui/label.dart';
 import 'package:samsara/widgets/markdown_wiki.dart';
 import 'package:samsara/richtext.dart';
 import 'package:samsara/effect/camera_shake.dart';
+import 'package:samsara/task.dart';
 
 import 'ui/drop_menu.dart';
 import '../app.dart';
@@ -27,6 +28,8 @@ class GameScene extends Scene {
   late final PiledZone piledZone;
 
   CustomGameCard? card;
+
+  final TaskController taskController = TaskController();
 
   GameScene({
     required super.id,
@@ -153,6 +156,29 @@ class GameScene extends Scene {
       },
     );
     background.add(button2);
+
+    final button3 = SpriteButton(
+      anchor: Anchor.center,
+      text: 'Shake',
+      spriteId: 'button.png',
+      useSpriteSrcSize: true,
+      position: center + Vector2(0, 100),
+      onTap: (buttons, position) async {
+        taskController.schedule(() async {
+          await Future.delayed(const Duration(seconds: 1));
+          engine.info('1');
+        });
+        taskController.schedule(() async {
+          await Future.delayed(const Duration(seconds: 1));
+          engine.info('2');
+        });
+        taskController.schedule(() async {
+          await Future.delayed(const Duration(seconds: 1));
+          engine.info('3');
+        });
+      },
+    );
+    background.add(button3);
 
     // button.onTap = (buttons, position) async {
     //   final coordinates1 =

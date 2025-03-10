@@ -71,13 +71,16 @@ class _ConsoleState extends State<Console> {
         body: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                child: TextField(
-                  controller: _consoleOutputTextController,
-                  readOnly: true,
-                  maxLines: null,
-                  decoration: const InputDecoration(border: InputBorder.none),
+              child: ScrollConfiguration(
+                behavior: MaterialScrollBehavior(),
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  child: TextField(
+                    controller: _consoleOutputTextController,
+                    readOnly: true,
+                    maxLines: null,
+                    decoration: const InputDecoration(border: InputBorder.none),
+                  ),
                 ),
               ),
             ),
