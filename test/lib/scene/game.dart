@@ -62,65 +62,65 @@ class GameScene extends Scene {
       spriteId: 'button.png',
       useSpriteSrcSize: true,
       position: center,
-      onTap: (buttons, position) async {
-        if (card == null) {
-          card = CustomGameCard(
-            position: center,
-            preferredSize: cardSize,
-            id: utils.randomUID(),
-            illustrationRelativePaddings:
-                const EdgeInsets.fromLTRB(0.074, 0.135, 0.074, 0.235),
-            illustrationSpriteId: 'attack_normal.png',
-            spriteId: 'border4.png',
-            title: '无名剑法',
-            titleRelativePaddings:
-                const EdgeInsets.fromLTRB(0.2, 0.05, 0.2, 0.865),
-            titleConfig: ScreenTextConfig(
-              anchor: Anchor.center,
-              outlined: true,
-              textStyle: TextStyle(
-                color: Colors.white,
-                fontSize: 15.0,
-              ),
-            ),
-            description: '卡牌描述\n词条 2',
-            descriptionRelativePaddings:
-                const EdgeInsets.fromLTRB(0.108, 0.735, 0.108, 0.08),
-            descriptionConfig: const ScreenTextConfig(
-              anchor: Anchor.center,
-              textStyle: TextStyle(
-                fontFamily: 'NotoSansMono',
-                // fontFamily: GameUI.fontFamily,
-                fontSize: 16.0,
-                color: Colors.black,
-              ),
-              overflow: ScreenTextOverflow.wordwrap,
-            ),
-            glowSpriteId: 'glow2.png',
-            showGlow: true,
-          );
-          world.add(card!);
-          // piledZone.placeCard(card!);
-          card!.moveTo(
-            duration: 0.5,
-            toPosition: Vector2.zero(),
-            toSize: cardSize * 1.5,
-          );
-        } else {
-          card!
-              .moveTo(
-            duration: 0.5,
-            toPosition: center,
-            toSize: Vector2.zero(),
-          )
-              .then((_) {
-            card!.removeFromParent();
-            // piledZone.removeCardById(card!.id);
-            card = null;
-          });
-        }
-      },
     );
+    button.onTap = (buttons, position) async {
+      if (card == null) {
+        card = CustomGameCard(
+          position: center,
+          preferredSize: cardSize,
+          id: utils.randomUID(),
+          illustrationRelativePaddings:
+              const EdgeInsets.fromLTRB(0.074, 0.135, 0.074, 0.235),
+          illustrationSpriteId: 'attack_normal.png',
+          spriteId: 'border4.png',
+          title: '无名剑法',
+          titleRelativePaddings:
+              const EdgeInsets.fromLTRB(0.2, 0.05, 0.2, 0.865),
+          titleConfig: ScreenTextConfig(
+            anchor: Anchor.center,
+            outlined: true,
+            textStyle: TextStyle(
+              color: Colors.white,
+              fontSize: 15.0,
+            ),
+          ),
+          description: '卡牌描述\n词条 2',
+          descriptionRelativePaddings:
+              const EdgeInsets.fromLTRB(0.108, 0.735, 0.108, 0.08),
+          descriptionConfig: const ScreenTextConfig(
+            anchor: Anchor.center,
+            textStyle: TextStyle(
+              fontFamily: 'NotoSansMono',
+              // fontFamily: GameUI.fontFamily,
+              fontSize: 16.0,
+              color: Colors.black,
+            ),
+            overflow: ScreenTextOverflow.wordwrap,
+          ),
+          glowSpriteId: 'glow2.png',
+          showGlow: true,
+        );
+        world.add(card!);
+        // piledZone.placeCard(card!);
+        card!.moveTo(
+          duration: 0.5,
+          toPosition: Vector2.zero(),
+          toSize: cardSize * 1.5,
+        );
+      } else {
+        card!
+            .moveTo(
+          duration: 0.5,
+          toPosition: center,
+          toSize: Vector2.zero(),
+        )
+            .then((_) {
+          card!.removeFromParent();
+          // piledZone.removeCardById(card!.id);
+          card = null;
+        });
+      }
+    };
 
     // button.onMouseEnter = () {
     //   Hovertip.show(

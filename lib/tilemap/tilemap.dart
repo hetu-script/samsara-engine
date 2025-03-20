@@ -16,8 +16,8 @@ import 'component.dart';
 import 'terrain.dart';
 import 'direction.dart';
 import 'route.dart';
-import '../utils/color.dart';
 import '../animation/sprite_animation.dart';
+import '../utils/color.dart';
 
 export 'direction.dart';
 
@@ -32,15 +32,6 @@ class TileMap extends GameComponent with HandlesGesture {
 
   static final halfShadowPaint = Paint()..color = Colors.white.withAlpha(128);
 
-  static final uninteractablePaint = Paint()
-    ..style = PaintingStyle.fill
-    ..color = Colors.red.withAlpha(180);
-
-  static final visiblePerimeterPaint = Paint()
-    ..style = PaintingStyle.fill
-    ..color = Colors.black.withAlpha(128)
-    ..maskFilter = MaskFilter.blur(BlurStyle.solid, convertRadiusToSigma(2));
-
   static final selectedPaint = Paint()
     ..strokeWidth = 1
     ..style = PaintingStyle.stroke
@@ -51,15 +42,19 @@ class TileMap extends GameComponent with HandlesGesture {
     ..style = PaintingStyle.stroke
     ..color = Colors.yellow.withAlpha(180);
 
-  static final gridPaint = Paint()
-    ..color = Colors.blue.withAlpha(128)
-    ..strokeWidth = 0.5
-    ..style = PaintingStyle.stroke;
+  static final visiblePerimeterPaint = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.black.withAlpha(128)
+    ..maskFilter = MaskFilter.blur(BlurStyle.solid, convertRadiusToSigma(2));
 
-  /// key 是 mapId, value 是一个列表
+  static final uninteractablePaint = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.red.withAlpha(180);
+
   /// 列表的index代表colorMode，列表的值是一个包含全部地图节点颜色数据的JSON
-  /// 节点颜色数据的Key是terrain的index，值是一个Record对，包含颜色和对应的Paint
-  final Map<String, List<Map<int, (Color, Paint)>>> mapZoneColors = {};
+  /// 节点颜色数据的Key是一个int，代表terrain的index
+  /// 值是一个Record值对，分别是颜色和对应的Paint
+  final List<Map<int, (Color, Paint)>> zoneColors = [];
 
   int colorMode = kColorModeNone;
 
@@ -71,8 +66,6 @@ class TileMap extends GameComponent with HandlesGesture {
   String? fogSpriteId;
   Sprite? fogSprite;
 
-  bool showNonInteractableHintColor;
-  bool showGrids;
   bool showFogOfWar;
   bool showSelected;
   bool showHover;
@@ -124,8 +117,6 @@ class TileMap extends GameComponent with HandlesGesture {
     required this.tileSpriteSrcSize,
     required this.tileOffset,
     required this.tileFogOffset,
-    this.showNonInteractableHintColor = false,
-    this.showGrids = false,
     this.showFogOfWar = false,
     this.showSelected = false,
     this.showHover = false,
@@ -374,7 +365,7 @@ class TileMap extends GameComponent with HandlesGesture {
 
   Future<TileMapComponent> loadTileMapComponentFromData(dynamic data,
       {Vector2? spriteSrcSize, bool isCharacter = false}) async {
-    assert(data['worldPosition'] != null);
+    // assert(data['worldPosition'] != null);
 
     String componentId;
     if (data['id'] != null) {
@@ -568,7 +559,7 @@ class TileMap extends GameComponent with HandlesGesture {
     }
   }
 
-  TileMapTerrain? getTerrainAtHero() {
+  TileMapTerrain? getHeroAtTerrain() {
     if (hero != null) {
       return terrains[tilePosition2Index(hero!.left, hero!.top)];
     }
@@ -979,9 +970,10 @@ class TileMap extends GameComponent with HandlesGesture {
     TileMapComponent component,
     List<int> route, {
     OrthogonalDirection? finishMoveDirection,
-    void Function(TileMapTerrain terrain, [TileMapTerrain? targetTerrain])?
-        onAfterStepCallback,
-    void Function()? onFinishCallback,
+    FutureOr<void> Function(TileMapTerrain terrain)? onAfterStepCallback,
+    FutureOr<void> Function(TileMapTerrain terrain,
+            [TileMapTerrain? targetTerrain])?
+        onFinishCallback,
     bool backwardMoving = false,
   }) {
     assert(components.containsKey(component.id));
@@ -1000,9 +992,9 @@ class TileMap extends GameComponent with HandlesGesture {
     component.onAfterStepCallback = onAfterStepCallback;
     if (component == hero && isCameraFollowHero) {
       setCameraFollowHero(true);
-      component.onFinishWalkCallback = () async {
+      component.onFinishWalkCallback = (terrain, [target]) async {
         setCameraFollowHero(false);
-        onFinishCallback?.call();
+        onFinishCallback?.call(terrain, target);
       };
     } else {
       component.onFinishWalkCallback = onFinishCallback;
@@ -1024,13 +1016,11 @@ class TileMap extends GameComponent with HandlesGesture {
         .toList();
   }
 
-  void componentFinishWalk(TileMapComponent component,
-      [TileMapTerrain? terrain, TileMapTerrain? targetTerrain]) {
-    if (component.prevRouteNode != null && terrain != null) {
-      component.onAfterStepCallback?.call(terrain, targetTerrain);
-    }
+  void componentFinishWalk(TileMapComponent component, TileMapTerrain terrain,
+      [TileMapTerrain? targetTerrain]) {
+    component.onAfterStepCallback?.call(terrain);
     component.onAfterStepCallback = null;
-    component.onFinishWalkCallback?.call();
+    component.onFinishWalkCallback?.call(terrain, targetTerrain);
     component.onFinishWalkCallback = null;
     component.prevRouteNode = null;
     component.currentRoute = null;
@@ -1044,8 +1034,9 @@ class TileMap extends GameComponent with HandlesGesture {
   void componentUpdateWalkPosition(TileMapComponent component) {
     if (component.isWalking) return;
     // 以current route 是否为 null 来判断是否需要开始移动
-    // 如果 currentRoute 不为 null，但是是空的，意味着已经完成移动
     if (component.currentRoute == null) return;
+
+    assert(component.currentRoute!.isNotEmpty);
 
     final prevRouteNode = component.currentRoute!.last;
     component.currentRoute!.removeLast();
@@ -1062,12 +1053,12 @@ class TileMap extends GameComponent with HandlesGesture {
 
     if (component.isWalkCanceled) {
       component.isWalkCanceled = false;
-      componentFinishWalk(component, terrain);
+      componentFinishWalk(component, terrain!);
       return;
     }
 
     if (component.currentRoute!.isEmpty) {
-      componentFinishWalk(component, terrain);
+      componentFinishWalk(component, terrain!);
       return;
     }
 
@@ -1076,11 +1067,9 @@ class TileMap extends GameComponent with HandlesGesture {
     // 如果路径上下一个目标是不可进入的，那么结束移动
     // 但若该目标是路径上最后一个目标，此种情况结束移动仍然会触发对最终目标的交互
     if (component.currentRoute!.length == 1 && target!.isNonEnterable) {
-      componentFinishWalk(component, terrain, target);
+      componentFinishWalk(component, terrain!, target);
       return;
-    }
-
-    if (component.prevRouteNode != null) {
+    } else if (component.prevRouteNode != null) {
       component.onAfterStepCallback?.call(terrain!);
     }
 
@@ -1088,7 +1077,7 @@ class TileMap extends GameComponent with HandlesGesture {
     // 但这里的finishMove 不传递 terrain，这样不会再次触发 onAfterMoveCallback
     if (component.isWalkCanceled) {
       component.isWalkCanceled = false;
-      componentFinishWalk(component);
+      componentFinishWalk(component, terrain!);
       return;
     }
 
@@ -1129,23 +1118,10 @@ class TileMap extends GameComponent with HandlesGesture {
     canvas.save();
     canvas.transform(transformMatrix.storage);
 
-    for (final tile in terrains) {
-      if (colorMode != kColorModeNone) {
-        final colorData = mapZoneColors[id]?[colorMode][tile.index];
-        if (colorData != null) {
-          final (_, paint) = colorData;
-          canvas.drawPath(tile.borderPath, paint);
-        }
-      }
-      if (tile.isNonEnterable && showNonInteractableHintColor) {
-        canvas.drawPath(tile.borderPath, uninteractablePaint);
-      }
-    }
-
-    for (final tile in terrains) {
-      if (showFogOfWar) {
+    if (!isEditorMode && showFogOfWar) {
+      for (final tile in terrains) {
         if (tile.isLighted) {
-          if (!_tilesWithinSight.contains(tile)) {
+          if (!isTileWithinSight(tile)) {
             canvas.drawPath(tile.borderPath, visiblePerimeterPaint);
           }
         } else {
@@ -1160,12 +1136,11 @@ class TileMap extends GameComponent with HandlesGesture {
       }
     }
 
-    for (final tile in terrains) {
-      if (showGrids) {
-        canvas.drawPath(tile.borderPath, gridPaint);
-      }
-      if (tile.isLighted) {
-        tile.drawCaption(canvas);
+    if (isEditorMode && colorMode == kColorModeNone) {
+      for (final tile in terrains) {
+        if (tile.isNonEnterable) {
+          canvas.drawPath(tile.borderPath, uninteractablePaint);
+        }
       }
     }
 

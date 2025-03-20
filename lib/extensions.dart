@@ -30,7 +30,7 @@ extension StringEx on String {
 
   bool get isNotBlank => !isBlank;
 
-  String? get nonEmptyValueOrNull => isBlank ? null : this;
+  String? get nonEmptyValue => isBlank ? null : this;
 
   String interpolate(List? interpolations) {
     if (interpolations == null) {

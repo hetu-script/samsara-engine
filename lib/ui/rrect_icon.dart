@@ -8,7 +8,7 @@ class RRectIcon extends StatelessWidget {
     required this.borderRadius,
     this.backgroundColor,
     this.borderColor,
-    this.borderWidth = 1.0,
+    this.borderWidth,
   });
 
   final ImageProvider<Object> image;
@@ -16,7 +16,7 @@ class RRectIcon extends StatelessWidget {
   final BorderRadiusGeometry borderRadius;
   final Color? backgroundColor;
   final Color? borderColor;
-  final double borderWidth;
+  final double? borderWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +32,12 @@ class RRectIcon extends StatelessWidget {
             image: image,
           ),
           borderRadius: borderRadius,
-          border: Border.all(
-            color: borderColor ?? Theme.of(context).colorScheme.onSurface,
-            width: borderWidth,
-          ),
+          border: (borderWidth != null && borderWidth! > 0)
+              ? Border.all(
+                  color: borderColor ?? Theme.of(context).colorScheme.onSurface,
+                  width: borderWidth!,
+                )
+              : null,
         ),
       ),
     );

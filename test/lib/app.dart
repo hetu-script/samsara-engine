@@ -37,10 +37,6 @@ class _GameAppState extends State<GameApp> {
     });
   }
 
-  Future<void> _initGame() async {
-    await engine.init();
-  }
-
   // FutureBuilder 根据返回值是否为null来判断是否成功，因此这里无论如何需要返回一个值
   Future<bool> _loadScene() async {
     if (_isLoading) return false;
@@ -48,7 +44,7 @@ class _GameAppState extends State<GameApp> {
 
     if (!_isInitted) {
       // 刚打开游戏，需要初始化引擎，载入数据，debug模式下还要初始化一个游戏存档用于测试
-      await _initGame();
+      await engine.init(context);
       _isInitted = true;
 
       engine.pushScene('game');

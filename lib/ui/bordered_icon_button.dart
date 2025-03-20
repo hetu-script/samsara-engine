@@ -3,22 +3,27 @@ import 'package:flutter/material.dart';
 import 'mouse_region2.dart';
 
 class BorderedIconButton extends StatelessWidget {
-  BorderedIconButton({
+  const BorderedIconButton({
+    super.key,
     this.size = const Size(24.0, 24.0),
     this.child,
     this.padding = const EdgeInsets.all(0.0),
-    this.borderRadius = 5.0,
+    this.borderRadius = 0.0,
+    this.borderColor = Colors.white54,
+    this.borderWidth = 1.0,
     this.onTapDown,
     this.onTapUp,
     this.onMouseEnter,
     this.onMouseExit,
     this.isSelected = false,
-  }) : super(key: GlobalKey());
+  });
 
   final Size size;
   final Widget? child;
   final EdgeInsetsGeometry padding;
   final double borderRadius;
+  final Color borderColor;
+  final double borderWidth;
   final bool isSelected;
 
   final Function()? onTapDown;
@@ -50,8 +55,10 @@ class BorderedIconButton extends StatelessWidget {
                 color:
                     isSelected ? Theme.of(context).colorScheme.primary : null,
                 borderRadius: BorderRadius.circular(borderRadius),
-                border:
-                    Border.all(color: Theme.of(context).colorScheme.onSurface),
+                border: Border.all(
+                  color: borderColor,
+                  width: borderWidth,
+                ),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(borderRadius),

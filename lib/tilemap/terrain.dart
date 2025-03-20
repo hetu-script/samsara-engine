@@ -39,6 +39,11 @@ bool isEmptyTerrain(TileMapTerrainKind? kind) =>
 class TileMapTerrain extends GameComponent with TileInfo {
   static const defaultAnimationStepTime = 0.2;
 
+  static final gridPaint = Paint()
+    ..color = Colors.blue.withAlpha(128)
+    ..strokeWidth = 0.5
+    ..style = PaintingStyle.stroke;
+
   final TileMap map;
 
   /// internal data of this tile, possible json or other user-defined data form.
@@ -366,27 +371,37 @@ class TileMapTerrain extends GameComponent with TileInfo {
     _animation?.ticker.currentFrame.sprite.renderRect(canvas, renderRect);
     _overlaySprite?.renderRect(canvas, renderRect);
 
+    if (map.isEditorMode) {
+      canvas.drawPath(borderPath, gridPaint);
+    }
+
     if (map.isEditorMode || map.isTileWithinSight(this)) {
       _overlayAnimation?.ticker.currentFrame.sprite
           .renderRect(canvas, renderRect);
     }
-  }
 
-  void drawCaption(Canvas canvas) {
-    if (caption == null) return;
+    if ((map.isEditorMode || isLighted) && caption != null) {
+      drawScreenText(
+        canvas,
+        caption!,
+        position: renderRect.topLeft,
+        textPaint: _captionPaint,
+        config: ScreenTextConfig(
+          size: renderRect.size.toVector2(),
+          outlined: true,
+          anchor: Anchor.center,
+          padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
+        ),
+      );
+    }
 
-    drawScreenText(
-      canvas,
-      caption!,
-      position: renderRect.topLeft,
-      textPaint: _captionPaint,
-      config: ScreenTextConfig(
-        size: renderRect.size.toVector2(),
-        outlined: true,
-        anchor: Anchor.center,
-        padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
-      ),
-    );
+    if (map.colorMode != kColorModeNone) {
+      final colorData = map.zoneColors[map.colorMode][index];
+      if (colorData != null) {
+        final (_, paint) = colorData;
+        canvas.drawPath(borderPath, paint);
+      }
+    }
   }
 
   // TODO:计算是否在屏幕上可见

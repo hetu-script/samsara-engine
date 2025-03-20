@@ -79,19 +79,18 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
   /// 在明确已经创建该场景的资源，并且不需要使用场景序列时，使用此函数
   /// 因为此函数不会改变场景序列，因此在之后再次调用 pop 时
   /// 无论切换到了什么场景都会正确的回到场景序列上的前一个场景
+  /// 使用这个方法可以强制再次触发进入当前场景
   Scene switchScene(
     String sceneId, {
     Map<String, dynamic> arguments = const {},
   }) {
-    if (scene?.id != sceneId) {
-      assert(_cached.containsKey(sceneId), 'Scene [$sceneId] not found!');
-      scene = _cached[sceneId];
-      scene!.onStart(arguments);
-      if (kDebugMode) {
-        info('samsara - switched to scene: [$sceneId]');
-      }
-      notifyListeners();
+    assert(_cached.containsKey(sceneId), 'Scene [$sceneId] not found!');
+    scene = _cached[sceneId];
+    scene!.onStart(arguments);
+    if (kDebugMode) {
+      info('samsara - switched to scene: [$sceneId]');
     }
+    notifyListeners();
     return scene!;
   }
 

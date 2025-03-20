@@ -4,7 +4,7 @@ import '../../components/border_component.dart';
 import '../card.dart';
 import '../../paint/paint.dart';
 
-enum PileStructure {
+enum PileStyle {
   /// new cards put to bottom of pile
   queue,
 
@@ -66,7 +66,7 @@ class PiledZone extends BorderComponent {
   /// [pileOffset] : 堆叠时每张牌相比上一张牌的位移
   late Vector2 pileOffset; //, focusOffset;
 
-  final PileStructure pileStructure;
+  final PileStyle pileStyle;
   final bool reverseX, reverseY;
 
   int pileTopPriority;
@@ -101,7 +101,7 @@ class PiledZone extends BorderComponent {
     this.allowStack = false,
     this.limit = -1,
     // this.allowEmptySlots = false,
-    List<GameCard> cards = const [],
+    List<GameCard>? cards,
     required this.piledCardSize,
     this.focusedOffset,
     this.focusedPosition,
@@ -109,7 +109,7 @@ class PiledZone extends BorderComponent {
     this.pileStartPosition,
     Vector2? pileMargin,
     Vector2? pileOffset,
-    this.pileStructure = PileStructure.stack,
+    this.pileStyle = PileStyle.stack,
     this.reverseX = false,
     this.reverseY = false,
     this.pileTopPriority = 250,
@@ -135,13 +135,15 @@ class PiledZone extends BorderComponent {
     if (limit < -1) limit = -1;
 
     // _largestIndex = cards.length - 1;
-    if (cards.isNotEmpty) {
-      for (var i = 0; i <= cards.length - 1; ++i) {
-        final card = cards[i];
-        card.index = i;
+    if (cards != null) {
+      this.cards = cards;
+      if (this.cards.isNotEmpty) {
+        for (var i = 0; i <= cards.length - 1; ++i) {
+          final card = cards[i];
+          card.index = i;
+        }
+        sortCards(animated: false);
       }
-      this.cards.addAll(cards);
-      sortCards(animated: false);
     }
 
     titleStyle = ScreenTextConfig(
@@ -165,8 +167,9 @@ class PiledZone extends BorderComponent {
     }
   }
 
-  /// 某些时候会在加入卡牌之前进行一些预操作，例如修改卡牌大小样式，移除过多的卡牌等。
-  /// 返回false表示加入失败
+  /// 在加入卡牌之前进行一些预操作
+  /// 例如修改卡牌大小样式，移除过多的卡牌等
+  /// 通常用返回false表示加入失败
   /// override 这个函数时，可以修改返回类型，比如改成String 用来返回具体原因
   dynamic tryAddCard(
     GameCard card, {
@@ -183,6 +186,7 @@ class PiledZone extends BorderComponent {
     return true;
   }
 
+  /// 将一个已经存在并显示的卡牌，移动到堆叠区域并添加到列表
   /// TODO: [insertAndRearrangeAll]如果为真，并且[allowEmptySlots]为真。并且目前有空位，则在向已经有卡牌的位置插入新卡牌时，会将已有的卡牌向后移动让出位置
   Future<void> placeCard(
     GameCard card, {
@@ -309,9 +313,9 @@ class PiledZone extends BorderComponent {
 
     void setCardPriority(GameCard card, int index) {
       // pile.add(card.id);
-      if (pileStructure == PileStructure.queue) {
+      if (pileStyle == PileStyle.queue) {
         card.preferredPriority = priority + pileTopPriority - index;
-      } else if (pileStructure == PileStructure.stack) {
+      } else if (pileStyle == PileStyle.stack) {
         card.preferredPriority = priority + 1 + index;
       }
       card.resetPriority();

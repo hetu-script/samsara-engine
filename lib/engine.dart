@@ -11,6 +11,7 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_audio/bgm.dart';
 import 'package:flutter_custom_cursor/cursor_manager.dart';
 import 'package:image/image.dart' as img2;
+import 'package:hetu_script/bytecode/bytecode_module.dart';
 
 import 'binding/engine_binding.dart';
 import '../event.dart';
@@ -24,18 +25,22 @@ import 'tilemap/tilemap.dart';
 class EngineConfig {
   final String name;
   final bool debugMode;
-  final bool isOnDesktop;
+  final bool desktop;
   final double musicVolume;
   final double soundEffectVolume;
   final Map<String, String> cursors;
+  final Map<String, dynamic> mods;
+  final bool showFps;
 
   const EngineConfig({
     this.name = 'A Samsara Engine Game',
-    this.isOnDesktop = false,
+    this.desktop = false,
     this.debugMode = false,
     this.musicVolume = 0.5,
     this.soundEffectVolume = 0.5,
+    this.mods = const {},
     this.cursors = const {},
+    this.showFps = false,
   });
 }
 
@@ -47,6 +52,10 @@ class SamsaraEngine extends SceneController
   final EngineConfig config;
 
   String get name => config.name;
+
+  Map<String, dynamic> get mods => config.mods;
+
+  late BuildContext context;
 
   SamsaraEngine({
     this.config = const EngineConfig(),
@@ -96,8 +105,8 @@ class SamsaraEngine extends SceneController
     _locale.languageId = localeId;
   }
 
-  void addTileMapZoneColors(TileMap map, String id, dynamic colors) {
-    final convertedList = [];
+  void loadTileMapZoneColors(TileMap map, dynamic colors) {
+    final List<Map<int, (Color, Paint)>> convertedList = [];
     for (final colorData in colors) {
       final colorInfo =
           Map<int, (Color, Paint)>.from(colorData.map((key, value) {
@@ -109,7 +118,8 @@ class SamsaraEngine extends SceneController
       }));
       convertedList.add(colorInfo);
     }
-    map.mapZoneColors[id] = List<Map<int, (Color, Paint)>>.from(convertedList);
+    map.zoneColors.clear();
+    map.zoneColors.addAll(convertedList);
   }
 
   late Hetu hetu;
@@ -125,7 +135,7 @@ class SamsaraEngine extends SceneController
   // dynamic assign(String id, dynamic value, {String? module}) =>
   //     hetu.interpreter.assign(id, value, module: module);
 
-  Future<void> loadModFromAssetsString(
+  Future<HTBytecodeModule> loadModFromAssetsString(
     String key, {
     required String module,
     List<dynamic> positionalArgs = const [],
@@ -140,25 +150,33 @@ class SamsaraEngine extends SceneController
       positionalArgs: positionalArgs,
       namedArgs: namedArgs,
     );
-    if (!isMainMod && _mainModName != null) switchMod(_mainModName!);
+    if (!isMainMod && _mainModName != null) {
+      switchMod(_mainModName!);
+    }
+
+    return hetu.interpreter.cachedModules[module]!;
   }
 
-  Future<void> loadModFromBytes(
+  Future<HTBytecodeModule> loadModFromBytes(
     Uint8List bytes, {
-    required String moduleName,
+    required String module,
     List<dynamic> positionalArgs = const [],
     Map<String, dynamic> namedArgs = const {},
     bool isMainMod = false,
   }) async {
-    if (isMainMod) _mainModName = moduleName;
+    if (isMainMod) _mainModName = module;
     hetu.loadBytecode(
       bytes: bytes,
-      module: moduleName,
+      module: module,
       globallyImport: isMainMod,
       positionalArgs: positionalArgs,
       namedArgs: namedArgs,
     );
-    if (!isMainMod && _mainModName != null) switchMod(_mainModName!);
+    if (!isMainMod && _mainModName != null) {
+      switchMod(_mainModName!);
+    }
+
+    return hetu.interpreter.cachedModules[module]!;
   }
 
   // Future<void> loadModFromApplicationDirectory(
@@ -192,11 +210,13 @@ class SamsaraEngine extends SceneController
   /// Initialize the engine, must be called within
   /// the initState() of Flutter widget,
   /// for accessing the assets bundle resources.
-  Future<void> init({
+  Future<void> init(
+    BuildContext context, {
     Map<String, Function> externalFunctions = const {},
-    Set<String> modules = const {},
+    Set<String> mods = const {},
   }) async {
     if (_isInitted) return;
+    this.context = context;
     if (config.debugMode) {
       const root = 'scripts/';
       final filterConfig = HTFilterConfig(root);
@@ -245,21 +265,6 @@ class SamsaraEngine extends SceneController
       globallyImport: true,
       type: HTResourceType.hetuModule,
     );
-
-    // if (modules.contains('cardGame')) {
-    //   /// add playing card class binding into script.
-    //   hetu.interpreter.bindExternalClass(PlayingCardClassBinding());
-    //   hetu.sourceContext.addResource(
-    //     'playing_card.ht',
-    //     HTSource(
-    //       kHetuPlayingCardBindingSource,
-    //       filename: 'playing_card_binding.ht',
-    //       type: HTResourceType.hetuModule,
-    //     ),
-    //   );
-    // }
-
-    // hetu.interpreter.bindExternalFunction('print', info, override: true);
 
     hetu.assign('engine', this);
 

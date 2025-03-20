@@ -12,6 +12,8 @@ class DynamicColorProgressBar extends StatelessWidget {
   final List<Color> colors;
   final List<double> stops = [];
   final double borderRadius;
+  final Color? borderColor;
+  final double? borderWidth;
   final bool useVerticalStyle;
   final void Function(Rect)? onMouseEnter;
   final void Function()? onMouseExit;
@@ -26,7 +28,9 @@ class DynamicColorProgressBar extends StatelessWidget {
     this.showNumberAsPercentage = true,
     required this.colors,
     List<double>? stops,
-    this.borderRadius = 2.5,
+    this.borderRadius = 0.0,
+    this.borderColor,
+    this.borderWidth,
     this.useVerticalStyle = false,
     this.onMouseEnter,
     this.onMouseExit,
@@ -57,8 +61,13 @@ class DynamicColorProgressBar extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white24,
               borderRadius: BorderRadius.circular(borderRadius),
-              border:
-                  Border.all(color: Theme.of(context).colorScheme.onSurface),
+              border: (borderWidth != null && borderWidth! > 0)
+                  ? Border.all(
+                      color: borderColor ??
+                          Theme.of(context).colorScheme.onSurface,
+                      width: borderWidth!,
+                    )
+                  : null,
             ),
             child: Stack(
               alignment: AlignmentDirectional.centerStart,
