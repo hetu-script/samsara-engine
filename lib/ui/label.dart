@@ -7,7 +7,6 @@ class Label extends StatelessWidget {
   Label(
     this.richTextSource, {
     this.width,
-    this.height = 20.0,
     this.padding = const EdgeInsets.symmetric(horizontal: 5.0),
     this.textAlign = TextAlign.center,
     this.textStyle,
@@ -18,7 +17,7 @@ class Label extends StatelessWidget {
   }) : super(key: GlobalKey());
 
   final String richTextSource;
-  final double? width, height;
+  final double? width;
   final EdgeInsetsGeometry padding;
   final TextAlign textAlign;
   final TextStyle? textStyle;
@@ -36,7 +35,6 @@ class Label extends StatelessWidget {
       onMouseExit: onMouseExit,
       child: Container(
         width: width,
-        height: height,
         padding: padding,
         color: backgroundColor,
         child: RichText(
