@@ -12,7 +12,7 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
   /// size of underlying sprite.
   bool _autoResize;
 
-  String? spriteId;
+  String? _spriteId;
 
   /// The [sprite] to be rendered by this component.
   Sprite? _sprite;
@@ -21,7 +21,7 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
 
   /// Creates a component with an empty sprite which can be set later
   SpriteComponent2({
-    this.spriteId,
+    String? spriteId,
     Sprite? sprite,
     this.color,
     bool? autoResize,
@@ -43,6 +43,7 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
           '''If size is set, autoResize should be false or size should be null when autoResize is true.''',
         ),
         _autoResize = autoResize ?? size == null,
+        _spriteId = spriteId,
         _sprite = sprite,
         super(size: size ?? sprite?.srcSize) {
     if (paint != null) {
@@ -114,12 +115,21 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
     _resizeToSprite();
   }
 
-  @override
-  FutureOr<void> onLoad() async {
+  Future<void> tryLoadSprite({String? spriteId, Sprite? sprite}) async {
     if (spriteId != null) {
-      _sprite = await Sprite.load(spriteId!);
+      _spriteId = spriteId;
+    } else {
+      _sprite = sprite;
+    }
+    if (_spriteId != null) {
+      _sprite = await gameRef.loadSprite(_spriteId!);
     }
     _resizeToSprite();
+  }
+
+  @override
+  FutureOr<void> onLoad() async {
+    await tryLoadSprite();
   }
 
   // @override

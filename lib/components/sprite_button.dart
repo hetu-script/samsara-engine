@@ -12,21 +12,21 @@ class SpriteButton extends BorderComponent with HandlesGesture {
 
   late Paint hoverTintPaint, unselectedPaint, invalidPaint; // shadowPaint;
 
-  Sprite? sprite;
-  String? spriteId;
+  Sprite? _sprite;
+  String? _spriteId;
   final bool useSpriteSrcSize;
 
-  Sprite? borderSprite;
-  String? borderSpriteId;
+  Sprite? _borderSprite;
+  String? _borderSpriteId;
 
-  Sprite? hoverSprite;
-  String? hoverSpriteId;
+  Sprite? _hoverSprite;
+  String? _hoverSpriteId;
 
-  Sprite? pressSprite;
-  String? pressSpriteId;
+  Sprite? _pressSprite;
+  String? _pressSpriteId;
 
-  Sprite? unselectedSprite;
-  String? unselectedSpriteId;
+  Sprite? _unselectedSprite;
+  String? _unselectedSpriteId;
 
   String? text;
   late ScreenTextConfig textConfig;
@@ -64,17 +64,17 @@ class SpriteButton extends BorderComponent with HandlesGesture {
     this.isSelectable = false,
     this.isSelected = false,
     Image? image,
-    this.sprite,
-    this.spriteId,
+    Sprite? sprite,
+    String? spriteId,
     this.useSpriteSrcSize = false,
-    this.borderSprite,
-    this.borderSpriteId,
-    this.hoverSprite,
-    this.hoverSpriteId,
-    this.pressSprite,
-    this.pressSpriteId,
-    this.unselectedSprite,
-    this.unselectedSpriteId,
+    Sprite? borderSprite,
+    String? borderSpriteId,
+    Sprite? hoverSprite,
+    String? hoverSpriteId,
+    Sprite? pressSprite,
+    String? pressSpriteId,
+    Sprite? unselectedSprite,
+    String? unselectedSpriteId,
     super.paint,
     Paint? hoverTintPaint,
     Paint? invalidPaint,
@@ -82,7 +82,16 @@ class SpriteButton extends BorderComponent with HandlesGesture {
     this.useSimpleStyle = false,
     super.lightConfig,
     super.isVisible,
-  }) {
+  })  : _borderSpriteId = borderSpriteId,
+        _borderSprite = borderSprite,
+        _hoverSpriteId = hoverSpriteId,
+        _hoverSprite = hoverSprite,
+        _pressSpriteId = pressSpriteId,
+        _pressSprite = pressSprite,
+        _unselectedSpriteId = unselectedSpriteId,
+        _unselectedSprite = unselectedSprite,
+        _spriteId = spriteId,
+        _sprite = sprite {
     this.isEnabled = isEnabled;
 
     if (textConfig != null) {
@@ -107,7 +116,7 @@ class SpriteButton extends BorderComponent with HandlesGesture {
       // );
 
       if (useSpriteSrcSize) {
-        size = sprite!.srcSize;
+        size = sprite.srcSize;
       }
     }
 
@@ -124,7 +133,7 @@ class SpriteButton extends BorderComponent with HandlesGesture {
     // }
 
     this.hoverTintPaint = hoverTintPaint ?? Paint()
-      // ..filterQuality = FilterQuality.medium
+      ..filterQuality = FilterQuality.medium
       ..colorFilter = PresetFilters.brightness(0.3);
     setPaint('hoverTintPaint', this.hoverTintPaint);
 
@@ -140,26 +149,46 @@ class SpriteButton extends BorderComponent with HandlesGesture {
     this.onTap = onTap;
   }
 
-  Future<void> tryLoadSprite() async {
+  Future<void> tryLoadSprite({
+    String? spriteId,
+    String? borderSpriteId,
+    String? hoverSpriteId,
+    String? pressSpriteId,
+    String? unselectedSpriteId,
+  }) async {
     if (spriteId != null) {
-      sprite = Sprite(await Flame.images.load(spriteId!));
-
-      if (useSpriteSrcSize) {
-        assert(sprite != null);
-        size = sprite!.srcSize;
-      }
+      _spriteId = spriteId;
     }
+    if (_spriteId != null) {
+      _sprite = Sprite(await Flame.images.load(_spriteId!));
+    }
+    if (useSpriteSrcSize && _sprite != null) {
+      size = _sprite!.srcSize;
+    }
+
     if (borderSpriteId != null) {
-      borderSprite = Sprite(await Flame.images.load(borderSpriteId!));
+      _borderSpriteId = borderSpriteId;
+    }
+    if (_borderSpriteId != null) {
+      _borderSprite = Sprite(await Flame.images.load(_borderSpriteId!));
     }
     if (hoverSpriteId != null) {
-      hoverSprite = Sprite(await Flame.images.load(hoverSpriteId!));
+      _hoverSpriteId = hoverSpriteId;
+    }
+    if (_hoverSpriteId != null) {
+      _hoverSprite = Sprite(await Flame.images.load(_hoverSpriteId!));
     }
     if (pressSpriteId != null) {
-      pressSprite = Sprite(await Flame.images.load(pressSpriteId!));
+      _pressSpriteId = pressSpriteId;
+    }
+    if (_pressSpriteId != null) {
+      _pressSprite = Sprite(await Flame.images.load(_pressSpriteId!));
     }
     if (unselectedSpriteId != null) {
-      unselectedSprite = Sprite(await Flame.images.load(unselectedSpriteId!));
+      _unselectedSpriteId = unselectedSpriteId;
+    }
+    if (_unselectedSpriteId != null) {
+      _unselectedSprite = Sprite(await Flame.images.load(_unselectedSpriteId!));
     }
   }
 
@@ -174,8 +203,8 @@ class SpriteButton extends BorderComponent with HandlesGesture {
     if (!isVisible) return;
 
     if (isEnabled) {
-      if (borderSprite != null) {
-        borderSprite?.render(canvas, size: size, overridePaint: paint);
+      if (_borderSprite != null) {
+        _borderSprite?.render(canvas, size: size, overridePaint: paint);
       }
       if (isPressing) {
         if (useSimpleStyle) {
@@ -183,29 +212,29 @@ class SpriteButton extends BorderComponent with HandlesGesture {
             roundBorder,
             PresetPaints.successFill,
           );
-        } else if (pressSprite != null) {
-          pressSprite?.render(canvas, size: size, overridePaint: paint);
-        } else if (hoverSprite != null) {
-          hoverSprite?.render(canvas, size: size, overridePaint: paint);
+        } else if (_pressSprite != null) {
+          _pressSprite?.render(canvas, size: size, overridePaint: paint);
+        } else if (_hoverSprite != null) {
+          _hoverSprite?.render(canvas, size: size, overridePaint: paint);
         } else {
           if (isSelectable && !isSelected) {
-            unselectedSprite?.render(canvas, size: size, overridePaint: paint);
+            _unselectedSprite?.render(canvas, size: size, overridePaint: paint);
           } else {
-            sprite?.render(canvas, size: size, overridePaint: paint);
+            _sprite?.render(canvas, size: size, overridePaint: paint);
           }
         }
       } else if (isHovering) {
         if (useSimpleStyle) {
           canvas.drawRRect(roundBorder, PresetPaints.lightGreenFill);
-        } else if (hoverSprite != null) {
-          hoverSprite?.render(canvas,
+        } else if (_hoverSprite != null) {
+          _hoverSprite?.render(canvas,
               size: size, overridePaint: hoverTintPaint);
         } else {
           if (isSelectable && !isSelected) {
-            unselectedSprite?.render(canvas,
+            _unselectedSprite?.render(canvas,
                 size: size, overridePaint: hoverTintPaint);
           } else {
-            sprite?.render(canvas, size: size, overridePaint: hoverTintPaint);
+            _sprite?.render(canvas, size: size, overridePaint: hoverTintPaint);
           }
         }
       } else {
@@ -213,25 +242,25 @@ class SpriteButton extends BorderComponent with HandlesGesture {
           canvas.drawRRect(roundBorder, PresetPaints.successFill);
         } else {
           if (isSelectable && !isSelected) {
-            unselectedSprite?.render(canvas, size: size, overridePaint: paint);
+            _unselectedSprite?.render(canvas, size: size, overridePaint: paint);
           } else {
-            sprite?.render(canvas, size: size, overridePaint: paint);
+            _sprite?.render(canvas, size: size, overridePaint: paint);
           }
         }
       }
     } else {
-      if (borderSprite != null) {
-        borderSprite?.render(canvas, size: size, overridePaint: invalidPaint);
+      if (_borderSprite != null) {
+        _borderSprite?.render(canvas, size: size, overridePaint: invalidPaint);
       }
 
       if (useSimpleStyle) {
         canvas.drawRRect(roundBorder, PresetPaints.invalidFill);
       } else {
         if (isSelectable && !isSelected) {
-          unselectedSprite?.render(canvas,
+          _unselectedSprite?.render(canvas,
               size: size, overridePaint: invalidPaint);
         } else {
-          sprite?.render(canvas, size: size, overridePaint: invalidPaint);
+          _sprite?.render(canvas, size: size, overridePaint: invalidPaint);
         }
       }
     }

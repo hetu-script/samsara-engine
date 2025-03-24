@@ -42,7 +42,7 @@ class Label extends StatelessWidget {
           text: TextSpan(
             children: buildFlutterRichText(
               richTextSource,
-              style: (Theme.of(context).textTheme.bodyMedium ?? TextStyle())
+              style: (Theme.of(context).textTheme.bodySmall ?? TextStyle())
                   .merge(textStyle),
             ),
           ),

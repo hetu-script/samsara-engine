@@ -8,20 +8,22 @@ class ResponsiveView extends StatelessWidget {
     this.width,
     this.height,
     this.margin,
-    this.isPortraitMode = false,
-    this.borderRadius = const BorderRadius.all(Radius.circular(5.0)),
-    Color? color,
+    this.borderRadius,
+    this.borderColor = Colors.white54,
+    this.borderWidth = 0.0,
+    this.backgroundColor,
     this.barrierColor,
     this.children = const [],
-  }) : color = color ?? Colors.black;
+  });
 
   final Widget? child;
   final AlignmentGeometry alignment;
   final double? width, height;
   final EdgeInsetsGeometry? margin;
-  final bool isPortraitMode;
-  final BorderRadius borderRadius;
-  final Color color;
+  final double? borderRadius;
+  final Color borderColor;
+  final double borderWidth;
+  final Color? backgroundColor;
   final Color? barrierColor;
   final List<Widget> children;
 
@@ -35,13 +37,9 @@ class ResponsiveView extends StatelessWidget {
             Positioned.fill(
               child: ModalBarrier(
                 color: barrierColor,
+                dismissible: false,
               ),
             ),
-          // Center(
-          //   child:
-          // ClipRRect(
-          //   borderRadius: borderRadius,
-          //   child:
           Align(
             alignment: alignment,
             child: Container(
@@ -50,16 +48,20 @@ class ResponsiveView extends StatelessWidget {
               margin: margin,
               padding: const EdgeInsets.all(5.0),
               decoration: BoxDecoration(
-                color: color,
-                borderRadius: borderRadius,
-                border:
-                    Border.all(color: Theme.of(context).colorScheme.onSurface),
+                color: backgroundColor,
+                borderRadius: borderRadius != null
+                    ? BorderRadius.circular(borderRadius!)
+                    : null,
+                border: borderWidth > 0
+                    ? Border.all(
+                        width: borderWidth,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      )
+                    : null,
               ),
               child: child,
             ),
           ),
-          // ),
-          // ),
           ...children,
         ],
       ),

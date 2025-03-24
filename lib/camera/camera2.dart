@@ -46,53 +46,52 @@ class Camera2 extends CameraComponent {
           canvas.drawColor(backgroundLightingColor, BlendMode.dstATop);
           for (final c in world!.children.whereType<GameComponent>()) {
             if (!c.isVisible) continue;
-            if (c.lightConfig != null) {
-              final config = c.lightConfig!;
-              canvas.save();
-              Vector2 lightCenter;
-              if (c.lightConfig!.lightCenter != null) {
-                lightCenter = c.lightConfig!.lightCenter!;
-              } else if (c.lightConfig!.lightCenterOffset != null) {
-                lightCenter = c.center + c.lightConfig!.lightCenterOffset!;
-              } else {
-                lightCenter = c.center;
-              }
-              switch (config.shape) {
-                case LightShape.circle:
-                  canvas.drawCircle(
-                      lightCenter.toOffset(), config.radius, config.lightPaint);
-                // if (c.lightingConfig!.hasHue) {
-                //   canvas.drawCircle(lightCenter.toOffset(), c.lightingConfig!.radius,
-                //       c.lightingConfig!.huePaint);
-                // }
-                case LightShape.rect:
-                  // canvas.drawRect(
-                  //     Rect.fromLTWH(
-                  //         c.x - c.width / 2 - config.radius,
-                  //         c.y - c.height / 2 - config.radius,
-                  //         c.width + config.radius * 2,
-                  //         c.height + config.radius * 2),
-                  //     config.lightingPaint);
-                  canvas.drawRRect(
-                      RRect.fromLTRBR(
-                        c.x - c.width / 2 - config.radius,
-                        c.y - c.height / 2 - config.radius,
-                        c.x -
-                            c.width / 2 -
-                            config.radius +
-                            c.width +
-                            config.radius * 2,
-                        c.y -
-                            c.height / 2 -
-                            config.radius +
-                            c.height +
-                            config.radius * 2,
-                        Radius.circular(config.radius),
-                      ),
-                      config.lightPaint);
-              }
-              canvas.restore();
+            if (c.lightConfig == null) continue;
+            final config = c.lightConfig!;
+            canvas.save();
+            Vector2 lightCenter;
+            if (c.lightConfig!.lightCenter != null) {
+              lightCenter = c.lightConfig!.lightCenter!;
+            } else if (c.lightConfig!.lightCenterOffset != null) {
+              lightCenter = c.center + c.lightConfig!.lightCenterOffset!;
+            } else {
+              lightCenter = c.center;
             }
+            switch (config.shape) {
+              case LightShape.circle:
+                canvas.drawCircle(
+                    lightCenter.toOffset(), config.radius, config.lightPaint);
+              // if (c.lightingConfig!.hasHue) {
+              //   canvas.drawCircle(lightCenter.toOffset(), c.lightingConfig!.radius,
+              //       c.lightingConfig!.huePaint);
+              // }
+              case LightShape.rect:
+                // canvas.drawRect(
+                //     Rect.fromLTWH(
+                //         c.x - c.width / 2 - config.radius,
+                //         c.y - c.height / 2 - config.radius,
+                //         c.width + config.radius * 2,
+                //         c.height + config.radius * 2),
+                //     config.lightingPaint);
+                canvas.drawRRect(
+                    RRect.fromLTRBR(
+                      c.x - c.width / 2 - config.radius,
+                      c.y - c.height / 2 - config.radius,
+                      c.x -
+                          c.width / 2 -
+                          config.radius +
+                          c.width +
+                          config.radius * 2,
+                      c.y -
+                          c.height / 2 -
+                          config.radius +
+                          c.height +
+                          config.radius * 2,
+                      Radius.circular(config.radius),
+                    ),
+                    config.lightPaint);
+            }
+            canvas.restore();
           }
           canvas.restore();
         }

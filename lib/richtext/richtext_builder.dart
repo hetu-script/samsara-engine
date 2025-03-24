@@ -163,9 +163,9 @@ TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
     } else if (currentTag == 'rank1' || currentTag == 'common') {
       textColor = HexColor.fromString('#CCCCCC');
     } else if (currentTag == 'rank2' || currentTag == 'uncommon') {
-      textColor = HexColor.fromString('#FFFFFF');
+      textColor = HexColor.fromString('#FFFFD4');
     } else if (currentTag == 'rank3' || currentTag == 'rare') {
-      textColor = HexColor.fromString('#00A6A9');
+      textColor = HexColor.fromString('#9D9DFF');
     } else if (currentTag == 'rank4' || currentTag == 'epic') {
       textColor = HexColor.fromString('#804DC8');
     } else if (currentTag == 'rank5' || currentTag == 'legendary') {

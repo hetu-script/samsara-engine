@@ -61,7 +61,7 @@ class _ConsoleState extends State<Console> {
     return ResponsiveView(
       alignment: AlignmentDirectional.center,
       margin: widget.margin,
-      color: widget.backgroundColor,
+      backgroundColor: widget.backgroundColor,
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,

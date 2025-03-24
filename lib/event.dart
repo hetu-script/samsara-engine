@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-typedef EventCallback = void Function(String listenerId, dynamic args);
+typedef EventCallback = void Function(dynamic args);
 
 mixin EventAggregator {
   // 第一层 key 是 eventId, 第二层 key 是 listenerId, value 是 callback
@@ -30,7 +30,7 @@ mixin EventAggregator {
     final listeners = _eventHandlers[eventId];
     if (listeners != null) {
       for (final callback in listeners.values) {
-        callback.call(eventId, args);
+        callback.call(args);
       }
     }
   }

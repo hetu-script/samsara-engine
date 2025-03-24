@@ -1,24 +1,36 @@
 import 'package:flutter/material.dart';
 
+import '../pointer_detector.dart';
+
 class MouseRegion2 extends StatelessWidget {
   MouseRegion2({
     this.cursor = MouseCursor.defer,
+    this.onTapDown,
+    this.onTapUp,
     this.onMouseEnter,
     this.onMouseExit,
-    this.child,
+    required this.child,
   }) : super(key: GlobalKey());
 
-  final Widget? child;
+  final Widget child;
 
   final MouseCursor cursor;
+  final void Function()? onTapDown;
+  final void Function()? onTapUp;
   final void Function(Rect rect)? onMouseEnter;
   final void Function()? onMouseExit;
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
+    return PointerDetector(
       cursor: cursor,
-      onEnter: (event) {
+      onTapDown: (pointer, buttons, details) {
+        onTapDown?.call();
+      },
+      onTapUp: (pointer, buttons, details) {
+        onTapUp?.call();
+      },
+      onMouseEnter: (event) {
         if (onMouseEnter == null) return;
 
         final renderBox = context.findRenderObject() as RenderBox;
@@ -28,7 +40,7 @@ class MouseRegion2 extends StatelessWidget {
             Rect.fromLTWH(offset.dx, offset.dy, size.width, size.height);
         onMouseEnter!.call(rect);
       },
-      onExit: (event) {
+      onMouseExit: (event) {
         onMouseExit?.call();
       },
       child: child,

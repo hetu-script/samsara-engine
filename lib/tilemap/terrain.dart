@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
@@ -11,7 +10,6 @@ import '../components/game_component.dart';
 import 'tile_mixin.dart';
 import '../animation/sprite_animation.dart';
 import '../utils/json.dart';
-import '../paint/paint.dart';
 import 'tilemap.dart';
 
 enum TileMapTerrainKind {
@@ -134,8 +132,6 @@ class TileMapTerrain extends GameComponent with TileInfo {
   // 显示标签
   String? caption;
 
-  final TextPaint _captionPaint;
-
   /// 显示贴图
   Sprite? _sprite, _overlaySprite;
   SpriteAnimationWithTicker? _animation, _overlayAnimation;
@@ -172,7 +168,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
   late final double _overlayAnimationOffset;
   double _overlayAnimationOffsetValue = 0;
 
-  Future<void> _tryLoadSpriteFromData({bool isOverlay = false}) async {
+  Future<void> _tryLoadSprite({bool isOverlay = false}) async {
     // if (data == null) return;
 
     final spriteData = isOverlay ? (data?['overlaySprite']) : data;
@@ -249,7 +245,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
   }
 
   void tryLoadSprite({bool isOverlay = false}) async {
-    await _tryLoadSpriteFromData(isOverlay: isOverlay);
+    await _tryLoadSprite(isOverlay: isOverlay);
     await _tryLoadAnimationFromData(isOverlay: isOverlay);
   }
 
@@ -309,7 +305,6 @@ class TileMapTerrain extends GameComponent with TileInfo {
     String? nationId,
     String? locationId,
     String? objectId,
-    required TextStyle captionStyle,
     Sprite? sprite,
     SpriteAnimationWithTicker? animation,
     Sprite? overlaySprite,
@@ -319,30 +314,6 @@ class TileMapTerrain extends GameComponent with TileInfo {
         assert(!srcSize.isZero()),
         _overlayAnimation = overlayAnimation,
         _animation = animation,
-        _captionPaint = TextPaint(
-          style: captionStyle.copyWith(
-            color: Colors.white,
-            fontSize: 7.0,
-            shadows: const [
-              Shadow(
-                  // bottomLeft
-                  offset: Offset(-0.01, -0.01),
-                  color: Colors.black),
-              Shadow(
-                  // bottomRight
-                  offset: Offset(0.01, -0.01),
-                  color: Colors.black),
-              Shadow(
-                  // topRight
-                  offset: Offset(0.01, 0.01),
-                  color: Colors.black),
-              Shadow(
-                  // topLeft
-                  offset: Offset(-0.01, 0.01),
-                  color: Colors.black),
-            ],
-          ),
-        ),
         _kind = kind,
         _isNonEnterable = isNonEnterable,
         _isLighted = isLighted,
@@ -378,21 +349,6 @@ class TileMapTerrain extends GameComponent with TileInfo {
     if (map.isEditorMode || map.isTileWithinSight(this)) {
       _overlayAnimation?.ticker.currentFrame.sprite
           .renderRect(canvas, renderRect);
-    }
-
-    if ((map.isEditorMode || isLighted) && caption != null) {
-      drawScreenText(
-        canvas,
-        caption!,
-        position: renderRect.topLeft,
-        textPaint: _captionPaint,
-        config: ScreenTextConfig(
-          size: renderRect.size.toVector2(),
-          outlined: true,
-          anchor: Anchor.center,
-          padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
-        ),
-      );
     }
 
     if (map.colorMode != kColorModeNone) {

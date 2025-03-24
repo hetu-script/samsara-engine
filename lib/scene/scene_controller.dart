@@ -42,9 +42,10 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     if (scene == null || scene?.id != sceneId) {
       if (_sequence.isNotEmpty) {
         assert(sceneId != _sequence.last, 'Cannot push the same scene again!');
-        final current = _cached[_sequence.last]!;
-        current.onEnd();
+        // final current = _cached[_sequence.last]!;
+        // current.onEnd();
       }
+      scene?.onEnd();
       _sequence.add(sceneId);
       scene = await createScene(sceneId,
           constructorId: constructorId, arguments: arguments);
@@ -63,13 +64,14 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     if (kDebugMode) {
       info('samsara - leaving scene: [${_sequence.last}]');
     }
-    final current = _cached[_sequence.last]!;
-    current.onEnd();
+    // scene?.onEnd();
+    // final current = _cached[_sequence.last]!;
+    // current.onEnd();
     if (clearCache) {
       _cached.remove(_sequence.last);
     }
     _sequence.removeLast();
-    final scene = switchScene(_sequence.last);
+    scene = switchScene(_sequence.last);
     notifyListeners();
     return scene;
   }
@@ -85,6 +87,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     Map<String, dynamic> arguments = const {},
   }) {
     assert(_cached.containsKey(sceneId), 'Scene [$sceneId] not found!');
+    scene?.onEnd();
     scene = _cached[sceneId];
     scene!.onStart(arguments);
     if (kDebugMode) {
@@ -144,7 +147,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
 
     final cached = _cached[sceneId]!;
     cached.onEnd();
-    cached.onDispose();
+    // cached.onDispose();
     _cached.remove(sceneId);
     if (kDebugMode) {
       info('samsara - cleared scene: [$sceneId]');
@@ -163,21 +166,25 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     assert(except == null || _cached.containsKey(except),
         'Scene [$except] not found!');
 
-    for (final scene in _cached.values) {
-      if (except != null && scene.id == except) {
+    for (final cached in _cached.values) {
+      if (except != null && cached.id == except) {
         continue;
       }
-      scene.onEnd();
-      scene.onDispose();
+      cached.onEnd();
+      if (scene == cached) {
+        scene = null;
+      }
+      // scene.onDispose();
     }
+    _cached.removeWhere((key, value) => key != except);
+    _sequence.removeWhere((key) => key != except);
     if (except != null) {
-      assert(_cached.containsKey(except), 'Scene [$except] not found!');
-      scene = switchScene(except, arguments: arguments);
-      _cached.removeWhere((key, value) => key != except);
-      _sequence.removeWhere((key) => key != except);
+      if (scene?.id != except) {
+        assert(_cached.containsKey(except), 'Scene [$except] not found!');
+        scene = switchScene(except, arguments: arguments);
+      }
     } else {
-      _cached.clear();
-      _sequence.clear();
+      scene = null;
     }
 
     if (kDebugMode) {

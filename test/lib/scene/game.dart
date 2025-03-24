@@ -11,7 +11,7 @@ import 'package:flame/components.dart';
 import 'package:samsara/cardgame/cardgame.dart';
 import 'package:hetu_script/utils/uid.dart' as utils;
 import 'package:window_manager/window_manager.dart';
-import 'package:samsara/ui/label.dart';
+// import 'package:samsara/ui/label.dart';
 import 'package:samsara/widgets/markdown_wiki.dart';
 import 'package:samsara/richtext.dart';
 import 'package:samsara/effect/camera_shake.dart';

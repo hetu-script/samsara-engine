@@ -241,13 +241,13 @@ mixin HandlesGesture on GameComponent {
       onDragIn?.call(buttons, positionWithinComponent, draggingComponent);
     }
 
+    // handleTapUp(pointer, buttons, details);
+
     // 此对象拖动结束
     if (isDragging) {
       isDragging = false;
       onDragEnd?.call(buttons, convertedPointerPosition);
     }
-
-    handleTapUp(pointer, buttons, details);
   }
 
   @mustCallSuper

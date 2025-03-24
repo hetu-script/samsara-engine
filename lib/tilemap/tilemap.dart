@@ -6,6 +6,7 @@ import 'package:flame/flame.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:hetu_script/utils/uid.dart';
+import 'package:flutter/material.dart';
 
 import '../extensions.dart';
 // import '../paint.dart';
@@ -18,6 +19,7 @@ import 'direction.dart';
 import 'route.dart';
 import '../animation/sprite_animation.dart';
 import '../utils/color.dart';
+import '../paint/paint.dart';
 
 export 'direction.dart';
 
@@ -74,6 +76,7 @@ class TileMap extends GameComponent with HandlesGesture {
   // double _cameraMoveDt = 0;
 
   final TextStyle captionStyle;
+  late final TextPaint captionPaint;
 
   final TileShape tileShape;
   final Vector2 gridSize, tileSpriteSrcSize, tileOffset;
@@ -127,9 +130,33 @@ class TileMap extends GameComponent with HandlesGesture {
     this.fogSprite,
     this.onLoadComplete,
     this.isEditorMode = false,
-  })  : random = math.Random(),
-        assert(!gridSize.isZero()),
-        assert(!tileSpriteSrcSize.isZero()) {
+  })  : assert(!gridSize.isZero()),
+        assert(!tileSpriteSrcSize.isZero()),
+        random = math.Random(),
+        captionPaint = TextPaint(
+          style: captionStyle.copyWith(
+            color: Colors.white,
+            fontSize: 7.0,
+            shadows: const [
+              Shadow(
+                  // bottomLeft
+                  offset: Offset(-0.01, -0.01),
+                  color: Colors.black),
+              Shadow(
+                  // bottomRight
+                  offset: Offset(0.01, -0.01),
+                  color: Colors.black),
+              Shadow(
+                  // topRight
+                  offset: Offset(0.01, 0.01),
+                  color: Colors.black),
+              Shadow(
+                  // topLeft
+                  offset: Offset(-0.01, 0.01),
+                  color: Colors.black),
+            ],
+          ),
+        ) {
     onMouseHover = (Vector2 position) {
       final tilePosition = worldPosition2Tile(position);
       final terrain = getTerrain(tilePosition.left, tilePosition.top);
@@ -328,7 +355,6 @@ class TileMap extends GameComponent with HandlesGesture {
           nationId: nationId,
           locationId: locationId,
           objectId: objectId,
-          captionStyle: captionStyle,
           offset: tileOffset,
         );
         updateTileInfo(tile);
@@ -970,7 +996,9 @@ class TileMap extends GameComponent with HandlesGesture {
     TileMapComponent component,
     List<int> route, {
     OrthogonalDirection? finishMoveDirection,
-    FutureOr<void> Function(TileMapTerrain terrain)? onAfterStepCallback,
+    FutureOr<void> Function(
+            TileMapTerrain terrain, TileMapTerrain? nextTerrain)?
+        onStepCallback,
     FutureOr<void> Function(TileMapTerrain terrain,
             [TileMapTerrain? targetTerrain])?
         onFinishCallback,
@@ -989,7 +1017,7 @@ class TileMap extends GameComponent with HandlesGesture {
 
     component.isBackwardWalking = backwardMoving;
 
-    component.onAfterStepCallback = onAfterStepCallback;
+    component.onStepCallback = onStepCallback;
     if (component == hero && isCameraFollowHero) {
       setCameraFollowHero(true);
       component.onFinishWalkCallback = (terrain, [target]) async {
@@ -1017,11 +1045,10 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   void componentFinishWalk(TileMapComponent component, TileMapTerrain terrain,
-      [TileMapTerrain? targetTerrain]) {
-    component.onAfterStepCallback?.call(terrain);
-    component.onAfterStepCallback = null;
+      TileMapTerrain? targetTerrain) {
     component.onFinishWalkCallback?.call(terrain, targetTerrain);
     component.onFinishWalkCallback = null;
+    component.onStepCallback = null;
     component.prevRouteNode = null;
     component.currentRoute = null;
     if (component.finishWalkDirection != null) {
@@ -1033,7 +1060,6 @@ class TileMap extends GameComponent with HandlesGesture {
 
   void componentUpdateWalkPosition(TileMapComponent component) {
     if (component.isWalking) return;
-    // 以current route 是否为 null 来判断是否需要开始移动
     if (component.currentRoute == null) return;
 
     assert(component.currentRoute!.isNotEmpty);
@@ -1042,8 +1068,8 @@ class TileMap extends GameComponent with HandlesGesture {
     component.currentRoute!.removeLast();
 
     // refreshTileInfo(object);
-    final pos = prevRouteNode.tilePosition;
-    final terrain = getTerrain(pos.left, pos.top);
+    final tile = prevRouteNode.tilePosition;
+    final terrain = getTerrain(tile.left, tile.top);
     assert(terrain != null);
     if (isWaterTerrain(terrain?.terrainKind)) {
       component.isOnWater = true;
@@ -1053,31 +1079,34 @@ class TileMap extends GameComponent with HandlesGesture {
 
     if (component.isWalkCanceled) {
       component.isWalkCanceled = false;
-      componentFinishWalk(component, terrain!);
+      component.onStepCallback?.call(terrain!, null);
+      componentFinishWalk(component, terrain!, null);
       return;
     }
 
     if (component.currentRoute!.isEmpty) {
-      componentFinishWalk(component, terrain!);
+      component.onStepCallback?.call(terrain!, null);
+      componentFinishWalk(component, terrain!, null);
       return;
     }
 
     final nextTile = component.currentRoute!.last.tilePosition;
-    final target = getTerrain(nextTile.left, nextTile.top);
+    final nextTerrain = getTerrain(nextTile.left, nextTile.top);
     // 如果路径上下一个目标是不可进入的，那么结束移动
     // 但若该目标是路径上最后一个目标，此种情况结束移动仍然会触发对最终目标的交互
-    if (component.currentRoute!.length == 1 && target!.isNonEnterable) {
-      componentFinishWalk(component, terrain!, target);
+    if (component.currentRoute!.length == 1 && nextTerrain!.isNonEnterable) {
+      component.onStepCallback?.call(terrain!, null);
+      componentFinishWalk(component, terrain!, nextTerrain);
       return;
-    } else if (component.prevRouteNode != null) {
-      component.onAfterStepCallback?.call(terrain!);
     }
 
-    // 这里要多检查一次，因为有可能在 onAfterMoveCallback 中被取消移动
+    component.onStepCallback?.call(terrain!, nextTerrain);
+
+    // 这里要多检查一次，因为有可能在 onBeforeStepCallback 中被取消移动
     // 但这里的finishMove 不传递 terrain，这样不会再次触发 onAfterMoveCallback
     if (component.isWalkCanceled) {
       component.isWalkCanceled = false;
-      componentFinishWalk(component, terrain!);
+      componentFinishWalk(component, terrain!, null);
       return;
     }
 
@@ -1118,8 +1147,9 @@ class TileMap extends GameComponent with HandlesGesture {
     canvas.save();
     canvas.transform(transformMatrix.storage);
 
-    if (!isEditorMode && showFogOfWar) {
-      for (final tile in terrains) {
+    for (final tile in terrains) {
+      // 战争迷雾
+      if (!isEditorMode && showFogOfWar) {
         if (tile.isLighted) {
           if (!isTileWithinSight(tile)) {
             canvas.drawPath(tile.borderPath, visiblePerimeterPaint);
@@ -1134,12 +1164,29 @@ class TileMap extends GameComponent with HandlesGesture {
                   tile.renderRect.height + -tileFogOffset.y * 2));
         }
       }
-    }
 
-    if (isEditorMode && colorMode == kColorModeNone) {
-      for (final tile in terrains) {
-        if (tile.isNonEnterable) {
-          canvas.drawPath(tile.borderPath, uninteractablePaint);
+      // 编辑模式下的不可进入标记颜色
+      if (isEditorMode && colorMode == kColorModeNone && tile.isNonEnterable) {
+        canvas.drawPath(tile.borderPath, uninteractablePaint);
+      }
+
+      if (isEditorMode || tile.isLighted) {
+        String? title = isEditorMode
+            ? tile.caption ?? tile.objectId ?? tile.locationId
+            : tile.caption;
+        if (title != null) {
+          drawScreenText(
+            canvas,
+            title,
+            position: tile.renderRect.topLeft,
+            textPaint: captionPaint,
+            config: ScreenTextConfig(
+              size: tile.renderRect.size.toVector2(),
+              outlined: true,
+              anchor: Anchor.center,
+              padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
+            ),
+          );
         }
       }
     }

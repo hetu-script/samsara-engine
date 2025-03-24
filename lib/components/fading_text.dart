@@ -11,7 +11,10 @@ class FadingText extends GameComponent {
   static TextStyle defaultTextStyle = TextStyle();
 
   // late TextPaint _textPaint;
-  ScreenTextConfig _textConfig = ScreenTextConfig(textStyle: defaultTextStyle);
+  ScreenTextConfig _textConfig = ScreenTextConfig(
+    textStyle: defaultTextStyle,
+    anchor: Anchor.center,
+  );
 
   final String text;
 

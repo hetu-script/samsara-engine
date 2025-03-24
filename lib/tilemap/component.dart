@@ -75,7 +75,8 @@ class TileMapComponent extends TaskComponent
   List<TileMapRouteNode>? currentRoute;
   TileMapRouteNode? prevRouteNode;
   bool isBackwardWalking = false;
-  FutureOr<void> Function(TileMapTerrain terrain)? onAfterStepCallback;
+  FutureOr<void> Function(TileMapTerrain terrain, TileMapTerrain? nextTerrain)?
+      onStepCallback;
   FutureOr<void> Function(TileMapTerrain terrain,
       [TileMapTerrain? targetTerrain])? onFinishWalkCallback;
   OrthogonalDirection? finishWalkDirection;
@@ -88,7 +89,6 @@ class TileMapComponent extends TaskComponent
     int? top,
     Vector2? offset,
     this.velocityFactor = 0.8,
-    // this.onMoved,
     this.isCharacter = false,
     this.hasWalkAnimation = false,
     this.hasSwimAnimation = false,

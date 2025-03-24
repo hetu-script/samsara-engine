@@ -18,7 +18,7 @@ import '../camera/world2.dart';
 import '../components/fading_text.dart';
 import 'scene_widget.dart';
 
-const kHintTextPriority = 1000000;
+const kHintTextPriority = 999999999;
 
 abstract class Scene extends FlameGame {
   static const overlayUIBuilderMapKey = 'overlayUI';
@@ -80,16 +80,22 @@ abstract class Scene extends FlameGame {
     double offsetY = 100.0,
     double horizontalVariation = 30.0,
     double verticalVariation = 30.0,
+    bool onViewport = true,
   }) {
     assert(position != null || target != null);
-    Vector2 p = position ?? target!.absolutePosition;
+    Vector2 targetPosition =
+        position ?? (onViewport ? target!.absoluteCenter : target!.center);
 
-    final r = math.Random();
-    final c = FadingText(
+    final random = math.Random();
+    final component = FadingText(
       text,
       position: Vector2(
-        p.x + r.nextDouble() * horizontalVariation - horizontalVariation / 2,
-        p.y + r.nextDouble() * verticalVariation - verticalVariation,
+        targetPosition.x +
+            random.nextDouble() * horizontalVariation -
+            horizontalVariation / 2,
+        targetPosition.y +
+            random.nextDouble() * verticalVariation -
+            verticalVariation,
       ),
       movingUpOffset: offsetY,
       duration: duration,
@@ -98,7 +104,11 @@ abstract class Scene extends FlameGame {
       ).merge(textStyle),
       priority: kHintTextPriority,
     );
-    camera.viewport.add(c);
+    if (onViewport) {
+      camera.viewport.add(component);
+    } else {
+      world.add(component);
+    }
   }
 
   /// 这个函数在进入场景时被调用，通常用来进行恢复之前冻结和终止的一些操作
@@ -106,13 +116,13 @@ abstract class Scene extends FlameGame {
   /// 注意因为场景本身始终存在于缓存中，因此这个函数可能会反复触发
   @mustCallSuper
   void onStart([Map<String, dynamic> arguments = const {}]) async {
-    if (bgm != null) {
-      if (bgmFile != null) {
-        if (bgm!.isPlaying) {
-          await bgm!.stop();
-        }
-        await bgm!.play('music/$bgmFile', volume: bgmVolume);
+    if (bgm == null) return;
+
+    if (bgmFile != null) {
+      if (bgm!.isPlaying) {
+        await bgm!.stop();
       }
+      await bgm!.play('music/$bgmFile', volume: bgmVolume);
     }
   }
 
@@ -125,12 +135,10 @@ abstract class Scene extends FlameGame {
   /// 如果要释放资源，应在调用 controller.popScene() 时带上参数 clearCache: true
   @mustCallSuper
   void onEnd() async {
-    if (bgm != null) {
-      if (bgmFile != null) {
-        if (bgm!.isPlaying) {
-          await bgm!.stop();
-        }
-      }
+    if (bgm == null) return;
+
+    if (bgmFile != null) {
+      await bgm!.stop();
     }
   }
 
