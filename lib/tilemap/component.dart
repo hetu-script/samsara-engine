@@ -125,9 +125,9 @@ class TileMapComponent extends TaskComponent
   set direction(OrthogonalDirection value) {
     _direction = value;
     if (hasSwimAnimation && isOnWater) {
-      setAnimationState('swim_${_direction.name}');
+      setState('swim_${_direction.name}');
     } else {
-      setAnimationState('walk_${_direction.name}');
+      setState('walk_${_direction.name}');
     }
   }
 
@@ -156,7 +156,7 @@ class TileMapComponent extends TaskComponent
         ),
       );
       addState('default', animation);
-      setAnimationState('default');
+      setState('default');
     }
   }
 

@@ -85,13 +85,22 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
   Scene switchScene(
     String sceneId, {
     Map<String, dynamic> arguments = const {},
+    bool restart = false,
   }) {
     assert(_cached.containsKey(sceneId), 'Scene [$sceneId] not found!');
-    scene?.onEnd();
+    bool switched = false;
+    if (scene?.id != sceneId) {
+      scene?.onEnd();
+      switched = true;
+    }
     scene = _cached[sceneId];
-    scene!.onStart(arguments);
-    if (kDebugMode) {
-      info('samsara - switched to scene: [$sceneId]');
+    if (switched) {
+      scene!.onStart(arguments);
+      if (kDebugMode) {
+        info('samsara - switched to scene: [$sceneId]');
+      }
+    } else if (restart) {
+      scene!.onStart(arguments);
     }
     notifyListeners();
     return scene!;
@@ -161,6 +170,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
   void clearAllCachedScene({
     String? except,
     Map<String, dynamic> arguments = const {},
+    bool restart = false,
   }) {
     assert(_cached.isNotEmpty, 'No scene to clear!');
     assert(except == null || _cached.containsKey(except),
@@ -179,10 +189,8 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     _cached.removeWhere((key, value) => key != except);
     _sequence.removeWhere((key) => key != except);
     if (except != null) {
-      if (scene?.id != except) {
-        assert(_cached.containsKey(except), 'Scene [$except] not found!');
-        scene = switchScene(except, arguments: arguments);
-      }
+      assert(_cached.containsKey(except), 'Scene [$except] not found!');
+      scene = switchScene(except, arguments: arguments, restart: restart);
     } else {
       scene = null;
     }

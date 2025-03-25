@@ -44,9 +44,14 @@ class EngineConfig {
   });
 }
 
+abstract class AudioPlayerInterface {
+  Bgm get bgm;
+  Future<AudioPlayer?> play(String fileName, {double? volume});
+}
+
 class SamsaraEngine extends SceneController
     with EventAggregator
-    implements HTLogger {
+    implements HTLogger, AudioPlayerInterface {
   static const modeFileExtension = '.mod';
 
   final EngineConfig config;
@@ -346,8 +351,10 @@ class SamsaraEngine extends SceneController
   @override
   void error(String message) => log(message, severity: MessageSeverity.error);
 
+  @override
   Bgm get bgm => FlameAudio.bgm;
 
+  @override
   Future<AudioPlayer?> play(String fileName, {double? volume}) async {
     return FlameAudio.play('sound/$fileName',
         volume: volume ?? config.musicVolume);

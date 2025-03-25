@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/painting.dart';
 import 'package:flame/components.dart';
 import 'package:meta/meta.dart';
 
@@ -19,15 +20,18 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
 
   Color? color;
 
+  BoxFit boxFit;
+
   /// Creates a component with an empty sprite which can be set later
   SpriteComponent2({
     String? spriteId,
     Sprite? sprite,
     this.color,
-    bool? autoResize,
+    this.boxFit = BoxFit.fill,
     Paint? paint,
     super.position,
     Vector2? size,
+    bool? autoResize,
     super.isVisible,
     super.scale,
     super.angle,
@@ -118,13 +122,15 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
   Future<void> tryLoadSprite({String? spriteId, Sprite? sprite}) async {
     if (spriteId != null) {
       _spriteId = spriteId;
-    } else {
+    } else if (sprite != null) {
       _sprite = sprite;
     }
     if (_spriteId != null) {
       _sprite = await gameRef.loadSprite(_spriteId!);
     }
-    _resizeToSprite();
+    if (autoResize) {
+      _resizeToSprite();
+    }
   }
 
   @override
@@ -146,11 +152,103 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
   void render(Canvas canvas) {
     if (!isVisible) return;
 
-    sprite?.render(
-      canvas,
-      size: size,
-      overridePaint: paint,
-    );
+    if (sprite != null) {
+      if (_autoResize) {
+        sprite?.render(
+          canvas,
+          size: size,
+          overridePaint: paint,
+        );
+      } else {
+        final thisRatio = width / height;
+        final spriteRatio = sprite!.srcSize.x / sprite!.srcSize.y;
+
+        switch (boxFit) {
+          case BoxFit.none:
+            sprite?.render(
+              canvas,
+              size: sprite?.srcSize,
+              overridePaint: paint,
+            );
+          case BoxFit.fill:
+            sprite?.render(
+              canvas,
+              size: size,
+              overridePaint: paint,
+            );
+          case BoxFit.contain:
+            if (thisRatio > spriteRatio) {
+              final newWidth = height * spriteRatio;
+              sprite?.render(
+                canvas,
+                size: Vector2(newWidth, height),
+                overridePaint: paint,
+                position: Vector2((width - newWidth) / 2, 0),
+              );
+            } else {
+              final newHeight = width / spriteRatio;
+              sprite?.render(
+                canvas,
+                size: Vector2(width, newHeight),
+                overridePaint: paint,
+                position: Vector2(0, (height - newHeight) / 2),
+              );
+            }
+          case BoxFit.cover:
+            if (thisRatio > spriteRatio) {
+              final newHeight = width / spriteRatio;
+              sprite?.render(
+                canvas,
+                size: Vector2(width, newHeight),
+                overridePaint: paint,
+                position: Vector2(0, (height - newHeight) / 2),
+              );
+            } else {
+              final newWidth = height * spriteRatio;
+              sprite?.render(
+                canvas,
+                size: Vector2(newWidth, height),
+                overridePaint: paint,
+                position: Vector2((width - newWidth) / 2, 0),
+              );
+            }
+          case BoxFit.fitWidth:
+            final newHeight = width / spriteRatio;
+            sprite?.render(
+              canvas,
+              size: Vector2(width, newHeight),
+              overridePaint: paint,
+              position: Vector2(0, (height - newHeight) / 2),
+            );
+          case BoxFit.fitHeight:
+            final newWidth = height * spriteRatio;
+            sprite?.render(
+              canvas,
+              size: Vector2(newWidth, height),
+              overridePaint: paint,
+              position: Vector2((width - newWidth) / 2, 0),
+            );
+          case BoxFit.scaleDown:
+            if (thisRatio > spriteRatio) {
+              final newHeight = width / spriteRatio;
+              sprite?.render(
+                canvas,
+                size: Vector2(width, newHeight),
+                overridePaint: paint,
+                position: Vector2(0, (height - newHeight) / 2),
+              );
+            } else {
+              final newWidth = height * spriteRatio;
+              sprite?.render(
+                canvas,
+                size: Vector2(newWidth, height),
+                overridePaint: paint,
+                position: Vector2((width - newWidth) / 2, 0),
+              );
+            }
+        }
+      }
+    }
 
     if (color != null) {
       canvas.drawColor(color!, BlendMode.srcATop);

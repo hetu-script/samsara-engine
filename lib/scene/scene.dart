@@ -35,15 +35,15 @@ abstract class Scene extends FlameGame {
 
   GameComponent? draggingComponent;
 
-  Vector2 topLeft = Vector2.zero(),
-      topCenter = Vector2.zero(),
-      topRight = Vector2.zero(),
-      centerLeft = Vector2.zero(),
-      center = Vector2.zero(),
-      centerRight = Vector2.zero(),
-      bottomLeft = Vector2.zero(),
-      bottomCenter = Vector2.zero(),
-      bottomRight = Vector2.zero();
+  Vector2 get topLeft => bounds.topLeft.toVector2();
+  Vector2 get topCenter => bounds.topCenter.toVector2();
+  Vector2 get topRight => bounds.topCenter.toVector2();
+  Vector2 get centerLeft => bounds.centerLeft.toVector2();
+  Vector2 get center => bounds.center.toVector2();
+  Vector2 get centerRight => bounds.centerRight.toVector2();
+  Vector2 get bottomLeft => bounds.bottomLeft.toVector2();
+  Vector2 get bottomCenter => bounds.bottomCenter.toVector2();
+  Vector2 get bottomRight => bounds.bottomRight.toVector2();
 
   bool get enableLighting => (camera as Camera2).enableLighting;
   set enableLighting(bool value) => (camera as Camera2).enableLighting = value;

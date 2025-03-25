@@ -361,9 +361,7 @@ mixin HandlesGesture on GameComponent {
     final convertedPointerPosition =
         isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
     if (containsPoint(convertedPointerPosition)) {
-      if (!isHovering) {
-        isHovering = true;
-      }
+      isHovering = true;
       final positionWithinComponent = convertedPointerPosition - position;
       onMouseHover?.call(positionWithinComponent);
       return this;

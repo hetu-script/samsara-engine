@@ -55,10 +55,12 @@ class BorderedIconButton extends StatelessWidget {
                 color:
                     isSelected ? Theme.of(context).colorScheme.primary : null,
                 borderRadius: BorderRadius.circular(borderRadius),
-                border: Border.all(
-                  color: borderColor,
-                  width: borderWidth,
-                ),
+                border: borderWidth > 0
+                    ? Border.all(
+                        color: borderColor,
+                        width: borderWidth,
+                      )
+                    : null,
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(borderRadius),

@@ -12,7 +12,7 @@ mixin AnimationStateController on GameComponent {
   String? currentAnimationState;
   String? currentOverlayAnimationState;
 
-  SamsaraEngine? engine;
+  AudioPlayerInterface? audioPlayer;
 
   SpriteAnimationWithTicker? get currentAnimation {
     return _animations[currentAnimationState];
@@ -47,8 +47,7 @@ mixin AnimationStateController on GameComponent {
     return _animations.containsKey(stateId);
   }
 
-  SpriteAnimationWithTicker _setState(
-      {required String state, bool isOverlay = false}) {
+  Future<void> setState(String state, {bool isOverlay = false}) {
     Map<String, SpriteAnimationWithTicker> collection =
         isOverlay ? _overlayAnimations : _animations;
     if (!collection.containsKey(state)) {
@@ -57,67 +56,53 @@ mixin AnimationStateController on GameComponent {
     if (isOverlay) {
       currentOverlayAnimationState = state;
     } else {
-      currentOverlayAnimationState = null;
       currentAnimationState = state;
     }
-    return collection[state]!;
+    final anim = collection[state]!;
+    anim.ticker.reset();
+    return anim.ticker.completed;
   }
 
-  Future<void> setAnimationState(
-    String state, {
+  Future<void> setCompositeState({
+    required String startup,
+    List<dynamic>? transitions,
+    List<dynamic>? overlays,
+    String? recovery,
+    String? complete,
     String? sound,
-    String? recoveryState,
-    String? overlayState,
-    String? completeState,
-    bool jumpToLastFrame = false,
     void Function()? onComplete,
-    bool isOverlay = false,
   }) async {
-    if (isOverlay) {
-      if (currentOverlayAnimationState == state) {
-        return;
-      }
-    } else {
-      if (currentAnimationState == state) {
-        return;
-      }
-    }
-
-    // final Completer completer = Completer();
-
-    final anim = _setState(state: state, isOverlay: isOverlay);
-    anim.ticker.reset();
-    if (jumpToLastFrame) {
-      anim.ticker.paused = true;
-      anim.ticker.setToLast();
-      onComplete?.call();
-      // completer.complete();
-      return;
-    } else {
-      Future result = anim.ticker.completed;
-      if (sound != null) {
-        result.then((_) {
-          engine?.play(sound);
-        });
-      }
-
-      if (overlayState != null) {
-        result = result
-            .then((_) => setAnimationState(overlayState, isOverlay: true));
-      }
-
-      if (recoveryState != null) {
-        result = result.then((_) => setAnimationState(recoveryState));
-      }
-
-      result.then((_) {
-        if (completeState != null) {
-          setAnimationState(completeState);
-        }
-        onComplete?.call();
+    Future future = setState(startup);
+    if (sound != null) {
+      future.then((_) {
+        audioPlayer?.play(sound);
       });
-
-      return result;
     }
+
+    if (overlays != null) {
+      Future prev = future;
+      for (final overlay in overlays) {
+        prev = prev.then((_) => setState(overlay, isOverlay: true));
+      }
+    }
+
+    if (transitions != null) {
+      for (final transition in transitions) {
+        future = future.then((_) => setState(transition));
+      }
+    }
+
+    if (recovery != null) {
+      future = future.then((_) => setState(recovery));
+    }
+
+    future.then((_) {
+      onComplete?.call();
+      if (complete != null) {
+        setState(complete);
+      }
+    });
+
+    return future;
   }
 }

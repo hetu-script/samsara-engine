@@ -13,6 +13,7 @@ class ResponsiveView extends StatelessWidget {
     this.borderWidth = 0.0,
     this.backgroundColor,
     this.barrierColor,
+    this.barrierDismissible = true,
     this.children = const [],
   });
 
@@ -25,6 +26,7 @@ class ResponsiveView extends StatelessWidget {
   final double borderWidth;
   final Color? backgroundColor;
   final Color? barrierColor;
+  final bool barrierDismissible;
   final List<Widget> children;
 
   @override
@@ -34,11 +36,9 @@ class ResponsiveView extends StatelessWidget {
       child: Stack(
         children: [
           if (barrierColor != null)
-            Positioned.fill(
-              child: ModalBarrier(
-                color: barrierColor,
-                dismissible: false,
-              ),
+            ModalBarrier(
+              color: barrierColor,
+              dismissible: barrierDismissible,
             ),
           Align(
             alignment: alignment,
