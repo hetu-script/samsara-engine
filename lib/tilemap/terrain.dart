@@ -199,9 +199,9 @@ class TileMapTerrain extends GameComponent with TileInfo {
     SpriteAnimationWithTicker? animation;
     final String? path = d?['path'];
     // final int? animationFrameCount = d?['frameCount'];
-    final int? row = d?['row'];
     final int from = d?['from'] ?? 0;
     final int? to = d?['to'];
+    final int? row = d?['row'];
     final double stepTime = d?['stepTime'] ?? defaultAnimationStepTime;
     final bool loop = d?['loop'] ?? true;
     if (path != null) {
@@ -219,11 +219,11 @@ class TileMapTerrain extends GameComponent with TileInfo {
     } else if (row != null) {
       animation = SpriteAnimationWithTicker(
         animation: terrainSpriteSheet.createAnimation(
+          from: from,
+          to: to,
           row: row,
           stepTime: stepTime,
           loop: loop,
-          from: from,
-          to: to,
         ),
       );
     } else {

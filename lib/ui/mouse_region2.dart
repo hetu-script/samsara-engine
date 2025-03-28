@@ -22,15 +22,8 @@ class MouseRegion2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PointerDetector(
-      cursor: cursor,
-      onTapDown: (pointer, buttons, details) {
-        onTapDown?.call();
-      },
-      onTapUp: (pointer, buttons, details) {
-        onTapUp?.call();
-      },
-      onMouseEnter: (event) {
+    return MouseRegion(
+      onEnter: (event) {
         if (onMouseEnter == null) return;
 
         final renderBox = context.findRenderObject() as RenderBox;
@@ -40,10 +33,19 @@ class MouseRegion2 extends StatelessWidget {
             Rect.fromLTWH(offset.dx, offset.dy, size.width, size.height);
         onMouseEnter!.call(rect);
       },
-      onMouseExit: (event) {
+      onExit: (event) {
         onMouseExit?.call();
       },
-      child: child,
+      child: PointerDetector(
+        cursor: cursor,
+        onTapDown: (pointer, buttons, details) {
+          onTapDown?.call();
+        },
+        onTapUp: (pointer, buttons, details) {
+          onTapUp?.call();
+        },
+        child: child,
+      ),
     );
   }
 }

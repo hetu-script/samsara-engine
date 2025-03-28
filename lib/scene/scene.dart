@@ -33,7 +33,8 @@ abstract class Scene extends FlameGame {
   String? bgmFile;
   double bgmVolume;
 
-  GameComponent? draggingComponent;
+  HandlesGesture? hoveringComponent;
+  HandlesGesture? draggingComponent;
 
   Vector2 get topLeft => bounds.topLeft.toVector2();
   Vector2 get topCenter => bounds.topCenter.toVector2();
@@ -203,6 +204,15 @@ abstract class Scene extends FlameGame {
 
   @mustCallSuper
   void onTapUp(int pointer, int buttons, TapUpDetails details) {
+    if (HandlesGesture.tappingDetails.containsKey(pointer)) {
+      // use stored tap positions because this will be lost on tap up event.
+      final detail = HandlesGesture.tappingDetails[pointer]!;
+      if (detail.buttons == buttons) {
+        detail.component.isPressing = false;
+      }
+      HandlesGesture.tappingDetails.remove(pointer);
+    }
+
     for (final c in gestureComponents) {
       if (c.handleTapUp(pointer, buttons, details)) {
         return;
@@ -233,6 +243,14 @@ abstract class Scene extends FlameGame {
     for (final c in gestureComponents) {
       c.handleDragEnd(pointer, buttons, details, draggingComponent);
     }
+
+    if (HandlesGesture.tappingDetails.containsKey(pointer)) {
+      // use stored tap positions because this will be lost on tap up event.
+      final detail = HandlesGesture.tappingDetails[pointer]!;
+      detail.component.isPressing = false;
+      HandlesGesture.tappingDetails.remove(pointer);
+    }
+
     draggingComponent = null;
   }
 
@@ -268,28 +286,27 @@ abstract class Scene extends FlameGame {
     }
   }
 
-  HandlesGesture? hoveringComponent;
-
   @mustCallSuper
   void onMouseHover(PointerHoverEvent details) {
-    void exitPreviousHoveringComponent([HandlesGesture? component]) {
-      if (hoveringComponent == component) return;
+    void mouseEnter([HandlesGesture? entered]) {
+      if (hoveringComponent == entered) return;
 
       hoveringComponent?.onMouseExit?.call();
       hoveringComponent?.isHovering = false;
-      hoveringComponent = component;
+      hoveringComponent = entered;
 
-      component?.onMouseEnter?.call();
+      entered?.onMouseEnter?.call();
+      entered?.isHovering = true;
     }
 
     for (final c in gestureComponents) {
-      final enteredComponent = c.handleMouseHover(details);
-      if (enteredComponent != null) {
-        exitPreviousHoveringComponent(enteredComponent);
+      final entered = c.handleMouseHover(details);
+      if (entered != null) {
+        mouseEnter(entered);
         return;
       }
     }
-    exitPreviousHoveringComponent();
+    mouseEnter();
   }
 
   @mustCallSuper

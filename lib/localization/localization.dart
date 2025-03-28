@@ -88,7 +88,7 @@ class GameLocalization {
         text = '"$key"';
       }
 
-      if (interpolations != null) {
+      if (interpolations != null && interpolations.isNotEmpty) {
         text = text.interpolate(interpolations);
       }
       return text;

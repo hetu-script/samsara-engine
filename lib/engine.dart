@@ -243,6 +243,7 @@ class SamsaraEngine extends SceneController
         ),
         sourceContext: sourceContext,
         locale: HTLocaleSimplifiedChinese(),
+        logger: this,
       );
       await hetu.initFlutter(
         externalFunctions: externalFunctions,

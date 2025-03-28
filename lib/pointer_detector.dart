@@ -121,9 +121,9 @@ class PointerDetector extends StatefulWidget {
     this.onScaleEnd,
     this.onLongPress,
     this.longPressTickTimeConsider = 400,
-    this.onMouseEnter,
     this.onMouseHover,
-    this.onMouseExit,
+    // this.onMouseEnter,
+    // this.onMouseExit,
     this.onMouseScroll,
   });
 
@@ -180,9 +180,9 @@ class PointerDetector extends StatefulWidget {
   /// A specific duration to detect long press
   final int longPressTickTimeConsider;
 
-  final void Function(PointerEnterEvent details)? onMouseEnter;
+  // final void Function(PointerEnterEvent details)? onMouseEnter;
   final void Function(PointerHoverEvent details)? onMouseHover;
-  final void Function(PointerExitEvent details)? onMouseExit;
+  // final void Function(PointerExitEvent details)? onMouseExit;
 
   final void Function(MouseScrollDetails details)? onMouseScroll;
 
@@ -214,13 +214,8 @@ class PointerDetectorState extends State<PointerDetector> {
       onPointerMove: onPointerMove,
       onPointerCancel: onPointerUp,
       onPointerSignal: onPointerSignal,
-      child: MouseRegion(
-        cursor: widget.cursor,
-        onEnter: onMouseEnter,
-        onExit: onMouseExit,
-        onHover: onMouseHover,
-        child: widget.child,
-      ),
+      onPointerHover: onMouseHover,
+      child: widget.child,
     );
   }
 
@@ -409,17 +404,17 @@ class PointerDetectorState extends State<PointerDetector> {
     widget.onMouseScroll?.call(mouseScrollDetail);
   }
 
-  void onMouseEnter(PointerEnterEvent event) {
-    widget.onMouseEnter?.call(event);
-  }
-
   void onMouseHover(PointerHoverEvent event) {
     widget.onMouseHover?.call(event);
   }
 
-  void onMouseExit(PointerExitEvent event) {
-    widget.onMouseExit?.call(event);
-  }
+  // void onMouseEnter(PointerEnterEvent event) {
+  //   widget.onMouseEnter?.call(event);
+  // }
+
+  // void onMouseExit(PointerExitEvent event) {
+  //   widget.onMouseExit?.call(event);
+  // }
 
   get touchCount => _touchDetails.length;
 }

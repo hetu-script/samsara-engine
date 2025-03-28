@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flame: ^1.25.0
+  flame: ^1.26.1
   flame_splash_screen: ^0.3.0
   flame_audio: ^2.11.0
   logger: ^2.5.0

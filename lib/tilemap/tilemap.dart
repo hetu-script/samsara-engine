@@ -60,7 +60,7 @@ class TileMap extends GameComponent with HandlesGesture {
 
   int colorMode = kColorModeNone;
 
-  late SpriteSheet terrainSpriteSheet;
+  final SpriteSheet terrainSpriteSheet;
 
   String id;
   dynamic data;
@@ -98,6 +98,12 @@ class TileMap extends GameComponent with HandlesGesture {
   /// 有些component可以互动，有些是NPC，并且可自行移动
   Map<String, TileMapComponent> components = {};
 
+  void setMapComponentVisible(String id, bool visible) {
+    assert(components.containsKey(id));
+    final component = components[id]!;
+    component.isHidden = !visible;
+  }
+
   TileMapComponent? hero;
 
   bool autoUpdateComponent;
@@ -115,6 +121,7 @@ class TileMap extends GameComponent with HandlesGesture {
     required this.tileShape,
     required this.tileMapWidth,
     required this.tileMapHeight,
+    required this.terrainSpriteSheet,
     this.data,
     required this.gridSize,
     required this.tileSpriteSrcSize,
@@ -289,12 +296,6 @@ class TileMap extends GameComponent with HandlesGesture {
     double mapScreenSizeY = (gridSize.y * tileMapHeight + gridSize.y / 2);
     mapScreenSize = Vector2(mapScreenSizeX, mapScreenSizeY);
 
-    final terrainSpritePath = data['terrainSpriteSheet'];
-    terrainSpriteSheet = SpriteSheet(
-      image: await Flame.images.load(terrainSpritePath),
-      srcSize: tileSpriteSrcSize,
-    );
-
     await loadTerrainData();
 
     moveCameraToTilePosition(tileMapWidth ~/ 2, tileMapHeight ~/ 2,
@@ -460,6 +461,7 @@ class TileMap extends GameComponent with HandlesGesture {
     }
 
     final component = TileMapComponent(
+      map: this,
       id: componentId,
       data: data,
       left: data!['worldPosition']['left'],
@@ -469,6 +471,7 @@ class TileMap extends GameComponent with HandlesGesture {
       isCharacter: isCharacter,
       hasWalkAnimation: isCharacter,
       hasSwimAnimation: isCharacter,
+      isHidden: data!['isHidden'] ?? false,
     );
     component.loadFrameData();
     updateTileInfo(component);

@@ -8,12 +8,12 @@ import 'package:flame/flame.dart';
 import '../tilemap/terrain.dart';
 // import '../components/game_component.dart';
 import 'tile_mixin.dart';
-import 'direction.dart';
 import '../animation/sprite_animation.dart';
 import 'route.dart';
 import '../animation/animation_state_controller.dart';
 import '../extensions.dart';
 import '../components/task_component.dart';
+import 'tilemap.dart';
 
 enum AnimationDirection {
   south,
@@ -48,6 +48,7 @@ class TileMapComponent extends TaskComponent
 
   final String id;
   final dynamic data;
+  final TileMap map;
 
   final double velocityFactor;
 
@@ -81,8 +82,16 @@ class TileMapComponent extends TaskComponent
       [TileMapTerrain? targetTerrain])? onFinishWalkCallback;
   OrthogonalDirection? finishWalkDirection;
 
+  bool _isHidden;
+  bool get isHidden => _isHidden;
+  set isHidden(bool value) {
+    _isHidden = value;
+    data?['isHidden'] = value;
+  }
+
   /// For moving object, states must contains all [kObjectWalkStates]
   TileMapComponent({
+    required this.map,
     required this.id,
     this.data,
     int? left,
@@ -93,7 +102,8 @@ class TileMapComponent extends TaskComponent
     this.hasWalkAnimation = false,
     this.hasSwimAnimation = false,
     Map<String, SpriteAnimationWithTicker> animations = const {},
-  }) {
+    bool isHidden = false,
+  }) : _isHidden = isHidden {
     this.offset = offset ?? Vector2.zero();
     tilePosition = TilePosition(left ?? 1, top ?? 1);
 
@@ -251,6 +261,8 @@ class TileMapComponent extends TaskComponent
 
   @override
   void render(Canvas canvas) {
+    if (!map.isEditorMode && isHidden) return;
+
     sprite?.render(canvas);
     currentAnimation?.render(canvas);
   }

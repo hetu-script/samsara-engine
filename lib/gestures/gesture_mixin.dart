@@ -134,18 +134,6 @@ mixin HandlesGesture on GameComponent {
     final convertedPointerPosition =
         isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
 
-    if (tappingDetails.containsKey(pointer)) {
-      // use stored tap positions because this will be lost on tap up event.
-      final detail = tappingDetails[pointer]!;
-      buttons = detail.buttons;
-      tappingDetails.remove(pointer);
-      final otherPointers = tappingDetails.values
-          .where((element) => element.component == detail.component);
-      if (otherPointers.isEmpty) {
-        detail.component.isPressing = false;
-      }
-    }
-
     if (containsPoint(convertedPointerPosition)) {
       final positionWithinComponent = convertedPointerPosition - position;
       onTap?.call(buttons, positionWithinComponent);

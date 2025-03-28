@@ -33,7 +33,7 @@ extension StringEx on String {
   String? get nonEmptyValue => isBlank ? null : this;
 
   String interpolate(List? interpolations) {
-    if (interpolations == null) {
+    if (interpolations == null || interpolations.isEmpty) {
       return this;
     }
     String result = this;
@@ -78,8 +78,8 @@ extension Vector2Ex on Vector2 {
     return position.x > 0 && position.y > 0 && position.x < x && position.y < y;
   }
 
-  Vector2 operator *(Vector2 other) {
-    return Vector2(x * other.x, y * other.y);
+  Vector2 operator *(double scale) {
+    return Vector2(x * scale, y * scale);
   }
 
   Vector2 moveAlongAngle(double angle, double distance) {
@@ -112,7 +112,7 @@ extension CornerPosition on PositionComponent {
       absolutePositionOfAnchor(Anchor.bottomRight);
 }
 
-extension CameraExtension on CameraComponent {
+extension CameraEx on CameraComponent {
   void moveTo2(
     Vector2 point, {
     double speed = double.infinity,
@@ -181,7 +181,7 @@ extension FormatHHMMSS on DateTime {
   }
 }
 
-extension RectAddingon on Rect {
+extension RectEx on Rect {
   Rect operator +(dynamic other) {
     if (other is Vector2) {
       return Rect.fromLTWH(left + other.x, top + other.y, width, height);
@@ -191,9 +191,11 @@ extension RectAddingon on Rect {
       throw 'Rect cannot adding with ${other.runtimeType}';
     }
   }
-}
 
-extension RectClone on Rect {
+  Rect operator *(num scale) {
+    return Rect.fromLTWH(left, top, width * scale, height * scale);
+  }
+
   /// 优先使用参数的属性，如果参数为 null，使用自己的属性
   Rect copyWith({
     double? left,

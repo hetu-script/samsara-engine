@@ -28,7 +28,7 @@ mixin AnimationStateController on GameComponent {
         isOverlay ? _overlayAnimations : _animations;
 
     if (collection.containsKey(state)) {
-      throw 'State already exists: $state';
+      throw 'Animation state already exists: $state';
     }
     collection[state] = anim;
   }
