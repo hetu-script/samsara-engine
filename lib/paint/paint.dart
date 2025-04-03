@@ -14,6 +14,7 @@ import '../extensions.dart';
 
 export '../extensions.dart' show Vector2Ex;
 export 'package:flame/extensions.dart' show Vector2Extension;
+export '../types.dart';
 
 // import 'text_paint2.dart';
 
@@ -272,6 +273,7 @@ class ScreenTextConfig {
   final double? scale;
   final ScreenTextOverflow? overflow;
   final TextStyle? textStyle;
+  final TextAlign? textAlign;
 
   const ScreenTextConfig({
     this.size,
@@ -281,6 +283,7 @@ class ScreenTextConfig {
     this.scale,
     this.overflow,
     this.textStyle,
+    this.textAlign,
   });
 
   /// 优先使用参数的属性，如果参数为 null，使用自己的属性
@@ -293,6 +296,7 @@ class ScreenTextConfig {
     double? scale,
     ScreenTextOverflow? overflow,
     TextStyle? textStyle,
+    TextAlign? textAlign,
   }) {
     return ScreenTextConfig(
       size: size ?? this.size,
@@ -302,6 +306,7 @@ class ScreenTextConfig {
       scale: scale ?? this.scale,
       overflow: overflow ?? this.overflow,
       textStyle: (textStyle ?? TextStyle()).merge(this.textStyle),
+      textAlign: textAlign ?? this.textAlign,
     );
   }
 
@@ -315,6 +320,7 @@ class ScreenTextConfig {
     double? scale,
     ScreenTextOverflow? overflow,
     TextStyle? textStyle,
+    TextAlign? textAlign,
   }) {
     return ScreenTextConfig(
       size: this.size ?? size,
@@ -324,6 +330,7 @@ class ScreenTextConfig {
       scale: this.scale ?? scale,
       overflow: this.overflow ?? overflow,
       textStyle: (this.textStyle ?? TextStyle()).merge(textStyle),
+      textAlign: this.textAlign ?? textAlign,
     );
   }
 
@@ -337,6 +344,7 @@ class ScreenTextConfig {
       scale: other?.scale ?? scale,
       overflow: other?.overflow ?? overflow,
       textStyle: (other?.textStyle ?? TextStyle()).merge(textStyle),
+      textAlign: other?.textAlign ?? textAlign,
     );
   }
 
@@ -350,6 +358,7 @@ class ScreenTextConfig {
       scale: scale ?? other?.scale,
       overflow: overflow ?? other?.overflow,
       textStyle: (textStyle ?? TextStyle()).merge(other?.textStyle),
+      textAlign: textAlign ?? other?.textAlign,
     );
   }
 }

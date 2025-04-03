@@ -69,10 +69,12 @@ class PiledZone extends BorderComponent {
   final PileStyle pileStyle;
   final bool reverseX, reverseY;
 
-  int pileTopPriority;
+  // int pileTopPriority;
 
   final Anchor titleAnchor;
   final EdgeInsets titlePadding;
+
+  int cardBasePriority;
 
   // final String? cardState;
 
@@ -112,12 +114,14 @@ class PiledZone extends BorderComponent {
     this.pileStyle = PileStyle.stack,
     this.reverseX = false,
     this.reverseY = false,
-    this.pileTopPriority = 250,
+    // this.pileTopPriority = 5000,
     this.titleAnchor = Anchor.topLeft,
     this.titlePadding = EdgeInsets.zero,
     // this.cardState,
     this.onPileChanged,
-  }) {
+    int? cardBasePriority,
+  }) : cardBasePriority =
+            cardBasePriority ?? (pileStyle == PileStyle.stack ? 0 : 5000) {
     pileMargin ??= Vector2(10.0, 10.0);
     pileOffset ??= Vector2(50.0, 0.0);
 
@@ -303,8 +307,11 @@ class PiledZone extends BorderComponent {
   /// 整理卡牌。如果 animated 为 true，则会用动画过度卡牌整理的过程
   Future<void> sortCards({
     bool animated = true,
+    int? basePriority,
     void Function()? onComplete,
   }) async {
+    basePriority ??= cardBasePriority;
+
     final completer = Completer();
     void onSortComplete() {
       onComplete?.call();
@@ -314,9 +321,9 @@ class PiledZone extends BorderComponent {
     void setCardPriority(GameCard card, int index) {
       // pile.add(card.id);
       if (pileStyle == PileStyle.queue) {
-        card.preferredPriority = priority + pileTopPriority - index;
+        card.preferredPriority = basePriority! - index;
       } else if (pileStyle == PileStyle.stack) {
-        card.preferredPriority = priority + 1 + index;
+        card.preferredPriority = basePriority! + index;
       }
       card.resetPriority();
     }

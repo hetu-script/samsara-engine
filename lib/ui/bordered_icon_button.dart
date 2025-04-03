@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'mouse_region2.dart';
+import '../paint/paint.dart';
 
 class BorderedIconButton extends StatelessWidget {
   const BorderedIconButton({
@@ -16,6 +17,7 @@ class BorderedIconButton extends StatelessWidget {
     this.onMouseEnter,
     this.onMouseExit,
     this.isSelected = false,
+    this.isEnabled = true,
   });
 
   final Size size;
@@ -25,6 +27,7 @@ class BorderedIconButton extends StatelessWidget {
   final Color borderColor;
   final double borderWidth;
   final bool isSelected;
+  final bool isEnabled;
 
   final Function()? onTapDown;
   final Function()? onTapUp;
@@ -39,9 +42,11 @@ class BorderedIconButton extends StatelessWidget {
         type: MaterialType.transparency,
         child: InkWell(
           onTapDown: (details) {
+            if (!isEnabled) return;
             onTapDown?.call();
           },
           onTapUp: (details) {
+            if (!isEnabled) return;
             onTapUp?.call();
           },
           child: MouseRegion2(
@@ -64,7 +69,12 @@ class BorderedIconButton extends StatelessWidget {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(borderRadius),
-                child: child,
+                child: isEnabled
+                    ? child
+                    : ColorFiltered(
+                        colorFilter: kColorFilterGreyscale,
+                        child: child,
+                      ),
               ),
             ),
           ),

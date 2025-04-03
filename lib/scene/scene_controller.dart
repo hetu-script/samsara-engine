@@ -41,12 +41,16 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
   }) async {
     if (scene == null || scene?.id != sceneId) {
       if (_sequence.isNotEmpty) {
-        assert(sceneId != _sequence.last, 'Cannot push the same scene again!');
+        // assert(sceneId != _sequence.last, 'Cannot push the same scene again!');
         // final current = _cached[_sequence.last]!;
         // current.onEnd();
+
+        if (_sequence.contains(sceneId)) {
+          _sequence.remove(sceneId);
+        }
       }
-      scene?.onEnd();
       _sequence.add(sceneId);
+      scene?.onEnd();
       scene = await createScene(sceneId,
           constructorId: constructorId, arguments: arguments);
       // scene!.completer = completer;

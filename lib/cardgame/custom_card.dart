@@ -1,14 +1,10 @@
-import 'dart:ui';
-
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/text.dart';
 import 'package:hetu_script/utils/collection.dart';
 
-import '../components/border_component.dart';
 import '../extensions.dart';
 import 'card.dart';
-import '../types.dart';
 import '../paint/paint.dart';
 import '../richtext/richtext_builder.dart';
 

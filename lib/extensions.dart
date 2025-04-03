@@ -5,9 +5,11 @@ import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'effect/zoom.dart';
 
-export 'package:flame/extensions.dart';
+export 'package:flame/extensions.dart' hide ListExtension;
 
 extension IterableEx<T> on Iterable<T> {
+  Iterable<T> get reversed => toList().reversed;
+
   T get random {
     return elementAt(math.Random().nextInt(length));
   }

@@ -17,8 +17,10 @@ class PointOnCircle {
 }
 
 List<PointOnCircle> generateDividingPointsFromCircle(
-    double x0, double y0, double radius, int number,
-    {double angleOffset = 0.0}) {
+    {required Vector2 center,
+    required double radius,
+    required int number,
+    double angleOffset = 0.0}) {
   assert(number > 1);
   List<PointOnCircle> coordinates = [];
 
@@ -27,8 +29,8 @@ List<PointOnCircle> generateDividingPointsFromCircle(
   for (int i = 0; i < number; i++) {
     angle = i * (360 / number) - 90 + angleOffset;
 
-    double x = x0 + radius * math.cos(math.radians(angle));
-    double y = y0 + radius * math.sin(math.radians(angle));
+    double x = center.x + radius * math.cos(math.radians(angle));
+    double y = center.y + radius * math.sin(math.radians(angle));
 
     coordinates.add(PointOnCircle(Vector2(x, y), math.radians(angle + 90)));
   }

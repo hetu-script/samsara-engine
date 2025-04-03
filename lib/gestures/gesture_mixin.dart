@@ -363,12 +363,12 @@ mixin HandlesGesture on GameComponent {
   }
 
   @mustCallSuper
-  void handleMouseScroll(MouseScrollDetails details) {
+  bool handleMouseScroll(MouseScrollDetails details) {
     for (final c in gestureComponents) {
       c.handleMouseScroll(details);
     }
 
-    if (!enableGesture || !isVisible) return;
+    if (!enableGesture || !isVisible) return false;
 
     final pointerPosition = details.position.toVector2();
     final convertedPointerPosition =
@@ -379,6 +379,9 @@ mixin HandlesGesture on GameComponent {
       } else if (details.scrollDelta.dy < 0) {
         onMouseScrollUp?.call();
       }
+      return true;
     }
+
+    return false;
   }
 }

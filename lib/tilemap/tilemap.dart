@@ -251,7 +251,7 @@ class TileMap extends GameComponent with HandlesGesture {
       case TileShape.isometric:
         throw 'Isometric map tile is not supported yet!';
       case TileShape.hexagonalHorizontal:
-        throw 'Vertical hexagonal map tile is not supported yet!';
+        throw 'Horizontal hexagonal map tile is not supported yet!';
     }
     // switch (renderDirection) {
     //   case TileRenderDirection.bottomRight:
@@ -564,7 +564,7 @@ class TileMap extends GameComponent with HandlesGesture {
       case TileShape.isometric:
         throw 'Get neighbors of Isometric map tile is not supported yet!';
       case TileShape.hexagonalHorizontal:
-        throw 'Get neighbors of Vertical hexagonal map tile is not supported yet!';
+        throw 'Get neighbors of Horizontal hexagonal map tile is not supported yet!';
     }
     return positions;
   }
@@ -711,7 +711,7 @@ class TileMap extends GameComponent with HandlesGesture {
       case TileShape.isometric:
         throw 'Isometric map tile is not supported yet!';
       case TileShape.hexagonalHorizontal:
-        throw 'Vertical hexagonal map tile is not supported yet!';
+        throw 'Horizontal hexagonal map tile is not supported yet!';
     }
     return Vector2(l, t);
   }
@@ -734,7 +734,7 @@ class TileMap extends GameComponent with HandlesGesture {
       case TileShape.isometric:
         throw 'Isometric map tile is not supported yet!';
       case TileShape.hexagonalHorizontal:
-        throw 'Vertical hexagonal map tile is not supported yet!';
+        throw 'Horizontal hexagonal map tile is not supported yet!';
     }
     // switch (renderDirection) {
     //   case TileRenderDirection.bottomRight:

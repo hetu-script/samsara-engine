@@ -19,6 +19,7 @@ export 'package:flutter/material.dart'
     show
         Colors,
         TextStyle,
+        TextAlign,
         FontWeight,
         FilterQuality,
         EdgeInsets,

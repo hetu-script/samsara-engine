@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 import '../extensions.dart';
 
 import '../scene/scene.dart';
@@ -27,7 +25,7 @@ enum HovertipDirection {
 const kHovertipScreenIndent = 10.0;
 const kHovertipContentIndent = 10.0;
 const kHovertipBackgroundBorderRadius = 5.0;
-const kHovertipDefautWidth = 300.0;
+const kHovertipDefautWidth = 400.0;
 
 class Hovertip extends BorderComponent {
   static final Map<String, Hovertip> _cached = {};
@@ -59,6 +57,7 @@ class Hovertip extends BorderComponent {
     ScreenTextConfig? config,
     HovertipDirection direction = HovertipDirection.topLeft,
     double width = kHovertipDefautWidth,
+    EdgeInsets? padding,
   }) {
     hide(target);
 
@@ -82,20 +81,30 @@ class Hovertip extends BorderComponent {
     Vector2 calculatedPosition;
     switch (direction) {
       case HovertipDirection.topLeft:
-        calculatedPosition = Vector2(targetPositionGlobal.x,
-            targetPositionGlobal.y - kHovertipScreenIndent - instance.height);
+        calculatedPosition = Vector2(
+            targetPositionGlobal.x + (padding?.left ?? 0),
+            targetPositionGlobal.y -
+                (padding?.bottom ?? kHovertipScreenIndent) -
+                instance.height);
       case HovertipDirection.topCenter:
         calculatedPosition = Vector2(
             targetPositionGlobal.x - (instance.width - targetSizeGlobal.x) / 2,
-            targetPositionGlobal.y - kHovertipScreenIndent - instance.height);
+            targetPositionGlobal.y -
+                (padding?.bottom ?? kHovertipScreenIndent) -
+                instance.height);
       case HovertipDirection.topRight:
         calculatedPosition = Vector2(
-            targetPositionGlobal.x + targetSizeGlobal.x - instance.width,
+            targetPositionGlobal.x +
+                targetSizeGlobal.x -
+                instance.width -
+                (padding?.right ?? 0),
             targetPositionGlobal.y - kHovertipScreenIndent - instance.height);
       case HovertipDirection.leftTop:
         calculatedPosition = Vector2(
-            targetPositionGlobal.x - kHovertipScreenIndent - instance.width,
-            targetPositionGlobal.y);
+            targetPositionGlobal.x -
+                (padding?.right ?? kHovertipScreenIndent) -
+                instance.width,
+            targetPositionGlobal.y + (padding?.top ?? 0));
       case HovertipDirection.leftCenter:
         calculatedPosition = Vector2(
             targetPositionGlobal.x - kHovertipScreenIndent - instance.width,
@@ -238,21 +247,16 @@ class Hovertip extends BorderComponent {
 
     double contentWidth = width - kHovertipContentIndent * 2;
     final contentAnchor = contentConfig.anchor ?? Anchor.topLeft;
-    TextAlign contentAlign = TextAlign.left;
-    if (contentAnchor.x == 0.5) {
-      contentAlign = TextAlign.center;
-    } else if (contentAnchor.x == 1.0) {
-      contentAlign = TextAlign.right;
-    }
 
     _contentElement = _contentDocument!.format(DocumentStyle(
-      paragraph: BlockStyle(margin: EdgeInsets.zero, textAlign: contentAlign),
+      paragraph: BlockStyle(
+          margin: EdgeInsets.zero, textAlign: contentConfig.textAlign),
       text: contentConfig.textStyle?.toInlineTextStyle(),
       width: contentWidth,
     ));
     final boundingBox = _contentElement!.boundingBox;
     size = Vector2(width, boundingBox.height + kHovertipContentIndent * 2);
-    // 文本区域的左中右对齐已经由document.format的textAlign处理
+    // 文本区域的左中右对齐已经由 document.format 的 textAlign 处理
     // 下面只是单独处理垂直方向的对齐
     switch (contentAnchor) {
       case Anchor.topLeft:

@@ -142,6 +142,7 @@ abstract class GameComponent extends PositionComponent
     double? toAngle,
     bool clockwise = true,
     required double duration,
+    double delay = 0.0,
     Curve curve = Curves.linear,
     void Function()? onChange,
     void Function()? onComplete,
@@ -163,6 +164,11 @@ abstract class GameComponent extends PositionComponent
 
     final completer = Completer();
     _isMoving = true;
+
+    if (delay > 0) {
+      await Future.delayed(Duration(milliseconds: (delay * 1000).toInt()));
+    }
+
     add(AdvancedMoveEffect(
       controller: EffectController(duration: duration, curve: curve),
       endPosition: toPosition,

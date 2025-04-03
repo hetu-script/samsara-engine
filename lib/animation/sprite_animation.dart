@@ -47,18 +47,19 @@ extension AnimationWithTicker on SpriteSheet {
 }
 
 class SpriteAnimationWithTicker {
-  late final SpriteAnimation animation;
+  late SpriteAnimation animation;
 
-  late final SpriteAnimationTicker ticker;
+  late SpriteAnimationTicker ticker;
 
   bool _isLoaded = false;
+  bool get isLoaded => _isLoaded;
 
   final String? animationId;
   Vector2? srcSize;
   double scale;
 
   SpriteSheet? _spriteSheet;
-  final int? from, to, row;
+  int? from, to, row;
   final double stepTime;
   final bool loop;
   Rect? renderRect;
@@ -89,7 +90,23 @@ class SpriteAnimationWithTicker {
     }
   }
 
+  SpriteAnimationWithTicker clone() => SpriteAnimationWithTicker(
+        animation: animation.clone(),
+        animationId: animationId,
+        spriteSheet: _spriteSheet,
+        srcSize: srcSize,
+        scale: scale,
+        from: from,
+        to: to,
+        row: row,
+        stepTime: stepTime,
+        loop: loop,
+        renderRect: renderRect,
+      );
+
   Future<void> load() async {
+    if (_isLoaded) return;
+
     if (animationId != null) {
       _spriteSheet = SpriteSheet(
         image: await Flame.images.load('animation/$animationId'),
@@ -98,26 +115,22 @@ class SpriteAnimationWithTicker {
     }
 
     if (_spriteSheet != null) {
+      from ??= row != null ? (row! * _spriteSheet!.columns) : 0;
+      to ??= _spriteSheet!.rows * _spriteSheet!.columns - 1;
       srcSize = _spriteSheet!.srcSize;
-      animation = _spriteSheet!
-          .createAnimationWithTicker(
-            from: from,
-            to: to,
-            row: row,
-            stepTime: stepTime,
-            loop: loop,
-            renderRect: renderRect,
-          )
-          .animation;
+      animation = _spriteSheet!.createAnimation(
+        from: from ?? 0,
+        to: to,
+        row: row ?? 0,
+        stepTime: stepTime,
+        loop: loop,
+      );
       ticker = animation.createTicker();
       _isLoaded = true;
     }
   }
 
   Sprite get currentSprite => ticker.getSprite();
-
-  SpriteAnimationWithTicker clone() => SpriteAnimationWithTicker(
-      animation: animation.clone(), renderRect: renderRect);
 
   void update(double dt) {
     if (_isLoaded) {

@@ -17,11 +17,13 @@ import '../camera/camera2.dart';
 import '../camera/world2.dart';
 import '../components/fading_text.dart';
 import 'scene_widget.dart';
+import '../task.dart';
 
 const kHintTextPriority = 999999999;
 
 abstract class Scene extends FlameGame {
   static const overlayUIBuilderMapKey = 'overlayUI';
+  static final random = math.Random();
 
   final String id;
   // final SceneController controller;
@@ -51,6 +53,8 @@ abstract class Scene extends FlameGame {
 
   /// 此参数由 SceneController 管理
   // Completer? completer;
+
+  final _hintTextController = TaskController();
 
   Scene({
     required this.id,
@@ -87,29 +91,31 @@ abstract class Scene extends FlameGame {
     Vector2 targetPosition =
         position ?? (onViewport ? target!.absoluteCenter : target!.center);
 
-    final random = math.Random();
-    final component = FadingText(
-      text,
-      position: Vector2(
-        targetPosition.x +
-            random.nextDouble() * horizontalVariation -
-            horizontalVariation / 2,
-        targetPosition.y +
-            random.nextDouble() * verticalVariation -
-            verticalVariation,
-      ),
-      movingUpOffset: offsetY,
-      duration: duration,
-      textStyle: TextStyle(
-        color: color ?? Colors.white,
-      ).merge(textStyle),
-      priority: kHintTextPriority,
-    );
-    if (onViewport) {
-      camera.viewport.add(component);
-    } else {
-      world.add(component);
-    }
+    _hintTextController.schedule(() async {
+      await Future.delayed(Duration(milliseconds: 500));
+      final component = FadingText(
+        text,
+        position: Vector2(
+          targetPosition.x +
+              random.nextDouble() * horizontalVariation -
+              horizontalVariation / 2,
+          targetPosition.y +
+              random.nextDouble() * verticalVariation -
+              verticalVariation,
+        ),
+        movingUpOffset: offsetY,
+        duration: duration,
+        textStyle: TextStyle(
+          color: color ?? Colors.white,
+        ).merge(textStyle),
+        priority: kHintTextPriority,
+      );
+      if (onViewport) {
+        camera.viewport.add(component);
+      } else {
+        world.add(component);
+      }
+    });
   }
 
   /// 这个函数在进入场景时被调用，通常用来进行恢复之前冻结和终止的一些操作
