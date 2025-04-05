@@ -34,6 +34,9 @@ class Hovertip extends BorderComponent {
 
   static ScreenTextConfig defaultContentConfig = ScreenTextConfig();
 
+  // static bool showBorder = false;
+  static late Paint backgroundPaint;
+
   static clearAll([List<GameComponent>? list]) {
     if (list == null) {
       for (final instance in _instances.values) {
@@ -201,13 +204,11 @@ class Hovertip extends BorderComponent {
   late ScreenTextConfig contentConfig;
   // late TextPaint _contentPaint;
 
-  late final Paint backgroundPaint;
-
   Hovertip({
     ScreenTextConfig? contentConfig,
-    super.borderRadius = 5.0,
-    super.borderWidth = 5.0,
-    super.borderPaint,
+    // super.borderRadius = 5.0,
+    // super.borderWidth = 5.0,
+    // super.borderPaint,
   }) : super(priority: 9999999999) {
     this.contentConfig = (contentConfig ?? const ScreenTextConfig())
         .fillFrom(defaultContentConfig);
@@ -298,8 +299,12 @@ class Hovertip extends BorderComponent {
 
   @override
   void render(Canvas canvas) {
-    canvas.drawRRect(roundBorder, borderPaint);
-    canvas.drawRRect(roundBorder, backgroundPaint);
+    // if (showBorder) {
+    //   canvas.drawRect(border, borderPaint);
+    // }
+    canvas.drawRect(border, backgroundPaint);
+    // canvas.drawRRect(roundBorder, borderPaint);
+    // canvas.drawRRect(roundBorder, backgroundPaint);
 
     if (_contentElement != null) {
       _contentElement!.draw(canvas);

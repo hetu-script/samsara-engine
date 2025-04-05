@@ -14,6 +14,7 @@ class SpriteButton extends BorderComponent with HandlesGesture {
 
   Sprite? _sprite;
   String? _spriteId;
+  String? get spriteId => _spriteId;
   final bool useSpriteSrcSize;
 
   Sprite? _borderSprite;

@@ -128,13 +128,15 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     } else {
       final constructor = _constructors[constructorId ?? sceneId];
       assert(constructor != null, 'Constructor [$constructorId] not found!');
+      final tik = DateTime.now().millisecondsSinceEpoch;
       final Scene created = (await constructor!(arguments));
       _cached[sceneId] = created;
       assert(created.id == sceneId,
           'Created scene ID [${created.id}] mismatch the function call [$sceneId]!');
       scene = created;
       if (kDebugMode) {
-        info('samsara - created scene: [$sceneId]');
+        info(
+            'samsara - created scene: [$sceneId] in ${DateTime.now().millisecondsSinceEpoch - tik}ms');
       }
     }
     scene!.onStart(arguments);

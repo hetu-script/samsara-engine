@@ -4,13 +4,13 @@ import 'dart:math' as math;
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
-import 'package:samsara/extensions.dart';
 
 import '../components/game_component.dart';
 import 'tile_mixin.dart';
 import '../animation/sprite_animation.dart';
 import '../utils/json.dart';
 import 'tilemap.dart';
+import '../extensions.dart';
 
 enum TileMapTerrainKind {
   none,
@@ -89,7 +89,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     }
   }
 
-  bool _isNonEnterable, _isLighted; //, _isOnLightPerimeter;
+  bool _isNonEnterable; //, _isLighted, _isOnLightPerimeter;
 
   bool get isNonEnterable => _isNonEnterable;
   set isNonEnterable(bool value) {
@@ -99,13 +99,15 @@ class TileMapTerrain extends GameComponent with TileInfo {
     }
   }
 
-  bool get isLighted => _isLighted;
-  set isLighted(value) {
-    _isLighted = value;
-    if (data != null) {
-      data?['isLighted'] = value;
-    }
-  }
+  bool isLighted = false;
+
+  // bool get isLighted => _isLighted;
+  // set isLighted(value) {
+  //   _isLighted = value;
+  //   if (data != null) {
+  //     data?['isLighted'] = value;
+  //   }
+  // }
 
   // bool get isOnLightPerimeter => _isOnLightPerimeter;
   // set isOnLightPerimeter(value) {
@@ -134,6 +136,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   /// 显示贴图
   Sprite? _sprite, _overlaySprite;
+  Vector2 _overlaySpriteOffset = Vector2.zero();
   SpriteAnimationWithTicker? _animation, _overlayAnimation;
 
   // set spriteIndex(int? value) {
@@ -169,16 +172,22 @@ class TileMapTerrain extends GameComponent with TileInfo {
   double _overlayAnimationOffsetValue = 0;
 
   Future<void> _tryLoadSprite({bool isOverlay = false}) async {
-    // if (data == null) return;
-
     final spriteData = isOverlay ? (data?['overlaySprite']) : data;
-    // assert(d != null);
+    if (spriteData == null) return;
+    final offset =
+        Vector2(spriteData?['offsetX'] ?? 0.0, spriteData?['offsetY'] ?? 0.0);
+
+    Vector2 spriteSrcSize = srcSize;
+    if (spriteData?['srcWidth'] != null && spriteData?['srcHeight'] != null) {
+      spriteSrcSize =
+          Vector2(spriteData!['srcWidth'], spriteData!['srcHeight']);
+    }
 
     Sprite? sprite;
     final String? spritePath = spriteData?['sprite'];
     final int? spriteIndex = spriteData?['spriteIndex'];
     if (spritePath != null) {
-      sprite = await Sprite.load(spritePath, srcSize: srcSize);
+      sprite = await Sprite.load(spritePath, srcSize: spriteSrcSize);
     } else if (spriteIndex != null) {
       sprite = terrainSpriteSheet.getSpriteById(spriteIndex);
     } else {
@@ -187,26 +196,37 @@ class TileMapTerrain extends GameComponent with TileInfo {
     if (!isOverlay) {
       _sprite = sprite;
     } else {
+      _overlaySpriteOffset = offset;
       _overlaySprite = sprite;
     }
   }
 
   Future<void> _tryLoadAnimationFromData({bool isOverlay = false}) async {
-    final d =
+    final spriteData = isOverlay ? (data?['overlaySprite']) : data;
+    final animationData =
         isOverlay ? data?['overlaySprite']?['animation'] : data?['animation'];
-    // if (d == null) return;
+    if (spriteData == null || animationData == null) return;
+
+    final offset =
+        Vector2(spriteData?['offsetX'] ?? 0.0, spriteData?['offsetY'] ?? 0.0);
+    Vector2 spriteSrcSize = srcSize;
+    if (spriteData?['srcWidth'] != null && spriteData?['srcHeight'] != null) {
+      spriteSrcSize =
+          Vector2(spriteData!['srcWidth'], spriteData!['srcHeight']);
+    }
 
     SpriteAnimationWithTicker? animation;
-    final String? path = d?['path'];
+    final String? path = animationData?['path'];
     // final int? animationFrameCount = d?['frameCount'];
-    final int from = d?['from'] ?? 0;
-    final int? to = d?['to'];
-    final int? row = d?['row'];
-    final double stepTime = d?['stepTime'] ?? defaultAnimationStepTime;
-    final bool loop = d?['loop'] ?? true;
+    final int from = animationData?['from'] ?? 0;
+    final int? to = animationData?['to'];
+    final int? row = animationData?['row'];
+    final double stepTime =
+        animationData?['stepTime'] ?? defaultAnimationStepTime;
+    final bool loop = animationData?['loop'] ?? true;
     if (path != null) {
-      final sheet =
-          SpriteSheet(image: await Flame.images.load(path), srcSize: srcSize);
+      final sheet = SpriteSheet(
+          image: await Flame.images.load(path), srcSize: spriteSrcSize);
       animation = SpriteAnimationWithTicker(
         animation: sheet.createAnimation(
           row: row ?? 0,
@@ -232,6 +252,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     if (!isOverlay) {
       _animation = animation;
     } else {
+      _overlaySpriteOffset = offset;
       _overlayAnimation = animation;
     }
   }
@@ -242,6 +263,13 @@ class TileMapTerrain extends GameComponent with TileInfo {
     if (data['overlaySprite'] != null) {
       tryLoadSprite(isOverlay: true);
     }
+  }
+
+  void updateInfo() {
+    _kind = data?['kind'];
+    _isNonEnterable = data?['isNonEnterable'] ?? false;
+    _objectId = data?['objectId'];
+    _nationId = data?['nationId'];
   }
 
   void tryLoadSprite({bool isOverlay = false}) async {
@@ -296,7 +324,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     required int left,
     required int top,
     bool isNonEnterable = false,
-    bool isLighted = true,
+    // bool isLighted = true,
     // bool isOnLightPerimeter = false,
     required Vector2 srcSize,
     required Vector2 gridSize,
@@ -316,7 +344,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
         _animation = animation,
         _kind = kind,
         _isNonEnterable = isNonEnterable,
-        _isLighted = isLighted,
+        // _isLighted = isLighted,
         // _isOnLightPerimeter = isOnLightPerimeter,
         _zoneIndex = zoneId,
         _nationId = nationId,
@@ -340,7 +368,8 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
     _sprite?.renderRect(canvas, renderRect);
     _animation?.ticker.currentFrame.sprite.renderRect(canvas, renderRect);
-    _overlaySprite?.renderRect(canvas, renderRect);
+    _overlaySprite?.renderRect(
+        canvas, renderRect.stretchTo(_overlaySpriteOffset));
 
     if (map.isEditorMode) {
       canvas.drawPath(borderPath, gridPaint);
@@ -348,7 +377,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
     if (map.isEditorMode || map.isTileWithinSight(this)) {
       _overlayAnimation?.ticker.currentFrame.sprite
-          .renderRect(canvas, renderRect);
+          .renderRect(canvas, renderRect.stretchTo(_overlaySpriteOffset));
     }
 
     if (map.colorMode != kColorModeNone) {

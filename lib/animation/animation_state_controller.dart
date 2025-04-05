@@ -73,11 +73,6 @@ mixin AnimationStateController on GameComponent {
     void Function()? onComplete,
   }) async {
     Future future = setState(startup);
-    if (sound != null) {
-      future.then((_) {
-        audioPlayer?.play(sound);
-      });
-    }
 
     if (overlays != null) {
       Future prev = future;
@@ -89,6 +84,17 @@ mixin AnimationStateController on GameComponent {
     if (transitions != null) {
       for (final transition in transitions) {
         future = future.then((_) => setState(transition));
+      }
+      if (sound != null) {
+        future.then((_) {
+          audioPlayer?.play(sound);
+        });
+      }
+    } else {
+      if (sound != null) {
+        future.then((_) {
+          audioPlayer?.play(sound);
+        });
       }
     }
 

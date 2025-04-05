@@ -12,7 +12,6 @@ class BorderedIconButton extends StatelessWidget {
     this.borderRadius = 0.0,
     this.borderColor = Colors.white54,
     this.borderWidth = 1.0,
-    this.onTapDown,
     this.onTapUp,
     this.onMouseEnter,
     this.onMouseExit,
@@ -29,7 +28,6 @@ class BorderedIconButton extends StatelessWidget {
   final bool isSelected;
   final bool isEnabled;
 
-  final Function()? onTapDown;
   final Function()? onTapUp;
   final Function(Rect rect)? onMouseEnter;
   final Function()? onMouseExit;
@@ -41,10 +39,6 @@ class BorderedIconButton extends StatelessWidget {
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
-          onTapDown: (details) {
-            if (!isEnabled) return;
-            onTapDown?.call();
-          },
           onTapUp: (details) {
             if (!isEnabled) return;
             onTapUp?.call();

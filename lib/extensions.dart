@@ -184,11 +184,19 @@ extension FormatHHMMSS on DateTime {
 }
 
 extension RectEx on Rect {
+  Rect stretchTo(Vector2 point) {
+    return Rect.fromLTWH(
+        left + point.x, top + point.y, width - point.x, height - point.y);
+  }
+
   Rect operator +(dynamic other) {
     if (other is Vector2) {
       return Rect.fromLTWH(left + other.x, top + other.y, width, height);
     } else if (other is Offset) {
       return Rect.fromLTWH(left + other.dx, top + other.dy, width, height);
+    } else if (other is Size) {
+      return Rect.fromLTWH(
+          left, top, width + other.width, height + other.height);
     } else {
       throw 'Rect cannot adding with ${other.runtimeType}';
     }

@@ -17,6 +17,7 @@ class DynamicColorProgressBar extends StatelessWidget {
   final bool useVerticalStyle;
   final void Function(Rect)? onMouseEnter;
   final void Function()? onMouseExit;
+  final String? label;
 
   DynamicColorProgressBar({
     super.key,
@@ -34,6 +35,7 @@ class DynamicColorProgressBar extends StatelessWidget {
     this.useVerticalStyle = false,
     this.onMouseEnter,
     this.onMouseExit,
+    this.label,
   }) : assert(colors.length > 1) {
     if (stops == null || stops.isEmpty) {
       final d = 1.0 / (colors.length - 1);
@@ -49,7 +51,7 @@ class DynamicColorProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final valueString = '${value.truncate()}/${max.truncate()}';
+    final valueString = '$label: ${value.truncate()}/${max.truncate()}';
     return MouseRegion2(
       onMouseEnter: onMouseEnter,
       onMouseExit: onMouseExit,

@@ -23,9 +23,9 @@ import '../paint/paint.dart';
 
 export 'direction.dart';
 
-const kTileMapTerrainPriority = 100;
+const kTileMapTerrainPriority = 1000;
 
-const kTileMapComponentPriority = 1000;
+// const kTileMapComponentPriority = 1000;
 
 const kColorModeNone = -1;
 
@@ -196,14 +196,21 @@ class TileMap extends GameComponent with HandlesGesture {
       bleendingPixelVertical = 2;
     }
 
-    int basePriority = tile is TileMapComponent
-        ? kTileMapComponentPriority
-        : kTileMapTerrainPriority;
+    // int basePriority = tile is TileMapComponent
+    //     ? kTileMapComponentPriority
+    //     : kTileMapTerrainPriority;
+    int basePriority = kTileMapTerrainPriority;
+    if (tile is TileMapComponent) {
+      basePriority += 5;
+    }
     late final double l, t; // l, t,
     switch (tileShape) {
       case TileShape.orthogonal:
+        // to avoid overlapping, render the tiles in a specific order:
+        // 这里乘以10 是为了给地形上的MapComponent留出空间
         tile.priority =
-            basePriority + (tile.left - 1 + (tile.top - 1) * tileMapWidth);
+            (basePriority + (tile.left - 1 + (tile.top - 1) * tileMapWidth)) *
+                10;
 
         l = (tile.left - 1) * gridSize.x;
         t = (tile.top - 1) * gridSize.y;
@@ -212,11 +219,13 @@ class TileMap extends GameComponent with HandlesGesture {
         break;
       case TileShape.hexagonalVertical:
         // to avoid overlapping, render the tiles in a specific order:
-        tile.priority = basePriority +
-            tileMapWidth * (tile.top - 1) +
-            (tile.left.isOdd
-                ? tile.left ~/ 2
-                : ((tileMapWidth / 2).ceil() + tile.left ~/ 2));
+        // 这里乘以10 是为了给地形上的MapComponent留出空间
+        tile.priority = (basePriority +
+                tileMapWidth * (tile.top - 1) +
+                (tile.left.isOdd
+                    ? tile.left ~/ 2
+                    : ((tileMapWidth / 2).ceil() + tile.left ~/ 2))) *
+            10;
 
         l = (tile.left - 1) * gridSize.x * (3 / 4);
         t = tile.left.isOdd
@@ -273,6 +282,11 @@ class TileMap extends GameComponent with HandlesGesture {
     //   case TileRenderDirection.bottomCenter:
     //     break;
     // }
+
+    // if (tile is TileMapComponent) {
+    //   tile.priority += 5;
+    // }
+
     tile.renderRect = Rect.fromLTWH(
         l -
             (tile.srcSize.x - gridSize.x) / 2 -
@@ -328,7 +342,7 @@ class TileMap extends GameComponent with HandlesGesture {
       for (var i = 0; i < tileMapWidth; ++i) {
         final index = tilePosition2Index(i + 1, j + 1);
         final terrainData = data['terrains'][index];
-        final bool isLighted = terrainData['isLighted'] ?? false;
+        // final bool isLighted = terrainData['isLighted'] ?? false;
         // final bool isOnLightPerimeter =
         //     terrainData['isOnLightPerimeter'] ?? false;
         final bool isNonEnterable = terrainData['isNonEnterable'] ?? false;
@@ -346,7 +360,7 @@ class TileMap extends GameComponent with HandlesGesture {
           data: terrainData,
           left: i + 1,
           top: j + 1,
-          isLighted: isLighted,
+          // isLighted: isLighted,
           // isOnLightPerimeter: isOnLightPerimeter,
           isNonEnterable: isNonEnterable,
           srcSize: tileSpriteSrcSize,
@@ -464,8 +478,8 @@ class TileMap extends GameComponent with HandlesGesture {
       map: this,
       id: componentId,
       data: data,
-      left: data!['worldPosition']['left'],
-      top: data!['worldPosition']['top'],
+      left: data['worldPosition']?['left'],
+      top: data['worldPosition']?['top'],
       offset: tileOffset,
       animations: states,
       isCharacter: isCharacter,
@@ -1123,6 +1137,13 @@ class TileMap extends GameComponent with HandlesGesture {
           backward: component.isBackwardWalking)),
       backward: component.isBackwardWalking,
     );
+  }
+
+  void resetFogOfWar() {
+    for (final tile in terrains) {
+      tile.isLighted = false;
+    }
+    _tilesWithinSight.clear();
   }
 
   @override

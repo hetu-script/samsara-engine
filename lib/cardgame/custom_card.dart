@@ -71,6 +71,9 @@ class CustomGameCard extends GameCard {
   late Rect _costIconRect;
   late Rect _rarityIconRect;
 
+  /// Wether this card is shown in a library (isFiltered == false) or not (isFiltered == true).
+  bool isFiltered = false;
+
   CustomGameCard({
     required super.id,
     super.deckId,

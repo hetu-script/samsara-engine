@@ -101,12 +101,13 @@ class SamsaraEngine extends SceneController
         warn(error);
       }
     }
-    debug('loaded ${localeData.length} locale strings...');
+    debug('samsara: loaded ${localeData.length} locale strings...');
   }
 
   void setLanguage(String localeId) {
     assert(_locale.hasLanguage(localeId));
-    info('设置当前语言为 [${_locale.getLanguageName(localeId)}]');
+    info(
+        'samsara: set current language to [${_locale.getLanguageName(localeId)}]');
     _locale.languageId = localeId;
   }
 
