@@ -47,7 +47,8 @@ mixin AnimationStateController on GameComponent {
     return _animations.containsKey(stateId);
   }
 
-  Future<void> setState(String state, {bool isOverlay = false}) {
+  Future<void> setState(String state,
+      {bool isOverlay = false, bool jumpToEnd = false}) {
     Map<String, SpriteAnimationWithTicker> collection =
         isOverlay ? _overlayAnimations : _animations;
     if (!collection.containsKey(state)) {
@@ -59,7 +60,12 @@ mixin AnimationStateController on GameComponent {
       currentAnimationState = state;
     }
     final anim = collection[state]!;
-    anim.ticker.reset();
+    if (jumpToEnd) {
+      anim.ticker.paused = true;
+      anim.ticker.setToLast();
+    } else {
+      anim.ticker.reset();
+    }
     return anim.ticker.completed;
   }
 

@@ -122,7 +122,7 @@ class TileMapComponent extends TaskComponent
         }
       }
 
-      direction = OrthogonalDirection.south;
+      setDirection(OrthogonalDirection.south);
       stopAnimation();
     }
   }
@@ -132,12 +132,12 @@ class TileMapComponent extends TaskComponent
     currentAnimation?.ticker.setToLast();
   }
 
-  set direction(OrthogonalDirection value) {
+  void setDirection(OrthogonalDirection value, {bool jumpToEnd = false}) {
     _direction = value;
     if (hasSwimAnimation && isOnWater) {
-      setState('swim_${_direction.name}');
+      setState('swim_${_direction.name}', jumpToEnd: jumpToEnd);
     } else {
-      setState('walk_${_direction.name}');
+      setState('walk_${_direction.name}', jumpToEnd: jumpToEnd);
     }
   }
 
@@ -173,8 +173,9 @@ class TileMapComponent extends TaskComponent
   void loadFrameData() {
     final frameData = data['frameData'];
     if (frameData != null) {
-      direction = OrthogonalDirection.values
+      final direction = OrthogonalDirection.values
           .singleWhere((element) => element.name == frameData['direction']);
+      setDirection(direction);
       currentAnimation?.ticker.currentIndex = frameData['currentIndex'];
       currentAnimation?.ticker.clock = frameData['clock'];
       currentAnimation?.ticker.elapsed = frameData['elapsed'];
@@ -219,7 +220,7 @@ class TileMapComponent extends TaskComponent
     _isWalking = true;
     // _isBackward = backward;
     _walkTargetRenderPosition = targetRenderPosition + offset;
-    direction = targetDirection;
+    setDirection(targetDirection);
 
     // 计算地图上的斜方向实际距离
     final sx = _walkTargetRenderPosition.x - position.x;

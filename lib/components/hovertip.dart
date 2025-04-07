@@ -78,7 +78,10 @@ class Hovertip extends BorderComponent {
     _instances[target] = instance;
 
     final targetPosition = target.absoluteTopLeftPosition;
-    final targetPositionGlobal = scene.camera.localToGlobal(targetPosition);
+    Vector2 targetPositionGlobal = targetPosition;
+    if (!target.isHud) {
+      targetPositionGlobal = scene.camera.localToGlobal(targetPosition);
+    }
     final targetSizeGlobal = target.size * scene.camera.zoom;
 
     Vector2 calculatedPosition;

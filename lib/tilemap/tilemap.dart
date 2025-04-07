@@ -88,8 +88,8 @@ class TileMap extends GameComponent with HandlesGesture {
   TileMapTerrain? selectedTerrain;
   List<TileMapComponent>? selectedActors;
 
-  TileMapTerrain? hoveredTerrain;
-  List<TileMapComponent>? hoverActors;
+  TileMapTerrain? hoveringTerrain;
+  List<TileMapComponent>? hoveringActors;
 
   List<TileMapTerrain> terrains = [];
 
@@ -110,11 +110,13 @@ class TileMap extends GameComponent with HandlesGesture {
 
   bool isCameraFollowHero;
 
-  void Function()? onLoadComplete;
-
   final Vector2 tileFogOffset;
 
   bool isEditorMode;
+
+  void Function()? onLoaded;
+
+  void Function(TileMapTerrain? tile)? onMouseEnterTile;
 
   TileMap({
     required this.id,
@@ -135,7 +137,7 @@ class TileMap extends GameComponent with HandlesGesture {
     required this.captionStyle,
     this.fogSpriteId,
     this.fogSprite,
-    this.onLoadComplete,
+    this.onLoaded,
     this.isEditorMode = false,
   })  : assert(!gridSize.isZero()),
         assert(!tileSpriteSrcSize.isZero()),
@@ -167,10 +169,11 @@ class TileMap extends GameComponent with HandlesGesture {
     onMouseHover = (Vector2 position) {
       final tilePosition = worldPosition2Tile(position);
       final terrain = getTerrain(tilePosition.left, tilePosition.top);
-      if (terrain != null && terrain != hoveredTerrain) {
-        terrain.isHovered = true;
-        hoveredTerrain?.isHovered = false;
-        hoveredTerrain = terrain;
+      if (terrain != hoveringTerrain) {
+        hoveringTerrain = terrain;
+        onMouseEnterTile?.call(hoveringTerrain);
+        // terrain.isHovered = true;
+        // hoveringTerrain?.isHovered = false;
       }
     };
   }
@@ -315,7 +318,7 @@ class TileMap extends GameComponent with HandlesGesture {
     moveCameraToTilePosition(tileMapWidth ~/ 2, tileMapHeight ~/ 2,
         animated: false);
 
-    onLoadComplete?.call();
+    onLoaded?.call();
   }
 
   Future<void> loadTerrainData([dynamic mapData]) async {
@@ -972,7 +975,7 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   void unselectTile() {
-    selectedTerrain?.isSelected = false;
+    // selectedTerrain?.isSelected = false;
     selectedTerrain = null;
   }
 
@@ -982,7 +985,7 @@ class TileMap extends GameComponent with HandlesGesture {
       if (terrain != selectedTerrain) {
         unselectTile();
         // &&  (!terrain.isNonEnterable || selectNonInteractable)) {
-        terrain.isSelected = true;
+        // terrain.isSelected = true;
         selectedTerrain = terrain;
       }
       return true;
@@ -1069,7 +1072,7 @@ class TileMap extends GameComponent with HandlesGesture {
     component.prevRouteNode = null;
     component.currentRoute = null;
     if (component.finishWalkDirection != null) {
-      component.direction = component.finishWalkDirection!;
+      component.setDirection(component.finishWalkDirection!);
     }
     component.finishWalkDirection = null;
     component.stopAnimation();
@@ -1146,6 +1149,13 @@ class TileMap extends GameComponent with HandlesGesture {
     _tilesWithinSight.clear();
   }
 
+  void lightUpAllTiles() {
+    for (final tile in terrains) {
+      tile.isLighted = true;
+    }
+    // _tilesWithinSight.clear();
+  }
+
   @override
   void updateTree(double dt) {
     super.updateTree(dt);
@@ -1219,10 +1229,13 @@ class TileMap extends GameComponent with HandlesGesture {
       canvas.drawPath(selectedTerrain!.borderPath, selectedPaint);
     }
 
-    if (showHover && hoveredTerrain != null) {
-      if (hoveredTerrain!.isLighted) {
-        canvas.drawPath(hoveredTerrain!.borderPath, hoverPaint);
+    if (showHover && hoveringTerrain != null) {
+      if (hoveringTerrain!.isLighted) {
+        canvas.drawPath(hoveringTerrain!.borderPath, hoverPaint);
       }
+      // if (kDebugMode) {
+      //   canvas.drawRect(hoveringTerrain!.renderRect, hoverPaint);
+      // }
     }
 
     canvas.restore();

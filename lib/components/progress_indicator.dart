@@ -53,7 +53,7 @@ class DynamicColorProgressIndicator extends BorderComponent
         _currentValue = value.toDouble() {
     _labelConfig = ScreenTextConfig(
       textStyle: TextStyle(
-        color: labelColor,
+        color: labelColor ?? Colors.white,
         fontSize: labelFontSize,
         fontFamily: labelFontFamily,
       ),

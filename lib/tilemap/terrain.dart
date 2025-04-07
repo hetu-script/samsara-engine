@@ -42,6 +42,52 @@ class TileMapTerrain extends GameComponent with TileInfo {
     ..strokeWidth = 0.5
     ..style = PaintingStyle.stroke;
 
+  TileMapTerrain({
+    required this.map,
+    required this.mapId,
+    required this.terrainSpriteSheet,
+    required TileShape tileShape,
+    // this.renderDirection = TileRenderDirection.bottomRight,
+    this.data,
+    required int left,
+    required int top,
+    // bool isLighted = true,
+    // bool isOnLightPerimeter = false,
+    required Vector2 srcSize,
+    required Vector2 gridSize,
+    String? kind,
+    String? zoneId,
+    String? nationId,
+    String? locationId,
+    String? objectId,
+    bool? isNonEnterable,
+    Sprite? sprite,
+    SpriteAnimationWithTicker? animation,
+    Sprite? overlaySprite,
+    SpriteAnimationWithTicker? overlayAnimation,
+    Vector2? offset,
+  })  : assert(!gridSize.isZero()),
+        assert(!srcSize.isZero()),
+        _kind = kind,
+        _locationId = locationId,
+        _objectId = objectId,
+        _nationId = nationId,
+        _zoneId = zoneId,
+        _isNonEnterable = isNonEnterable ?? false,
+        _overlayAnimation = overlayAnimation,
+        _animation = animation,
+        _sprite = sprite,
+        _overlaySprite = overlaySprite {
+    this.tileShape = tileShape;
+    this.gridSize = gridSize;
+    this.srcSize = srcSize;
+    this.offset = offset ?? Vector2.zero();
+
+    tilePosition = TilePosition(left, top);
+
+    _overlayAnimationPlaytimeOffset = math.Random().nextDouble() * 5;
+  }
+
   final TileMap map;
 
   /// internal data of this tile, possible json or other user-defined data form.
@@ -51,14 +97,11 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   final SpriteSheet terrainSpriteSheet;
 
-  bool isSelected = false;
-  bool isHovered = false;
-
   // final TileRenderDirection renderDirection;
 
   /// TODO: kind可能并不直接对应一种类型
   TileMapTerrainKind get terrainKind =>
-      TileMapTerrainKind.values.firstWhere((element) => element.name == _kind,
+      TileMapTerrainKind.values.firstWhere((element) => element.name == kind,
           orElse: () => TileMapTerrainKind.none);
 
   String? _kind;
@@ -68,68 +111,42 @@ class TileMapTerrain extends GameComponent with TileInfo {
     data?['kind'] = value;
   }
 
-  final String? _zoneIndex;
-  String? get zoneId => _zoneIndex;
+  String? _locationId;
+  String? get locationId => _locationId;
+  set locationId(String? value) {
+    _locationId = value;
+    data?['locationId'] = value;
+  }
+
+  String? _objectId;
+  String? get objectId => _objectId;
+  set objectId(String? value) {
+    _objectId = value;
+    data?['objectId'] = value;
+  }
 
   String? _nationId;
   String? get nationId => _nationId;
-  set nationId(value) {
+  set nationId(String? value) {
     _nationId = value;
-    if (data != null) {
-      data?['nationId'] = value;
-    }
+    data?['nationId'] = value;
   }
 
-  String? _locationId;
-  String? get locationId => _locationId;
-  set locationId(value) {
-    _locationId = value;
-    if (data != null) {
-      data?['locationId'] = value;
-    }
+  String? _zoneId;
+  String? get zoneId => _zoneId;
+  set zoneId(String? value) {
+    _zoneId = value;
+    data?['zoneId'] = value;
   }
 
-  bool _isNonEnterable; //, _isLighted, _isOnLightPerimeter;
-
+  bool _isNonEnterable;
   bool get isNonEnterable => _isNonEnterable;
   set isNonEnterable(bool value) {
     _isNonEnterable = value;
-    if (data != null) {
-      data?['isNonEnterable'] = value;
-    }
+    data?['isNonEnterable'] = value;
   }
 
   bool isLighted = false;
-
-  // bool get isLighted => _isLighted;
-  // set isLighted(value) {
-  //   _isLighted = value;
-  //   if (data != null) {
-  //     data?['isLighted'] = value;
-  //   }
-  // }
-
-  // bool get isOnLightPerimeter => _isOnLightPerimeter;
-  // set isOnLightPerimeter(value) {
-  //   _isOnLightPerimeter = value;
-  //   if (data != null) {
-  //     data?['isOnLightPerimeter'] = value;
-  //   }
-  // }
-
-  /// 此地块上的物体
-  /// 通常用此属性代表一些固定不移动的可互动对象，例如传送门、开关、地牢入口等等
-  /// 这些对象不一定是地图渲染时的component，可能纯是脚本数据
-  String? _objectId;
-
-  set objectId(value) {
-    _objectId = value;
-    if (data != null) {
-      data?['objectId'] = value;
-    }
-  }
-
-  String? get objectId => _objectId;
 
   // 显示标签
   String? caption;
@@ -139,41 +156,12 @@ class TileMapTerrain extends GameComponent with TileInfo {
   Vector2 _overlaySpriteOffset = Vector2.zero();
   SpriteAnimationWithTicker? _animation, _overlayAnimation;
 
-  // set spriteIndex(int? value) {
-  //   if (data != null) {
-  //     data?['spriteIndex'] = value;
-  //     if (value != null) {
-  //       _sprite = terrainSpriteSheet.getSpriteById(value);
-  //     } else {
-  //       _sprite = null;
-  //     }
-  //   }
-  // }
-
-  // int? get spriteIndex {
-  //   return data?['spriteIndex'];
-  // }
-
-  // set overlaySprite(dynamic overlayData) {
-  //   // assert(spriteData != null);
-  //   // jsonLikeDataAssign(data?['overlaySprite'], spriteData);
-  //   if (data != null) {
-  //     data['overlaySprite'] = overlayData;
-  //     tryLoadSprite(overlay: true);
-  //   }
-  // }
-
-  // dynamic get overlaySprite {
-  //   return data?['overlaySprite'];
-  // }
-
   // 随机数，用来让多个 tile 的贴图动画错开播放
-  late final double _overlayAnimationOffset;
+  late final double _overlayAnimationPlaytimeOffset;
   double _overlayAnimationOffsetValue = 0;
 
   Future<void> _tryLoadSprite({bool isOverlay = false}) async {
     final spriteData = isOverlay ? (data?['overlaySprite']) : data;
-    if (spriteData == null) return;
     final offset =
         Vector2(spriteData?['offsetX'] ?? 0.0, spriteData?['offsetY'] ?? 0.0);
 
@@ -205,7 +193,6 @@ class TileMapTerrain extends GameComponent with TileInfo {
     final spriteData = isOverlay ? (data?['overlaySprite']) : data;
     final animationData =
         isOverlay ? data?['overlaySprite']?['animation'] : data?['animation'];
-    if (spriteData == null || animationData == null) return;
 
     final offset =
         Vector2(spriteData?['offsetX'] ?? 0.0, spriteData?['offsetY'] ?? 0.0);
@@ -265,11 +252,23 @@ class TileMapTerrain extends GameComponent with TileInfo {
     }
   }
 
-  void updateInfo() {
-    _kind = data?['kind'];
-    _isNonEnterable = data?['isNonEnterable'] ?? false;
-    _objectId = data?['objectId'];
-    _nationId = data?['nationId'];
+  void updateData({
+    bool updateSprite = false,
+    bool updateOverlaySprite = false,
+  }) {
+    kind = data?['kind'];
+    locationId = data?['locationId'];
+    objectId = data?['objectId'];
+    nationId = data?['nationId'];
+    zoneId = data?['zoneId'];
+    isNonEnterable = data?['isNonEnterable'] ?? false;
+
+    if (updateSprite) {
+      tryLoadSprite();
+    }
+    if (updateOverlaySprite) {
+      tryLoadSprite(isOverlay: true);
+    }
   }
 
   void tryLoadSprite({bool isOverlay = false}) async {
@@ -314,54 +313,6 @@ class TileMapTerrain extends GameComponent with TileInfo {
     _overlayAnimation = null;
   }
 
-  TileMapTerrain({
-    required this.map,
-    required this.mapId,
-    required this.terrainSpriteSheet,
-    required TileShape tileShape,
-    // this.renderDirection = TileRenderDirection.bottomRight,
-    this.data,
-    required int left,
-    required int top,
-    bool isNonEnterable = false,
-    // bool isLighted = true,
-    // bool isOnLightPerimeter = false,
-    required Vector2 srcSize,
-    required Vector2 gridSize,
-    String? kind,
-    String? zoneId,
-    String? nationId,
-    String? locationId,
-    String? objectId,
-    Sprite? sprite,
-    SpriteAnimationWithTicker? animation,
-    Sprite? overlaySprite,
-    SpriteAnimationWithTicker? overlayAnimation,
-    Vector2? offset,
-  })  : assert(!gridSize.isZero()),
-        assert(!srcSize.isZero()),
-        _overlayAnimation = overlayAnimation,
-        _animation = animation,
-        _kind = kind,
-        _isNonEnterable = isNonEnterable,
-        // _isLighted = isLighted,
-        // _isOnLightPerimeter = isOnLightPerimeter,
-        _zoneIndex = zoneId,
-        _nationId = nationId,
-        _locationId = locationId,
-        _objectId = objectId,
-        _sprite = sprite,
-        _overlaySprite = overlaySprite {
-    this.tileShape = tileShape;
-    this.gridSize = gridSize;
-    this.srcSize = srcSize;
-    this.offset = offset ?? Vector2.zero();
-
-    tilePosition = TilePosition(left, top);
-
-    _overlayAnimationOffset = math.Random().nextDouble() * 5;
-  }
-
   @override
   void render(Canvas canvas) {
     if (!map.isTileVisibleOnScreen(this)) return;
@@ -402,7 +353,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
         _overlayAnimation?.ticker.update(dt);
         if (_overlayAnimation!.ticker.done()) {
           _overlayAnimationOffsetValue += dt;
-          if (_overlayAnimationOffsetValue >= _overlayAnimationOffset) {
+          if (_overlayAnimationOffsetValue >= _overlayAnimationPlaytimeOffset) {
             _overlayAnimationOffsetValue = 0;
             _overlayAnimation!.ticker.reset();
           }

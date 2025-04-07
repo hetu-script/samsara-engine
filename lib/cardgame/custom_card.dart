@@ -44,12 +44,12 @@ class CustomGameCard extends GameCard {
   int modifiedCost;
 
   /// the sprite id of this card, should be unique among all cards
-  final String? glowSpriteId;
-  final String? illustrationSpriteId;
-  final String? backSpriteId;
-  final String? stackIconSpriteId;
-  final String? costIconSpriteId;
-  final String? rarityIconSpriteId;
+  String? glowSpriteId;
+  String? illustrationSpriteId;
+  String? backSpriteId;
+  String? stackIconSpriteId;
+  String? costIconSpriteId;
+  String? rarityIconSpriteId;
   Sprite? glowSprite;
   Sprite? illustrationSprite;
   Sprite? backSprite;
@@ -102,28 +102,28 @@ class CustomGameCard extends GameCard {
     super.isRotated,
     super.isRotatable,
     super.isEnabled,
-    super.anchor,
     super.onFocused,
     super.onUnfocused,
     super.onPreviewed,
     super.onUnpreviewed,
+    super.anchor,
     this.preferredSize,
     this.title,
     String? description,
-    this.glowSpriteId,
-    this.glowSprite,
+    this.titleConfig,
+    this.descriptionConfig,
     this.illustrationSpriteId,
     this.illustrationSprite,
     this.backSpriteId,
     this.backSprite,
+    this.glowSpriteId,
+    this.glowSprite,
     this.stackIconSpriteId,
     this.stackIconSprite,
     this.costIconSpriteId,
     this.costIconSprite,
     this.rarityIconSpriteId,
     this.rarityIconSprite,
-    this.titleConfig,
-    this.descriptionConfig,
     this.costNumberTextStyle,
     this.stackNumberTextStyle,
     this.cost = 0,
@@ -163,9 +163,10 @@ class CustomGameCard extends GameCard {
       // 拷贝的卡牌的底层数据也会被拷贝，这样在对局中可以修改卡牌的数据而不影响原始卡牌
       data: deepCopyData ? deepCopy(data) : data,
       ownedByRole: ownedByRole,
+      stack: stack,
+      spriteId: spriteId,
       sprite: sprite,
       tags: tags,
-      stack: stack,
       priority: priority,
       position: position,
       size: size,
@@ -186,18 +187,20 @@ class CustomGameCard extends GameCard {
       preferredSize: preferredSize,
       title: title,
       description: _description,
+      titleConfig: titleConfig,
+      descriptionConfig: descriptionConfig,
       illustrationSpriteId: illustrationSpriteId,
       illustrationSprite: illustrationSprite,
       backSpriteId: backSpriteId,
       backSprite: backSprite,
+      glowSpriteId: glowSpriteId,
+      glowSprite: glowSprite,
       stackIconSpriteId: stackIconSpriteId,
       stackIconSprite: stackIconSprite,
       costIconSpriteId: costIconSpriteId,
       costIconSprite: costIconSprite,
       rarityIconSpriteId: rarityIconSpriteId,
       rarityIconSprite: rarityIconSprite,
-      titleConfig: titleConfig,
-      descriptionConfig: descriptionConfig,
       costNumberTextStyle: costNumberTextStyle,
       stackNumberTextStyle: stackNumberTextStyle,
       cost: cost,
@@ -218,6 +221,62 @@ class CustomGameCard extends GameCard {
     );
   }
 
+  Future<void> tryLoadSprite({
+    String? spriteId,
+    String? illustrationSpriteId,
+    String? backSpriteId,
+    String? glowSpriteId,
+    String? stackIconSpriteId,
+    String? costIconSpriteId,
+    String? rarityIconSpriteId,
+  }) async {
+    if (spriteId != null) {
+      this.spriteId = spriteId;
+    }
+    if (this.spriteId != null) {
+      sprite = Sprite(await Flame.images.load(this.spriteId!));
+    }
+    if (illustrationSpriteId != null) {
+      this.illustrationSpriteId = illustrationSpriteId;
+    }
+    if (this.illustrationSpriteId != null) {
+      illustrationSprite =
+          Sprite(await Flame.images.load(this.illustrationSpriteId!));
+    }
+    if (backSpriteId != null) {
+      this.backSpriteId = backSpriteId;
+    }
+    if (this.backSpriteId != null) {
+      backSprite = Sprite(await Flame.images.load(this.backSpriteId!));
+    }
+    if (glowSpriteId != null) {
+      this.glowSpriteId = glowSpriteId;
+    }
+    if (this.glowSpriteId != null) {
+      glowSprite = Sprite(await Flame.images.load(this.glowSpriteId!));
+    }
+    if (stackIconSpriteId != null) {
+      this.stackIconSpriteId = stackIconSpriteId;
+    }
+    if (this.stackIconSpriteId != null) {
+      stackIconSprite =
+          Sprite(await Flame.images.load(this.stackIconSpriteId!));
+    }
+    if (costIconSpriteId != null) {
+      this.costIconSpriteId = costIconSpriteId;
+    }
+    if (this.costIconSpriteId != null) {
+      costIconSprite = Sprite(await Flame.images.load(this.costIconSpriteId!));
+    }
+    if (rarityIconSpriteId != null) {
+      this.rarityIconSpriteId = rarityIconSpriteId;
+    }
+    if (this.rarityIconSpriteId != null) {
+      rarityIconSprite =
+          Sprite(await Flame.images.load(this.rarityIconSpriteId!));
+    }
+  }
+
   @override
   void onLoad() async {
     super.onLoad();
@@ -232,10 +291,6 @@ class CustomGameCard extends GameCard {
     if (backSpriteId != null) {
       backSprite = Sprite(await Flame.images.load(backSpriteId!));
     }
-    // if (countDecorSpriteId != null) {
-    //   countDecorSprite =
-    //       Sprite(await Flame.images.load('$countDecorSpriteId.png'));
-    // }
   }
 
   void _generateDescription() {
