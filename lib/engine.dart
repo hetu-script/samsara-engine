@@ -277,6 +277,10 @@ class SamsaraEngine extends SceneController
 
     await _locale.init();
 
+    _isInitted = true;
+  }
+
+  Future<void> registerCursors() async {
     if (config.cursors.isNotEmpty) {
       for (final name in config.cursors.keys) {
         await registerCursor(
@@ -285,8 +289,6 @@ class SamsaraEngine extends SceneController
         );
       }
     }
-
-    _isInitted = true;
   }
 
   // @override
@@ -388,7 +390,11 @@ class SamsaraEngine extends SceneController
     return cursorName;
   }
 
+  String? _cursor;
+  String? get cursor => _cursor;
+
   Future<void> setCursor(String name) async {
+    _cursor = name;
     await _cursorManager.setSystemCursor(name);
   }
 }
