@@ -9,6 +9,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:samsara/samsara.dart';
 import 'package:flutter_custom_cursor/flutter_custom_cursor.dart';
+import 'package:fluent_ui/fluent_ui.dart' as fluent;
 
 import 'app.dart';
 
@@ -80,32 +81,35 @@ void main() {
         providers: [
           ChangeNotifierProvider(create: (_) => engine),
         ],
-        child: MaterialApp(
-          scrollBehavior: DesktopScrollBehavior(),
-          debugShowCheckedModeBanner: false,
-          home: MouseRegion(
-            cursor: FlutterCustomMemoryImageCursor(key: cursorName),
-            child: GameApp(key: mainKey),
+        child: fluent.FluentTheme(
+          data: fluent.FluentThemeData(),
+          child: MaterialApp(
+            scrollBehavior: DesktopScrollBehavior(),
+            debugShowCheckedModeBanner: false,
+            home: MouseRegion(
+              cursor: FlutterCustomMemoryImageCursor(key: cursorName),
+              child: GameApp(key: mainKey),
+            ),
+            // 控件绘制时发生错误，用一个显示错误信息的控件替代
+            builder: (context, widget) {
+              ErrorWidget.builder = (FlutterErrorDetails details) {
+                String stack = '';
+                if (details.stack != null) {
+                  stack = trimStackTrace(details.stack!);
+                }
+                final Object exception = details.exception;
+                Widget error = ErrorWidget.withDetails(
+                    message: '$exception\n$stack',
+                    error: exception is FlutterError ? exception : null);
+                if (widget is Scaffold || widget is Navigator) {
+                  error = Scaffold(body: Center(child: error));
+                }
+                return error;
+              };
+              if (widget != null) return widget;
+              throw ('error trying to create error widget!');
+            },
           ),
-          // 控件绘制时发生错误，用一个显示错误信息的控件替代
-          builder: (context, widget) {
-            ErrorWidget.builder = (FlutterErrorDetails details) {
-              String stack = '';
-              if (details.stack != null) {
-                stack = trimStackTrace(details.stack!);
-              }
-              final Object exception = details.exception;
-              Widget error = ErrorWidget.withDetails(
-                  message: '$exception\n$stack',
-                  error: exception is FlutterError ? exception : null);
-              if (widget is Scaffold || widget is Navigator) {
-                error = Scaffold(body: Center(child: error));
-              }
-              return error;
-            };
-            if (widget != null) return widget;
-            throw ('error trying to create error widget!');
-          },
         ),
       ),
     );

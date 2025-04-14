@@ -25,6 +25,26 @@ class TouchDetails {
         currentGlobalPosition = startGlobalPosition;
 }
 
+const kMoveTimeDeltaThresholdByMS = 50;
+
+class PointerMoveDetails {
+  int timestamp;
+  int pointer;
+  Offset delta;
+  Offset position;
+  Offset? localPosition;
+  int? buttons;
+
+  PointerMoveDetails({
+    required this.timestamp,
+    required this.pointer,
+    required this.delta,
+    required this.position,
+    this.localPosition,
+    this.buttons,
+  });
+}
+
 class PointerMoveUpdateDetails {
   /// Creates details for a [PointerMoveUpdateDetails].
   ///
@@ -109,7 +129,7 @@ class PointerDetector extends StatefulWidget {
   /// Creates a widget that detects gestures.
   const PointerDetector({
     super.key,
-    required this.child,
+    this.child,
     this.cursor = MouseCursor.defer,
     this.onTapDown,
     this.onTapUp,
@@ -125,10 +145,13 @@ class PointerDetector extends StatefulWidget {
     // this.onMouseEnter,
     // this.onMouseExit,
     this.onMouseScroll,
+    this.behavior = HitTestBehavior.deferToChild,
   });
 
   /// The widget below this widget in the tree.
-  final Widget child;
+  final Widget? child;
+
+  final HitTestBehavior behavior;
 
   final MouseCursor cursor;
 
@@ -181,7 +204,7 @@ class PointerDetector extends StatefulWidget {
   final int longPressTickTimeConsider;
 
   // final void Function(PointerEnterEvent details)? onMouseEnter;
-  final void Function(PointerHoverEvent details)? onMouseHover;
+  final void Function(PointerMoveDetails details)? onMouseHover;
   // final void Function(PointerExitEvent details)? onMouseExit;
 
   final void Function(MouseScrollDetails details)? onMouseScroll;
@@ -205,10 +228,15 @@ class PointerDetectorState extends State<PointerDetector> {
   _GestureState _gestureState = _GestureState.none;
   Timer? _longPressTimer;
   // var _lastTouchUpPos = const Offset(0, 0);
+  PointerMoveDetails? _lastMoveDetail;
+  Timer? _lastMoveTimer;
+  PointerMoveDetails? _lastHoverDetail;
+  Timer? _lastHoverTimer;
 
   @override
   Widget build(BuildContext context) {
     return Listener(
+      behavior: widget.behavior,
       onPointerDown: onPointerDown,
       onPointerUp: onPointerUp,
       onPointerMove: onPointerMove,
@@ -263,90 +291,123 @@ class PointerDetectorState extends State<PointerDetector> {
   }
 
   void onPointerMove(PointerMoveEvent event) {
-    final detail =
-        _touchDetails.firstWhere((detail) => detail.pointer == event.pointer);
+    if (_lastMoveDetail != null) {
+      _lastMoveDetail!.delta += event.delta;
+      _lastMoveDetail!.position = event.position;
+    } else {
+      _lastMoveDetail = PointerMoveDetails(
+        pointer: event.pointer,
+        buttons: event.buttons,
+        timestamp: event.timeStamp.inMilliseconds,
+        delta: event.delta,
+        position: event.position,
+        localPosition: event.localPosition,
+      );
+      _lastMoveTimer = Timer(
+        Duration(milliseconds: kMoveTimeDeltaThresholdByMS),
+        () {
+          _lastMoveTimer!.cancel();
+          _lastMoveTimer = null;
+          assert(_lastMoveDetail != null);
+          final moveDetail = _lastMoveDetail!;
+          _lastMoveDetail = null;
 
-    final distance = Offset(
-            detail.currentLocalPosition.dx - event.localPosition.dx,
-            detail.currentLocalPosition.dy - event.localPosition.dy)
-        .distance;
+          final touches = _touchDetails
+              .where((detail) => detail.pointer == moveDetail.pointer);
+          if (touches.isEmpty) return;
+          assert(touches.length == 1);
+          final touchDetail = touches.first;
 
-    detail.currentLocalPosition = event.localPosition;
-    detail.currentGlobalPosition = event.position;
-    _longPressTimer?.cancel();
-
-    switch (_gestureState) {
-      case _GestureState.pointerDown:
-        //print('move distance: ' + distance.toString());
-        if (distance > 1) {
-          _gestureState = _GestureState.dragStart;
-          detail.startGlobalPosition = event.position;
-          detail.startLocalPosition = event.localPosition;
-          widget.onDragStart?.call(
-              event.pointer,
-              event.buttons,
-              DragStartDetails(
-                  sourceTimeStamp: event.timeStamp,
-                  globalPosition: event.position,
-                  localPosition: event.localPosition));
-        }
-        break;
-      case _GestureState.dragStart:
-        if (widget.onDragUpdate != null) {
-          widget.onDragUpdate!(
-              event.pointer,
-              event.buttons,
-              DragUpdateDetails(
-                  sourceTimeStamp: event.timeStamp,
-                  delta: event.delta,
-                  globalPosition: event.position,
-                  localPosition: event.localPosition));
-        }
-        break;
-      case _GestureState.scaleStart:
-        detail.startGlobalPosition = detail.currentGlobalPosition;
-        detail.startLocalPosition = detail.currentLocalPosition;
-        _gestureState = _GestureState.scalling;
-        initScaleAndRotate();
-        if (widget.onScaleStart != null) {
-          final centerGlobal = (_touchDetails[0].currentGlobalPosition +
-                  _touchDetails[1].currentGlobalPosition) /
-              2;
-          final centerLocal = (_touchDetails[0].currentLocalPosition +
-                  _touchDetails[1].currentLocalPosition) /
-              2;
-          widget.onScaleStart!(
-              _touchDetails,
-              ScaleStartDetails(
-                  focalPoint: centerGlobal, localFocalPoint: centerLocal));
-        }
-        break;
-      case _GestureState.scalling:
-        if (widget.onScaleUpdate != null) {
-          final rotation =
-              _angleBetweenLines(_touchDetails[0], _touchDetails[1]);
-          final newDistance = (_touchDetails[0].currentLocalPosition -
-                  _touchDetails[1].currentLocalPosition)
+          final distance = Offset(
+                  touchDetail.currentLocalPosition.dx -
+                      moveDetail.localPosition!.dx,
+                  touchDetail.currentLocalPosition.dy -
+                      moveDetail.localPosition!.dy)
               .distance;
-          final centerGlobal = (_touchDetails[0].currentGlobalPosition +
-                  _touchDetails[1].currentGlobalPosition) /
-              2;
-          final centerLocal = (_touchDetails[0].currentLocalPosition +
-                  _touchDetails[1].currentLocalPosition) /
-              2;
-          widget.onScaleUpdate!(
-              _touchDetails,
-              ScaleUpdateDetails(
-                  focalPoint: centerGlobal,
-                  localFocalPoint: centerLocal,
-                  scale: newDistance / _initialScaleDistance,
-                  rotation: rotation));
-        }
-        break;
-      default:
-        detail.startGlobalPosition = detail.currentGlobalPosition;
-        detail.startLocalPosition = detail.currentLocalPosition;
-        break;
+
+          touchDetail.currentLocalPosition = moveDetail.localPosition!;
+          touchDetail.currentGlobalPosition = moveDetail.position;
+          _longPressTimer?.cancel();
+
+          switch (_gestureState) {
+            case _GestureState.pointerDown:
+              //print('move distance: ' + distance.toString());
+              if (distance > 1) {
+                _gestureState = _GestureState.dragStart;
+                touchDetail.startGlobalPosition = moveDetail.position;
+                touchDetail.startLocalPosition = moveDetail.localPosition!;
+                widget.onDragStart?.call(
+                  moveDetail.pointer,
+                  moveDetail.buttons!,
+                  DragStartDetails(
+                    sourceTimeStamp:
+                        Duration(milliseconds: moveDetail.timestamp),
+                    globalPosition: moveDetail.position,
+                    localPosition: moveDetail.localPosition,
+                  ),
+                );
+              }
+            case _GestureState.dragStart:
+              if (widget.onDragUpdate != null) {
+                widget.onDragUpdate!(
+                  moveDetail.pointer,
+                  moveDetail.buttons!,
+                  DragUpdateDetails(
+                    sourceTimeStamp:
+                        Duration(milliseconds: moveDetail.timestamp),
+                    delta: moveDetail.delta,
+                    globalPosition: moveDetail.position,
+                    localPosition: moveDetail.localPosition,
+                  ),
+                );
+              }
+            case _GestureState.scaleStart:
+              touchDetail.startGlobalPosition =
+                  touchDetail.currentGlobalPosition;
+              touchDetail.startLocalPosition = touchDetail.currentLocalPosition;
+              _gestureState = _GestureState.scalling;
+              initScaleAndRotate();
+              if (widget.onScaleStart != null) {
+                final centerGlobal = (_touchDetails[0].currentGlobalPosition +
+                        _touchDetails[1].currentGlobalPosition) /
+                    2;
+                final centerLocal = (_touchDetails[0].currentLocalPosition +
+                        _touchDetails[1].currentLocalPosition) /
+                    2;
+                widget.onScaleStart!(
+                    _touchDetails,
+                    ScaleStartDetails(
+                        focalPoint: centerGlobal,
+                        localFocalPoint: centerLocal));
+              }
+            case _GestureState.scalling:
+              if (widget.onScaleUpdate != null) {
+                final rotation =
+                    _angleBetweenLines(_touchDetails[0], _touchDetails[1]);
+                final newDistance = (_touchDetails[0].currentLocalPosition -
+                        _touchDetails[1].currentLocalPosition)
+                    .distance;
+                final centerGlobal = (_touchDetails[0].currentGlobalPosition +
+                        _touchDetails[1].currentGlobalPosition) /
+                    2;
+                final centerLocal = (_touchDetails[0].currentLocalPosition +
+                        _touchDetails[1].currentLocalPosition) /
+                    2;
+                widget.onScaleUpdate!(
+                    _touchDetails,
+                    ScaleUpdateDetails(
+                        focalPoint: centerGlobal,
+                        localFocalPoint: centerLocal,
+                        scale: newDistance / _initialScaleDistance,
+                        rotation: rotation));
+              }
+            default:
+              touchDetail.startGlobalPosition =
+                  touchDetail.currentGlobalPosition;
+              touchDetail.startLocalPosition = touchDetail.currentLocalPosition;
+          }
+        },
+      );
     }
   }
 
@@ -405,7 +466,28 @@ class PointerDetectorState extends State<PointerDetector> {
   }
 
   void onMouseHover(PointerHoverEvent event) {
-    widget.onMouseHover?.call(event);
+    if (_lastHoverDetail != null) {
+      _lastHoverDetail!.delta += event.delta;
+      _lastHoverDetail!.position = event.position;
+    } else {
+      _lastHoverDetail = PointerMoveDetails(
+        pointer: event.pointer,
+        timestamp: event.timeStamp.inMilliseconds,
+        delta: event.delta,
+        position: event.position,
+        localPosition: event.localPosition,
+      );
+      _lastHoverTimer = Timer(
+        Duration(milliseconds: kMoveTimeDeltaThresholdByMS),
+        () {
+          _lastHoverTimer!.cancel();
+          _lastHoverTimer = null;
+          assert(_lastHoverDetail != null);
+          widget.onMouseHover?.call(_lastHoverDetail!);
+          _lastHoverDetail = null;
+        },
+      );
+    }
   }
 
   // void onMouseEnter(PointerEnterEvent event) {

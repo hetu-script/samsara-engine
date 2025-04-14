@@ -1,23 +1,21 @@
 import 'dart:math' as math;
 
-import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
 import 'package:flame/flame.dart';
 import 'package:samsara/components/sprite_button.dart';
 import 'package:flame/components.dart';
-// import 'package:samsara/utils/math.dart' as math;
 import 'package:samsara/cardgame/cardgame.dart';
 import 'package:hetu_script/utils/uid.dart' as utils;
 import 'package:window_manager/window_manager.dart';
-// import 'package:samsara/ui/label.dart';
 import 'package:samsara/widgets/markdown_wiki.dart';
 import 'package:samsara/richtext.dart';
-import 'package:samsara/effect/camera_shake.dart';
 import 'package:samsara/task.dart';
+import 'package:fluent_ui/fluent_ui.dart' as fluent;
+import 'package:flame/game.dart';
 
-import 'ui/drop_menu.dart';
+// import 'ui/drop_menu.dart';
 import '../app.dart';
 
 const richTextSource = 'rich text is <yellow italic>awesome</> !!!';
@@ -30,6 +28,8 @@ class GameScene extends Scene {
   CustomGameCard? card;
 
   final TaskController taskController = TaskController();
+
+  final fluent.FlyoutController menuController = fluent.FlyoutController();
 
   GameScene({
     required super.id,
@@ -121,166 +121,7 @@ class GameScene extends Scene {
         });
       }
     };
-
-    // button.onMouseEnter = () {
-    //   Hovertip.show(
-    //     scene: this,
-    //     target: button,
-    //     direction: HovertipDirection.topCenter,
-    //     width: 360,
-    //     content:
-    //         '''<yellow>野堂</>\n\n<yellow>宋代：陆游</>\n\n野堂萧飒雪侵冠，历尽人间行路难。\n病马不收烟草暝，孤桐半落井床寒。\n长瓶浊酒犹堪醉，败箧残编更细看。\n此兴不随年共老，未容城角动忧端。''',
-    //     config: ScreenTextConfig(anchor: Anchor.topCenter),
-    //   );
-    // };
-    // button.onMouseExit = () {
-    //   Hovertip.hide(button);
-    // };
-    button.onDragUpdate = (int buttons, Vector2 offset) {
-      button.position += offset;
-    };
-    // camera.viewport.add(button);
     background.add(button);
-
-    final button2 = SpriteButton(
-      anchor: Anchor.center,
-      text: 'Shake',
-      spriteId: 'button.png',
-      useSpriteSrcSize: true,
-      position: center + Vector2(0, 50),
-      onTap: (buttons, position) async {
-        add(CameraShakeEffect(
-          frequency: 10,
-          controller: EffectController(duration: 4.0),
-        ));
-      },
-    );
-    background.add(button2);
-
-    final button3 = SpriteButton(
-      anchor: Anchor.center,
-      text: 'Shake',
-      spriteId: 'button.png',
-      useSpriteSrcSize: true,
-      position: center + Vector2(0, 100),
-      onTap: (buttons, position) async {
-        taskController.schedule(() async {
-          await Future.delayed(const Duration(seconds: 1));
-          engine.info('1');
-        });
-        taskController.schedule(() async {
-          await Future.delayed(const Duration(seconds: 1));
-          engine.info('2');
-        });
-        taskController.schedule(() async {
-          await Future.delayed(const Duration(seconds: 1));
-          engine.info('3');
-        });
-      },
-    );
-    background.add(button3);
-
-    // button.onTap = (buttons, position) async {
-    //   final coordinates1 =
-    //       getDividingPointsFromCircle(center.x, center.y, 200, 24);
-    //   world.addAll([
-    //     LightTrail(
-    //       radius: 200,
-    //       index: 0,
-    //       points: coordinates1,
-    //     ),
-    //     LightTrail(
-    //       radius: 200,
-    //       index: 8,
-    //       points: coordinates1,
-    //     ),
-    //     LightTrail(
-    //       radius: 200,
-    //       index: 16,
-    //       points: coordinates1,
-    //     ),
-    //   ]);
-
-    //   final coordinates2 =
-    //       getDividingPointsFromCircle(center.x, center.y, 350, 30);
-    //   world.addAll([
-    //     LightTrail(
-    //       radius: 350,
-    //       index: 0,
-    //       points: coordinates2,
-    //     ),
-    //     LightTrail(
-    //       radius: 350,
-    //       index: 6,
-    //       points: coordinates2,
-    //     ),
-    //     LightTrail(
-    //       radius: 350,
-    //       index: 12,
-    //       points: coordinates2,
-    //     ),
-    //     LightTrail(
-    //       radius: 350,
-    //       index: 18,
-    //       points: coordinates2,
-    //     ),
-    //     LightTrail(
-    //       radius: 350,
-    //       index: 24,
-    //       points: coordinates2,
-    //     ),
-    //   ]);
-
-    //   final coordinates3 =
-    //       getDividingPointsFromCircle(center.x, center.y, 500, 36);
-    //   world.addAll([
-    //     LightTrail(
-    //       radius: 500,
-    //       index: 0,
-    //       points: coordinates3,
-    //     ),
-    //     LightTrail(
-    //       radius: 500,
-    //       index: 4,
-    //       points: coordinates3,
-    //     ),
-    //     LightTrail(
-    //       radius: 500,
-    //       index: 8,
-    //       points: coordinates3,
-    //     ),
-    //     LightTrail(
-    //       radius: 500,
-    //       index: 12,
-    //       points: coordinates3,
-    //     ),
-    //     LightTrail(
-    //       radius: 500,
-    //       index: 16,
-    //       points: coordinates3,
-    //     ),
-    //     LightTrail(
-    //       radius: 500,
-    //       index: 20,
-    //       points: coordinates3,
-    //     ),
-    //     LightTrail(
-    //       radius: 500,
-    //       index: 24,
-    //       points: coordinates3,
-    //     ),
-    //     LightTrail(
-    //       radius: 500,
-    //       index: 28,
-    //       points: coordinates3,
-    //     ),
-    //     LightTrail(
-    //       radius: 500,
-    //       index: 32,
-    //       points: coordinates3,
-    //     ),
-    //   ]);
-    // };
   }
 
   @override
@@ -297,7 +138,21 @@ class GameScene extends Scene {
     return Scaffold(
       body: Stack(
         children: [
-          SceneWidget(scene: this),
+          GameWidget(game: this),
+          PointerDetector(
+            behavior: HitTestBehavior.translucent,
+            onTapDown: onTapDown,
+            onTapUp: onTapUp,
+            onDragStart: onDragStart,
+            onDragUpdate: onDragUpdate,
+            onDragEnd: onDragEnd,
+            onScaleStart: onScaleStart,
+            onScaleUpdate: onScaleUpdate,
+            onScaleEnd: onScaleEnd,
+            onLongPress: onLongPress,
+            onMouseHover: onMouseHover,
+            onMouseScroll: onMouseScroll,
+          ),
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -369,20 +224,57 @@ class GameScene extends Scene {
           Positioned(
             right: 0,
             top: 0,
-            child: MainGameDropMenu(
-              onSelected: (MainGameDropMenuItems item) async {
-                switch (item) {
-                  case MainGameDropMenuItems.console:
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) => Console(
-                        engine: engine,
-                      ),
-                    );
-                  case MainGameDropMenuItems.quit:
-                    windowManager.close();
-                }
-              },
+            child: fluent.FlyoutTarget(
+              controller: menuController,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(5.0),
+                ),
+                child: fluent.IconButton(
+                  icon: Icon(fluent.FluentIcons.collapse_menu),
+                  onPressed: () {
+                    menuController.showFlyout(builder: (context) {
+                      return fluent.MenuFlyout(
+                        items: [
+                          // fluent.MenuFlyoutSubItem(
+                          //   text: Text('sub_items'),
+                          //   items: (context) {
+                          //     return <fluent.MenuFlyoutItemBase>[
+                          //       fluent.MenuFlyoutItem(
+                          //         text: const Text('sub_item1'),
+                          //         onPressed: () {},
+                          //       ),
+                          //       fluent.MenuFlyoutItem(
+                          //         text: const Text('sub_item2'),
+                          //         onPressed: () {},
+                          //       ),
+                          //     ];
+                          //   },
+                          // ),
+                          fluent.MenuFlyoutItem(
+                            text: const Text('console'),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) => Console(
+                                  engine: engine,
+                                ),
+                              );
+                            },
+                          ),
+                          fluent.MenuFlyoutItem(
+                            text: const Text('quit'),
+                            onPressed: () {
+                              windowManager.close();
+                            },
+                          ),
+                        ],
+                      );
+                    });
+                  },
+                ),
+              ),
             ),
           ),
         ],

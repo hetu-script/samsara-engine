@@ -37,7 +37,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     String sceneId, {
     String? constructorId,
     Map<String, dynamic> arguments = const {},
-    // Completer? completer,
+    bool clearCache = false,
   }) async {
     if (scene == null || scene?.id != sceneId) {
       if (_sequence.isNotEmpty) {
@@ -49,8 +49,12 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
           _sequence.remove(sceneId);
         }
       }
-      _sequence.add(sceneId);
-      scene?.onEnd();
+      if (clearCache) {
+        _endCurrentScene(clearCache: clearCache);
+      } else {
+        scene?.onEnd();
+        _sequence.add(sceneId);
+      }
       scene = await createScene(sceneId,
           constructorId: constructorId, arguments: arguments);
       // scene!.completer = completer;
@@ -66,7 +70,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
   Future<Scene?> popScene({bool clearCache = false}) async {
     assert(_sequence.length > 1, 'Cannot pop the last scene!');
     if (kDebugMode) {
-      info('samsara - leaving scene: [${_sequence.last}]');
+      info('leaving scene: [${_sequence.last}]');
     }
     // scene?.onEnd();
     // final current = _cached[_sequence.last]!;
@@ -80,6 +84,13 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     return scene;
   }
 
+  void _endCurrentScene({bool clearCache = false}) {
+    scene?.onEnd();
+    if (clearCache) {
+      _cached.remove(scene?.id);
+    }
+  }
+
   /// 获取一个之前已经构建过的场景
   /// 使用此方法不会改变场景序列
   /// 在明确已经创建该场景的资源，并且不需要使用场景序列时，使用此函数
@@ -90,18 +101,19 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     String sceneId, {
     Map<String, dynamic> arguments = const {},
     bool restart = false,
+    bool clearCache = false,
   }) {
     assert(_cached.containsKey(sceneId), 'Scene [$sceneId] not found!');
     bool switched = false;
     if (scene?.id != sceneId) {
-      scene?.onEnd();
       switched = true;
+      _endCurrentScene(clearCache: clearCache);
     }
     scene = _cached[sceneId];
     if (switched) {
       scene!.onStart(arguments);
       if (kDebugMode) {
-        info('samsara - switched to scene: [$sceneId]');
+        info('switched to scene: [$sceneId]');
       }
     } else if (restart) {
       scene!.onStart(arguments);
@@ -123,7 +135,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     if (_cached.containsKey(sceneId)) {
       scene = _cached[sceneId]!;
       if (kDebugMode) {
-        info('samsara - resumed scene: [$sceneId]');
+        info('resumed scene: [$sceneId]');
       }
     } else {
       final constructor = _constructors[constructorId ?? sceneId];
@@ -136,7 +148,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
       scene = created;
       if (kDebugMode) {
         info(
-            'samsara - created scene: [$sceneId] in ${DateTime.now().millisecondsSinceEpoch - tik}ms');
+            'created scene: [$sceneId] in ${DateTime.now().millisecondsSinceEpoch - tik}ms');
       }
     }
     scene!.onStart(arguments);
@@ -165,7 +177,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     // cached.onDispose();
     _cached.remove(sceneId);
     if (kDebugMode) {
-      info('samsara - cleared scene: [$sceneId]');
+      info('cleared scene: [$sceneId]');
     }
     if (scene?.id == sceneId) {
       scene = null;
@@ -202,8 +214,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     }
 
     if (kDebugMode) {
-      info(
-          'samsara - cleared all scenes${except != null ? ', except [$except]' : ''}');
+      info('cleared all scenes${except != null ? ', except [$except]' : ''}');
     }
     notifyListeners();
   }

@@ -315,7 +315,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   @override
   void render(Canvas canvas) {
-    if (!map.isTileVisibleOnScreen(this)) return;
+    if (!isVisible) return;
 
     _sprite?.renderRect(canvas, renderRect);
     _animation?.ticker.currentFrame.sprite.renderRect(canvas, renderRect);
@@ -342,21 +342,21 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   // TODO:计算是否在屏幕上可见
   @override
-  bool get isVisible => true;
+  bool get isVisible => map.isTileVisibleOnScreen(this);
 
   @override
   void update(double dt) {
+    if (!isVisible) return;
+
     super.update(dt);
-    if (map.isTileVisibleOnScreen(this)) {
-      _animation?.ticker.update(dt);
-      if (_overlayAnimation != null) {
-        _overlayAnimation?.ticker.update(dt);
-        if (_overlayAnimation!.ticker.done()) {
-          _overlayAnimationOffsetValue += dt;
-          if (_overlayAnimationOffsetValue >= _overlayAnimationPlaytimeOffset) {
-            _overlayAnimationOffsetValue = 0;
-            _overlayAnimation!.ticker.reset();
-          }
+    _animation?.ticker.update(dt);
+    if (_overlayAnimation != null) {
+      _overlayAnimation?.ticker.update(dt);
+      if (_overlayAnimation!.ticker.done()) {
+        _overlayAnimationOffsetValue += dt;
+        if (_overlayAnimationOffsetValue >= _overlayAnimationPlaytimeOffset) {
+          _overlayAnimationOffsetValue = 0;
+          _overlayAnimation!.ticker.reset();
         }
       }
     }

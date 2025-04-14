@@ -7,6 +7,7 @@ class Label extends StatelessWidget {
   Label(
     this.richTextSource, {
     this.width,
+    this.height,
     this.padding = const EdgeInsets.symmetric(horizontal: 5.0),
     this.textAlign = TextAlign.center,
     this.textStyle,
@@ -17,7 +18,7 @@ class Label extends StatelessWidget {
   }) : super(key: GlobalKey());
 
   final String richTextSource;
-  final double? width;
+  final double? width, height;
   final EdgeInsetsGeometry padding;
   final TextAlign textAlign;
   final TextStyle? textStyle;
@@ -35,6 +36,7 @@ class Label extends StatelessWidget {
       onMouseExit: onMouseExit,
       child: Container(
         width: width,
+        height: height,
         padding: padding,
         color: backgroundColor,
         child: RichText(
@@ -42,7 +44,7 @@ class Label extends StatelessWidget {
           text: TextSpan(
             children: buildFlutterRichText(
               richTextSource,
-              style: (Theme.of(context).textTheme.bodySmall ?? TextStyle())
+              style: (Theme.of(context).textTheme.bodyMedium ?? TextStyle())
                   .merge(textStyle),
             ),
           ),

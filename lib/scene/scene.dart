@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 // import 'dart:async';
 
-import 'package:flutter/gestures.dart';
+// import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:flame_audio/bgm.dart';
@@ -21,7 +21,7 @@ import '../task.dart';
 
 const kHintTextPriority = 999999999;
 
-abstract class Scene extends FlameGame {
+abstract class Scene extends FlameGame with TaskController {
   static const overlayUIBuilderMapKey = 'overlayUI';
   static final random = math.Random();
 
@@ -152,6 +152,8 @@ abstract class Scene extends FlameGame {
   @mustCallSuper
   @override
   void onLoad() async {
+    bounds = Rect.fromLTWH(0, 0, size.x, size.y);
+
     fitScreen();
   }
 
@@ -159,11 +161,6 @@ abstract class Scene extends FlameGame {
   @mustCallSuper
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
-
-    topCenter.x = center.x = bottomCenter.x = size.x / 2;
-    topRight.x = centerRight.x = bottomRight.x = size.x;
-    centerLeft.y = center.y = centerRight.y = size.y / 2;
-    bottomLeft.y = bottomCenter.y = bottomRight.y = size.y;
 
     bounds = Rect.fromLTWH(0, 0, size.x, size.y);
   }
@@ -293,7 +290,7 @@ abstract class Scene extends FlameGame {
   }
 
   @mustCallSuper
-  void onMouseHover(PointerHoverEvent details) {
+  void onMouseHover(PointerMoveDetails details) {
     void mouseEnter([HandlesGesture? entered]) {
       if (hoveringComponent == entered) return;
 

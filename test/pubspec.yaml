@@ -29,6 +29,7 @@ dependencies:
   window_manager: ^0.4.3
   provider: ^6.1.2
   flutter_custom_cursor: ^0.0.4
+  fluent_ui: 4.11.3
 
 dev_dependencies:
   flutter_test:

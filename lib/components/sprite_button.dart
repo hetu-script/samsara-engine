@@ -144,6 +144,9 @@ class SpriteButton extends BorderComponent with HandlesGesture {
     }
     if (this.spriteId != null) {
       sprite = Sprite(await Flame.images.load(this.spriteId!));
+      if (useSpriteSrcSize) {
+        size = sprite!.srcSize;
+      }
     }
     if (borderSpriteId != null) {
       this.borderSpriteId = borderSpriteId;

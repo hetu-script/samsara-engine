@@ -173,18 +173,18 @@ packages:
     dependency: "direct main"
     description:
       name: flame
-      sha256: "6a68254f6d6a298e14bb1671147d859e73bb505e05bf2ab4fb0bf663cb3b2696"
+      sha256: "7a39044eeea6906d8acc5d8292941fa081a4f2a37fd76dc5a2dbee8a29e28256"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "1.26.1"
+    version: "1.27.0"
   flame_audio:
     dependency: "direct main"
     description:
       name: flame_audio
-      sha256: a53075eb17c35ecc5c13a9ea519e713b757dd205d93f7a6dce8f7d25ced99921
+      sha256: "8de338cb5bc44c7f31c229fc6da074f7ac4a1b02a24fc1a5244bc05921aee7b4"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.11.2"
+    version: "2.11.3"
   flame_splash_screen:
     dependency: "direct main"
     description:
@@ -258,10 +258,10 @@ packages:
     dependency: "direct main"
     description:
       name: html
-      sha256: "1fc58edeaec4307368c60d59b7e15b9d658b57d7f3125098b6294153c75337ec"
+      sha256: "9475be233c437f0e3637af55e7702cbbe5c23a68bd56e8a5fa2d426297b7c6c8"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.15.5"
+    version: "0.15.5+1"
   http:
     dependency: transitive
     description:
@@ -290,10 +290,10 @@ packages:
     dependency: transitive
     description:
       name: intl
-      sha256: "3df61194eb431efc39c4ceba583b95633a403f46c9fd341e550ce0bfa50e9aa5"
+      sha256: d6f56758b7d3014a48af9701c085700aac781a92a87a62b1333b46d8879661cf
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.20.2"
+    version: "0.19.0"
   leak_tracker:
     dependency: transitive
     description:

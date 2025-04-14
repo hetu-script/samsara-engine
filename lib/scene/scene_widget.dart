@@ -22,28 +22,25 @@ class SceneWidget<T extends Scene> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: MediaQuery.of(context).size.height,
-      width: MediaQuery.of(context).size.width,
-      child: PointerDetector(
-        onTapDown: scene.onTapDown,
-        onTapUp: scene.onTapUp,
-        onDragStart: scene.onDragStart,
-        onDragUpdate: scene.onDragUpdate,
-        onDragEnd: scene.onDragEnd,
-        onScaleStart: scene.onScaleStart,
-        onScaleUpdate: scene.onScaleUpdate,
-        onScaleEnd: scene.onScaleEnd,
-        onLongPress: scene.onLongPress,
-        onMouseHover: scene.onMouseHover,
-        onMouseScroll: scene.onMouseScroll,
-        child: GameWidget(
-          game: scene,
-          mouseCursor: cursor,
-          loadingBuilder: loadingBuilder,
-          overlayBuilderMap: overlayBuilderMap,
-          initialActiveOverlays: initialActiveOverlays,
-        ),
+    // final screeSize = MediaQuery.sizeOf(context);
+    return PointerDetector(
+      onTapDown: scene.onTapDown,
+      onTapUp: scene.onTapUp,
+      onDragStart: scene.onDragStart,
+      onDragUpdate: scene.onDragUpdate,
+      onDragEnd: scene.onDragEnd,
+      onScaleStart: scene.onScaleStart,
+      onScaleUpdate: scene.onScaleUpdate,
+      onScaleEnd: scene.onScaleEnd,
+      onLongPress: scene.onLongPress,
+      onMouseHover: scene.onMouseHover,
+      onMouseScroll: scene.onMouseScroll,
+      child: GameWidget(
+        game: scene,
+        mouseCursor: cursor,
+        loadingBuilder: loadingBuilder,
+        overlayBuilderMap: overlayBuilderMap,
+        initialActiveOverlays: initialActiveOverlays,
       ),
     );
   }

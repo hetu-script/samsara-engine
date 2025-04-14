@@ -24,7 +24,7 @@ mixin EventAggregator {
 
   void emit(String eventId, [dynamic args]) {
     if (kDebugMode) {
-      print('samsara - event: [$eventId], args: [$args]');
+      print('event emitted: [$eventId], args: [$args]');
     }
 
     final listeners = _eventHandlers[eventId];

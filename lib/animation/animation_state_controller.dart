@@ -43,7 +43,7 @@ mixin AnimationStateController on GameComponent {
   }
 
   bool containsState(String stateId) {
-    // return _animations.containsKey('${stateId}_$skinId');
+    // return _animations.containsKey('${stateId}_$modelId');
     return _animations.containsKey(stateId);
   }
 

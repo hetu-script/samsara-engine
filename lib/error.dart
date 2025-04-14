@@ -3,7 +3,7 @@ import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 
 GlobalKey mainKey = GlobalKey();
 
-int stackTraceDisplayCountLimit = 5;
+int stackTraceDisplayCountLimit = 10;
 
 String trimStackTrace(StackTrace stackTrace) {
   final stack = stackTrace.toString().trim().split('\n');

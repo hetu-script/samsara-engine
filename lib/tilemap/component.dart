@@ -76,10 +76,9 @@ class TileMapComponent extends TaskComponent
   List<TileMapRouteNode>? currentRoute;
   TileMapRouteNode? prevRouteNode;
   bool isBackwardWalking = false;
-  FutureOr<void> Function(TileMapTerrain terrain, TileMapTerrain? nextTerrain)?
+  FutureOr<void> Function(
+          TileMapTerrain terrain, TileMapTerrain? nextTerrain, bool isFinished)?
       onStepCallback;
-  FutureOr<void> Function(TileMapTerrain terrain,
-      [TileMapTerrain? targetTerrain])? onFinishWalkCallback;
   OrthogonalDirection? finishWalkDirection;
 
   bool _isHidden;
@@ -114,11 +113,11 @@ class TileMapComponent extends TaskComponent
     if (hasWalkAnimation || hasSwimAnimation) {
       if (hasSwimAnimation) {
         for (final key in kObjectWalkStatesWithSwim) {
-          assert(animations.containsKey(key));
+          assert(animations.containsKey(key), 'animation not found! id: $key');
         }
       } else if (hasWalkAnimation) {
         for (final key in kObjectWalkStates) {
-          assert(animations.containsKey(key));
+          assert(animations.containsKey(key), 'animation not found! id: $key');
         }
       }
 

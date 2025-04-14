@@ -172,8 +172,6 @@ class TileMap extends GameComponent with HandlesGesture {
       if (terrain != hoveringTerrain) {
         hoveringTerrain = terrain;
         onMouseEnterTile?.call(hoveringTerrain);
-        // terrain.isHovered = true;
-        // hoveringTerrain?.isHovered = false;
       }
     };
   }
@@ -432,11 +430,11 @@ class TileMap extends GameComponent with HandlesGesture {
     if (isCharacter) {
       assert(spriteSrcSize != null);
       SpriteSheet? walkAnimationSpriteSheet, swimAnimationSpriteSheet;
-      final String? skinId = data['characterSkin'];
-      final String? shipSkinId = data['shipSkin'];
-      if (skinId != null) {
+      final String? modelId = data['model'];
+      final String? shipModelId = data['shipModel'];
+      if (modelId != null) {
         final image = await Flame.images
-            .load('animation/$skinId/tilemap_moving_animation.png');
+            .load('animation/$modelId/tilemap_moving_animation.png');
         walkAnimationSpriteSheet = SpriteSheet(
           image: image,
           srcSize: spriteSrcSize!,
@@ -455,8 +453,8 @@ class TileMap extends GameComponent with HandlesGesture {
             animation: walkAnimationSpriteSheet.createAnimation(
                 row: 3, stepTime: TileMapComponent.defaultAnimationStepTime));
       }
-      if (shipSkinId != null) {
-        final image = await Flame.images.load('animation/$shipSkinId.png');
+      if (shipModelId != null) {
+        final image = await Flame.images.load('animation/$shipModelId.png');
         swimAnimationSpriteSheet = SpriteSheet(
           image: image,
           srcSize: spriteSrcSize!,
@@ -536,7 +534,15 @@ class TileMap extends GameComponent with HandlesGesture {
 
   // TODO: 计算tile是否在屏幕上
   bool isTileVisibleOnScreen(TileMapTerrain tile) {
-    return true;
+    final leftTopPos = worldPosition2Screen(tile.position);
+    final bottomRightPos =
+        worldPosition2Screen(tile.renderRect.bottomRight.toVector2());
+    final isVisible = bottomRightPos.x > 0 &&
+        bottomRightPos.y > 0 &&
+        leftTopPos.x < game.size.x &&
+        leftTopPos.y < game.size.y;
+
+    return isVisible;
   }
 
   bool isTileWithinSight(TileMapTerrain tile) {
@@ -777,7 +783,7 @@ class TileMap extends GameComponent with HandlesGesture {
         t - (tileSpriteSrcSize.y - gridSize.y));
   }
 
-  Vector2 tilePosition2TileCenterInScreen(int left, int top) {
+  Vector2 tilePosition2TileCenterOnScreen(int left, int top) {
     final worldPos = tilePosition2TileCenter(left, top);
     final result = worldPosition2Screen(worldPos);
     return result;
@@ -1016,12 +1022,9 @@ class TileMap extends GameComponent with HandlesGesture {
     TileMapComponent component,
     List<int> route, {
     OrthogonalDirection? finishMoveDirection,
-    FutureOr<void> Function(
-            TileMapTerrain terrain, TileMapTerrain? nextTerrain)?
+    FutureOr<void> Function(TileMapTerrain terrain, TileMapTerrain? nextTerrain,
+            bool isFinished)?
         onStepCallback,
-    FutureOr<void> Function(TileMapTerrain terrain,
-            [TileMapTerrain? targetTerrain])?
-        onFinishCallback,
     bool backwardMoving = false,
   }) {
     assert(components.containsKey(component.id));
@@ -1037,15 +1040,15 @@ class TileMap extends GameComponent with HandlesGesture {
 
     component.isBackwardWalking = backwardMoving;
 
-    component.onStepCallback = onStepCallback;
+    // component.onStepCallback = onStepCallback;
     if (component == hero && isCameraFollowHero) {
       setCameraFollowHero(true);
-      component.onFinishWalkCallback = (terrain, [target]) async {
+      component.onStepCallback = (terrain, target, isFinished) async {
         setCameraFollowHero(false);
-        onFinishCallback?.call(terrain, target);
+        onStepCallback?.call(terrain, target, isFinished);
       };
     } else {
-      component.onFinishWalkCallback = onFinishCallback;
+      component.onStepCallback = onStepCallback;
     }
     // 默认移动结束后面朝主视角
     component.finishWalkDirection = finishMoveDirection;
@@ -1066,8 +1069,9 @@ class TileMap extends GameComponent with HandlesGesture {
 
   void componentFinishWalk(TileMapComponent component, TileMapTerrain terrain,
       TileMapTerrain? targetTerrain) {
-    component.onFinishWalkCallback?.call(terrain, targetTerrain);
-    component.onFinishWalkCallback = null;
+    // component.onFinishWalkCallback?.call(terrain, targetTerrain);
+    // component.onFinishWalkCallback = null;
+    component.onStepCallback?.call(terrain, targetTerrain, true);
     component.onStepCallback = null;
     component.prevRouteNode = null;
     component.currentRoute = null;
@@ -1099,13 +1103,13 @@ class TileMap extends GameComponent with HandlesGesture {
 
     if (component.isWalkCanceled) {
       component.isWalkCanceled = false;
-      component.onStepCallback?.call(terrain!, null);
+      // component.onStepCallback?.call(terrain!, null, true);
       componentFinishWalk(component, terrain!, null);
       return;
     }
 
     if (component.currentRoute!.isEmpty) {
-      component.onStepCallback?.call(terrain!, null);
+      // component.onStepCallback?.call(terrain!, null);
       componentFinishWalk(component, terrain!, null);
       return;
     }
@@ -1115,12 +1119,12 @@ class TileMap extends GameComponent with HandlesGesture {
     // 如果路径上下一个目标是不可进入的，那么结束移动
     // 但若该目标是路径上最后一个目标，此种情况结束移动仍然会触发对最终目标的交互
     if (component.currentRoute!.length == 1 && nextTerrain!.isNonEnterable) {
-      component.onStepCallback?.call(terrain!, null);
+      // component.onStepCallback?.call(terrain!, null);
       componentFinishWalk(component, terrain!, nextTerrain);
       return;
     }
 
-    component.onStepCallback?.call(terrain!, nextTerrain);
+    component.onStepCallback?.call(terrain!, nextTerrain, false);
 
     // 这里要多检查一次，因为有可能在 onBeforeStepCallback 中被取消移动
     // 但这里的finishMove 不传递 terrain，这样不会再次触发 onAfterMoveCallback
@@ -1142,7 +1146,7 @@ class TileMap extends GameComponent with HandlesGesture {
     );
   }
 
-  void resetFogOfWar() {
+  void darkenAllTiles() {
     for (final tile in terrains) {
       tile.isLighted = false;
     }
@@ -1182,6 +1186,8 @@ class TileMap extends GameComponent with HandlesGesture {
     canvas.transform(transformMatrix.storage);
 
     for (final tile in terrains) {
+      if (!isTileVisibleOnScreen(tile)) continue;
+
       // 战争迷雾
       if (!isEditorMode && showFogOfWar) {
         if (tile.isLighted) {
@@ -1230,7 +1236,7 @@ class TileMap extends GameComponent with HandlesGesture {
     }
 
     if (showHover && hoveringTerrain != null) {
-      if (hoveringTerrain!.isLighted) {
+      if (hoveringTerrain!.isLighted || isEditorMode) {
         canvas.drawPath(hoveringTerrain!.borderPath, hoverPaint);
       }
       // if (kDebugMode) {

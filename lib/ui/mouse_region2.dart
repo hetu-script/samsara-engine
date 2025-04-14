@@ -9,20 +9,23 @@ class MouseRegion2 extends StatelessWidget {
     this.onTapUp,
     this.onMouseEnter,
     this.onMouseExit,
+    this.hitTestBehavior,
     required this.child,
   }) : super(key: GlobalKey());
-
-  final Widget child;
 
   final MouseCursor cursor;
   final void Function()? onTapDown;
   final void Function()? onTapUp;
   final void Function(Rect rect)? onMouseEnter;
   final void Function()? onMouseExit;
+  final HitTestBehavior? hitTestBehavior;
+
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
+      hitTestBehavior: hitTestBehavior,
       onEnter: (event) {
         if (onMouseEnter == null) return;
 
