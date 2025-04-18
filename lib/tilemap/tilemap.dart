@@ -56,7 +56,8 @@ class TileMap extends GameComponent with HandlesGesture {
   /// 列表的index代表colorMode，列表的值是一个包含全部地图节点颜色数据的JSON
   /// 节点颜色数据的Key是一个int，代表terrain的index
   /// 值是一个Record值对，分别是颜色和对应的Paint
-  final List<Map<int, (Color, Paint)>> zoneColors = [];
+  final List<Map<int, Color>> zoneColors = [];
+  final Map<Color, Paint> cachedPaints = {};
 
   int colorMode = kColorModeNone;
 
@@ -347,6 +348,7 @@ class TileMap extends GameComponent with HandlesGesture {
         // final bool isOnLightPerimeter =
         //     terrainData['isOnLightPerimeter'] ?? false;
         final bool isNonEnterable = terrainData['isNonEnterable'] ?? false;
+        final bool isWater = terrainData['isWater'] ?? false;
         final String? kindString = terrainData['kind'];
         final String? zoneId = terrainData['zoneId'];
         final String? nationId = terrainData['nationId'];
@@ -364,6 +366,7 @@ class TileMap extends GameComponent with HandlesGesture {
           // isLighted: isLighted,
           // isOnLightPerimeter: isOnLightPerimeter,
           isNonEnterable: isNonEnterable,
+          isWater: isWater,
           srcSize: tileSpriteSrcSize,
           gridSize: gridSize,
           kind: kindString,
@@ -1095,11 +1098,6 @@ class TileMap extends GameComponent with HandlesGesture {
     final tile = prevRouteNode.tilePosition;
     final terrain = getTerrain(tile.left, tile.top);
     assert(terrain != null);
-    if (isWaterTerrain(terrain?.terrainKind)) {
-      component.isOnWater = true;
-    } else {
-      component.isOnWater = false;
-    }
 
     if (component.isWalkCanceled) {
       component.isWalkCanceled = false;
@@ -1116,6 +1114,11 @@ class TileMap extends GameComponent with HandlesGesture {
 
     final nextTile = component.currentRoute!.last.tilePosition;
     final nextTerrain = getTerrain(nextTile.left, nextTile.top);
+    if (nextTerrain?.isWater ?? false) {
+      component.isOnWater = true;
+    } else {
+      component.isOnWater = false;
+    }
     // 如果路径上下一个目标是不可进入的，那么结束移动
     // 但若该目标是路径上最后一个目标，此种情况结束移动仍然会触发对最终目标的交互
     if (component.currentRoute!.length == 1 && nextTerrain!.isNonEnterable) {
@@ -1210,14 +1213,12 @@ class TileMap extends GameComponent with HandlesGesture {
         canvas.drawPath(tile.borderPath, uninteractablePaint);
       }
 
-      if (isEditorMode || tile.isLighted) {
-        String? title = isEditorMode
-            ? tile.caption ?? tile.objectId ?? tile.locationId
-            : tile.caption;
-        if (title != null) {
+      if (kDebugMode || isEditorMode || tile.isLighted) {
+        final caption = tile.objectId ?? tile.caption;
+        if (caption != null) {
           drawScreenText(
             canvas,
-            title,
+            caption,
             position: tile.renderRect.topLeft,
             textPaint: captionPaint,
             config: ScreenTextConfig(

@@ -58,7 +58,6 @@ abstract class Scene extends FlameGame with TaskController {
 
   Scene({
     required this.id,
-    // required this.controller,
     required this.context,
     this.bgm,
     this.bgmFile,
@@ -122,7 +121,7 @@ abstract class Scene extends FlameGame with TaskController {
   /// 不要在这里进行涉及 component 的操作，这个函数执行时机在 onLoad 之前
   /// 注意因为场景本身始终存在于缓存中，因此这个函数可能会反复触发
   @mustCallSuper
-  void onStart([Map<String, dynamic> arguments = const {}]) async {
+  void onStart([dynamic arguments = const {}]) async {
     if (bgm == null) return;
 
     if (bgmFile != null) {
@@ -197,36 +196,36 @@ abstract class Scene extends FlameGame with TaskController {
   }
 
   @mustCallSuper
-  void onTapDown(int pointer, int buttons, TapDownDetails details) {
+  void onTapDown(int pointer, int button, TapDownDetails details) {
     for (final c in gestureComponents) {
-      if (c.handleTapDown(pointer, buttons, details)) {
+      if (c.handleTapDown(pointer, button, details)) {
         return;
       }
     }
   }
 
   @mustCallSuper
-  void onTapUp(int pointer, int buttons, TapUpDetails details) {
+  void onTapUp(int pointer, int button, TapUpDetails details) {
     if (HandlesGesture.tappingDetails.containsKey(pointer)) {
       // use stored tap positions because this will be lost on tap up event.
       final detail = HandlesGesture.tappingDetails[pointer]!;
-      if (detail.buttons == buttons) {
+      if (detail.button == button) {
         detail.component.isPressing = false;
       }
       HandlesGesture.tappingDetails.remove(pointer);
     }
 
     for (final c in gestureComponents) {
-      if (c.handleTapUp(pointer, buttons, details)) {
+      if (c.handleTapUp(pointer, button, details)) {
         return;
       }
     }
   }
 
   @mustCallSuper
-  void onDragStart(int pointer, int buttons, DragStartDetails details) {
+  void onDragStart(int pointer, int button, DragStartDetails details) {
     for (final c in gestureComponents) {
-      final r = c.handleDragStart(pointer, buttons, details);
+      final r = c.handleDragStart(pointer, button, details);
       if (r != null) {
         draggingComponent = r;
         return;
@@ -235,16 +234,16 @@ abstract class Scene extends FlameGame with TaskController {
   }
 
   @mustCallSuper
-  void onDragUpdate(int pointer, int buttons, DragUpdateDetails details) {
+  void onDragUpdate(int pointer, int button, DragUpdateDetails details) {
     for (final c in gestureComponents) {
-      c.handleDragUpdate(pointer, buttons, details, draggingComponent);
+      c.handleDragUpdate(pointer, button, details, draggingComponent);
     }
   }
 
   @mustCallSuper
-  void onDragEnd(int pointer, int buttons, TapUpDetails details) {
+  void onDragEnd(int pointer, int button, TapUpDetails details) {
     for (final c in gestureComponents) {
-      c.handleDragEnd(pointer, buttons, details, draggingComponent);
+      c.handleDragEnd(pointer, button, details, draggingComponent);
     }
 
     if (HandlesGesture.tappingDetails.containsKey(pointer)) {
@@ -281,9 +280,9 @@ abstract class Scene extends FlameGame with TaskController {
   }
 
   @mustCallSuper
-  void onLongPress(int pointer, int buttons, LongPressStartDetails details) {
+  void onLongPress(int pointer, int button, LongPressStartDetails details) {
     for (final c in gestureComponents) {
-      if (c.handleLongPress(pointer, buttons, details)) {
+      if (c.handleLongPress(pointer, button, details)) {
         return;
       }
     }

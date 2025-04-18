@@ -12,28 +12,6 @@ import '../utils/json.dart';
 import 'tilemap.dart';
 import '../extensions.dart';
 
-enum TileMapTerrainKind {
-  none,
-  plain,
-  forest,
-  mountain,
-  seashelf,
-  shore,
-  lake,
-  sea,
-  river,
-  road,
-}
-
-bool isWaterTerrain(TileMapTerrainKind? kind) =>
-    kind == TileMapTerrainKind.sea ||
-    kind == TileMapTerrainKind.seashelf ||
-    kind == TileMapTerrainKind.river ||
-    kind == TileMapTerrainKind.lake;
-
-bool isEmptyTerrain(TileMapTerrainKind? kind) =>
-    kind == TileMapTerrainKind.none;
-
 class TileMapTerrain extends GameComponent with TileInfo {
   static const defaultAnimationStepTime = 0.2;
 
@@ -61,6 +39,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     String? locationId,
     String? objectId,
     bool? isNonEnterable,
+    bool? isWater,
     Sprite? sprite,
     SpriteAnimationWithTicker? animation,
     Sprite? overlaySprite,
@@ -74,6 +53,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
         _nationId = nationId,
         _zoneId = zoneId,
         _isNonEnterable = isNonEnterable ?? false,
+        _isWater = isWater ?? false,
         _overlayAnimation = overlayAnimation,
         _animation = animation,
         _sprite = sprite,
@@ -98,11 +78,6 @@ class TileMapTerrain extends GameComponent with TileInfo {
   final SpriteSheet terrainSpriteSheet;
 
   // final TileRenderDirection renderDirection;
-
-  /// TODO: kind可能并不直接对应一种类型
-  TileMapTerrainKind get terrainKind =>
-      TileMapTerrainKind.values.firstWhere((element) => element.name == kind,
-          orElse: () => TileMapTerrainKind.none);
 
   String? _kind;
   String? get kind => _kind;
@@ -144,6 +119,13 @@ class TileMapTerrain extends GameComponent with TileInfo {
   set isNonEnterable(bool value) {
     _isNonEnterable = value;
     data?['isNonEnterable'] = value;
+  }
+
+  bool _isWater;
+  bool get isWater => _isWater;
+  set isWater(bool value) {
+    _isWater = value;
+    data?['isWater'] = value;
   }
 
   bool isLighted = false;
@@ -332,9 +314,12 @@ class TileMapTerrain extends GameComponent with TileInfo {
     }
 
     if (map.colorMode != kColorModeNone) {
-      final colorData = map.zoneColors[map.colorMode][index];
-      if (colorData != null) {
-        final (_, paint) = colorData;
+      final color = map.zoneColors[map.colorMode][index];
+      if (color != null) {
+        var paint = map.cachedPaints[color];
+        paint ??= map.cachedPaints[color] = Paint()
+          ..color = color
+          ..style = PaintingStyle.fill;
         canvas.drawPath(borderPath, paint);
       }
     }

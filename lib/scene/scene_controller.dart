@@ -20,13 +20,12 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
   /// 如果没有使用场景序列，则此值为 null
   Scene? get lastScene => _sequence.isEmpty ? null : _cached[_sequence.last];
 
-  final _constructors =
-      <String, Future<Scene> Function([Map<String, dynamic> arguments])>{};
+  final _constructors = <String, Future<Scene> Function(dynamic arguments)>{};
 
   /// 注册一个场景构造器
   /// 一个场景可能会存在多个实例，此时用 sceneId 区分它们
   void registerSceneConstructor(String constructorId,
-      Future<Scene> Function([Map<String, dynamic> arguments]) constructor) {
+      Future<Scene> Function(dynamic arguments) constructor) {
     _constructors[constructorId] = constructor;
   }
 
@@ -36,7 +35,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
   Future<Scene> pushScene(
     String sceneId, {
     String? constructorId,
-    Map<String, dynamic> arguments = const {},
+    dynamic arguments = const {},
     bool clearCache = false,
   }) async {
     if (scene == null || scene?.id != sceneId) {
@@ -99,7 +98,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
   /// 使用这个方法可以强制再次触发进入当前场景
   Scene switchScene(
     String sceneId, {
-    Map<String, dynamic> arguments = const {},
+    dynamic arguments = const {},
     bool restart = false,
     bool clearCache = false,
   }) {
@@ -128,7 +127,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
   Future<Scene> createScene(
     String sceneId, {
     String? constructorId,
-    Map<String, dynamic> arguments = const {},
+    dynamic arguments = const {},
   }) async {
     if (scene?.id == sceneId) return scene!;
 
@@ -187,7 +186,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
 
   void clearAllCachedScene({
     String? except,
-    Map<String, dynamic> arguments = const {},
+    dynamic arguments = const {},
     bool restart = false,
   }) {
     assert(_cached.isNotEmpty, 'No scene to clear!');

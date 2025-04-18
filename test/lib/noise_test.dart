@@ -38,7 +38,8 @@ int getABGR(double a, double b, double g, double r) {
 //   return (argbColor & 0xFF00FF00) | (b << 16) | r;
 // }
 
-Future<ui.Image> makeImage(List<List<double>> noiseData) {
+Future<ui.Image> makeImage(List<List<double>> noiseData,
+    {double threshold = 0.5}) async {
   final dimension = noiseData.length;
   final c = Completer<ui.Image>();
   final pixels = Int32List(dimension * dimension);
@@ -46,10 +47,7 @@ Future<ui.Image> makeImage(List<List<double>> noiseData) {
     for (var y = 0; y < dimension; ++y) {
       final noise = noiseData[x][y];
       final normalize = (noise + 1) / 2;
-      // 群岛 islands：normalize > 0.55，frequency： 6 /, type: PerlinFractal
-      // 滨海 coast：normalize > 0.48，frequency： 3.5 /, type: CubicFractal
-      // 内陆 inland：normalize > 0.35，frequency： 6 /, type: CubicFractal
-      final alpha = normalize > 0.48 ? 255 : 0;
+      final alpha = normalize > threshold ? 255 : 0;
       final abgr = getABGR(alpha.toDouble(), 0, 0, 0);
       pixels[y * dimension + x] = abgr;
     }
@@ -71,11 +69,14 @@ class NoiseTest extends StatelessWidget {
   Widget build(BuildContext context) {
     const size = Size(512, 512);
     const dimension = 50;
+    // 群岛 islands: normalize > 0.55，frequency： 6 /, type: PerlinFractal
+    // 滨海 coast: normalize > 0.48，frequency： 3.5 /, type: CubicFractal
+    // 内陆 inland: normalize > 0.35，frequency： 6 /, type: CubicFractal
     final noiseData = noise2(
       dimension,
       dimension,
       seed: math.Random().nextInt(1 << 32),
-      frequency: 3.5 / dimension,
+      frequency: 10 / dimension,
       noiseType: NoiseType.cubicFractal,
     );
 
@@ -89,7 +90,7 @@ class NoiseTest extends StatelessWidget {
             title: const Text('Noise Test'),
           ),
           body: FutureBuilder<ui.Image>(
-            future: makeImage(noiseData),
+            future: makeImage(noiseData, threshold: 0.35),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 return Center(

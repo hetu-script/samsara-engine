@@ -176,16 +176,15 @@ TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
       textColor = HexColor.fromString('#C65043');
     } else if (currentTag == 'rank8' || currentTag == 'arcane') {
       textColor = HexColor.fromString('#983030');
-    } else if (currentTag.startsWith('color=\'')) {
-      textColor =
-          HexColor.fromString(currentTag.substring(7, currentTag.length - 1));
-    } else if (currentTag.startsWith('icon=\'')) {
-      final iconId = currentTag.substring(7, currentTag.length - 1);
+    } else if (currentTag.startsWith('color=')) {
+      textColor = HexColor.fromString(currentTag.substring(6));
+    } else if (currentTag.startsWith('icon=')) {
+      final iconId = currentTag.substring(5);
       icon = 'text/$iconId';
-    } else if (currentTag.startsWith('link=\'')) {
+    } else if (currentTag.startsWith('link=')) {
       // link='character?name=aleph42'
       // 例如：link=character?name=wendy&age=18
-      link = currentTag.substring(7, currentTag.length - 1);
+      link = currentTag.substring(5);
       // TODO: 进一步解析
       // final separaterIndex = routeString.indexOf('?');
       // if (separaterIndex != -1) {
@@ -229,7 +228,7 @@ List<TextSpan> buildFlutterRichText(
   if (source == null && source!.isEmpty) {
     return result;
   }
-  final paragraphs = source.split(RegExp(r'\n'));
+  final paragraphs = source.trim().split(RegExp(r'\n'));
   for (var i = 0; i < paragraphs.length; ++i) {
     final paragraph = paragraphs[i];
     final List<InlineSpan> spanList = [];

@@ -10,7 +10,7 @@ export 'package:flutter/gestures.dart' show PointerHoverEvent;
 
 class TouchDetails {
   int pointer;
-  int buttons;
+  int button;
   Offset startLocalPosition;
   Offset startGlobalPosition;
   Offset currentLocalPosition;
@@ -18,7 +18,7 @@ class TouchDetails {
 
   TouchDetails(
     this.pointer,
-    this.buttons,
+    this.button,
     this.startGlobalPosition,
     this.startLocalPosition,
   )   : currentLocalPosition = startLocalPosition,
@@ -33,7 +33,7 @@ class PointerMoveDetails {
   Offset delta;
   Offset position;
   Offset? localPosition;
-  int? buttons;
+  int? button;
 
   PointerMoveDetails({
     required this.timestamp,
@@ -41,7 +41,7 @@ class PointerMoveDetails {
     required this.delta,
     required this.position,
     this.localPosition,
-    this.buttons,
+    this.button,
   });
 }
 
@@ -155,23 +155,22 @@ class PointerDetector extends StatefulWidget {
 
   final MouseCursor cursor;
 
-  final void Function(int pointer, int buttons, TapDownDetails details)?
+  final void Function(int pointer, int button, TapDownDetails details)?
       onTapDown;
-  final void Function(int pointer, int buttons, TapUpDetails details)? onTapUp;
+  final void Function(int pointer, int button, TapUpDetails details)? onTapUp;
 
   /// A pointer has contacted the screen with a primary button and has begun to move.
-  final void Function(int pointer, int buttons, DragStartDetails details)?
+  final void Function(int pointer, int button, DragStartDetails details)?
       onDragStart;
 
   /// A pointer that is in contact with the screen with a primary button and moving has moved again.
-  final void Function(int pointer, int buttons, DragUpdateDetails details)?
+  final void Function(int pointer, int button, DragUpdateDetails details)?
       onDragUpdate;
 
   /// A pointer that was previously in contact with the screen with a primary
   /// button and moving is no longer in contact with the screen and was moving
   /// at a specific velocity when it stopped contacting the screen.
-  final void Function(int pointer, int buttons, TapUpDetails details)?
-      onDragEnd;
+  final void Function(int pointer, int button, TapUpDetails details)? onDragEnd;
 
   /// The pointers in contact with the screen have established a focal point and
   /// initial scale of 1.0.
@@ -197,7 +196,7 @@ class PointerDetector extends StatefulWidget {
   /// A pointer has remained in contact with the screen at the same location for a long period of time
   ///
   /// @param
-  final void Function(int pointer, int buttons, LongPressStartDetails details)?
+  final void Function(int pointer, int button, LongPressStartDetails details)?
       onLongPress;
 
   /// A specific duration to detect long press
@@ -297,7 +296,7 @@ class PointerDetectorState extends State<PointerDetector> {
     } else {
       _lastMoveDetail = PointerMoveDetails(
         pointer: event.pointer,
-        buttons: event.buttons,
+        button: event.buttons,
         timestamp: event.timeStamp.inMilliseconds,
         delta: event.delta,
         position: event.position,
@@ -338,7 +337,7 @@ class PointerDetectorState extends State<PointerDetector> {
                 touchDetail.startLocalPosition = moveDetail.localPosition!;
                 widget.onDragStart?.call(
                   moveDetail.pointer,
-                  moveDetail.buttons!,
+                  moveDetail.button!,
                   DragStartDetails(
                     sourceTimeStamp:
                         Duration(milliseconds: moveDetail.timestamp),
@@ -351,7 +350,7 @@ class PointerDetectorState extends State<PointerDetector> {
               if (widget.onDragUpdate != null) {
                 widget.onDragUpdate!(
                   moveDetail.pointer,
-                  moveDetail.buttons!,
+                  moveDetail.button!,
                   DragUpdateDetails(
                     sourceTimeStamp:
                         Duration(milliseconds: moveDetail.timestamp),
@@ -426,7 +425,7 @@ class PointerDetectorState extends State<PointerDetector> {
   }
 
   void onPointerUp(PointerEvent event) {
-    // use the original detail's buttons information instead
+    // use the original detail's button information instead
     // because this information will be lost in the pointerUp event.
     final originalDetail =
         _touchDetails.singleWhere((detail) => detail.pointer == event.pointer);
@@ -436,7 +435,7 @@ class PointerDetectorState extends State<PointerDetector> {
         kind: event.kind);
     if (_gestureState == _GestureState.pointerDown ||
         _gestureState == _GestureState.longPress) {
-      widget.onTapUp?.call(event.pointer, originalDetail.buttons, tapUpDetail);
+      widget.onTapUp?.call(event.pointer, originalDetail.button, tapUpDetail);
     } else if (_gestureState == _GestureState.scaleStart ||
         _gestureState == _GestureState.scalling) {
       _gestureState = _GestureState.none;

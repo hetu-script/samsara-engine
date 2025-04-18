@@ -52,7 +52,7 @@ class SpriteButton extends BorderComponent with HandlesGesture {
     super.children,
     super.scale,
     super.angle,
-    void Function(int buttons, Vector2 position)? onTap,
+    void Function(int button, Vector2 position)? onTap,
     super.borderRadius,
     this.isEnabled = true,
     this.isSelectable = false,

@@ -21,13 +21,13 @@ export '../pointer_detector.dart' show TouchDetails, PointerMoveUpdateDetails;
 
 class TappingDetails {
   int pointer;
-  int buttons;
+  int button;
   Vector2 globalPosition;
   HandlesGesture component;
 
   TappingDetails(
     this.pointer,
-    this.buttons,
+    this.button,
     this.globalPosition,
     this.component,
   );
@@ -54,26 +54,26 @@ mixin HandlesGesture on GameComponent {
   int doubleTapTimeConsider = 400;
   Timer? doubleTapTimer;
 
-  void Function(int buttons, Vector2 position)? onTap;
-  void Function(int buttons, Vector2 position)? onTapDown;
-  void Function(int buttons, Vector2 position)? onTapUp;
-  void Function(int buttons, Vector2 position)? onDoubleTap;
+  void Function(int button, Vector2 position)? onTap;
+  void Function(int button, Vector2 position)? onTapDown;
+  void Function(int button, Vector2 position)? onTapUp;
+  void Function(int button, Vector2 position)? onDoubleTap;
 
   /// 拖动开始时，返回被拖动的子对象
   /// 如果返回null，此时其他对象仍会捕捉到拖动事件，只是无法拿到被拖动的对象
-  HandlesGesture? Function(int buttons, Vector2 position)? onDragStart;
+  HandlesGesture? Function(int button, Vector2 position)? onDragStart;
 
   /// 对象自己被拖动时
-  void Function(int buttons, Vector2 position, Vector2 delta)? onDragUpdate;
+  void Function(int button, Vector2 position, Vector2 delta)? onDragUpdate;
 
   /// 其他对象在此控件中拖动时
-  void Function(int buttons, GameComponent? component)? onDragOver;
+  void Function(int button, GameComponent? component)? onDragOver;
 
   /// 此控件被拖动并松开
-  void Function(int buttons, Vector2 position)? onDragEnd;
+  void Function(int button, Vector2 position)? onDragEnd;
 
   /// 其他对象拖入此控件并松开
-  void Function(int buttons, Vector2 position, GameComponent? component)?
+  void Function(int button, Vector2 position, GameComponent? component)?
       onDragIn;
 
   void Function(List<TouchDetails> touches, ScaleStartDetails details)?
@@ -95,11 +95,11 @@ mixin HandlesGesture on GameComponent {
   void Function()? onMouseScrollUp, onMouseScrollDown;
 
   @mustCallSuper
-  bool handleTapDown(int pointer, int buttons, TapDownDetails details) {
+  bool handleTapDown(int pointer, int button, TapDownDetails details) {
     if (!enableGesture || !isVisible) return false;
 
     for (final c in gestureComponents) {
-      if (c.handleTapDown(pointer, buttons, details) &&
+      if (c.handleTapDown(pointer, button, details) &&
           !tappingDetails.containsKey(pointer)) {
         return true;
       }
@@ -113,9 +113,9 @@ mixin HandlesGesture on GameComponent {
     if (isContained) {
       isPressing = true;
       tappingDetails[pointer] =
-          TappingDetails(pointer, buttons, pointerPosition, this);
+          TappingDetails(pointer, button, pointerPosition, this);
       final positionWithinComponent = convertedPointerPosition - position;
-      onTapDown?.call(buttons, positionWithinComponent);
+      onTapDown?.call(button, positionWithinComponent);
       return true;
     }
 
@@ -123,11 +123,11 @@ mixin HandlesGesture on GameComponent {
   }
 
   @mustCallSuper
-  bool handleTapUp(int pointer, int buttons, TapUpDetails details) {
+  bool handleTapUp(int pointer, int button, TapUpDetails details) {
     if (!enableGesture || !isVisible) return false;
 
     for (final c in gestureComponents) {
-      if (c.handleTapUp(pointer, buttons, details) &&
+      if (c.handleTapUp(pointer, button, details) &&
           !tappingDetails.containsKey(pointer)) {
         return true;
       }
@@ -140,17 +140,17 @@ mixin HandlesGesture on GameComponent {
     final isContained = containsPoint(convertedPointerPosition);
     if (isContained) {
       final positionWithinComponent = convertedPointerPosition - position;
-      onTap?.call(buttons, positionWithinComponent);
+      onTap?.call(button, positionWithinComponent);
       if (doubleTapTimer?.isActive ?? false) {
         doubleTapTimer?.cancel();
-        onDoubleTap?.call(buttons, positionWithinComponent);
+        onDoubleTap?.call(button, positionWithinComponent);
       } else {
         doubleTapTimer =
             Timer(Duration(milliseconds: doubleTapTimeConsider), () {
           doubleTapTimer?.cancel();
         });
       }
-      onTapUp?.call(buttons, positionWithinComponent);
+      onTapUp?.call(button, positionWithinComponent);
       return true;
     }
 
@@ -159,11 +159,11 @@ mixin HandlesGesture on GameComponent {
 
   @mustCallSuper
   HandlesGesture? handleDragStart(
-      int pointer, int buttons, DragStartDetails details) {
+      int pointer, int button, DragStartDetails details) {
     if (!enableGesture || !isVisible) return null;
 
     for (final c in gestureComponents) {
-      final r = c.handleDragStart(pointer, buttons, details);
+      final r = c.handleDragStart(pointer, button, details);
       if (r != null) {
         return r;
       }
@@ -180,7 +180,7 @@ mixin HandlesGesture on GameComponent {
       final convertedDraggingPosition =
           isHud ? dragPosition : gameRef.camera.globalToLocal(dragPosition);
       final positionWithinComponent = convertedDraggingPosition - position;
-      final r = onDragStart?.call(buttons, positionWithinComponent);
+      final r = onDragStart?.call(button, positionWithinComponent);
       if (r != null) {
         return r;
       } else {
@@ -192,12 +192,12 @@ mixin HandlesGesture on GameComponent {
   }
 
   @mustCallSuper
-  void handleDragUpdate(int pointer, int buttons, DragUpdateDetails details,
+  void handleDragUpdate(int pointer, int button, DragUpdateDetails details,
       GameComponent? draggingComponent) {
     if (!enableGesture || !isVisible) return;
 
     for (final c in gestureComponents) {
-      c.handleDragUpdate(pointer, buttons, details, draggingComponent);
+      c.handleDragUpdate(pointer, button, details, draggingComponent);
     }
 
     final dragPosition = details.globalPosition.toVector2();
@@ -206,19 +206,19 @@ mixin HandlesGesture on GameComponent {
 
     if (isDragging) {
       final delta = game.camera.globalToLocal(details.delta.toVector2());
-      onDragUpdate?.call(buttons, convertedDraggingPosition, delta);
+      onDragUpdate?.call(button, convertedDraggingPosition, delta);
     } else if (containsPoint(convertedDraggingPosition)) {
-      onDragOver?.call(buttons, draggingComponent);
+      onDragOver?.call(button, draggingComponent);
     }
   }
 
   @mustCallSuper
-  void handleDragEnd(int pointer, int buttons, TapUpDetails details,
+  void handleDragEnd(int pointer, int button, TapUpDetails details,
       GameComponent? draggingComponent) {
     if (!enableGesture || !isVisible) return;
 
     for (final c in gestureComponents) {
-      c.handleDragEnd(pointer, buttons, details, draggingComponent);
+      c.handleDragEnd(pointer, button, details, draggingComponent);
     }
 
     final pointerPosition = details.globalPosition.toVector2();
@@ -228,15 +228,15 @@ mixin HandlesGesture on GameComponent {
     // 其他的对象拖入此对象
     if (containsPoint(convertedPointerPosition) && draggingComponent != this) {
       final positionWithinComponent = convertedPointerPosition - position;
-      onDragIn?.call(buttons, positionWithinComponent, draggingComponent);
+      onDragIn?.call(button, positionWithinComponent, draggingComponent);
     }
 
-    // handleTapUp(pointer, buttons, details);
+    // handleTapUp(pointer, button, details);
 
     // 此对象拖动结束
     if (isDragging) {
       isDragging = false;
-      onDragEnd?.call(buttons, convertedPointerPosition);
+      onDragEnd?.call(button, convertedPointerPosition);
     }
   }
 
@@ -313,12 +313,11 @@ mixin HandlesGesture on GameComponent {
   }
 
   @mustCallSuper
-  bool handleLongPress(
-      int pointer, int buttons, LongPressStartDetails details) {
+  bool handleLongPress(int pointer, int button, LongPressStartDetails details) {
     if (!enableGesture || !isVisible) return false;
 
     for (final c in gestureComponents) {
-      if (c.handleLongPress(pointer, buttons, details) &&
+      if (c.handleLongPress(pointer, button, details) &&
           !tappingDetails.containsKey(pointer)) {
         return true;
       }

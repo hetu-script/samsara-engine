@@ -17,6 +17,7 @@ import 'package:flame/game.dart';
 
 // import 'ui/drop_menu.dart';
 import '../app.dart';
+import '../noise_test.dart';
 
 const richTextSource = 'rich text is <yellow italic>awesome</> !!!';
 
@@ -63,7 +64,7 @@ class GameScene extends Scene {
       useSpriteSrcSize: true,
       position: center,
     );
-    button.onTap = (buttons, position) async {
+    button.onTap = (button, position) async {
       if (card == null) {
         card = CustomGameCard(
           position: center,
@@ -125,10 +126,10 @@ class GameScene extends Scene {
   }
 
   @override
-  void onDragUpdate(int pointer, int buttons, DragUpdateDetails details) {
-    super.onDragUpdate(pointer, buttons, details);
+  void onDragUpdate(int pointer, int button, DragUpdateDetails details) {
+    super.onDragUpdate(pointer, button, details);
 
-    if (buttons == kSecondaryButton) {
+    if (button == kSecondaryButton) {
       camera.moveBy(-details.delta.toVector2());
     }
   }
@@ -158,7 +159,7 @@ class GameScene extends Scene {
               mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
                 Padding(
-                  padding: const EdgeInsets.only(top: 20.0, bottom: 20.0),
+                  padding: const EdgeInsets.only(top: 10.0),
                   child: ElevatedButton(
                     onPressed: () {
                       showDialog(
@@ -192,7 +193,7 @@ class GameScene extends Scene {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 20.0, bottom: 20.0),
+                  padding: const EdgeInsets.only(top: 10.0),
                   child: ElevatedButton(
                     onPressed: () {
                       showDialog(
@@ -206,7 +207,24 @@ class GameScene extends Scene {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 20.0, bottom: 100.0),
+                  padding: const EdgeInsets.only(top: 10.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      showDialog(
+                          context: context,
+                          builder: (context) {
+                            return const NoiseTest();
+                          });
+                    },
+                    child: Label(
+                      'noise test',
+                      width: 100.0,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10.0, bottom: 10.0),
                   child: ElevatedButton(
                     onPressed: () {
                       windowManager.close();
@@ -237,21 +255,21 @@ class GameScene extends Scene {
                     menuController.showFlyout(builder: (context) {
                       return fluent.MenuFlyout(
                         items: [
-                          // fluent.MenuFlyoutSubItem(
-                          //   text: Text('sub_items'),
-                          //   items: (context) {
-                          //     return <fluent.MenuFlyoutItemBase>[
-                          //       fluent.MenuFlyoutItem(
-                          //         text: const Text('sub_item1'),
-                          //         onPressed: () {},
-                          //       ),
-                          //       fluent.MenuFlyoutItem(
-                          //         text: const Text('sub_item2'),
-                          //         onPressed: () {},
-                          //       ),
-                          //     ];
-                          //   },
-                          // ),
+                          fluent.MenuFlyoutSubItem(
+                            text: Text('sub_items'),
+                            items: (context) {
+                              return <fluent.MenuFlyoutItemBase>[
+                                fluent.MenuFlyoutItem(
+                                  text: const Text('sub_item1'),
+                                  onPressed: () {},
+                                ),
+                                fluent.MenuFlyoutItem(
+                                  text: const Text('sub_item2'),
+                                  onPressed: () {},
+                                ),
+                              ];
+                            },
+                          ),
                           fluent.MenuFlyoutItem(
                             text: const Text('console'),
                             onPressed: () {

@@ -111,16 +111,16 @@ class SamsaraEngine extends SceneController
     _locale.languageId = localeId;
   }
 
-  void loadTileMapZoneColors(TileMap map, dynamic colors) {
-    final List<Map<int, (Color, Paint)>> convertedList = [];
-    for (final colorData in colors) {
-      final colorInfo =
-          Map<int, (Color, Paint)>.from(colorData.map((key, value) {
+  void loadTileMapZoneColors(TileMap map, List colorsData) {
+    final List<Map<int, Color>> convertedList = [];
+    for (final colorData in colorsData) {
+      final colorInfo = Map<int, Color>.from(colorData.map((key, value) {
         final color = HexColor.fromString(value);
         final paint = Paint()
           ..style = PaintingStyle.fill
           ..color = color.withAlpha(150);
-        return MapEntry(key as int, (color, paint));
+        map.cachedPaints[color] = paint;
+        return MapEntry(key as int, color);
       }));
       convertedList.add(colorInfo);
     }

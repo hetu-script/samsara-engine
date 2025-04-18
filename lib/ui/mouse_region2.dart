@@ -25,6 +25,7 @@ class MouseRegion2 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
+      cursor: cursor,
       hitTestBehavior: hitTestBehavior,
       onEnter: (event) {
         if (onMouseEnter == null) return;
@@ -40,11 +41,10 @@ class MouseRegion2 extends StatelessWidget {
         onMouseExit?.call();
       },
       child: PointerDetector(
-        cursor: cursor,
-        onTapDown: (pointer, buttons, details) {
+        onTapDown: (pointer, button, details) {
           onTapDown?.call();
         },
-        onTapUp: (pointer, buttons, details) {
+        onTapUp: (pointer, button, details) {
           onTapUp?.call();
         },
         child: child,

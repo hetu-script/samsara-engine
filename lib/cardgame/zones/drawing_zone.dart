@@ -108,7 +108,7 @@ class DrawingZone extends BorderComponent with HandlesGesture {
   // }
 
   // @override
-  // void onTap(int buttons, Vector2 position) {
+  // void onTap(int button, Vector2 position) {
   //   // drawOneCard();
   // }
 

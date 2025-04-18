@@ -30,7 +30,7 @@ class OutlinedText extends StatelessWidget {
     this.style = const TextStyle(),
     required this.textColor,
     this.strokeColor = Colors.black,
-    this.strokeWidth = 2,
+    this.strokeWidth = 3,
   });
 
   @override
