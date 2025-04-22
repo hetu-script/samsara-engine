@@ -6,7 +6,6 @@ import 'package:flame/flame.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:hetu_script/utils/uid.dart';
-import 'package:flutter/material.dart';
 
 import '../extensions.dart';
 // import '../paint.dart';
@@ -77,7 +76,6 @@ class TileMap extends GameComponent with HandlesGesture {
   // double _cameraMoveDt = 0;
 
   final TextStyle captionStyle;
-  late final TextPaint captionPaint;
 
   final TileShape tileShape;
   final Vector2 gridSize, tileSpriteSrcSize, tileOffset;
@@ -142,31 +140,7 @@ class TileMap extends GameComponent with HandlesGesture {
     this.isEditorMode = false,
   })  : assert(!gridSize.isZero()),
         assert(!tileSpriteSrcSize.isZero()),
-        random = math.Random(),
-        captionPaint = TextPaint(
-          style: captionStyle.copyWith(
-            color: Colors.white,
-            fontSize: 7.0,
-            shadows: const [
-              Shadow(
-                  // bottomLeft
-                  offset: Offset(-0.01, -0.01),
-                  color: Colors.black),
-              Shadow(
-                  // bottomRight
-                  offset: Offset(0.01, -0.01),
-                  color: Colors.black),
-              Shadow(
-                  // topRight
-                  offset: Offset(0.01, 0.01),
-                  color: Colors.black),
-              Shadow(
-                  // topLeft
-                  offset: Offset(-0.01, 0.01),
-                  color: Colors.black),
-            ],
-          ),
-        ) {
+        random = math.Random() {
     onMouseHover = (Vector2 position) {
       final tilePosition = worldPosition2Tile(position);
       final terrain = getTerrain(tilePosition.left, tilePosition.top);
@@ -189,18 +163,15 @@ class TileMap extends GameComponent with HandlesGesture {
           tilePosition2RenderPosition(tile.left, tile.top) + tileOffset;
     }
 
-    double bleendingPixelHorizontal = tile.srcSize.x * 0.04;
-    double bleendingPixelVertical = tile.srcSize.y * 0.04;
-    if (bleendingPixelHorizontal > 2) {
-      bleendingPixelHorizontal = 2;
+    double bleedingPixelHorizontal = tile.srcSize.x * 0.04;
+    double bleedingPixelVertical = tile.srcSize.y * 0.04;
+    if (bleedingPixelHorizontal > 2) {
+      bleedingPixelHorizontal = 2;
     }
-    if (bleendingPixelVertical > 2) {
-      bleendingPixelVertical = 2;
+    if (bleedingPixelVertical > 2) {
+      bleedingPixelVertical = 2;
     }
 
-    // int basePriority = tile is TileMapComponent
-    //     ? kTileMapComponentPriority
-    //     : kTileMapTerrainPriority;
     int basePriority = kTileMapTerrainPriority;
     if (tile is TileMapComponent) {
       basePriority += 5;
@@ -241,65 +212,24 @@ class TileMap extends GameComponent with HandlesGesture {
         tile.borderPath.relativeLineTo(-gridSize.x / 2, 0);
         tile.borderPath.relativeLineTo(-gridSize.x / 4, -gridSize.y / 2);
         tile.borderPath.close();
-        // tile.shadowPath.moveTo(l - bleendingPixelHorizontal + tile.offset.x,
-        //     t + gridSize.y / 2 + tile.offset.y);
-        // tile.shadowPath.relativeLineTo(
-        //     gridSize.x / 4 + bleendingPixelHorizontal,
-        //     -gridSize.y / 2 - bleendingPixelVertical);
-        // tile.shadowPath.relativeLineTo(gridSize.x / 2, 0);
-        // tile.shadowPath.relativeLineTo(
-        //     gridSize.x / 4 + bleendingPixelHorizontal,
-        //     gridSize.y / 2 + bleendingPixelVertical);
-        // tile.shadowPath.relativeLineTo(
-        //     -gridSize.x / 4 - bleendingPixelHorizontal,
-        //     gridSize.y / 2 + bleendingPixelVertical);
-        // tile.shadowPath.relativeLineTo(-gridSize.x / 2, 0);
-        // tile.shadowPath.relativeLineTo(
-        //     -gridSize.x / 4 - bleendingPixelHorizontal,
-        //     -gridSize.y / 2 - bleendingPixelVertical);
-        // tile.shadowPath.close();
         break;
       case TileShape.isometric:
         throw 'Isometric map tile is not supported yet!';
       case TileShape.hexagonalHorizontal:
         throw 'Horizontal hexagonal map tile is not supported yet!';
     }
-    // switch (renderDirection) {
-    //   case TileRenderDirection.bottomRight:
-    //     l = bl - (width - gridSize.x);
-    //     t = bt - (height - gridSize.y);
-    //     break;
-    //   case TileRenderDirection.bottomLeft:
-    //     l = bl;
-    //     t = bt - (height - gridSize.y);
-    //     break;
-    //   case TileRenderDirection.topRight:
-    //     l = bl - (width - gridSize.x);
-    //     t = bt;
-    //     break;
-    //   case TileRenderDirection.topLeft:
-    //     l = bl;
-    //     t = bt;
-    //     break;
-    //   case TileRenderDirection.bottomCenter:
-    //     break;
-    // }
-
-    // if (tile is TileMapComponent) {
-    //   tile.priority += 5;
-    // }
 
     tile.renderRect = Rect.fromLTWH(
         l -
             (tile.srcSize.x - gridSize.x) / 2 -
-            bleendingPixelHorizontal / 2 +
+            bleedingPixelHorizontal / 2 +
             tile.offset.x,
         t -
             (tile.srcSize.y - gridSize.y) -
-            bleendingPixelVertical / 2 +
+            bleedingPixelVertical / 2 +
             tile.offset.y,
-        tile.srcSize.x + bleendingPixelHorizontal,
-        tile.srcSize.y + bleendingPixelVertical);
+        tile.srcSize.x + bleedingPixelHorizontal,
+        tile.srcSize.y + bleedingPixelVertical);
   }
 
   @override
@@ -389,10 +319,11 @@ class TileMap extends GameComponent with HandlesGesture {
     }
   }
 
-  void setTerrainCaption(int left, int top, String? caption) {
+  void setTerrainCaption(int left, int top, String? caption, TextStyle? style) {
     final tile = getTerrain(left, top);
     assert(tile != null);
     tile!.caption = caption;
+    tile.captionStyle = style;
   }
 
   /// 这里的id仅仅是id，可能对应于纯数据对象
@@ -1220,12 +1151,12 @@ class TileMap extends GameComponent with HandlesGesture {
             canvas,
             caption,
             position: tile.renderRect.topLeft,
-            textPaint: captionPaint,
             config: ScreenTextConfig(
               size: tile.renderRect.size.toVector2(),
               outlined: true,
               anchor: Anchor.center,
               padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
+              textStyle: tile.captionStyle,
             ),
           );
         }

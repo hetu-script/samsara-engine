@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 // import 'package:hetu_script/errors.dart';
 
 import 'engine.dart';
-import 'ui/close_button2.dart';
 import 'ui/responsive_view.dart';
 import 'extensions.dart';
 
@@ -13,11 +12,13 @@ class Console extends StatefulWidget {
     required this.engine,
     this.margin,
     this.backgroundColor,
+    this.closeButton,
   });
 
   final SamsaraEngine engine;
   final EdgeInsetsGeometry? margin;
   final Color? backgroundColor;
+  final Widget? closeButton;
 
   @override
   State<Console> createState() => _ConsoleState();
@@ -66,7 +67,7 @@ class _ConsoleState extends State<Console> {
         appBar: AppBar(
           automaticallyImplyLeading: false,
           title: Text(widget.engine.locale('console')),
-          actions: const [CloseButton2()],
+          actions: [widget.closeButton ?? CloseButton()],
         ),
         body: Column(
           children: [

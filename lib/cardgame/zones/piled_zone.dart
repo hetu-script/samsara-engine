@@ -309,6 +309,7 @@ class PiledZone extends BorderComponent {
     bool animated = true,
     int? basePriority,
     void Function()? onComplete,
+    bool reversed = false,
   }) async {
     basePriority ??= cardBasePriority;
 
@@ -328,7 +329,8 @@ class PiledZone extends BorderComponent {
       card.resetPriority();
     }
 
-    cards.sort((c1, c2) => c1.index.compareTo(c2.index));
+    cards.sort((c1, c2) =>
+        reversed ? c2.index.compareTo(c1.index) : c1.index.compareTo(c2.index));
     // pile.clear();
     // calculate the new position of each hand cards.
     for (var i = 0; i < cards.length; ++i) {

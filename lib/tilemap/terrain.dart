@@ -132,6 +132,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   // 显示标签
   String? caption;
+  TextStyle? captionStyle;
 
   /// 显示贴图
   Sprite? _sprite, _overlaySprite;
