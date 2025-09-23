@@ -24,7 +24,7 @@ class LightConfig {
   Vector2? lightCenterOffset;
 
   late double _blurBorder;
-  set blurBorder(value) {
+  set blurBorder(double value) {
     _blurBorder = value;
 
     lightPaint = Paint()

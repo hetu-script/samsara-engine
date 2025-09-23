@@ -6,7 +6,7 @@ import 'package:flame/components.dart';
 
 import '../scene/scene.dart';
 
-class AnimatedCloud extends PositionComponent with HasGameRef<Scene> {
+class AnimatedCloud extends PositionComponent with HasGameReference<Scene> {
   late final Paint paint;
 
   Sprite? sprite;

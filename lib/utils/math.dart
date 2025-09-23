@@ -16,11 +16,12 @@ class PointOnCircle {
   );
 }
 
-List<PointOnCircle> generateDividingPointsFromCircle(
-    {required Vector2 center,
-    required double radius,
-    required int number,
-    double angleOffset = 0.0}) {
+List<PointOnCircle> generateDividingPointsOnCircle({
+  required Vector2 center,
+  required double radius,
+  required int number,
+  double angleOffset = 0.0,
+}) {
   assert(number > 1);
   List<PointOnCircle> coordinates = [];
 
@@ -40,7 +41,7 @@ List<PointOnCircle> generateDividingPointsFromCircle(
 
 /// 使用极坐标生成随机点
 /// 可以将 exponent 调整为更靠近小的值来增加靠近圆心的概率
-Vector2 generateRandomPointInCircle(
+Vector2 generateRandomPointOnCircle(
   Vector2 center,
   double radius, {
   double exponent = 0.5,

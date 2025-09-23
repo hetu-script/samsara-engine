@@ -497,5 +497,5 @@ class PointerDetectorState extends State<PointerDetector> {
   //   widget.onMouseExit?.call(event);
   // }
 
-  get touchCount => _touchDetails.length;
+  int get touchCount => _touchDetails.length;
 }

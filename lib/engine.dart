@@ -118,7 +118,7 @@ class SamsaraEngine extends SceneController
         final color = HexColor.fromString(value);
         final paint = Paint()
           ..style = PaintingStyle.fill
-          ..color = color.withAlpha(150);
+          ..color = color;
         map.cachedPaints[color] = paint;
         return MapEntry(key as int, color);
       }));

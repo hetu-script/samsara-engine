@@ -107,7 +107,7 @@ mixin HandlesGesture on GameComponent {
 
     final pointerPosition = details.globalPosition.toVector2();
     final convertedPointerPosition =
-        isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
+        isHud ? pointerPosition : game.camera.globalToLocal(pointerPosition);
 
     final isContained = containsPoint(convertedPointerPosition);
     if (isContained) {
@@ -135,7 +135,7 @@ mixin HandlesGesture on GameComponent {
 
     final pointerPosition = details.globalPosition.toVector2();
     final convertedPointerPosition =
-        isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
+        isHud ? pointerPosition : game.camera.globalToLocal(pointerPosition);
 
     final isContained = containsPoint(convertedPointerPosition);
     if (isContained) {
@@ -171,14 +171,14 @@ mixin HandlesGesture on GameComponent {
 
     final pointerPosition = details.globalPosition.toVector2();
     final convertedPointerPosition =
-        isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
+        isHud ? pointerPosition : game.camera.globalToLocal(pointerPosition);
     if (containsPoint(convertedPointerPosition) &&
         tappingDetails.containsKey(pointer)) {
       isDragging = true;
       final detail = tappingDetails[pointer]!;
       final dragPosition = detail.globalPosition;
       final convertedDraggingPosition =
-          isHud ? dragPosition : gameRef.camera.globalToLocal(dragPosition);
+          isHud ? dragPosition : game.camera.globalToLocal(dragPosition);
       final positionWithinComponent = convertedDraggingPosition - position;
       final r = onDragStart?.call(button, positionWithinComponent);
       if (r != null) {
@@ -202,7 +202,7 @@ mixin HandlesGesture on GameComponent {
 
     final dragPosition = details.globalPosition.toVector2();
     final convertedDraggingPosition =
-        isHud ? dragPosition : gameRef.camera.globalToLocal(dragPosition);
+        isHud ? dragPosition : game.camera.globalToLocal(dragPosition);
 
     if (isDragging) {
       final delta = game.camera.globalToLocal(details.delta.toVector2());
@@ -223,7 +223,7 @@ mixin HandlesGesture on GameComponent {
 
     final pointerPosition = details.globalPosition.toVector2();
     final convertedPointerPosition =
-        isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
+        isHud ? pointerPosition : game.camera.globalToLocal(pointerPosition);
 
     // 其他的对象拖入此对象
     if (containsPoint(convertedPointerPosition) && draggingComponent != this) {
@@ -251,13 +251,11 @@ mixin HandlesGesture on GameComponent {
     }
 
     final pointerPosition1 = touches[0].currentGlobalPosition.toVector2();
-    final convertedPointerPosition1 = isHud
-        ? pointerPosition1
-        : gameRef.camera.globalToLocal(pointerPosition1);
+    final convertedPointerPosition1 =
+        isHud ? pointerPosition1 : game.camera.globalToLocal(pointerPosition1);
     final pointerPosition2 = touches[1].currentGlobalPosition.toVector2();
-    final convertedPointerPosition2 = isHud
-        ? pointerPosition2
-        : gameRef.camera.globalToLocal(pointerPosition2);
+    final convertedPointerPosition2 =
+        isHud ? pointerPosition2 : game.camera.globalToLocal(pointerPosition2);
     if (containsPoint(convertedPointerPosition1) &&
         containsPoint(convertedPointerPosition2)) {
       isScalling = true;
@@ -282,13 +280,11 @@ mixin HandlesGesture on GameComponent {
     }
 
     final pointerPosition1 = touches[0].currentGlobalPosition.toVector2();
-    final convertedPointerPosition1 = isHud
-        ? pointerPosition1
-        : gameRef.camera.globalToLocal(pointerPosition1);
+    final convertedPointerPosition1 =
+        isHud ? pointerPosition1 : game.camera.globalToLocal(pointerPosition1);
     final pointerPosition2 = touches[1].currentGlobalPosition.toVector2();
-    final convertedPointerPosition2 = isHud
-        ? pointerPosition2
-        : gameRef.camera.globalToLocal(pointerPosition2);
+    final convertedPointerPosition2 =
+        isHud ? pointerPosition2 : game.camera.globalToLocal(pointerPosition2);
     if (containsPoint(convertedPointerPosition1) &&
         containsPoint(convertedPointerPosition2)) {
       onScaleUpdate?.call(touches, details);
@@ -325,7 +321,7 @@ mixin HandlesGesture on GameComponent {
 
     final pointerPosition = details.globalPosition.toVector2();
     final convertedPointerPosition =
-        isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
+        isHud ? pointerPosition : game.camera.globalToLocal(pointerPosition);
 
     final isContained = containsPoint(convertedPointerPosition);
     if (isContained) {
@@ -350,7 +346,7 @@ mixin HandlesGesture on GameComponent {
 
     final pointerPosition = details.position.toVector2();
     final convertedPointerPosition =
-        isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
+        isHud ? pointerPosition : game.camera.globalToLocal(pointerPosition);
     final isContained = containsPoint(convertedPointerPosition);
     if (isContained) {
       isHovering = true;
@@ -376,7 +372,7 @@ mixin HandlesGesture on GameComponent {
 
     final pointerPosition = details.position.toVector2();
     final convertedPointerPosition =
-        isHud ? pointerPosition : gameRef.camera.globalToLocal(pointerPosition);
+        isHud ? pointerPosition : game.camera.globalToLocal(pointerPosition);
     final isContained = containsPoint(convertedPointerPosition);
     if (isContained) {
       if (details.scrollDelta.dy > 0) {

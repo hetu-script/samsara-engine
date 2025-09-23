@@ -158,24 +158,18 @@ TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
       textColor = Colors.brown;
     } else if (currentTag == 'blueGrey') {
       textColor = Colors.blueGrey;
-    } else if (currentTag == 'rank0' || currentTag == 'basic') {
+    } else if (currentTag == 'rank0' || currentTag == 'common') {
       textColor = HexColor.fromString('#CCCCCC');
-    } else if (currentTag == 'rank1' || currentTag == 'common') {
+    } else if (currentTag == 'rank1' || currentTag == 'rare') {
       textColor = HexColor.fromString('#D4FFFF');
-    } else if (currentTag == 'rank2' || currentTag == 'uncommon') {
+    } else if (currentTag == 'rank2' || currentTag == 'epic') {
       textColor = HexColor.fromString('#9D9DFF');
-    } else if (currentTag == 'rank3' || currentTag == 'rare') {
+    } else if (currentTag == 'rank3' || currentTag == 'legendary') {
       textColor = HexColor.fromString('#693DA8');
-    } else if (currentTag == 'rank4' || currentTag == 'epic') {
+    } else if (currentTag == 'rank4' || currentTag == 'mythic') {
       textColor = HexColor.fromString('#E7E7AC');
-    } else if (currentTag == 'rank5' || currentTag == 'legendary') {
-      textColor = HexColor.fromString('#DBDB72');
-    } else if (currentTag == 'rank6' || currentTag == 'unique') {
-      textColor = HexColor.fromString('#62CC39');
-    } else if (currentTag == 'rank7' || currentTag == 'mythic') {
+    } else if (currentTag == 'rank5' || currentTag == 'arcane') {
       textColor = HexColor.fromString('#C65043');
-    } else if (currentTag == 'rank8' || currentTag == 'arcane') {
-      textColor = HexColor.fromString('#983030');
     } else if (currentTag.startsWith('color=')) {
       textColor = HexColor.fromString(currentTag.substring(6));
     } else if (currentTag.startsWith('icon=')) {

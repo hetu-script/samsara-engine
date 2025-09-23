@@ -43,7 +43,6 @@ mixin AnimationStateController on GameComponent {
   }
 
   bool containsState(String stateId) {
-    // return _animations.containsKey('${stateId}_$modelId');
     return _animations.containsKey(stateId);
   }
 
@@ -70,15 +69,21 @@ mixin AnimationStateController on GameComponent {
   }
 
   Future<void> setCompositeState({
-    required String startup,
-    List<dynamic>? transitions,
+    required List<dynamic> startup,
+    List<dynamic>? recovery,
+    List<dynamic>? actions,
     List<dynamic>? overlays,
-    String? recovery,
     String? complete,
     String? sound,
     void Function()? onComplete,
   }) async {
-    Future future = setState(startup);
+    assert(startup.isNotEmpty);
+    Future future = setState(startup.first);
+    if (startup.length > 1) {
+      for (final state in startup.skip(1)) {
+        future = future.then((_) => setState(state));
+      }
+    }
 
     if (overlays != null) {
       Future prev = future;
@@ -87,9 +92,9 @@ mixin AnimationStateController on GameComponent {
       }
     }
 
-    if (transitions != null) {
-      for (final transition in transitions) {
-        future = future.then((_) => setState(transition));
+    if (actions != null) {
+      for (final action in actions) {
+        future = future.then((_) => setState(action));
       }
       if (sound != null) {
         future.then((_) {
@@ -105,7 +110,9 @@ mixin AnimationStateController on GameComponent {
     }
 
     if (recovery != null) {
-      future = future.then((_) => setState(recovery));
+      for (final state in recovery) {
+        future = future.then((_) => setState(state));
+      }
     }
 
     future.then((_) {

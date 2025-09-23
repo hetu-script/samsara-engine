@@ -158,10 +158,13 @@ class TileMap extends GameComponent with HandlesGesture {
     // tile.renderPosition = tilePosition2RenderPosition(tile.left, tile.top);
     tile.centerPosition = tilePosition2TileCenter(tile.left, tile.top);
 
+    int basePriority = kTileMapTerrainPriority;
+
     if (tile is TileMapComponent) {
+      basePriority += 5;
       tile.position =
           tilePosition2RenderPosition(tile.left, tile.top) + tileOffset;
-    }
+    } else {}
 
     double bleedingPixelHorizontal = tile.srcSize.x * 0.04;
     double bleedingPixelVertical = tile.srcSize.y * 0.04;
@@ -172,11 +175,8 @@ class TileMap extends GameComponent with HandlesGesture {
       bleedingPixelVertical = 2;
     }
 
-    int basePriority = kTileMapTerrainPriority;
-    if (tile is TileMapComponent) {
-      basePriority += 5;
-    }
     late final double l, t; // l, t,
+
     switch (tileShape) {
       case TileShape.orthogonal:
         // to avoid overlapping, render the tiles in a specific order:
@@ -187,9 +187,11 @@ class TileMap extends GameComponent with HandlesGesture {
 
         l = (tile.left - 1) * gridSize.x;
         t = (tile.top - 1) * gridSize.y;
-        final border = Rect.fromLTWH(l, t, gridSize.x, gridSize.y);
-        tile.borderPath.addRect(border);
-        break;
+
+        if (tile is! TileMapComponent) {
+          final border = Rect.fromLTWH(l, t, gridSize.x, gridSize.y);
+          tile.borderPath.addRect(border);
+        }
       case TileShape.hexagonalVertical:
         // to avoid overlapping, render the tiles in a specific order:
         // 这里乘以10 是为了给地形上的MapComponent留出空间
@@ -204,15 +206,58 @@ class TileMap extends GameComponent with HandlesGesture {
         t = tile.left.isOdd
             ? (tile.top - 1) * gridSize.y
             : (tile.top - 1) * gridSize.y + gridSize.y / 2;
-        tile.borderPath.moveTo(l, t + gridSize.y / 2);
-        tile.borderPath.relativeLineTo(gridSize.x / 4, -gridSize.y / 2);
-        tile.borderPath.relativeLineTo(gridSize.x / 2, 0);
-        tile.borderPath.relativeLineTo(gridSize.x / 4, gridSize.y / 2);
-        tile.borderPath.relativeLineTo(-gridSize.x / 4, gridSize.y / 2);
-        tile.borderPath.relativeLineTo(-gridSize.x / 2, 0);
-        tile.borderPath.relativeLineTo(-gridSize.x / 4, -gridSize.y / 2);
-        tile.borderPath.close();
-        break;
+
+        if (tile is! TileMapComponent) {
+          tile.borderPath.moveTo(l, t + gridSize.y / 2);
+          tile.borderPath.relativeLineTo(gridSize.x / 4, -gridSize.y / 2);
+          tile.borderPath.relativeLineTo(gridSize.x / 2, 0);
+          tile.borderPath.relativeLineTo(gridSize.x / 4, gridSize.y / 2);
+          tile.borderPath.relativeLineTo(-gridSize.x / 4, gridSize.y / 2);
+          tile.borderPath.relativeLineTo(-gridSize.x / 2, 0);
+          tile.borderPath.relativeLineTo(-gridSize.x / 4, -gridSize.y / 2);
+          tile.borderPath.close();
+
+          final double innerMargin = gridSize.x / 10;
+          final Vector2 innerSize = gridSize - Vector2.all(innerMargin * 2);
+
+          Vector2 start = Vector2(l + innerMargin, t + gridSize.y / 2);
+
+          final innerBorderPath1 = Path();
+          innerBorderPath1.moveTo(start.x, start.y);
+          start += Vector2(innerSize.x / 4, -innerSize.y / 2);
+          innerBorderPath1.lineTo(start.x, start.y);
+          tile.innerBorderPaths[1] = innerBorderPath1;
+
+          final innerBorderPath2 = Path();
+          innerBorderPath2.moveTo(start.x, start.y);
+          start += Vector2(innerSize.x / 2, 0);
+          innerBorderPath2.lineTo(start.x, start.y);
+          tile.innerBorderPaths[2] = innerBorderPath2;
+
+          final innerBorderPath3 = Path();
+          innerBorderPath3.moveTo(start.x, start.y);
+          start += Vector2(innerSize.x / 4, innerSize.y / 2);
+          innerBorderPath3.lineTo(start.x, start.y);
+          tile.innerBorderPaths[3] = innerBorderPath3;
+
+          final innerBorderPath4 = Path();
+          innerBorderPath4.moveTo(start.x, start.y);
+          start += Vector2(-innerSize.x / 4, innerSize.y / 2);
+          innerBorderPath4.lineTo(start.x, start.y);
+          tile.innerBorderPaths[4] = innerBorderPath4;
+
+          final innerBorderPath5 = Path();
+          innerBorderPath5.moveTo(start.x, start.y);
+          start += Vector2(-innerSize.x / 2, 0);
+          innerBorderPath5.lineTo(start.x, start.y);
+          tile.innerBorderPaths[5] = innerBorderPath5;
+
+          final innerBorderPath6 = Path();
+          innerBorderPath6.moveTo(start.x, start.y);
+          start += Vector2(-innerSize.x / 4, -innerSize.y / 2);
+          innerBorderPath6.lineTo(start.x, start.y);
+          tile.innerBorderPaths[6] = innerBorderPath6;
+        }
       case TileShape.isometric:
         throw 'Isometric map tile is not supported yet!';
       case TileShape.hexagonalHorizontal:
@@ -364,11 +409,11 @@ class TileMap extends GameComponent with HandlesGesture {
     if (isCharacter) {
       assert(spriteSrcSize != null);
       SpriteSheet? walkAnimationSpriteSheet, swimAnimationSpriteSheet;
-      final String? modelId = data['model'];
+      final String? skinId = data['skin'];
       final String? shipModelId = data['shipModel'];
-      if (modelId != null) {
-        final image = await Flame.images
-            .load('animation/$modelId/tilemap_moving_animation.png');
+      if (skinId != null) {
+        final image =
+            await Flame.images.load('animation/character/tilemap_$skinId.png');
         walkAnimationSpriteSheet = SpriteSheet(
           image: image,
           srcSize: spriteSrcSize!,
@@ -459,9 +504,9 @@ class TileMap extends GameComponent with HandlesGesture {
   void setCameraFollowHero(bool value) {
     if (hero != null) {
       if (value) {
-        gameRef.camera.follow(hero!);
+        game.camera.follow(hero!);
       } else {
-        gameRef.camera.stop();
+        game.camera.stop();
       }
     }
   }
@@ -524,6 +569,58 @@ class TileMap extends GameComponent with HandlesGesture {
         throw 'Get neighbors of Horizontal hexagonal map tile is not supported yet!';
     }
     return positions;
+  }
+
+  Map<int, TileMapTerrain> getNeighborTiles(TileMapTerrain tile) {
+    final neighbors = <int, TileMapTerrain>{};
+    switch (tileShape) {
+      case TileShape.orthogonal:
+        // 对于正方形tilemap，邻居顺序是左(1)上(2)右(3)下(4)
+        final n1 = getTerrain(tile.left - 1, tile.top);
+        if (n1 != null) neighbors[1] = n1;
+        final n2 = getTerrain(tile.left, tile.top - 1);
+        if (n2 != null) neighbors[2] = n2;
+        final n3 = getTerrain(tile.left + 1, tile.top);
+        if (n3 != null) neighbors[3] = n3;
+        final n4 = getTerrain(tile.left, tile.top + 1);
+        if (n4 != null) neighbors[4] = n4;
+
+      case TileShape.hexagonalVertical:
+        // 对于横向六边形tilemap，邻居顺序是左上(1)上(2)右上(3)右下(4)下(5)左下(6)
+
+        if (tile.left.isOdd) {
+          final n1 = getTerrain(tile.left - 1, tile.top - 1);
+          if (n1 != null) neighbors[1] = n1;
+          final n2 = getTerrain(tile.left, tile.top - 1);
+          if (n2 != null) neighbors[2] = n2;
+          final n3 = getTerrain(tile.left + 1, tile.top - 1);
+          if (n3 != null) neighbors[3] = n3;
+          final n4 = getTerrain(tile.left + 1, tile.top);
+          if (n4 != null) neighbors[4] = n4;
+          final n5 = getTerrain(tile.left, tile.top + 1);
+          if (n5 != null) neighbors[5] = n5;
+          final n6 = getTerrain(tile.left - 1, tile.top);
+          if (n6 != null) neighbors[6] = n6;
+        } else {
+          final n1 = getTerrain(tile.left - 1, tile.top);
+          if (n1 != null) neighbors[1] = n1;
+          final n2 = getTerrain(tile.left, tile.top - 1);
+          if (n2 != null) neighbors[2] = n2;
+          final n3 = getTerrain(tile.left + 1, tile.top);
+          if (n3 != null) neighbors[3] = n3;
+          final n4 = getTerrain(tile.left + 1, tile.top + 1);
+          if (n4 != null) neighbors[4] = n4;
+          final n5 = getTerrain(tile.left, tile.top + 1);
+          if (n5 != null) neighbors[5] = n5;
+          final n6 = getTerrain(tile.left - 1, tile.top + 1);
+          if (n6 != null) neighbors[6] = n6;
+        }
+      case TileShape.isometric:
+        throw 'Get neighbors of Isometric map tile is not supported yet!';
+      case TileShape.hexagonalHorizontal:
+        throw 'Get neighbors of Horizontal hexagonal map tile is not supported yet!';
+    }
+    return neighbors;
   }
 
   Vector2 getRandomTerrainPosition() {
@@ -903,11 +1000,11 @@ class TileMap extends GameComponent with HandlesGesture {
     final completer = Completer();
 
     if (animated) {
-      gameRef.camera.moveTo2(dest, speed: speed, zoom: zoom, onComplete: () {
+      game.camera.moveTo2(dest, speed: speed, zoom: zoom, onComplete: () {
         completer.complete();
       });
     } else {
-      gameRef.camera.snapTo(dest);
+      game.camera.snapTo(dest);
       completer.complete();
     }
 
@@ -1117,7 +1214,7 @@ class TileMap extends GameComponent with HandlesGesture {
   void renderTree(Canvas canvas) {
     super.renderTree(canvas);
     canvas.save();
-    canvas.transform(transformMatrix.storage);
+    canvas.transform(Float64List.fromList(transformMatrix.storage));
 
     for (final tile in terrains) {
       if (!isTileVisibleOnScreen(tile)) continue;
@@ -1144,19 +1241,44 @@ class TileMap extends GameComponent with HandlesGesture {
         canvas.drawPath(tile.borderPath, uninteractablePaint);
       }
 
-      if (kDebugMode || isEditorMode || tile.isLighted) {
-        final caption = tile.objectId ?? tile.caption;
-        if (caption != null) {
+      if (isEditorMode || isTileWithinSight(tile)) {
+        if (tile.nationId != null) {
+          // 取出门派模式下此地块所属门派的颜色
+          final Color? color = zoneColors[1][tile.index];
+          assert(color != null,
+              'TileMapTerrain.render: tile (index: ${tile.index}, left: ${tile.left}, top: ${tile.top}, nationId: ${tile.nationId}) has no color defined in map.zoneColors');
+          final neighbors = getNeighborTiles(tile);
+          for (final neighborIndex in neighbors.keys) {
+            final neighbor = neighbors[neighborIndex]!;
+            if (neighbor.nationId != tile.nationId) {
+              assert(tile.innerBorderPaths[neighborIndex] != null);
+              final borderPaint = Paint()
+                ..strokeWidth = 2
+                ..style = PaintingStyle.stroke
+                ..color = color!.withAlpha(128);
+              final borderShadowPaint = Paint()
+                ..strokeWidth = 4
+                ..style = PaintingStyle.stroke
+                ..color = Colors.black.withAlpha(128);
+              canvas.drawPath(
+                  tile.innerBorderPaths[neighborIndex]!, borderShadowPaint);
+              canvas.drawPath(
+                  tile.innerBorderPaths[neighborIndex]!, borderPaint);
+            }
+          }
+        }
+
+        if (tile.caption != null) {
           drawScreenText(
             canvas,
-            caption,
+            tile.caption!,
             position: tile.renderRect.topLeft,
             config: ScreenTextConfig(
               size: tile.renderRect.size.toVector2(),
               outlined: true,
               anchor: Anchor.center,
               padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
-              textStyle: tile.captionStyle,
+              textStyle: tile.captionStyle ?? captionStyle,
             ),
           );
         }

@@ -16,7 +16,7 @@ import '../lighting/light_config.dart';
 export '../types.dart';
 
 abstract class GameComponent extends PositionComponent
-    with HasGameRef<Scene>, HasPaint
+    with HasGameReference<Scene>, HasPaint
     implements SizeProvider, OpacityProvider {
   bool? _isHud;
   bool get isHud => _isHud ?? false;
@@ -174,7 +174,6 @@ abstract class GameComponent extends PositionComponent
       endPosition: toPosition,
       endSize: toSize,
       endAngle: toAngle,
-      clockwise: clockwise,
       onChange: onChange,
       onComplete: () {
         _toPosition = null;

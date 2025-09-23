@@ -61,5 +61,6 @@ mixin TileInfo on GameComponent {
   int get top => tilePosition.top;
 
   final borderPath = Path();
+  Map<int, Path> innerBorderPaths = {};
   // final shadowPath = Path();
 }

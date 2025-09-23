@@ -11,9 +11,9 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flame: ^1.26.1
+  flame: ^1.32.0
   flame_splash_screen: ^0.3.0
-  flame_audio: ^2.11.0
+  flame_audio: ^2.11.7
   logger: ^2.5.0
 
   hetu_script:
@@ -25,7 +25,7 @@ dependencies:
   vector_math: ^2.1.4
   path_provider: ^2.0.13
   path: ^1.8.2
-  flutter_platform_alert: ^0.7.0
+  flutter_platform_alert: ^0.8.0
   colorfilter_generator: ^0.0.8
   meta: ^1.10.0
   quiver: ^3.2.1
@@ -35,7 +35,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
 

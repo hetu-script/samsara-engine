@@ -37,7 +37,7 @@ class Hovertip extends BorderComponent {
   // static bool showBorder = false;
   static late Paint backgroundPaint;
 
-  static clearAll([List<GameComponent>? list]) {
+  static void clearAll([List<GameComponent>? list]) {
     if (list == null) {
       for (final instance in _instances.values) {
         instance.removeFromParent();
@@ -53,7 +53,7 @@ class Hovertip extends BorderComponent {
     }
   }
 
-  static show({
+  static void show({
     required Scene scene,
     required GameComponent target,
     String? content,

@@ -11,6 +11,7 @@ class AdvancedMoveEffect extends Effect with EffectTarget<GameComponent> {
   final bool _clockwise;
 
   Vector2? _diffPosition, _diffSize;
+  double _originalAngle = 0;
   double? _diffAngle;
 
   void Function()? onChange;
@@ -26,7 +27,7 @@ class AdvancedMoveEffect extends Effect with EffectTarget<GameComponent> {
     super.onComplete,
   })  : _endPosition = endPosition,
         _endSize = endSize,
-        _endAngle = endAngle,
+        _endAngle = endAngle?.toNormalizedAngle(),
         _clockwise = clockwise,
         super(controller) {
     this.target = target;
@@ -55,12 +56,13 @@ class AdvancedMoveEffect extends Effect with EffectTarget<GameComponent> {
     }
 
     if (_endAngle != null) {
-      _diffAngle =
-          (target.angle - (_endAngle != 0 ? _endAngle! : 2 * math.pi)).abs() *
-              (_clockwise ? 1 : -1);
+      _originalAngle =
+          target.angle < 0 ? target.angle + 2 * math.pi : target.angle;
+      final endAngle = _endAngle! <= 0 ? _endAngle! + 2 * math.pi : _endAngle!;
+      _diffAngle = (_originalAngle - endAngle).abs() * (_clockwise ? 1 : -1);
     }
 
-    assert(_diffPosition != null || _diffSize != null || _endAngle != null);
+    assert(_diffPosition != null || _diffSize != null || _diffAngle != null);
   }
 
   @override
@@ -83,7 +85,7 @@ class AdvancedMoveEffect extends Effect with EffectTarget<GameComponent> {
     }
 
     if (_diffAngle != null) {
-      target.angle += _diffAngle! * dProgress;
+      target.angle = _originalAngle + _diffAngle! * progress;
     }
 
     onChange?.call();

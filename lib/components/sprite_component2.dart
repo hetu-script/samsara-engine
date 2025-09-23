@@ -126,7 +126,7 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
       _sprite = sprite;
     }
     if (_spriteId != null) {
-      _sprite = await gameRef.loadSprite(_spriteId!);
+      _sprite = await game.loadSprite(_spriteId!);
     }
     if (autoResize) {
       _resizeToSprite();

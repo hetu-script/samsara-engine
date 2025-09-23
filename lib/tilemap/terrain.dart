@@ -302,27 +302,28 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
     _sprite?.renderRect(canvas, renderRect);
     _animation?.ticker.currentFrame.sprite.renderRect(canvas, renderRect);
-    _overlaySprite?.renderRect(
-        canvas, renderRect.stretchTo(_overlaySpriteOffset));
-
-    if (map.isEditorMode) {
-      canvas.drawPath(borderPath, gridPaint);
-    }
-
-    if (map.isEditorMode || map.isTileWithinSight(this)) {
-      _overlayAnimation?.ticker.currentFrame.sprite
-          .renderRect(canvas, renderRect.stretchTo(_overlaySpriteOffset));
-    }
 
     if (map.colorMode != kColorModeNone) {
       final color = map.zoneColors[map.colorMode][index];
       if (color != null) {
         var paint = map.cachedPaints[color];
         paint ??= map.cachedPaints[color] = Paint()
-          ..color = color
-          ..style = PaintingStyle.fill;
+          ..style = PaintingStyle.fill
+          ..color = color;
         canvas.drawPath(borderPath, paint);
       }
+    }
+
+    _overlaySprite?.renderRect(
+        canvas, renderRect.stretchTo(_overlaySpriteOffset));
+
+    if (map.isEditorMode || map.isTileWithinSight(this)) {
+      _overlayAnimation?.ticker.currentFrame.sprite
+          .renderRect(canvas, renderRect.stretchTo(_overlaySpriteOffset));
+    }
+
+    if (map.isEditorMode) {
+      canvas.drawPath(borderPath, gridPaint);
     }
   }
 
