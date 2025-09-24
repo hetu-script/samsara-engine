@@ -16,7 +16,6 @@ import 'component.dart';
 import 'terrain.dart';
 import 'direction.dart';
 import 'route.dart';
-import '../animation/sprite_animation.dart';
 import '../utils/color.dart';
 import '../paint/paint.dart';
 
@@ -404,56 +403,6 @@ class TileMap extends GameComponent with HandlesGesture {
       return hero!;
     }
 
-    final Map<String, SpriteAnimationWithTicker> states = {};
-
-    if (isCharacter) {
-      assert(spriteSrcSize != null);
-      SpriteSheet? walkAnimationSpriteSheet, swimAnimationSpriteSheet;
-      final String? skinId = data['skin'];
-      final String? shipModelId = data['shipModel'];
-      if (skinId != null) {
-        final image =
-            await Flame.images.load('animation/character/tilemap_$skinId.png');
-        walkAnimationSpriteSheet = SpriteSheet(
-          image: image,
-          srcSize: spriteSrcSize!,
-        );
-
-        states['walk_south'] = SpriteAnimationWithTicker(
-            animation: walkAnimationSpriteSheet.createAnimation(
-                row: 0, stepTime: TileMapComponent.defaultAnimationStepTime));
-        states['walk_east'] = SpriteAnimationWithTicker(
-            animation: walkAnimationSpriteSheet.createAnimation(
-                row: 1, stepTime: TileMapComponent.defaultAnimationStepTime));
-        states['walk_north'] = SpriteAnimationWithTicker(
-            animation: walkAnimationSpriteSheet.createAnimation(
-                row: 2, stepTime: TileMapComponent.defaultAnimationStepTime));
-        states['walk_west'] = SpriteAnimationWithTicker(
-            animation: walkAnimationSpriteSheet.createAnimation(
-                row: 3, stepTime: TileMapComponent.defaultAnimationStepTime));
-      }
-      if (shipModelId != null) {
-        final image = await Flame.images.load('animation/$shipModelId.png');
-        swimAnimationSpriteSheet = SpriteSheet(
-          image: image,
-          srcSize: spriteSrcSize!,
-        );
-
-        states['swim_south'] = SpriteAnimationWithTicker(
-            animation: swimAnimationSpriteSheet.createAnimation(
-                row: 0, stepTime: TileMapComponent.defaultAnimationStepTime));
-        states['swim_east'] = SpriteAnimationWithTicker(
-            animation: swimAnimationSpriteSheet.createAnimation(
-                row: 1, stepTime: TileMapComponent.defaultAnimationStepTime));
-        states['swim_north'] = SpriteAnimationWithTicker(
-            animation: swimAnimationSpriteSheet.createAnimation(
-                row: 2, stepTime: TileMapComponent.defaultAnimationStepTime));
-        states['swim_west'] = SpriteAnimationWithTicker(
-            animation: swimAnimationSpriteSheet.createAnimation(
-                row: 3, stepTime: TileMapComponent.defaultAnimationStepTime));
-      }
-    }
-
     final component = TileMapComponent(
       map: this,
       id: componentId,
@@ -461,10 +410,8 @@ class TileMap extends GameComponent with HandlesGesture {
       left: data['worldPosition']?['left'],
       top: data['worldPosition']?['top'],
       offset: tileOffset,
-      animations: states,
       isCharacter: isCharacter,
-      hasWalkAnimation: isCharacter,
-      hasSwimAnimation: isCharacter,
+      spriteSrcSize: spriteSrcSize,
       isHidden: data!['isHidden'] ?? false,
     );
     component.loadFrameData();
@@ -525,8 +472,12 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   bool isTileWithinSight(TileMapTerrain tile) {
-    // return (tile?.isLighted ?? false) || (tile?.isOnLightPerimeter ?? false);
-    return _tilesWithinSight.contains(tile);
+    if (showFogOfWar == false) {
+      return true;
+    } else {
+      // return (tile?.isLighted ?? false) || (tile?.isOnLightPerimeter ?? false);
+      return _tilesWithinSight.contains(tile);
+    }
   }
 
   // 从索引得到坐标

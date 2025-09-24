@@ -22,14 +22,14 @@ enum AnimationDirection {
   north,
 }
 
-const kObjectWalkStates = {
+const kObjectWalkAnimations = {
   'walk_north',
   'walk_south',
   'walk_east',
   'walk_west',
 };
 
-const kObjectWalkStatesWithSwim = {
+const kObjectWalkAnimationsWithSwim = {
   'walk_north',
   'walk_south',
   'walk_east',
@@ -53,8 +53,8 @@ class TileMapComponent extends TaskComponent
   final double velocityFactor;
 
   final bool isCharacter;
-  final bool hasWalkAnimation;
-  final bool hasSwimAnimation;
+
+  final Vector2? spriteSrcSize;
 
   late OrthogonalDirection _direction;
 
@@ -88,7 +88,7 @@ class TileMapComponent extends TaskComponent
     data?['isHidden'] = value;
   }
 
-  /// For moving object, states must contains all [kObjectWalkStates]
+  /// For moving object, animations must contains all [kObjectWalkAnimations]
   TileMapComponent({
     required this.map,
     required this.id,
@@ -98,32 +98,11 @@ class TileMapComponent extends TaskComponent
     Vector2? offset,
     this.velocityFactor = 0.8,
     this.isCharacter = false,
-    this.hasWalkAnimation = false,
-    this.hasSwimAnimation = false,
-    Map<String, SpriteAnimationWithTicker> animations = const {},
+    this.spriteSrcSize,
     bool isHidden = false,
   }) : _isHidden = isHidden {
     this.offset = offset ?? Vector2.zero();
     tilePosition = TilePosition(left ?? 1, top ?? 1);
-
-    for (final key in animations.keys) {
-      addState(key, animations[key]!);
-    }
-
-    if (hasWalkAnimation || hasSwimAnimation) {
-      if (hasSwimAnimation) {
-        for (final key in kObjectWalkStatesWithSwim) {
-          assert(animations.containsKey(key), 'animation not found! id: $key');
-        }
-      } else if (hasWalkAnimation) {
-        for (final key in kObjectWalkStates) {
-          assert(animations.containsKey(key), 'animation not found! id: $key');
-        }
-      }
-
-      setDirection(OrthogonalDirection.south);
-      stopAnimation();
-    }
   }
 
   void stopAnimation() {
@@ -133,7 +112,7 @@ class TileMapComponent extends TaskComponent
 
   void setDirection(OrthogonalDirection value, {bool jumpToEnd = false}) {
     _direction = value;
-    if (hasSwimAnimation && isOnWater) {
+    if (isOnWater) {
       setState('swim_${_direction.name}', jumpToEnd: jumpToEnd);
     } else {
       setState('walk_${_direction.name}', jumpToEnd: jumpToEnd);
@@ -166,6 +145,75 @@ class TileMapComponent extends TaskComponent
       );
       addState('default', animation);
       setState('default');
+    }
+
+    if (isCharacter) {
+      assert(spriteSrcSize != null);
+
+      final Map<String, SpriteAnimationWithTicker> animations = {};
+
+      SpriteSheet? walkAnimationSpriteSheet, swimAnimationSpriteSheet;
+      final String? skinId = data['skin'];
+      final String? shipModelId = data['shipModel'];
+
+      if (skinId != null) {
+        final image =
+            await Flame.images.load('animation/character/tilemap_$skinId.png');
+        walkAnimationSpriteSheet = SpriteSheet(
+          image: image,
+          srcSize: spriteSrcSize!,
+        );
+
+        animations['walk_south'] = SpriteAnimationWithTicker(
+            animation: walkAnimationSpriteSheet.createAnimation(
+                row: 0, stepTime: TileMapComponent.defaultAnimationStepTime));
+        animations['walk_east'] = SpriteAnimationWithTicker(
+            animation: walkAnimationSpriteSheet.createAnimation(
+                row: 1, stepTime: TileMapComponent.defaultAnimationStepTime));
+        animations['walk_north'] = SpriteAnimationWithTicker(
+            animation: walkAnimationSpriteSheet.createAnimation(
+                row: 2, stepTime: TileMapComponent.defaultAnimationStepTime));
+        animations['walk_west'] = SpriteAnimationWithTicker(
+            animation: walkAnimationSpriteSheet.createAnimation(
+                row: 3, stepTime: TileMapComponent.defaultAnimationStepTime));
+      }
+      if (shipModelId != null) {
+        final image = await Flame.images.load('animation/$shipModelId.png');
+        swimAnimationSpriteSheet = SpriteSheet(
+          image: image,
+          srcSize: spriteSrcSize!,
+        );
+
+        animations['swim_south'] = SpriteAnimationWithTicker(
+            animation: swimAnimationSpriteSheet.createAnimation(
+                row: 0, stepTime: TileMapComponent.defaultAnimationStepTime));
+        animations['swim_east'] = SpriteAnimationWithTicker(
+            animation: swimAnimationSpriteSheet.createAnimation(
+                row: 1, stepTime: TileMapComponent.defaultAnimationStepTime));
+        animations['swim_north'] = SpriteAnimationWithTicker(
+            animation: swimAnimationSpriteSheet.createAnimation(
+                row: 2, stepTime: TileMapComponent.defaultAnimationStepTime));
+        animations['swim_west'] = SpriteAnimationWithTicker(
+            animation: swimAnimationSpriteSheet.createAnimation(
+                row: 3, stepTime: TileMapComponent.defaultAnimationStepTime));
+      }
+
+      for (final key in animations.keys) {
+        addState(key, animations[key]!);
+      }
+
+      if (shipModelId != null) {
+        for (final key in kObjectWalkAnimationsWithSwim) {
+          assert(animations.containsKey(key), 'animation not found! id: $key');
+        }
+      } else {
+        for (final key in kObjectWalkAnimations) {
+          assert(animations.containsKey(key), 'animation not found! id: $key');
+        }
+      }
+
+      setDirection(OrthogonalDirection.south);
+      stopAnimation();
     }
   }
 

@@ -47,11 +47,12 @@ mixin AnimationStateController on GameComponent {
   }
 
   Future<void> setState(String state,
-      {bool isOverlay = false, bool jumpToEnd = false}) {
+      {bool isOverlay = false, bool jumpToEnd = false}) async {
     Map<String, SpriteAnimationWithTicker> collection =
         isOverlay ? _overlayAnimations : _animations;
     if (!collection.containsKey(state)) {
-      throw 'State not found: $state';
+      // throw 'State not found: $state';
+      return;
     }
     if (isOverlay) {
       currentOverlayAnimationState = state;
