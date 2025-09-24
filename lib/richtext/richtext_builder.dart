@@ -159,7 +159,7 @@ TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
     } else if (currentTag == 'blueGrey') {
       textColor = Colors.blueGrey;
     } else if (currentTag == 'rank0' || currentTag == 'common') {
-      textColor = HexColor.fromString('#CCCCCC');
+      textColor = HexColor.fromString('#B4B4B4');
     } else if (currentTag == 'rank1' || currentTag == 'rare') {
       textColor = HexColor.fromString('#D4FFFF');
     } else if (currentTag == 'rank2' || currentTag == 'epic') {
