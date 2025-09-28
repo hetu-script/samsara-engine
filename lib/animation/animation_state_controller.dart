@@ -97,17 +97,12 @@ mixin AnimationStateController on GameComponent {
       for (final action in actions) {
         future = future.then((_) => setState(action));
       }
-      if (sound != null) {
-        future.then((_) {
-          audioPlayer?.play(sound);
-        });
-      }
-    } else {
-      if (sound != null) {
-        future.then((_) {
-          audioPlayer?.play(sound);
-        });
-      }
+    }
+
+    if (sound != null) {
+      future.then((_) {
+        audioPlayer?.play(sound);
+      });
     }
 
     if (recovery != null) {

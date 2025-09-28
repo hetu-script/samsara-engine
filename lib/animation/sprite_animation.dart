@@ -6,45 +6,45 @@ import '../extensions.dart';
 
 const kDefaultAnimationStepTime = 0.5;
 
-extension AnimationWithTicker on SpriteSheet {
-  List<Sprite> generateSpriteList({required int from, required int to}) {
-    if (!(from >= 0 && from <= to && to < columns * rows)) {
-      throw 'Invalid range: from $from to $to';
-    }
-    final spriteList = <Sprite>[];
-    for (var i = from; i <= to; i++) {
-      final sprite = getSpriteById(i);
-      spriteList.add(sprite);
-    }
-    return spriteList;
-  }
+// extension AnimationWithTicker on SpriteSheet {
+//   List<Sprite> generateSpriteList({required int from, required int to}) {
+//     if (!(from >= 0 && from <= to && to < columns * rows)) {
+//       throw 'Invalid range: from $from to $to';
+//     }
+//     final spriteList = <Sprite>[];
+//     for (var i = from; i <= to; i++) {
+//       final sprite = getSpriteById(i);
+//       spriteList.add(sprite);
+//     }
+//     return spriteList;
+//   }
 
-  /// Create a SpriteAnimationWithTicker
-  /// If [from] is null, it will start from the first sprite of the sheet.
-  /// If [to] is null, it will end at the last sprite of the row.
-  SpriteAnimationWithTicker createAnimationWithTicker({
-    int? from,
-    int? to,
-    int? row,
-    required double stepTime,
-    bool loop = true,
-    Rect? renderRect,
-  }) {
-    from ??= row != null ? row * columns : 0;
-    to ??= rows * columns - 1;
+//   /// Create a SpriteAnimationWithTicker
+//   /// If [from] is null, it will start from the first sprite of the sheet.
+//   /// If [to] is null, it will end at the last sprite of the row.
+//   SpriteAnimationWithTicker createAnimationWithTicker({
+//     int? from,
+//     int? to,
+//     int? row,
+//     required double stepTime,
+//     bool loop = true,
+//     Rect? renderRect,
+//   }) {
+//     from ??= row != null ? row * columns : 0;
+//     to ??= rows * columns - 1;
 
-    final spriteList = generateSpriteList(from: from, to: to);
+//     final spriteList = generateSpriteList(from: from, to: to);
 
-    return SpriteAnimationWithTicker(
-      animation: SpriteAnimation.spriteList(
-        spriteList,
-        stepTime: stepTime,
-        loop: loop,
-      ),
-      renderRect: renderRect,
-    );
-  }
-}
+//     return SpriteAnimationWithTicker(
+//       animation: SpriteAnimation.spriteList(
+//         spriteList,
+//         stepTime: stepTime,
+//         loop: loop,
+//       ),
+//       renderRect: renderRect,
+//     );
+//   }
+// }
 
 class SpriteAnimationWithTicker {
   late SpriteAnimation animation;

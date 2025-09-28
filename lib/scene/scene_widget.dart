@@ -22,7 +22,6 @@ class SceneWidget<T extends Scene> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final screeSize = MediaQuery.sizeOf(context);
     return PointerDetector(
       onTapDown: scene.onTapDown,
       onTapUp: scene.onTapUp,

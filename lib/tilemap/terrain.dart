@@ -136,7 +136,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   /// 显示贴图
   Sprite? _sprite, _overlaySprite;
-  Vector2 _overlaySpriteOffset = Vector2.zero();
+  Vector2 overlaySpriteOffset = Vector2.zero();
   SpriteAnimationWithTicker? _animation, _overlayAnimation;
 
   // 随机数，用来让多个 tile 的贴图动画错开播放
@@ -167,7 +167,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     if (!isOverlay) {
       _sprite = sprite;
     } else {
-      _overlaySpriteOffset = offset;
+      this.offset = offset;
       _overlaySprite = sprite;
     }
   }
@@ -222,7 +222,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     if (!isOverlay) {
       _animation = animation;
     } else {
-      _overlaySpriteOffset = offset;
+      overlaySpriteOffset = offset;
       _overlayAnimation = animation;
     }
   }
@@ -310,13 +310,14 @@ class TileMapTerrain extends GameComponent with TileInfo {
         canvas.drawPath(borderPath, paint);
       }
     } else {
-      _sprite?.renderRect(canvas, renderRect);
-      _animation?.ticker.currentFrame.sprite.renderRect(canvas, renderRect);
-      _overlaySprite?.renderRect(
-          canvas, renderRect.stretchTo(_overlaySpriteOffset));
+      _sprite?.render(canvas, position: renderPosition, size: renderSize);
+      _animation?.ticker.currentFrame.sprite
+          .render(canvas, position: renderPosition, size: renderSize);
+      _overlaySprite?.render(canvas,
+          position: renderPosition2, size: renderSize);
       if (map.isEditorMode || map.isTileWithinSight(this)) {
         _overlayAnimation?.ticker.currentFrame.sprite
-            .renderRect(canvas, renderRect.stretchTo(_overlaySpriteOffset));
+            .render(canvas, position: renderPosition2, size: renderSize);
       }
     }
 

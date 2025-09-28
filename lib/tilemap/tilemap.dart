@@ -51,11 +51,21 @@ class TileMap extends GameComponent with HandlesGesture {
     ..style = PaintingStyle.fill
     ..color = Colors.red.withAlpha(180);
 
+  static final borderShadowPaint = Paint()
+    ..strokeWidth = 4
+    ..style = PaintingStyle.stroke
+    ..color = Colors.black.withAlpha(128);
+
   /// 列表的index代表colorMode，列表的值是一个包含全部地图节点颜色数据的JSON
   /// 节点颜色数据的Key是一个int，代表terrain的index
   /// 值是一个Record值对，分别是颜色和对应的Paint
   final List<Map<int, Color>> zoneColors = [];
+
+  /// 缓存的国家颜色 Paint
   final Map<Color, Paint> cachedPaints = {};
+
+  /// 缓存的国家边界 Paint
+  final Map<int, Paint> cachedBorderPaints = {};
 
   int colorMode = kColorModeNone;
 
@@ -263,7 +273,7 @@ class TileMap extends GameComponent with HandlesGesture {
         throw 'Horizontal hexagonal map tile is not supported yet!';
     }
 
-    tile.renderRect = Rect.fromLTWH(
+    tile.renderPosition = Vector2(
         l -
             (tile.srcSize.x - gridSize.x) / 2 -
             bleedingPixelHorizontal / 2 +
@@ -271,8 +281,8 @@ class TileMap extends GameComponent with HandlesGesture {
         t -
             (tile.srcSize.y - gridSize.y) -
             bleedingPixelVertical / 2 +
-            tile.offset.y,
-        tile.srcSize.x + bleedingPixelHorizontal,
+            tile.offset.y);
+    tile.renderSize = Vector2(tile.srcSize.x + bleedingPixelHorizontal,
         tile.srcSize.y + bleedingPixelVertical);
   }
 
@@ -461,8 +471,7 @@ class TileMap extends GameComponent with HandlesGesture {
   // TODO: 计算tile是否在屏幕上
   bool isTileVisibleOnScreen(TileMapTerrain tile) {
     final leftTopPos = worldPosition2Screen(tile.position);
-    final bottomRightPos =
-        worldPosition2Screen(tile.renderRect.bottomRight.toVector2());
+    final bottomRightPos = worldPosition2Screen(tile.bottomRightRenderRect);
     final isVisible = bottomRightPos.x > 0 &&
         bottomRightPos.y > 0 &&
         leftTopPos.x < game.size.x &&
@@ -494,77 +503,100 @@ class TileMap extends GameComponent with HandlesGesture {
         top <= tileMapHeight);
   }
 
-  List<TilePosition> getNeighborTilePositions(int left, int top) {
-    final positions = <TilePosition>[];
-    switch (tileShape) {
-      case TileShape.orthogonal:
-        positions.add(TilePosition(left - 1, top));
-        positions.add(TilePosition(left, top - 1));
-        positions.add(TilePosition(left + 1, top));
-        positions.add(TilePosition(left, top + 1));
-      case TileShape.hexagonalVertical:
-        positions.add(TilePosition(left - 1, top));
-        positions.add(TilePosition(left, top - 1));
-        positions.add(TilePosition(left + 1, top));
-        positions.add(TilePosition(left, top + 1));
-        if (left.isOdd) {
-          positions.add(TilePosition(left - 1, top - 1));
-          positions.add(TilePosition(left + 1, top - 1));
-        } else {
-          positions.add(TilePosition(left + 1, top + 1));
-          positions.add(TilePosition(left - 1, top + 1));
-        }
-      case TileShape.isometric:
-        throw 'Get neighbors of Isometric map tile is not supported yet!';
-      case TileShape.hexagonalHorizontal:
-        throw 'Get neighbors of Horizontal hexagonal map tile is not supported yet!';
-    }
-    return positions;
-  }
-
-  Map<int, TileMapTerrain> getNeighborTiles(TileMapTerrain tile) {
+  /// 返回一个Map，index是1-4(正方形地块)或者1-6(六边形地块)
+  /// 每个编号对应一个固定位置的相邻地块，如果值为 null 表示这个位置没有符合要求的相邻地块
+  Map<int, TileMapTerrain> getNeighborTiles(TileMapTerrain tile,
+      {List terrainKinds = const []}) {
     final neighbors = <int, TileMapTerrain>{};
     switch (tileShape) {
       case TileShape.orthogonal:
         // 对于正方形tilemap，邻居顺序是左(1)上(2)右(3)下(4)
         final n1 = getTerrain(tile.left - 1, tile.top);
-        if (n1 != null) neighbors[1] = n1;
+        if (n1 != null &&
+            (terrainKinds.isEmpty || terrainKinds.contains(n1.kind))) {
+          neighbors[1] = n1;
+        }
         final n2 = getTerrain(tile.left, tile.top - 1);
-        if (n2 != null) neighbors[2] = n2;
+        if (n2 != null &&
+            (terrainKinds.isEmpty || terrainKinds.contains(n2.kind))) {
+          neighbors[2] = n2;
+        }
         final n3 = getTerrain(tile.left + 1, tile.top);
-        if (n3 != null) neighbors[3] = n3;
+        if (n3 != null &&
+            (terrainKinds.isEmpty || terrainKinds.contains(n3.kind))) {
+          neighbors[3] = n3;
+        }
         final n4 = getTerrain(tile.left, tile.top + 1);
-        if (n4 != null) neighbors[4] = n4;
+        if (n4 != null &&
+            (terrainKinds.isEmpty || terrainKinds.contains(n4.kind))) {
+          neighbors[4] = n4;
+        }
 
       case TileShape.hexagonalVertical:
         // 对于横向六边形tilemap，邻居顺序是左上(1)上(2)右上(3)右下(4)下(5)左下(6)
 
         if (tile.left.isOdd) {
           final n1 = getTerrain(tile.left - 1, tile.top - 1);
-          if (n1 != null) neighbors[1] = n1;
+          if (n1 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(n1.kind))) {
+            neighbors[1] = n1;
+          }
           final n2 = getTerrain(tile.left, tile.top - 1);
-          if (n2 != null) neighbors[2] = n2;
+          if (n2 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(n2.kind))) {
+            neighbors[2] = n2;
+          }
           final n3 = getTerrain(tile.left + 1, tile.top - 1);
-          if (n3 != null) neighbors[3] = n3;
+          if (n3 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(n3.kind))) {
+            neighbors[3] = n3;
+          }
           final n4 = getTerrain(tile.left + 1, tile.top);
-          if (n4 != null) neighbors[4] = n4;
+          if (n4 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(n4.kind))) {
+            neighbors[4] = n4;
+          }
           final n5 = getTerrain(tile.left, tile.top + 1);
-          if (n5 != null) neighbors[5] = n5;
+          if (n5 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(n5.kind))) {
+            neighbors[5] = n5;
+          }
           final n6 = getTerrain(tile.left - 1, tile.top);
-          if (n6 != null) neighbors[6] = n6;
+          if (n6 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(n6.kind))) {
+            neighbors[6] = n6;
+          }
         } else {
           final n1 = getTerrain(tile.left - 1, tile.top);
-          if (n1 != null) neighbors[1] = n1;
+          if (n1 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(n1.kind))) {
+            neighbors[1] = n1;
+          }
           final n2 = getTerrain(tile.left, tile.top - 1);
-          if (n2 != null) neighbors[2] = n2;
+          if (n2 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(n2.kind))) {
+            neighbors[2] = n2;
+          }
           final n3 = getTerrain(tile.left + 1, tile.top);
-          if (n3 != null) neighbors[3] = n3;
+          if (n3 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(n3.kind))) {
+            neighbors[3] = n3;
+          }
           final n4 = getTerrain(tile.left + 1, tile.top + 1);
-          if (n4 != null) neighbors[4] = n4;
+          if (n4 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(n4.kind))) {
+            neighbors[4] = n4;
+          }
           final n5 = getTerrain(tile.left, tile.top + 1);
-          if (n5 != null) neighbors[5] = n5;
+          if (n5 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(n5.kind))) {
+            neighbors[5] = n5;
+          }
           final n6 = getTerrain(tile.left - 1, tile.top + 1);
-          if (n6 != null) neighbors[6] = n6;
+          if (n6 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(n6.kind))) {
+            neighbors[6] = n6;
+          }
         }
       case TileShape.isometric:
         throw 'Get neighbors of Isometric map tile is not supported yet!';
@@ -596,6 +628,102 @@ class TileMap extends GameComponent with HandlesGesture {
   TileMapTerrain? getHeroAtTerrain() {
     if (hero != null) {
       return terrains[tilePosition2Index(hero!.left, hero!.top)];
+    }
+    return null;
+  }
+
+  /// manhattan 距离算法
+  int getTileDistance(TileMapTerrain start, TileMapTerrain end) {
+    int result;
+    final dx = end.slashLeft - start.slashLeft;
+    final dy = end.slashTop - start.slashTop;
+    if ((dx >= 0 && dy >= 0) || (dx <= 0 && dy <= 0)) {
+      result = (dx + dy).abs();
+    } else {
+      result = math.max(dx.abs(), dy.abs());
+    }
+    // print('getTileDistance: ${start}, ${end}, result: ${result}')
+    return result;
+  }
+
+  /// hScore(n) 是曼哈顿距离时的 A* 算法
+  List<int>? calculateRoute(TileMapTerrain start, TileMapTerrain end,
+      {List terrainKinds = const []}) {
+    // print('calculating route: ${start.left},${start.top} to ${end.left},${end.top}')
+
+    if (start == end || start.index == end.index) {
+      return null;
+    }
+
+    // g(n): 原点到该点的距离
+    final gScore = <int, int>{};
+    gScore[start.index] = 0;
+    // h(n): 该点到终点的距离
+    final hScore = <int, int>{};
+    hScore[start.index] = getTileDistance(start, end);
+    // f(n) = g(n) + h(n)
+    final fScore = <int, int>{};
+    fScore[start.index] = hScore[start.index]!;
+
+    // 节点返回路径，每个 key 对应的 value 代表了 key 的坐标的上一步骤的坐标
+    final cameFrom = <int, int>{};
+    List<int> reconstructPath(Map<int, int> cameFrom, int current) {
+      final from = cameFrom[current];
+      if (from != null) {
+        final path = reconstructPath(cameFrom, from);
+        return [...path, current];
+      } else {
+        return [current];
+      }
+    }
+
+    // 已被计算的坐标
+    final closed = <int>{};
+    // 将要计算的坐标, key 是 tile index，value 是 离起点的距离
+    final open = <int>[];
+    open.add(start.index);
+    // final distance = getTileDistance(start, end);
+
+    while (open.isNotEmpty) {
+      // 找到 f(x) 最小的节点
+      open.sort((t1, t2) {
+        assert(fScore.containsKey(t1));
+        assert(fScore.containsKey(t2));
+        return fScore[t1]!.compareTo(fScore[t2]!);
+      });
+      final nextIndex = open.first;
+      final nextTile = terrains[nextIndex];
+      if (nextIndex == end.index) {
+        // route.path = reconstructPath(cameFrom, end.index)
+        final route = reconstructPath(cameFrom, end.index);
+        return route;
+      }
+      open.remove(nextIndex);
+      closed.add(nextIndex);
+      final neighbors = getNeighborTiles(nextTile, terrainKinds: terrainKinds);
+      for (final neighbor in neighbors.values) {
+        if (neighbor.isNonEnterable && neighbor.index != end.index) continue;
+        if (closed.contains(neighbor.index)) continue;
+        assert(gScore.containsKey(nextIndex));
+        final tentetiveGScore = gScore[nextIndex]! + 1;
+        var tentativelyBetter = false;
+        if (!open.contains(neighbor.index) ||
+            (tentetiveGScore < gScore[neighbor.index]!)) {
+          tentativelyBetter = true;
+        }
+        if (tentativelyBetter) {
+          cameFrom[neighbor.index] = nextIndex;
+          gScore[neighbor.index] = tentetiveGScore;
+          hScore[neighbor.index] = getTileDistance(neighbor, end);
+          assert(gScore.containsKey(neighbor.index));
+          assert(hScore.containsKey(neighbor.index));
+          fScore[neighbor.index] =
+              gScore[neighbor.index]! + hScore[neighbor.index]!;
+          if (!open.contains(neighbor.index)) {
+            open.add(neighbor.index);
+          }
+        }
+      }
     }
     return null;
   }
@@ -665,16 +793,13 @@ class TileMap extends GameComponent with HandlesGesture {
             _tilesWithinSight.add(tile);
           }
         }
-        final neighbors = getNeighborTilePositions(tile.left, tile.top);
-        for (final neighbor in neighbors) {
-          final neighborTile = getTerrain(neighbor.left, neighbor.top);
-          if (neighborTile != null) {
-            if (_tilesWithinSight.contains(neighborTile) ||
-                peremeterTiles.contains(neighborTile)) {
-              continue;
-            }
-            pendingTiles.add(neighborTile);
+        final neighbors = getNeighborTiles(tile);
+        for (final neighbor in neighbors.values) {
+          if (_tilesWithinSight.contains(neighbor) ||
+              peremeterTiles.contains(neighbor)) {
+            continue;
           }
+          pendingTiles.add(neighbor);
         }
       }
       peremeterTiles.clear();
@@ -1161,11 +1286,12 @@ class TileMap extends GameComponent with HandlesGesture {
   @override
   bool get isVisible => true;
 
+  // canvas.save();
+  // canvas.transform(Float64List.fromList(transformMatrix.storage));
+  // canvas.restore();
   @override
   void renderTree(Canvas canvas) {
     super.renderTree(canvas);
-    canvas.save();
-    canvas.transform(Float64List.fromList(transformMatrix.storage));
 
     for (final tile in terrains) {
       if (!isTileVisibleOnScreen(tile)) continue;
@@ -1177,13 +1303,9 @@ class TileMap extends GameComponent with HandlesGesture {
             canvas.drawPath(tile.borderPath, visiblePerimeterPaint);
           }
         } else {
-          fogSprite?.renderRect(
-              canvas,
-              Rect.fromLTWH(
-                  tile.renderRect.left + tileFogOffset.x,
-                  tile.renderRect.top + tileFogOffset.y,
-                  tile.renderRect.width + -tileFogOffset.x * 2,
-                  tile.renderRect.height + -tileFogOffset.y * 2));
+          fogSprite?.render(canvas,
+              position: tile.renderPosition + tileFogOffset,
+              size: tile.renderSize - tileFogOffset * 2);
         }
       }
 
@@ -1203,14 +1325,13 @@ class TileMap extends GameComponent with HandlesGesture {
             final neighbor = neighbors[neighborIndex]!;
             if (neighbor.nationId != tile.nationId) {
               assert(tile.innerBorderPaths[neighborIndex] != null);
-              final borderPaint = Paint()
+
+              var borderPaint = cachedBorderPaints[tile.index];
+              borderPaint ??= cachedBorderPaints[tile.index] = Paint()
                 ..strokeWidth = 2
                 ..style = PaintingStyle.stroke
                 ..color = color!.withAlpha(128);
-              final borderShadowPaint = Paint()
-                ..strokeWidth = 4
-                ..style = PaintingStyle.stroke
-                ..color = Colors.black.withAlpha(128);
+
               canvas.drawPath(
                   tile.innerBorderPaths[neighborIndex]!, borderShadowPaint);
               canvas.drawPath(
@@ -1223,9 +1344,9 @@ class TileMap extends GameComponent with HandlesGesture {
           drawScreenText(
             canvas,
             tile.caption!,
-            position: tile.renderRect.topLeft,
+            position: tile.renderPosition.toOffset(),
             config: ScreenTextConfig(
-              size: tile.renderRect.size.toVector2(),
+              size: tile.renderSize,
               outlined: true,
               anchor: Anchor.center,
               padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
@@ -1248,8 +1369,6 @@ class TileMap extends GameComponent with HandlesGesture {
       //   canvas.drawRect(hoveringTerrain!.renderRect, hoverPaint);
       // }
     }
-
-    canvas.restore();
   }
 
   @override

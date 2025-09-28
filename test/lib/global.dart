@@ -4,5 +4,6 @@ final SamsaraEngine engine = SamsaraEngine(
   config: const EngineConfig(
     name: 'Samsara Engine Test',
     debugMode: true,
+    showFps: true,
   ),
 );

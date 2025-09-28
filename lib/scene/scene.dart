@@ -14,7 +14,6 @@ import '../pointer_detector.dart';
 import '../gestures/gesture_mixin.dart';
 // import '../components/border_component.dart';
 import '../camera/camera2.dart';
-import '../camera/world2.dart';
 import '../components/fading_text.dart';
 import 'scene_widget.dart';
 import '../task.dart';
@@ -69,7 +68,6 @@ abstract class Scene extends FlameGame with TaskController {
             enableLighting: enableLighting,
             backgroundLightingColor: backgroundLightingColor,
           ),
-          world: World2(),
         ) {
     // camera.viewfinder.anchor = Anchor.topLeft;
   }

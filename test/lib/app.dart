@@ -4,8 +4,7 @@ import 'package:samsara/ui/loading_screen.dart';
 import 'package:samsara/samsara.dart';
 
 import 'scene/game.dart';
-
-final engine = SamsaraEngine();
+import 'global.dart';
 
 class GameApp extends StatefulWidget {
   const GameApp({super.key});

@@ -468,6 +468,7 @@ class PointerDetectorState extends State<PointerDetector> {
     if (_lastHoverDetail != null) {
       _lastHoverDetail!.delta += event.delta;
       _lastHoverDetail!.position = event.position;
+      _lastHoverDetail!.localPosition = event.localPosition;
     } else {
       _lastHoverDetail = PointerMoveDetails(
         pointer: event.pointer,

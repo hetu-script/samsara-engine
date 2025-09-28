@@ -205,10 +205,10 @@ packages:
     dependency: "direct main"
     description:
       name: fluent_ui
-      sha256: "8645eabacb46bfc9632fadc6e106756cdc6f2a4efb5a4fed4410bd3131306fe8"
+      sha256: "76c4ba700bb26ac9894b9c6b16cae40f36f78266b2281c995d814b01a7c75356"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "4.12.0"
+    version: "4.11.5"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -234,10 +234,10 @@ packages:
     dependency: "direct dev"
     description:
       name: flutter_lints
-      sha256: "3105dc8492f6183fb076ccf1f351ac3d60564bff92e20bfc4af9cc1651f4e7e1"
+      sha256: "5398f14efa795ffb7a33e9b6a08798b26a180edac4ad7db3f231e40f82ce11e1"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "6.0.0"
+    version: "5.0.0"
   flutter_localizations:
     dependency: transitive
     description: flutter
@@ -359,10 +359,10 @@ packages:
     dependency: transitive
     description:
       name: lints
-      sha256: a5e2b223cb7c9c8efdc663ef484fdd95bb243bff242ef5b13e26883547fce9a0
+      sha256: c35bb79562d980e9a453fc715854e1ed39e24e7d0297a880ef54e17f9874a9d7
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "6.0.0"
+    version: "5.1.1"
   logger:
     dependency: transitive
     description:
@@ -651,10 +651,10 @@ packages:
     dependency: transitive
     description:
       name: synchronized
-      sha256: c254ade258ec8282947a0acbbc90b9575b4f19673533ee46f2f6e9b3aeefd7c0
+      sha256: "0669c70faae6270521ee4f05bffd2919892d42d1276e6c495be80174b6bc0ef6"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "3.4.0"
+    version: "3.3.1"
   term_glyph:
     dependency: transitive
     description:

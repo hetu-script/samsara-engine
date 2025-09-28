@@ -12,6 +12,7 @@ import 'package:flutter_custom_cursor/flutter_custom_cursor.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 
 import 'app.dart';
+import 'global.dart';
 
 class DesktopScrollBehavior extends MaterialScrollBehavior {
   // Override behavior methods and getters like dragDevices

@@ -2,7 +2,7 @@ import 'package:flame/components.dart';
 import '../components/game_component.dart';
 import '../extensions.dart';
 import '../lighting/light_config.dart';
-import 'world2.dart';
+// import 'world2.dart';
 
 class Camera2 extends CameraComponent {
   bool enableLighting;
@@ -40,7 +40,7 @@ class Camera2 extends CameraComponent {
       try {
         CameraComponent.currentCameras.add(this);
         canvas.transform2D(viewfinder.transform);
-        (world as World2).renderFromCamera2(canvas);
+        world!.renderFromCamera(canvas);
         if (enableLighting) {
           canvas.saveLayer(null, Paint());
           canvas.drawColor(backgroundLightingColor, BlendMode.dstATop);
