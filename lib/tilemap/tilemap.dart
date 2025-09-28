@@ -1175,10 +1175,11 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   void componentFinishWalk(TileMapComponent component, TileMapTerrain terrain,
-      TileMapTerrain? targetTerrain) {
-    // component.onFinishWalkCallback?.call(terrain, targetTerrain);
-    // component.onFinishWalkCallback = null;
-    component.onStepCallback?.call(terrain, targetTerrain, true);
+      TileMapTerrain? targetTerrain,
+      {bool stepCallback = true}) {
+    if (stepCallback) {
+      component.onStepCallback?.call(terrain, targetTerrain, true);
+    }
     component.onStepCallback = null;
     component.prevRouteNode = null;
     component.currentRoute = null;
@@ -1205,13 +1206,11 @@ class TileMap extends GameComponent with HandlesGesture {
 
     if (component.isWalkCanceled) {
       component.isWalkCanceled = false;
-      // component.onStepCallback?.call(terrain!, null, true);
       componentFinishWalk(component, terrain!, null);
       return;
     }
 
     if (component.currentRoute!.isEmpty) {
-      // component.onStepCallback?.call(terrain!, null);
       componentFinishWalk(component, terrain!, null);
       return;
     }
@@ -1223,10 +1222,9 @@ class TileMap extends GameComponent with HandlesGesture {
     } else {
       component.isOnWater = false;
     }
-    // 如果路径上下一个目标是不可进入的，那么结束移动
-    // 但若该目标是路径上最后一个目标，此种情况结束移动仍然会触发对最终目标的交互
+    // 如果路径上下一个目标是不可进入的，且该目标是路径上最后一个目标
+    // 此种情况结束移动，但仍会触发对最终目标的交互
     if (component.currentRoute!.length == 1 && nextTerrain!.isNonEnterable) {
-      // component.onStepCallback?.call(terrain!, null);
       componentFinishWalk(component, terrain!, nextTerrain);
       return;
     }
@@ -1237,7 +1235,7 @@ class TileMap extends GameComponent with HandlesGesture {
     // 但这里的finishMove 不传递 terrain，这样不会再次触发 onAfterMoveCallback
     if (component.isWalkCanceled) {
       component.isWalkCanceled = false;
-      componentFinishWalk(component, terrain!, null);
+      componentFinishWalk(component, terrain!, null, stepCallback: false);
       return;
     }
 
