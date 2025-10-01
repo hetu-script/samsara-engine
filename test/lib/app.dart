@@ -1,10 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:samsara/ui/loading_screen.dart';
 import 'package:samsara/samsara.dart';
 
 import 'scene/game.dart';
 import 'global.dart';
+
+class LoadingScreen extends StatelessWidget {
+  const LoadingScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.canvas,
+      color: Colors.black,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Align(
+            alignment: Alignment.center,
+            child: Text(
+              engine.isInitted ? engine.locale('loading') : 'Loading...',
+              style: const TextStyle(
+                fontSize: 18.0,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class GameApp extends StatefulWidget {
   const GameApp({super.key});
@@ -37,7 +63,7 @@ class _GameAppState extends State<GameApp> {
   }
 
   // FutureBuilder 根据返回值是否为null来判断是否成功，因此这里无论如何需要返回一个值
-  Future<bool> _loadScene() async {
+  Future<bool> _initEngine() async {
     if (_isLoading) return false;
     _isLoading = true;
 
@@ -59,18 +85,25 @@ class _GameAppState extends State<GameApp> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: _loadScene(),
+      future: _initEngine(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           throw Exception('${snapshot.error}\n${snapshot.stackTrace}');
-        }
-        if (!snapshot.hasData) {
-          return LoadingScreen(
-            text: engine.isInitted ? engine.locale('loading') : 'Loading...',
-          );
+        } else if (!snapshot.hasData) {
+          return const LoadingScreen();
         } else {
           final scene = context.watch<SamsaraEngine>().scene;
-          return Scaffold(body: scene?.build(context));
+          return Scaffold(
+            body: Stack(
+              children: [
+                scene?.build(
+                      context,
+                      loadingBuilder: (context) => LoadingScreen(),
+                    ) ??
+                    const SizedBox.shrink(),
+              ],
+            ),
+          );
         }
       },
     );

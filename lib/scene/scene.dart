@@ -316,5 +316,16 @@ abstract class Scene extends FlameGame with TaskController {
     }
   }
 
-  Widget build(BuildContext context) => SceneWidget(scene: this);
+  Widget build(
+    BuildContext context, {
+    Widget Function(BuildContext)? loadingBuilder,
+    Map<String, Widget Function(BuildContext, Scene)>? overlayBuilderMap,
+    List<String>? initialActiveOverlays,
+  }) =>
+      SceneWidget(
+        scene: this,
+        loadingBuilder: loadingBuilder,
+        overlayBuilderMap: overlayBuilderMap,
+        initialActiveOverlays: initialActiveOverlays,
+      );
 }

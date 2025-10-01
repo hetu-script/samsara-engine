@@ -62,6 +62,16 @@ class SamsaraEngine extends SceneController
 
   late BuildContext context;
 
+  bool isLoading = false;
+
+  bool setLoading(bool value) {
+    if (isLoading != value) {
+      isLoading = value;
+      notifyListeners();
+    }
+    return isLoading;
+  }
+
   SamsaraEngine({
     this.config = const EngineConfig(),
   }) {
@@ -222,6 +232,9 @@ class SamsaraEngine extends SceneController
     Set<String> mods = const {},
   }) async {
     if (_isInitted) return;
+    // isLoading = true;
+    // notifyListeners();
+
     this.context = context;
     if (config.debugMode) {
       const root = 'scripts/';
@@ -278,6 +291,8 @@ class SamsaraEngine extends SceneController
     await _locale.init();
 
     _isInitted = true;
+    // isLoading = false;
+    // notifyListeners();
   }
 
   Future<void> registerCursors() async {
