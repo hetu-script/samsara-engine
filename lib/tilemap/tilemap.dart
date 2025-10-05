@@ -124,6 +124,8 @@ class TileMap extends GameComponent with HandlesGesture {
 
   void Function()? onLoaded;
 
+  void Function()? onMounted;
+
   void Function(TileMapTerrain? tile)? onMouseEnterTile;
 
   TileMap({
@@ -298,10 +300,12 @@ class TileMap extends GameComponent with HandlesGesture {
 
     await loadTerrainData();
 
-    moveCameraToTilePosition(tileMapWidth ~/ 2, tileMapHeight ~/ 2,
-        animated: false);
-
     onLoaded?.call();
+  }
+
+  @override
+  void onMount() {
+    onMounted?.call();
   }
 
   Future<void> loadTerrainData([dynamic mapData]) async {
@@ -619,6 +623,7 @@ class TileMap extends GameComponent with HandlesGesture {
 
   TileMapTerrain? getTerrain(int left, int top) {
     if (isPositionWithinMap(left, top)) {
+      if (terrains.isEmpty) return null;
       return terrains[tilePosition2Index(left, top)];
     } else {
       return null;

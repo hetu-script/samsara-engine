@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:hetu_script/hetu_script.dart';
 import 'package:hetu_script/binding.dart';
 
@@ -13,7 +12,7 @@ class SamsaraEngineClassBinding extends HTExternalClass {
     var engine = instance as SamsaraEngine;
     switch (id) {
       case 'debugMode':
-        return kDebugMode || engine.config.debugMode;
+        return engine.config.debugMode;
       case 'loadLocaleDataFromJSON':
         return ({object, positionalArgs, namedArgs}) =>
             engine.loadLocaleDataFromJSON(positionalArgs.first);

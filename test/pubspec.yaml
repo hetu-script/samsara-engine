@@ -20,6 +20,8 @@ dependencies:
     path: ../../hetu-script/packages/hetu_script
   samsara:
     path: ..
+  fluent_ui:
+    path: ../../fluent_ui
 
   flame: ^1.32.0
   flame_splash_screen: ^0.3.0
@@ -29,7 +31,6 @@ dependencies:
   window_manager: ^0.5.0
   provider: ^6.1.2
   flutter_custom_cursor: ^0.0.4
-  fluent_ui: ^4.11.5
 
 dev_dependencies:
   flutter_test:

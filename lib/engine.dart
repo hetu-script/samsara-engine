@@ -20,6 +20,7 @@ import 'extensions.dart' show HexColor;
 import 'scene/scene_controller.dart';
 import 'logger/printer.dart';
 import 'logger/output.dart';
+import 'logger/filter.dart';
 import 'tilemap/tilemap.dart';
 
 class EngineConfig {
@@ -54,7 +55,7 @@ class SamsaraEngine extends SceneController
     implements HTLogger, AudioPlayerInterface {
   static const modeFileExtension = '.mod';
 
-  final EngineConfig config;
+  EngineConfig config;
 
   String get name => config.name;
 
@@ -76,14 +77,13 @@ class SamsaraEngine extends SceneController
     this.config = const EngineConfig(),
   }) {
     logger = Logger(
-      filter: null,
-      printer: _loggerPrinter,
+      filter: CustomLoggerFilter(), // 使用自定义过滤器，在所有模式下都允许日志记录
+      printer: CustomLoggerPrinter(),
       output: _loggerOutput,
     );
     _locale = GameLocalization();
   }
 
-  final CustomLoggerPrinter _loggerPrinter = CustomLoggerPrinter();
   final CustomLoggerOutput _loggerOutput = CustomLoggerOutput();
 
   late final Logger logger;

@@ -254,14 +254,15 @@ class TileMapTerrain extends GameComponent with TileInfo {
     }
   }
 
-  void tryLoadSprite({bool isOverlay = false}) async {
+  Future<void> tryLoadSprite({bool isOverlay = false}) async {
     await _tryLoadSprite(isOverlay: isOverlay);
     await _tryLoadAnimationFromData(isOverlay: isOverlay);
   }
 
-  void overrideSpriteData(dynamic spriteData, {bool isOverlay = false}) {
+  Future<void> overrideSpriteData(dynamic spriteData,
+      {bool isOverlay = false}) async {
     jsonLikeDataAssign(data, spriteData);
-    tryLoadSprite(isOverlay: isOverlay);
+    await tryLoadSprite(isOverlay: isOverlay);
   }
 
   void clearAllSprite() {
