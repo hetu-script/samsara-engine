@@ -29,7 +29,6 @@ class EngineConfig {
   final bool desktop;
   final double musicVolume;
   final double soundEffectVolume;
-  final Map<String, String> cursors;
   final Map<String, dynamic> mods;
   final bool showFps;
 
@@ -40,7 +39,6 @@ class EngineConfig {
     this.musicVolume = 0.5,
     this.soundEffectVolume = 0.5,
     this.mods = const {},
-    this.cursors = const {},
     this.showFps = false,
   });
 }
@@ -295,12 +293,12 @@ class SamsaraEngine extends SceneController
     // notifyListeners();
   }
 
-  Future<void> registerCursors() async {
-    if (config.cursors.isNotEmpty) {
-      for (final name in config.cursors.keys) {
+  Future<void> registerCursors(Map<String, String> cursors) async {
+    if (cursors.isNotEmpty) {
+      for (final name in cursors.keys) {
         await registerCursor(
           name: name,
-          assetPath: config.cursors[name]!,
+          assetPath: cursors[name]!,
         );
       }
     }

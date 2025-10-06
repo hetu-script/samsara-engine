@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-// import 'dart:async';
+import 'dart:async';
 
 // import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -119,7 +119,7 @@ abstract class Scene extends FlameGame with TaskController {
   /// 不要在这里进行涉及 component 的操作，这个函数执行时机在 onLoad 之前
   /// 注意因为场景本身始终存在于缓存中，因此这个函数可能会反复触发
   @mustCallSuper
-  void onStart([dynamic arguments = const {}]) async {
+  FutureOr<void> onStart([dynamic arguments = const {}]) async {
     if (bgm == null) return;
 
     if (bgmFile != null) {
@@ -138,7 +138,7 @@ abstract class Scene extends FlameGame with TaskController {
   /// 注意此时场景的资源并未被施放，场景本身仍然存在于缓存中
   /// 如果要释放资源，应在调用 controller.popScene() 时带上参数 clearCache: true
   @mustCallSuper
-  void onEnd() async {
+  FutureOr<void> onEnd() async {
     if (bgm == null) return;
 
     if (bgmFile != null) {

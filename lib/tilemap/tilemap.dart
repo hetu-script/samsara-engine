@@ -52,9 +52,9 @@ class TileMap extends GameComponent with HandlesGesture {
     ..color = Colors.red.withAlpha(180);
 
   static final borderShadowPaint = Paint()
-    ..strokeWidth = 4
+    ..strokeWidth = 3
     ..style = PaintingStyle.stroke
-    ..color = Colors.black.withAlpha(128);
+    ..color = Colors.black.withAlpha(90);
 
   /// 列表的index代表colorMode，列表的值是一个包含全部地图节点颜色数据的JSON
   /// 节点颜色数据的Key是一个int，代表terrain的index
@@ -122,9 +122,9 @@ class TileMap extends GameComponent with HandlesGesture {
 
   bool isEditorMode;
 
-  void Function()? onLoaded;
+  FutureOr<void> Function()? onLoaded;
 
-  void Function()? onMounted;
+  FutureOr<void> Function()? onMounted;
 
   void Function(TileMapTerrain? tile)? onMouseEnterTile;
 
@@ -300,12 +300,12 @@ class TileMap extends GameComponent with HandlesGesture {
 
     await loadTerrainData();
 
-    onLoaded?.call();
+    await onLoaded?.call();
   }
 
   @override
-  void onMount() {
-    onMounted?.call();
+  Future<void> onMount() async {
+    await onMounted?.call();
   }
 
   Future<void> loadTerrainData([dynamic mapData]) async {
@@ -473,7 +473,7 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   // TODO: 计算tile是否在屏幕上
-  bool isTileVisibleOnScreen(TileMapTerrain tile) {
+  bool isTileWithinOnScreen(TileMapTerrain tile) {
     final leftTopPos = worldPosition2Screen(tile.position);
     final bottomRightPos = worldPosition2Screen(tile.bottomRightRenderRect);
     final isVisible = bottomRightPos.x > 0 &&
@@ -1297,7 +1297,7 @@ class TileMap extends GameComponent with HandlesGesture {
     super.renderTree(canvas);
 
     for (final tile in terrains) {
-      if (!isTileVisibleOnScreen(tile)) continue;
+      if (!isTileWithinOnScreen(tile)) continue;
 
       // 战争迷雾
       if (!isEditorMode && showFogOfWar) {
@@ -1317,46 +1317,19 @@ class TileMap extends GameComponent with HandlesGesture {
         canvas.drawPath(tile.borderPath, uninteractablePaint);
       }
 
-      if (isEditorMode || isTileWithinSight(tile)) {
-        if (tile.nationId != null) {
-          // 取出门派模式下此地块所属门派的颜色
-          final Color? color = zoneColors[1][tile.index];
-          assert(color != null,
-              'TileMapTerrain.render: tile (index: ${tile.index}, left: ${tile.left}, top: ${tile.top}, nationId: ${tile.nationId}) has no color defined in map.zoneColors');
-          final neighbors = getNeighborTiles(tile);
-          for (final neighborIndex in neighbors.keys) {
-            final neighbor = neighbors[neighborIndex]!;
-            if (neighbor.nationId != tile.nationId) {
-              assert(tile.innerBorderPaths[neighborIndex] != null);
-
-              var borderPaint = cachedBorderPaints[tile.index];
-              borderPaint ??= cachedBorderPaints[tile.index] = Paint()
-                ..strokeWidth = 2
-                ..style = PaintingStyle.stroke
-                ..color = color!.withAlpha(128);
-
-              canvas.drawPath(
-                  tile.innerBorderPaths[neighborIndex]!, borderShadowPaint);
-              canvas.drawPath(
-                  tile.innerBorderPaths[neighborIndex]!, borderPaint);
-            }
-          }
-        }
-
-        if (tile.caption != null) {
-          drawScreenText(
-            canvas,
-            tile.caption!,
-            position: tile.renderPosition.toOffset(),
-            config: ScreenTextConfig(
-              size: tile.renderSize,
-              outlined: true,
-              anchor: Anchor.center,
-              padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
-              textStyle: tile.captionStyle ?? captionStyle,
-            ),
-          );
-        }
+      if (tile.caption != null) {
+        drawScreenText(
+          canvas,
+          tile.caption!,
+          position: tile.renderPosition.toOffset(),
+          config: ScreenTextConfig(
+            size: tile.renderSize,
+            outlined: true,
+            anchor: Anchor.center,
+            padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
+            textStyle: tile.captionStyle ?? captionStyle,
+          ),
+        );
       }
     }
 

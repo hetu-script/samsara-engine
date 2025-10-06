@@ -235,10 +235,10 @@ class TileMapTerrain extends GameComponent with TileInfo {
     }
   }
 
-  void updateData({
+  FutureOr<void> updateData({
     bool updateSprite = false,
     bool updateOverlaySprite = false,
-  }) {
+  }) async {
     kind = data?['kind'];
     locationId = data?['locationId'];
     objectId = data?['objectId'];
@@ -247,10 +247,10 @@ class TileMapTerrain extends GameComponent with TileInfo {
     isNonEnterable = data?['isNonEnterable'] ?? false;
 
     if (updateSprite) {
-      tryLoadSprite();
+      await tryLoadSprite();
     }
     if (updateOverlaySprite) {
-      tryLoadSprite(isOverlay: true);
+      await tryLoadSprite(isOverlay: true);
     }
   }
 
@@ -302,6 +302,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     if (!isVisible) return;
 
     if (map.colorMode != kColorModeNone) {
+      // 涂色视图地块填充色
       final color = map.zoneColors[map.colorMode][index];
       if (color != null) {
         var paint = map.cachedPaints[color];
@@ -320,6 +321,32 @@ class TileMapTerrain extends GameComponent with TileInfo {
         _overlayAnimation?.ticker.currentFrame.sprite
             .render(canvas, position: renderPosition2, size: renderSize);
       }
+      // 国界线
+      if (nationId != null) {
+        // 取出门派模式下此地块所属门派的颜色
+        final Color? color = map.zoneColors[1][index];
+        assert(color != null,
+            'TileMapTerrain.render: tile (index: $index, left: $left, top: $top, nationId: $nationId) has no color defined in map.zoneColors');
+        final neighbors = map.getNeighborTiles(this);
+        for (final neighborIndex in neighbors.keys) {
+          final neighbor = neighbors[neighborIndex]!;
+          if (neighbor.nationId != nationId) {
+            assert(innerBorderPaths[neighborIndex] != null);
+
+            var borderPaint = map.cachedBorderPaints[index];
+            borderPaint ??= map.cachedBorderPaints[index] = Paint()
+              ..strokeWidth = 1.5
+              ..style = PaintingStyle.stroke
+              ..color = color!;
+
+            // canvas.drawPath(
+            //     innerBorderPaths[neighborIndex]!, TileMap.borderShadowPaint);
+            canvas.drawShadow(
+                innerBorderPaths[neighborIndex]!, Colors.black, 2.0, false);
+            canvas.drawPath(innerBorderPaths[neighborIndex]!, borderPaint);
+          }
+        }
+      }
     }
 
     if (map.isEditorMode) {
@@ -329,7 +356,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   // TODO:计算是否在屏幕上可见
   @override
-  bool get isVisible => map.isTileVisibleOnScreen(this);
+  bool get isVisible => map.isTileWithinOnScreen(this);
 
   @override
   void update(double dt) {
@@ -337,6 +364,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
     super.update(dt);
     _animation?.ticker.update(dt);
+
     if (_overlayAnimation != null) {
       _overlayAnimation?.ticker.update(dt);
       if (_overlayAnimation!.ticker.done()) {
