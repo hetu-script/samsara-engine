@@ -122,7 +122,8 @@ class TileMap extends GameComponent with HandlesGesture {
 
   bool isEditorMode;
 
-  FutureOr<void> Function()? onLoaded;
+  FutureOr<void> Function()? onAfterLoaded;
+  bool onAfterLoadedCalled = false;
 
   FutureOr<void> Function()? onMounted;
 
@@ -147,7 +148,9 @@ class TileMap extends GameComponent with HandlesGesture {
     required this.captionStyle,
     this.fogSpriteId,
     this.fogSprite,
-    this.onLoaded,
+    this.onAfterLoaded,
+    this.onMounted,
+    this.onMouseEnterTile,
     this.isEditorMode = false,
   })  : assert(!gridSize.isZero()),
         assert(!tileSpriteSrcSize.isZero()),
@@ -299,12 +302,15 @@ class TileMap extends GameComponent with HandlesGesture {
     mapScreenSize = Vector2(mapScreenSizeX, mapScreenSizeY);
 
     await loadTerrainData();
-
-    await onLoaded?.call();
   }
 
   @override
   Future<void> onMount() async {
+    if (!onAfterLoadedCalled) {
+      onAfterLoadedCalled = true;
+      await onAfterLoaded?.call();
+    }
+
     await onMounted?.call();
   }
 
@@ -456,9 +462,9 @@ class TileMap extends GameComponent with HandlesGesture {
     });
   }
 
-  void moveCameraToHero({bool animated = true}) {
+  Future<void> moveCameraToHero({bool animated = true}) async {
     if (hero != null) {
-      moveCameraToTilePosition(hero!.left, hero!.top, animated: animated);
+      await moveCameraToTilePosition(hero!.left, hero!.top, animated: animated);
     }
   }
 
@@ -473,15 +479,15 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   // TODO: 计算tile是否在屏幕上
-  bool isTileWithinOnScreen(TileMapTerrain tile) {
-    final leftTopPos = worldPosition2Screen(tile.position);
-    final bottomRightPos = worldPosition2Screen(tile.bottomRightRenderRect);
-    final isVisible = bottomRightPos.x > 0 &&
+  bool isTileOnScreen(TileMapTerrain tile) {
+    final leftTopPos = worldPosition2Screen(tile.renderPosition);
+    final bottomRightPos = worldPosition2Screen(tile.renderBottomRight);
+    final isOnScreen = bottomRightPos.x > 0 &&
         bottomRightPos.y > 0 &&
         leftTopPos.x < game.size.x &&
         leftTopPos.y < game.size.y;
 
-    return isVisible;
+    return isOnScreen;
   }
 
   bool isTileWithinSight(TileMapTerrain tile) {
@@ -515,91 +521,91 @@ class TileMap extends GameComponent with HandlesGesture {
     switch (tileShape) {
       case TileShape.orthogonal:
         // 对于正方形tilemap，邻居顺序是左(1)上(2)右(3)下(4)
-        final n1 = getTerrain(tile.left - 1, tile.top);
-        if (n1 != null &&
-            (terrainKinds.isEmpty || terrainKinds.contains(n1.kind))) {
-          neighbors[1] = n1;
+        final t1 = getTerrain(tile.left - 1, tile.top);
+        if (t1 != null &&
+            (terrainKinds.isEmpty || terrainKinds.contains(t1.kind))) {
+          neighbors[1] = t1;
         }
-        final n2 = getTerrain(tile.left, tile.top - 1);
-        if (n2 != null &&
-            (terrainKinds.isEmpty || terrainKinds.contains(n2.kind))) {
-          neighbors[2] = n2;
+        final t2 = getTerrain(tile.left, tile.top - 1);
+        if (t2 != null &&
+            (terrainKinds.isEmpty || terrainKinds.contains(t2.kind))) {
+          neighbors[2] = t2;
         }
-        final n3 = getTerrain(tile.left + 1, tile.top);
-        if (n3 != null &&
-            (terrainKinds.isEmpty || terrainKinds.contains(n3.kind))) {
-          neighbors[3] = n3;
+        final t3 = getTerrain(tile.left + 1, tile.top);
+        if (t3 != null &&
+            (terrainKinds.isEmpty || terrainKinds.contains(t3.kind))) {
+          neighbors[3] = t3;
         }
-        final n4 = getTerrain(tile.left, tile.top + 1);
-        if (n4 != null &&
-            (terrainKinds.isEmpty || terrainKinds.contains(n4.kind))) {
-          neighbors[4] = n4;
+        final t4 = getTerrain(tile.left, tile.top + 1);
+        if (t4 != null &&
+            (terrainKinds.isEmpty || terrainKinds.contains(t4.kind))) {
+          neighbors[4] = t4;
         }
 
       case TileShape.hexagonalVertical:
         // 对于横向六边形tilemap，邻居顺序是左上(1)上(2)右上(3)右下(4)下(5)左下(6)
 
         if (tile.left.isOdd) {
-          final n1 = getTerrain(tile.left - 1, tile.top - 1);
-          if (n1 != null &&
-              (terrainKinds.isEmpty || terrainKinds.contains(n1.kind))) {
-            neighbors[1] = n1;
+          final t1 = getTerrain(tile.left - 1, tile.top - 1);
+          if (t1 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(t1.kind))) {
+            neighbors[1] = t1;
           }
-          final n2 = getTerrain(tile.left, tile.top - 1);
-          if (n2 != null &&
-              (terrainKinds.isEmpty || terrainKinds.contains(n2.kind))) {
-            neighbors[2] = n2;
+          final t2 = getTerrain(tile.left, tile.top - 1);
+          if (t2 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(t2.kind))) {
+            neighbors[2] = t2;
           }
-          final n3 = getTerrain(tile.left + 1, tile.top - 1);
-          if (n3 != null &&
-              (terrainKinds.isEmpty || terrainKinds.contains(n3.kind))) {
-            neighbors[3] = n3;
+          final t3 = getTerrain(tile.left + 1, tile.top - 1);
+          if (t3 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(t3.kind))) {
+            neighbors[3] = t3;
           }
-          final n4 = getTerrain(tile.left + 1, tile.top);
-          if (n4 != null &&
-              (terrainKinds.isEmpty || terrainKinds.contains(n4.kind))) {
-            neighbors[4] = n4;
+          final t4 = getTerrain(tile.left + 1, tile.top);
+          if (t4 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(t4.kind))) {
+            neighbors[4] = t4;
           }
-          final n5 = getTerrain(tile.left, tile.top + 1);
-          if (n5 != null &&
-              (terrainKinds.isEmpty || terrainKinds.contains(n5.kind))) {
-            neighbors[5] = n5;
+          final t5 = getTerrain(tile.left, tile.top + 1);
+          if (t5 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(t5.kind))) {
+            neighbors[5] = t5;
           }
-          final n6 = getTerrain(tile.left - 1, tile.top);
-          if (n6 != null &&
-              (terrainKinds.isEmpty || terrainKinds.contains(n6.kind))) {
-            neighbors[6] = n6;
+          final t6 = getTerrain(tile.left - 1, tile.top);
+          if (t6 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(t6.kind))) {
+            neighbors[6] = t6;
           }
         } else {
-          final n1 = getTerrain(tile.left - 1, tile.top);
-          if (n1 != null &&
-              (terrainKinds.isEmpty || terrainKinds.contains(n1.kind))) {
-            neighbors[1] = n1;
+          final t1 = getTerrain(tile.left - 1, tile.top);
+          if (t1 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(t1.kind))) {
+            neighbors[1] = t1;
           }
-          final n2 = getTerrain(tile.left, tile.top - 1);
-          if (n2 != null &&
-              (terrainKinds.isEmpty || terrainKinds.contains(n2.kind))) {
-            neighbors[2] = n2;
+          final t2 = getTerrain(tile.left, tile.top - 1);
+          if (t2 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(t2.kind))) {
+            neighbors[2] = t2;
           }
-          final n3 = getTerrain(tile.left + 1, tile.top);
-          if (n3 != null &&
-              (terrainKinds.isEmpty || terrainKinds.contains(n3.kind))) {
-            neighbors[3] = n3;
+          final t3 = getTerrain(tile.left + 1, tile.top);
+          if (t3 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(t3.kind))) {
+            neighbors[3] = t3;
           }
-          final n4 = getTerrain(tile.left + 1, tile.top + 1);
-          if (n4 != null &&
-              (terrainKinds.isEmpty || terrainKinds.contains(n4.kind))) {
-            neighbors[4] = n4;
+          final t4 = getTerrain(tile.left + 1, tile.top + 1);
+          if (t4 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(t4.kind))) {
+            neighbors[4] = t4;
           }
-          final n5 = getTerrain(tile.left, tile.top + 1);
-          if (n5 != null &&
-              (terrainKinds.isEmpty || terrainKinds.contains(n5.kind))) {
-            neighbors[5] = n5;
+          final t5 = getTerrain(tile.left, tile.top + 1);
+          if (t5 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(t5.kind))) {
+            neighbors[5] = t5;
           }
-          final n6 = getTerrain(tile.left - 1, tile.top + 1);
-          if (n6 != null &&
-              (terrainKinds.isEmpty || terrainKinds.contains(n6.kind))) {
-            neighbors[6] = n6;
+          final t6 = getTerrain(tile.left - 1, tile.top + 1);
+          if (t6 != null &&
+              (terrainKinds.isEmpty || terrainKinds.contains(t6.kind))) {
+            neighbors[6] = t6;
           }
         }
       case TileShape.isometric:
@@ -834,15 +840,16 @@ class TileMap extends GameComponent with HandlesGesture {
 
   Vector2 tilePosition2TileCenter(int left, int top) {
     late final double l, t;
+    final int bl = left - 1, bt = top - 1;
     switch (tileShape) {
       case TileShape.orthogonal:
-        l = ((left - 1) * gridSize.x);
-        t = ((top - 1) * gridSize.y);
+        l = (bl * gridSize.x);
+        t = (bt * gridSize.y);
       case TileShape.hexagonalVertical:
-        l = (left - 1) * gridSize.x * (3 / 4) + gridSize.x / 2;
+        l = (bl * gridSize.x * (3 / 4)) + gridSize.x / 2;
         t = left.isOdd
-            ? (top - 1) * gridSize.y + gridSize.y / 2
-            : (top - 1) * gridSize.y + gridSize.y;
+            ? (bt * gridSize.y) + gridSize.y / 2
+            : (bt * gridSize.y) + gridSize.y;
       case TileShape.isometric:
         throw 'Isometric map tile is not supported yet!';
       case TileShape.hexagonalHorizontal:
@@ -1297,10 +1304,10 @@ class TileMap extends GameComponent with HandlesGesture {
     super.renderTree(canvas);
 
     for (final tile in terrains) {
-      if (!isTileWithinOnScreen(tile)) continue;
+      if (!isTileOnScreen(tile)) continue;
 
       // 战争迷雾
-      if (!isEditorMode && showFogOfWar) {
+      if (showFogOfWar && !isEditorMode) {
         if (tile.isLighted) {
           if (!isTileWithinSight(tile)) {
             canvas.drawPath(tile.borderPath, visiblePerimeterPaint);
@@ -1326,7 +1333,7 @@ class TileMap extends GameComponent with HandlesGesture {
             size: tile.renderSize,
             outlined: true,
             anchor: Anchor.center,
-            padding: EdgeInsets.only(top: gridSize.y / 2 - 5.0),
+            padding: EdgeInsets.only(top: gridSize.y / 4 * 3),
             textStyle: tile.captionStyle ?? captionStyle,
           ),
         );
@@ -1338,7 +1345,7 @@ class TileMap extends GameComponent with HandlesGesture {
     }
 
     if (showHover && hoveringTerrain != null) {
-      if (hoveringTerrain!.isLighted || isEditorMode) {
+      if (isEditorMode || !showFogOfWar || hoveringTerrain!.isLighted) {
         canvas.drawPath(hoveringTerrain!.borderPath, hoverPaint);
       }
       // if (kDebugMode) {

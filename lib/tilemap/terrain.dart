@@ -12,6 +12,8 @@ import '../utils/json.dart';
 import 'tilemap.dart';
 import '../extensions.dart';
 
+const kNeighborIndexes = [1, 2, 3, 4, 5, 6];
+
 class TileMapTerrain extends GameComponent with TileInfo {
   static const defaultAnimationStepTime = 0.2;
 
@@ -301,6 +303,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
   void render(Canvas canvas) {
     if (!isVisible) return;
 
+    bool hasColorModeColor = false;
     if (map.colorMode != kColorModeNone) {
       // 涂色视图地块填充色
       final color = map.zoneColors[map.colorMode][index];
@@ -310,14 +313,21 @@ class TileMapTerrain extends GameComponent with TileInfo {
           ..style = PaintingStyle.fill
           ..color = color;
         canvas.drawPath(borderPath, paint);
+        hasColorModeColor = true;
       }
+    }
+
+    if (hasColorModeColor || map.isEditorMode) {
+      canvas.drawPath(borderPath, gridPaint);
     } else {
       _sprite?.render(canvas, position: renderPosition, size: renderSize);
       _animation?.ticker.currentFrame.sprite
           .render(canvas, position: renderPosition, size: renderSize);
       _overlaySprite?.render(canvas,
           position: renderPosition2, size: renderSize);
-      if (map.isEditorMode || map.isTileWithinSight(this)) {
+      if (map.isEditorMode ||
+          !map.showFogOfWar ||
+          map.isTileWithinSight(this)) {
         _overlayAnimation?.ticker.currentFrame.sprite
             .render(canvas, position: renderPosition2, size: renderSize);
       }
@@ -327,10 +337,11 @@ class TileMapTerrain extends GameComponent with TileInfo {
         final Color? color = map.zoneColors[1][index];
         assert(color != null,
             'TileMapTerrain.render: tile (index: $index, left: $left, top: $top, nationId: $nationId) has no color defined in map.zoneColors');
-        final neighbors = map.getNeighborTiles(this);
-        for (final neighborIndex in neighbors.keys) {
-          final neighbor = neighbors[neighborIndex]!;
-          if (neighbor.nationId != nationId) {
+
+        final bordersData = data['borders'] ?? {};
+
+        for (final neighborIndex in kNeighborIndexes) {
+          if (bordersData[neighborIndex] == true) {
             assert(innerBorderPaths[neighborIndex] != null);
 
             var borderPaint = map.cachedBorderPaints[index];
@@ -348,15 +359,11 @@ class TileMapTerrain extends GameComponent with TileInfo {
         }
       }
     }
-
-    if (map.isEditorMode) {
-      canvas.drawPath(borderPath, gridPaint);
-    }
   }
 
   // TODO:计算是否在屏幕上可见
   @override
-  bool get isVisible => map.isTileWithinOnScreen(this);
+  bool get isVisible => map.isTileOnScreen(this);
 
   @override
   void update(double dt) {

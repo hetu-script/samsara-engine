@@ -67,11 +67,11 @@ List<String> getRichTextStream(String source) {
 }
 
 class TagResolveResult {
-  String? icon;
-  String? link;
-  TextStyle? style;
+  final String? icon;
+  final String? link;
+  final TextStyle style;
 
-  TagResolveResult({this.icon, this.link, this.style});
+  TagResolveResult({this.icon, this.link, required this.style});
 }
 
 TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
@@ -249,8 +249,7 @@ List<TextSpan> buildFlutterRichText(
             spanList.add(
               TextSpan(
                 text: taggedContent,
-                style:
-                    (style ?? const TextStyle()).merge(tagResolveResult.style),
+                style: tagResolveResult.style.merge(style ?? const TextStyle()),
                 // recognizer: route != null
                 //     ? (TapGestureRecognizer()
                 //       ..onTap = () => onTap?.call(route!, routeArg)
@@ -307,22 +306,22 @@ DocumentRoot buildFlameRichText(
           final tags = _tagContentPattern.allMatches(taggedString);
           final tagResolveResult = _resolveTagStyle(tags);
 
-          if (tagResolveResult.icon != null) {
-          } else {
-            nodes.add(
-              RichTextNode(
-                text: taggedContent,
-                style: ((style ?? const TextStyle())
-                    .merge(tagResolveResult.style)
-                    .toInlineTextStyle()),
-                // recognizer: route != null
-                //     ? (TapGestureRecognizer()
-                //       ..onTap = () => onTap?.call(route!, routeArg)
-                //       )
-                //     : null,
-              ),
-            );
-          }
+          // if (tagResolveResult.icon != null) {
+          // } else {
+          nodes.add(
+            RichTextNode(
+              text: taggedContent,
+              style: tagResolveResult.style
+                  .merge(style ?? const TextStyle())
+                  .toInlineTextStyle(),
+              // recognizer: route != null
+              //     ? (TapGestureRecognizer()
+              //       ..onTap = () => onTap?.call(route!, routeArg)
+              //       )
+              //     : null,
+            ),
+          );
+          // }
         }
       }
 
