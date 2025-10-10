@@ -63,7 +63,7 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
             text: (config.textStyle ?? TextStyle())
                 .copyWith(
                   foreground: Paint()
-                    ..strokeWidth = 3
+                    ..strokeWidth = 2.5
                     ..color = Colors.black
                     ..style = PaintingStyle.stroke,
                 )

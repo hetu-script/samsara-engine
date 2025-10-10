@@ -63,9 +63,14 @@ class SamsaraEngine extends SceneController
 
   bool isLoading = false;
 
-  bool setLoading(bool value) {
-    if (isLoading != value) {
-      isLoading = value;
+  String? loadingTip;
+  String? loadingMessage;
+
+  bool setLoading(bool loading, {String? tip, String? message}) {
+    if (isLoading != loading) {
+      isLoading = loading;
+      loadingTip = tip;
+      loadingMessage = message;
       notifyListeners();
     }
     return isLoading;

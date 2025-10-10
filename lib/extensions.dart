@@ -59,20 +59,42 @@ extension DoubleFixed on double {
 }
 
 extension HexColor on Color {
-  /// String is in the format "rrggbb" or "aarrggbb" with an optional leading "#".
-  static Color fromString(String hexString) {
-    final buffer = StringBuffer();
-    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
-    buffer.write(hexString.replaceFirst('#', ''));
-    return Color(int.parse(buffer.toString(), radix: 16));
+  /// 将十六进制颜色字符串转换为 Flutter 的 Color 对象。
+  ///
+  /// 接受的格式:
+  /// - 6位 RGB (例如, "FF0000")
+  /// - 8位 RRGGBBAA (例如, "FF00007F")
+  /// - 以上格式均可带 "#" 前缀 (例如, "#FF0000")
+  ///
+  /// [hexCode] 十六进制颜色字符串。
+  /// 返回一个 [Color] 对象。
+  /// 如果格式无效，则抛出 [ArgumentError]。
+  static Color fromString(String hexCode) {
+    // 移除 '#' 符号
+    final String hex = hexCode.startsWith('#') ? hexCode.substring(1) : hexCode;
+    if (hex.length == 6) {
+      return Color(int.parse('FF$hex', radix: 16));
+    } else if (hex.length == 8) {
+      // 如果是8位颜色码 (RRGGBBAA)，则需要将其转换为 AARRGGBB
+      return Color(
+        int.parse(
+          '${hex.substring(6, 8)}${hex.substring(0, 6)}',
+          radix: 16,
+        ),
+      );
+    } else {
+      // 如果长度不符合要求，则抛出异常
+      throw ArgumentError('Invalid hex color code: $hexCode');
+    }
   }
 
+  /// HexColor String is in the format "rrggbb" or "rrggbbaa" with an optional leading "#".
   /// Prefixes a hash sign if [leadingHashSign] is set to `true` (default is `true`).
   String toHex({bool leadingHashSign = true}) => '${leadingHashSign ? '#' : ''}'
-      '${a.round().toRadixString(16).padLeft(2, '0')}'
       '${r.round().toRadixString(16).padLeft(2, '0')}'
       '${g.round().toRadixString(16).padLeft(2, '0')}'
-      '${b.round().toRadixString(16).padLeft(2, '0')}';
+      '${b.round().toRadixString(16).padLeft(2, '0')}'
+      '${a.round().toRadixString(16).padLeft(2, '0')}';
 }
 
 extension Vector2Ex on Vector2 {

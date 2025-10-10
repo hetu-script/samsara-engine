@@ -550,7 +550,7 @@ Offset drawMultilineText(
         outlinePaint = textPaint.copyWith(
           (textStyle) => textStyle.copyWith(
             foreground: Paint()
-              ..strokeWidth = 3
+              ..strokeWidth = 2.5
               ..color = Colors.black
               ..style = PaintingStyle.stroke,
           ),

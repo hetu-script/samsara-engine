@@ -36,10 +36,11 @@ class TileMapTerrain extends GameComponent with TileInfo {
     required Vector2 srcSize,
     required Vector2 gridSize,
     String? kind,
+    String? objectId,
     String? zoneId,
     String? nationId,
+    String? cityId,
     String? locationId,
-    String? objectId,
     bool? isNonEnterable,
     bool? isWater,
     Sprite? sprite,
@@ -50,10 +51,11 @@ class TileMapTerrain extends GameComponent with TileInfo {
   })  : assert(!gridSize.isZero()),
         assert(!srcSize.isZero()),
         _kind = kind,
-        _locationId = locationId,
         _objectId = objectId,
-        _nationId = nationId,
         _zoneId = zoneId,
+        _nationId = nationId,
+        _cityId = cityId,
+        _locationId = locationId,
         _isNonEnterable = isNonEnterable ?? false,
         _isWater = isWater ?? false,
         _overlayAnimation = overlayAnimation,
@@ -88,18 +90,25 @@ class TileMapTerrain extends GameComponent with TileInfo {
     data?['kind'] = value;
   }
 
-  String? _locationId;
-  String? get locationId => _locationId;
-  set locationId(String? value) {
-    _locationId = value;
-    data?['locationId'] = value;
-  }
-
   String? _objectId;
   String? get objectId => _objectId;
   set objectId(String? value) {
     _objectId = value;
     data?['objectId'] = value;
+  }
+
+  String? _cityId;
+  String? get cityId => _cityId;
+  set cityId(String? value) {
+    _cityId = value;
+    data?['cityId'] = value;
+  }
+
+  String? _locationId;
+  String? get locationId => _locationId;
+  set locationId(String? value) {
+    _locationId = value;
+    data?['locationId'] = value;
   }
 
   String? _nationId;
@@ -353,7 +362,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
             // canvas.drawPath(
             //     innerBorderPaths[neighborIndex]!, TileMap.borderShadowPaint);
             canvas.drawShadow(
-                innerBorderPaths[neighborIndex]!, Colors.black, 2.0, false);
+                innerBorderPaths[neighborIndex]!, Colors.black, 5.0, false);
             canvas.drawPath(innerBorderPaths[neighborIndex]!, borderPaint);
           }
         }

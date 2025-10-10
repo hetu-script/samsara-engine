@@ -240,36 +240,42 @@ class TileMap extends GameComponent with HandlesGesture {
           innerBorderPath1.moveTo(start.x, start.y);
           start += Vector2(innerSize.x / 4, -innerSize.y / 2);
           innerBorderPath1.lineTo(start.x, start.y);
+          innerBorderPath1.close();
           tile.innerBorderPaths[1] = innerBorderPath1;
 
           final innerBorderPath2 = Path();
           innerBorderPath2.moveTo(start.x, start.y);
           start += Vector2(innerSize.x / 2, 0);
           innerBorderPath2.lineTo(start.x, start.y);
+          innerBorderPath2.close();
           tile.innerBorderPaths[2] = innerBorderPath2;
 
           final innerBorderPath3 = Path();
           innerBorderPath3.moveTo(start.x, start.y);
           start += Vector2(innerSize.x / 4, innerSize.y / 2);
           innerBorderPath3.lineTo(start.x, start.y);
+          innerBorderPath3.close();
           tile.innerBorderPaths[3] = innerBorderPath3;
 
           final innerBorderPath4 = Path();
           innerBorderPath4.moveTo(start.x, start.y);
           start += Vector2(-innerSize.x / 4, innerSize.y / 2);
           innerBorderPath4.lineTo(start.x, start.y);
+          innerBorderPath4.close();
           tile.innerBorderPaths[4] = innerBorderPath4;
 
           final innerBorderPath5 = Path();
           innerBorderPath5.moveTo(start.x, start.y);
           start += Vector2(-innerSize.x / 2, 0);
           innerBorderPath5.lineTo(start.x, start.y);
+          innerBorderPath5.close();
           tile.innerBorderPaths[5] = innerBorderPath5;
 
           final innerBorderPath6 = Path();
           innerBorderPath6.moveTo(start.x, start.y);
           start += Vector2(-innerSize.x / 4, -innerSize.y / 2);
           innerBorderPath6.lineTo(start.x, start.y);
+          innerBorderPath6.close();
           tile.innerBorderPaths[6] = innerBorderPath6;
         }
       case TileShape.isometric:
@@ -344,10 +350,11 @@ class TileMap extends GameComponent with HandlesGesture {
         final bool isNonEnterable = terrainData['isNonEnterable'] ?? false;
         final bool isWater = terrainData['isWater'] ?? false;
         final String? kindString = terrainData['kind'];
+        final String? objectId = terrainData['objectId'];
         final String? zoneId = terrainData['zoneId'];
         final String? nationId = terrainData['nationId'];
+        final String? cityId = terrainData['cityId'];
         final String? locationId = terrainData['locationId'];
-        final String? objectId = terrainData['objectId'];
         // 这里不载入图片和动画，而是交给terrain自己从data中读取
         final tile = TileMapTerrain(
           map: this,
@@ -364,10 +371,11 @@ class TileMap extends GameComponent with HandlesGesture {
           srcSize: tileSpriteSrcSize,
           gridSize: gridSize,
           kind: kindString,
+          objectId: objectId,
           zoneId: zoneId,
           nationId: nationId,
+          cityId: cityId,
           locationId: locationId,
-          objectId: objectId,
           offset: tileOffset,
         );
         updateTileInfo(tile);
@@ -515,7 +523,7 @@ class TileMap extends GameComponent with HandlesGesture {
 
   /// 返回一个Map，index是1-4(正方形地块)或者1-6(六边形地块)
   /// 每个编号对应一个固定位置的相邻地块，如果值为 null 表示这个位置没有符合要求的相邻地块
-  Map<int, TileMapTerrain> getNeighborTiles(TileMapTerrain tile,
+  Map<int, TileMapTerrain> getTileNeighbors(TileMapTerrain tile,
       {List terrainKinds = const []}) {
     final neighbors = <int, TileMapTerrain>{};
     switch (tileShape) {
@@ -711,7 +719,7 @@ class TileMap extends GameComponent with HandlesGesture {
       }
       open.remove(nextIndex);
       closed.add(nextIndex);
-      final neighbors = getNeighborTiles(nextTile, terrainKinds: terrainKinds);
+      final neighbors = getTileNeighbors(nextTile, terrainKinds: terrainKinds);
       for (final neighbor in neighbors.values) {
         if (neighbor.isNonEnterable && neighbor.index != end.index) continue;
         if (closed.contains(neighbor.index)) continue;
@@ -804,7 +812,7 @@ class TileMap extends GameComponent with HandlesGesture {
             _tilesWithinSight.add(tile);
           }
         }
-        final neighbors = getNeighborTiles(tile);
+        final neighbors = getTileNeighbors(tile);
         for (final neighbor in neighbors.values) {
           if (_tilesWithinSight.contains(neighbor) ||
               peremeterTiles.contains(neighbor)) {
