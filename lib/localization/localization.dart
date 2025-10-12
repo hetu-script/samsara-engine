@@ -85,7 +85,7 @@ class GameLocalization {
       }
 
       if (text is! String) {
-        text = '"$key"';
+        text = key;
       }
 
       if (interpolations != null && interpolations.isNotEmpty) {
@@ -99,7 +99,7 @@ class GameLocalization {
       }
       return result.join(', ');
     } else {
-      return '"$key"';
+      return key;
     }
   }
 }

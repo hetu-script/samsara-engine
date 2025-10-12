@@ -2,8 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:hetu_script/hetu_script.dart';
-
-import 'scene.dart';
+import 'package:samsara/samsara.dart';
 
 abstract class SceneController with ChangeNotifier implements HTLogger {
   // Scene? _scene;
@@ -40,20 +39,12 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
   }) async {
     if (scene == null || scene?.id != sceneId) {
       if (_sequence.isNotEmpty) {
-        // assert(sceneId != _sequence.last, 'Cannot push the same scene again!');
-        // final current = _cached[_sequence.last]!;
-        // current.onEnd();
-
         if (_sequence.contains(sceneId)) {
           _sequence.remove(sceneId);
         }
       }
-      if (clearCache) {
-        _endCurrentScene(clearCache: clearCache);
-      } else {
-        scene?.onEnd();
-        _sequence.add(sceneId);
-      }
+      await scene?.onEnd();
+      _sequence.add(sceneId);
       scene = await createScene(sceneId,
           constructorId: constructorId, arguments: arguments);
       // scene!.completer = completer;
@@ -67,27 +58,40 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
 
   /// 回退到当前场景序列的上一个场景
   Future<Scene?> popScene({bool clearCache = false}) async {
-    assert(_sequence.length > 1, 'Cannot pop the last scene!');
+    assert(_sequence.isNotEmpty && _sequence.last == scene?.id);
+    if (_sequence.length <= 1) {
+      if (kDebugMode) {
+        error('no scene to pop!');
+      }
+      return null;
+    }
     if (kDebugMode) {
       info('leaving scene: [${_sequence.last}]');
     }
-    // scene?.onEnd();
-    // final current = _cached[_sequence.last]!;
-    // current.onEnd();
-    if (clearCache) {
-      _cached.remove(_sequence.last);
+    await scene?.onEnd();
+    if (_sequence.isNotEmpty) {
+      _sequence.removeLast();
     }
-    _sequence.removeLast();
-    scene = switchScene(_sequence.last);
+    if (clearCache) {
+      _cached.remove(scene?.id);
+    }
+    scene = await switchScene(_sequence.last);
     notifyListeners();
     return scene;
   }
 
-  void _endCurrentScene({bool clearCache = false}) {
-    scene?.onEnd();
-    if (clearCache) {
-      _cached.remove(scene?.id);
+  Future<Scene?> popSceneTill(String sceneId, {bool clearCache = false}) async {
+    assert(_sequence.contains(sceneId),
+        'could not find scene [$sceneId] to pop to!');
+
+    String? before = scene?.id;
+    while (_sequence.isNotEmpty && _sequence.last != sceneId) {
+      await popScene(clearCache: clearCache);
     }
+    if (scene?.id != before) {
+      notifyListeners();
+    }
+    return scene;
   }
 
   /// 获取一个之前已经构建过的场景
@@ -96,17 +100,16 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
   /// 因为此函数不会改变场景序列，因此在之后再次调用 pop 时
   /// 无论切换到了什么场景都会正确的回到场景序列上的前一个场景
   /// 使用这个方法可以强制再次触发进入当前场景
-  Scene switchScene(
+  Future<Scene> switchScene(
     String sceneId, {
     dynamic arguments = const {},
     bool restart = false,
-    bool clearCache = false,
-  }) {
-    assert(_cached.containsKey(sceneId), 'Scene [$sceneId] not found!');
+  }) async {
+    assert(_cached.containsKey(sceneId), 'scene [$sceneId] not found!');
     bool switched = false;
     if (scene?.id != sceneId) {
       switched = true;
-      _endCurrentScene(clearCache: clearCache);
+      await scene?.onEnd();
     }
     scene = _cached[sceneId];
     if (switched) {
@@ -138,16 +141,22 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
       }
     } else {
       final constructor = _constructors[constructorId ?? sceneId];
-      assert(constructor != null, 'Constructor [$constructorId] not found!');
+      assert(constructor != null, 'constructor [$constructorId] not found!');
       final tik = DateTime.now().millisecondsSinceEpoch;
-      final Scene created = (await constructor!(arguments));
-      _cached[sceneId] = created;
-      assert(created.id == sceneId,
-          'Created scene ID [${created.id}] mismatch the function call [$sceneId]!');
-      scene = created;
-      if (kDebugMode) {
-        info(
-            'created scene: [$sceneId] in ${DateTime.now().millisecondsSinceEpoch - tik}ms');
+      try {
+        final Scene created = (await constructor!(arguments));
+        _cached[sceneId] = created;
+        if ((created.id != sceneId) && kDebugMode) {
+          warn(
+              'created scene id [${created.id}] mismatch the constructor argument scene id [$sceneId]!');
+        }
+        scene = created;
+        if (kDebugMode) {
+          info(
+              'created scene: [$sceneId] in ${DateTime.now().millisecondsSinceEpoch - tik}ms');
+        }
+      } catch (e) {
+        rethrow;
       }
     }
     scene!.onStart(arguments);
@@ -155,25 +164,10 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     return scene!;
   }
 
-  // void leaveScene(String sceneId, {bool clearCache = false}) {
-  //   assert(_scene?.id == sceneId);
-
-  //   _scene = null;
-  //   if (clearCache) {
-  //     _cachedScenes.remove(sceneId);
-  //   }
-  //   if (kDebugMode) {
-  //     info('ended scene: $sceneId');
-  //   }
-  // }
-
   /// delete a previously cached scene
   void clearCachedScene(String sceneId) {
-    assert(_cached.containsKey(sceneId), 'Scene [$sceneId] not found!');
+    assert(_cached.containsKey(sceneId), 'scene [$sceneId] not found!');
 
-    final cached = _cached[sceneId]!;
-    cached.onEnd();
-    // cached.onDispose();
     _cached.remove(sceneId);
     if (kDebugMode) {
       info('cleared scene: [$sceneId]');
@@ -184,32 +178,32 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     }
   }
 
-  void clearAllCachedScene({
+  /// 清除所有缓存的 Scene 实例
+  /// 如果提供了 except 参数，则保留该场景，并切换到该场景
+  /// 不会触发 onEnd()
+  Future<void> clearAllCachedScene({
     String? except,
     dynamic arguments = const {},
     bool restart = false,
-  }) {
+  }) async {
     assert(_cached.isNotEmpty, 'No scene to clear!');
     assert(except == null || _cached.containsKey(except),
-        'Scene [$except] not found!');
+        'scene [$except] not found!');
 
-    for (final cached in _cached.values) {
+    for (final cached in _cached.values.reversed) {
       if (except != null && cached.id == except) {
         continue;
       }
-      cached.onEnd();
       if (scene == cached) {
         scene = null;
       }
-      // scene.onDispose();
     }
     _cached.removeWhere((key, value) => key != except);
     _sequence.removeWhere((key) => key != except);
+    scene = null;
     if (except != null) {
-      assert(_cached.containsKey(except), 'Scene [$except] not found!');
-      scene = switchScene(except, arguments: arguments, restart: restart);
-    } else {
-      scene = null;
+      assert(_cached.containsKey(except), 'scene [$except] not found!');
+      scene = await switchScene(except, arguments: arguments, restart: restart);
     }
 
     if (kDebugMode) {

@@ -32,8 +32,8 @@ class Label extends StatelessWidget {
   Widget build(BuildContext context) {
     return MouseRegion2(
       cursor: cursor,
-      onMouseEnter: onMouseEnter,
-      onMouseExit: onMouseExit,
+      onEnter: onMouseEnter,
+      onExit: onMouseExit,
       child: Container(
         width: width,
         height: height,

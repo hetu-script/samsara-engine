@@ -1,0 +1,14 @@
+[
+  {
+    id: "rpg",
+    title: "wiki_rpg_title",
+    path: "wiki/rpg/readme.md",
+    children: [],
+  },
+  {
+    id: "tutorial",
+    title: "wiki_tutorial_title",
+    path: "wiki/tutorial/readme.md",
+    children: [],
+  },
+]

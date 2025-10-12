@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
 import 'package:flame/flame.dart';
@@ -9,10 +10,12 @@ import 'package:flame/components.dart';
 import 'package:samsara/cardgame/cardgame.dart';
 import 'package:hetu_script/utils/uid.dart' as utils;
 import 'package:window_manager/window_manager.dart';
-import 'package:samsara/widgets/markdown_wiki.dart';
+import 'package:samsara/markdown_wiki.dart';
 import 'package:samsara/richtext.dart';
 import 'package:samsara/task.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
+import 'package:json5/json5.dart';
+import 'package:animated_tree_view/animated_tree_view.dart';
 
 import '../noise_test.dart';
 import '../global.dart';
@@ -31,6 +34,10 @@ class GameScene extends Scene {
   final TaskController taskController = TaskController();
 
   final fluent.FlyoutController menuController = fluent.FlyoutController();
+
+  final List<dynamic> wikiData = [];
+
+  late final TreeNode<WikiPageData> wikiTreeNodes;
 
   GameScene({
     required super.id,
@@ -125,6 +132,11 @@ class GameScene extends Scene {
     };
     background.add(button);
 
+    final docsDataString = await rootBundle.loadString('wiki/wiki.json5');
+    wikiData.addAll(JSON5.parse(docsDataString));
+
+    wikiTreeNodes = await buildWikiTreeNodesFromData(wikiData);
+
     engine.setLoading(false);
   }
 
@@ -218,7 +230,8 @@ class GameScene extends Scene {
                       showDialog(
                         context: context,
                         builder: (context) => MarkdownWiki(
-                          resourceManager: AssetManager(),
+                          engine: engine,
+                          treeNodes: wikiTreeNodes,
                         ),
                       );
                     },

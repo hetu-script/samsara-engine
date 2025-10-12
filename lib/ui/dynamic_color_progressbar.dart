@@ -53,8 +53,8 @@ class DynamicColorProgressBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final valueString = '$label: ${value.truncate()}/${max.truncate()}';
     return MouseRegion2(
-      onMouseEnter: onMouseEnter,
-      onMouseExit: onMouseExit,
+      onEnter: onMouseEnter,
+      onExit: onMouseExit,
       child: Row(
         children: [
           Container(

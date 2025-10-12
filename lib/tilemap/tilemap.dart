@@ -1194,11 +1194,13 @@ class TileMap extends GameComponent with HandlesGesture {
         .toList();
   }
 
-  void componentFinishWalk(TileMapComponent component, TileMapTerrain terrain,
-      TileMapTerrain? targetTerrain,
-      {bool stepCallback = true}) {
+  void componentFinishWalk(TileMapComponent component,
+      {bool stepCallback = false,
+      TileMapTerrain? terrain,
+      TileMapTerrain? target}) async {
     if (stepCallback) {
-      component.onStepCallback?.call(terrain, targetTerrain, true);
+      assert(terrain != null);
+      await component.onStepCallback?.call(terrain!, target, true);
     }
     component.onStepCallback = null;
     component.prevRouteNode = null;
@@ -1207,6 +1209,7 @@ class TileMap extends GameComponent with HandlesGesture {
       component.setDirection(component.finishWalkDirection!);
     }
     component.finishWalkDirection = null;
+    component.isWalkCanceled = false;
     component.stopAnimation();
   }
 
@@ -1214,7 +1217,10 @@ class TileMap extends GameComponent with HandlesGesture {
     if (component.isWalking) return;
     if (component.currentRoute == null) return;
 
-    assert(component.currentRoute!.isNotEmpty);
+    if (component.currentRoute!.isEmpty) {
+      componentFinishWalk(component);
+      return;
+    }
 
     final prevRouteNode = component.currentRoute!.last;
     component.currentRoute!.removeLast();
@@ -1224,14 +1230,13 @@ class TileMap extends GameComponent with HandlesGesture {
     final terrain = getTerrain(tile.left, tile.top);
     assert(terrain != null);
 
-    if (component.isWalkCanceled) {
-      component.isWalkCanceled = false;
-      componentFinishWalk(component, terrain!, null);
+    if (component.currentRoute!.isEmpty) {
+      componentFinishWalk(component, stepCallback: true, terrain: terrain!);
       return;
     }
 
-    if (component.currentRoute!.isEmpty) {
-      componentFinishWalk(component, terrain!, null);
+    if (component.isWalkCanceled) {
+      componentFinishWalk(component);
       return;
     }
 
@@ -1245,21 +1250,22 @@ class TileMap extends GameComponent with HandlesGesture {
     // 如果路径上下一个目标是不可进入的，且该目标是路径上最后一个目标
     // 此种情况结束移动，但仍会触发对最终目标的交互
     if (component.currentRoute!.length == 1 && nextTerrain!.isNonEnterable) {
-      componentFinishWalk(component, terrain!, nextTerrain);
+      componentFinishWalk(component,
+          stepCallback: true, terrain: terrain!, target: nextTerrain);
       return;
     }
 
     component.onStepCallback?.call(terrain!, nextTerrain, false);
+    // prevRouteNode 记录了前一次移动时的位置，但第一次移动时，此值为Null
+    component.prevRouteNode = prevRouteNode;
 
     // 这里要多检查一次，因为有可能在 onBeforeStepCallback 中被取消移动
     // 但这里的finishMove 不传递 terrain，这样不会再次触发 onAfterMoveCallback
     if (component.isWalkCanceled) {
-      component.isWalkCanceled = false;
-      componentFinishWalk(component, terrain!, null, stepCallback: false);
+      componentFinishWalk(component);
       return;
     }
 
-    component.prevRouteNode = prevRouteNode;
     component.walkTo(
       target: nextTile,
       targetRenderPosition:

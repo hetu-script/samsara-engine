@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -54,6 +55,8 @@ class SamsaraEngine extends SceneController
   static const modeFileExtension = '.mod';
 
   EngineConfig config;
+
+  math.Random random = math.Random(DateTime.now().millisecondsSinceEpoch);
 
   String get name => config.name;
 
