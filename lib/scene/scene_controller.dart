@@ -106,19 +106,15 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     bool restart = false,
   }) async {
     assert(_cached.containsKey(sceneId), 'scene [$sceneId] not found!');
-    bool switched = false;
     if (scene?.id != sceneId) {
-      switched = true;
       await scene?.onEnd();
     }
     scene = _cached[sceneId];
-    if (switched) {
+    if (restart) {
       scene!.onStart(arguments);
-      if (kDebugMode) {
-        info('switched to scene: [$sceneId]');
-      }
-    } else if (restart) {
-      scene!.onStart(arguments);
+    }
+    if (kDebugMode) {
+      info('switched to scene: [$sceneId]');
     }
     notifyListeners();
     return scene!;

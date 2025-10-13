@@ -17,9 +17,9 @@ class WikiPageData {
 }
 
 Future<TreeNode<WikiPageData>> buildWikiTreeNodesFromData(
-    List<dynamic> data) async {
-  final root = TreeNode<WikiPageData>.root();
-
+  List<dynamic> data, {
+  dynamic root,
+}) async {
   Future<TreeNode<WikiPageData>> buildNode(Map<String, dynamic> data) async {
     final String key = data['id'];
     final String path = data['path'];
@@ -42,11 +42,15 @@ Future<TreeNode<WikiPageData>> buildWikiTreeNodesFromData(
     return node;
   }
 
+  final rootNode = await buildNode(
+    root ?? {'id': '/'},
+  );
+
   for (final item in data) {
     if (item is! Map<String, dynamic>) continue;
     final node = await buildNode(item);
-    root.add(node);
+    rootNode.add(node);
   }
 
-  return root;
+  return rootNode;
 }

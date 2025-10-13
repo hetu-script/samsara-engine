@@ -4,12 +4,19 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 class MarkdownPage extends StatelessWidget {
   final String data;
 
-  const MarkdownPage(this.data, {super.key});
+  const MarkdownPage(
+    this.data, {
+    this.scrollController,
+    super.key,
+  });
+
+  final ScrollController? scrollController;
 
   @override
   Widget build(BuildContext context) {
     return Markdown(
       data: data,
+      controller: scrollController,
       // styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
       //   p: Theme.of(context).textTheme.bodyMedium,
       //   h1: Theme.of(context).textTheme.headlineLarge,
