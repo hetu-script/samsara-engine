@@ -333,7 +333,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
       _animation?.ticker.currentFrame.sprite
           .render(canvas, position: renderPosition, size: renderSize);
       _overlaySprite?.render(canvas,
-          position: renderPosition2, size: renderSize);
+          position: renderPosition2 + overlaySpriteOffset, size: renderSize);
       if (map.isEditorMode ||
           !map.showFogOfWar ||
           map.isTileWithinSight(this)) {

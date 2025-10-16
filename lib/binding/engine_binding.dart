@@ -63,6 +63,35 @@ class SamsaraEngineClassBinding extends HTExternalClass {
       case 'loop':
         return ({object, positionalArgs, namedArgs}) =>
             engine.bgm.play(positionalArgs.first);
+      case 'pushScene':
+        return ({object, positionalArgs, namedArgs}) => engine.pushScene(
+            positionalArgs.first,
+            constructorId: namedArgs['constructorId'],
+            arguments: namedArgs['arguments'],
+            triggerOnStart: namedArgs['triggerOnStart'] ?? true);
+      case 'switchScene':
+        return ({object, positionalArgs, namedArgs}) => engine.switchScene(
+            positionalArgs.first,
+            arguments: namedArgs['arguments'],
+            triggerOnStart: namedArgs['triggerOnStart'] ?? true);
+      case 'popScene':
+        return ({object, positionalArgs, namedArgs}) =>
+            engine.popScene(clearCache: namedArgs['clearCache'] ?? false);
+      case 'popSceneTill':
+        return ({object, positionalArgs, namedArgs}) => engine.popSceneTill(
+            positionalArgs.first,
+            clearCache: namedArgs['clearCache'] ?? false);
+      case 'clearSceneCache':
+        return ({object, positionalArgs, namedArgs}) =>
+            engine.clearCachedScene(positionalArgs.first);
+      case 'clearAllCachedScene':
+        return ({object, positionalArgs, namedArgs}) =>
+            engine.clearAllCachedScene(
+              except: namedArgs['except'],
+              arguments: namedArgs['arguments'],
+              triggerOnStart: namedArgs['triggerOnStart'] ?? true,
+            );
+
       default:
         if (!ignoreUndefined) throw HTError.undefined(id);
     }
@@ -73,18 +102,24 @@ const kHetuEngineBindingSource = r'''
 external class SamsaraEngine {
   get random
   get debugMode
-  fun loadLocaleDataFromJSON(data: Map)
-  fun setLanguage(languageId: string)
-  fun hasLocaleKey(key)
-  fun locale(key: string, {interpolations})
-  fun emit(eventId, args)
-  fun log(...content: string)
-  fun debug(...content: string)
-  fun info(...content: string)
-  fun warn(...content: string)
-  fun error(...content: string)
-  fun play(filename)
-  fun loop(filename)
+  function loadLocaleDataFromJSON(data: Map)
+  function setLanguage(languageId: string)
+  function hasLocaleKey(key: string)
+  function locale(key: string, {interpolations: List})
+  function emit(eventId, args)
+  function log(...content: string)
+  function debug(...content: string)
+  function info(...content: string)
+  function warn(...content: string)
+  function error(...content: string)
+  function play(filename: string)
+  function loop(filename: string)
+  function pushScene(sceneId: string, {constructorId: string, arguments, triggerOnStart: bool = true})
+  function switchScene(sceneId: string, {arguments, triggerOnStart: bool = true})
+  function popScene({clearCache: bool = false})
+  function popSceneTill(sceneId: string, {clearCache: bool = false})
+  function clearCachedScene(sceneId: string)
+  function clearAllCachedScene({except: string, arguments, triggerOnStart: bool = true})
 }
 
 let ctx

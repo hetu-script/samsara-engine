@@ -122,7 +122,7 @@ class TileMap extends GameComponent with HandlesGesture {
 
   bool isEditorMode;
 
-  FutureOr<void> Function()? onAfterLoaded;
+  FutureOr<void> Function()? onAfterMapLoaded;
   bool onAfterLoadedCalled = false;
 
   FutureOr<void> Function()? onMounted;
@@ -148,7 +148,7 @@ class TileMap extends GameComponent with HandlesGesture {
     required this.captionStyle,
     this.fogSpriteId,
     this.fogSprite,
-    this.onAfterLoaded,
+    this.onAfterMapLoaded,
     this.onMounted,
     this.onMouseEnterTile,
     this.isEditorMode = false,
@@ -314,7 +314,7 @@ class TileMap extends GameComponent with HandlesGesture {
   Future<void> onMount() async {
     if (!onAfterLoadedCalled) {
       onAfterLoadedCalled = true;
-      await onAfterLoaded?.call();
+      await onAfterMapLoaded?.call();
     }
 
     await onMounted?.call();

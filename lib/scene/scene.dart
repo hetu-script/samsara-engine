@@ -55,6 +55,10 @@ abstract class Scene extends FlameGame with TaskController {
 
   final _hintTextController = TaskController();
 
+  void Function()? onAfterLoaded;
+
+  bool _isFirstLoad = true;
+
   Scene({
     required this.id,
     required this.context,
@@ -130,10 +134,6 @@ abstract class Scene extends FlameGame with TaskController {
     }
   }
 
-  /// 这个函数在场景参数被改变时触发
-  /// 通常意味着当前已经在此场景中时，某些事件试图调用此场景的某些功能
-  void onTrigger(dynamic arguments) {}
-
   /// 这个函数在退出场景时被调用，通常用来清理数据等
   /// 注意此时场景的资源并未被施放，场景本身仍然存在于缓存中
   /// 如果要释放资源，应在调用 controller.popScene() 时带上参数 clearCache: true
@@ -152,6 +152,15 @@ abstract class Scene extends FlameGame with TaskController {
     bounds = Rect.fromLTWH(0, 0, size.x, size.y);
 
     fitScreen();
+  }
+
+  @mustCallSuper
+  @override
+  void onMount() {
+    if (_isFirstLoad) {
+      _isFirstLoad = false;
+      onAfterLoaded?.call();
+    }
   }
 
   @override

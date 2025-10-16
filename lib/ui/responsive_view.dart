@@ -3,30 +3,30 @@ import 'package:flutter/material.dart';
 class ResponsiveView extends StatelessWidget {
   const ResponsiveView({
     super.key,
-    this.child,
     this.alignment = Alignment.center,
     this.width,
     this.height,
+    this.padding = const EdgeInsets.all(5.0),
     this.margin,
     this.borderRadius,
     this.borderColor = Colors.white54,
     this.borderWidth = 0.0,
     this.backgroundColor,
     this.barrierColor,
-    this.barrierDismissible = true,
+    this.child,
     this.children = const [],
   });
 
   final Widget? child;
   final AlignmentGeometry alignment;
   final double? width, height;
+  final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry? margin;
   final double? borderRadius;
   final Color borderColor;
   final double borderWidth;
   final Color? backgroundColor;
   final Color? barrierColor;
-  final bool barrierDismissible;
   final List<Widget> children;
 
   @override
@@ -38,15 +38,15 @@ class ResponsiveView extends StatelessWidget {
           if (barrierColor != null)
             ModalBarrier(
               color: barrierColor,
-              dismissible: barrierDismissible,
+              onDismiss: () {},
             ),
           Align(
             alignment: alignment,
             child: Container(
               width: width,
               height: height,
+              padding: padding,
               margin: margin,
-              padding: const EdgeInsets.all(5.0),
               decoration: BoxDecoration(
                 color: backgroundColor,
                 borderRadius: borderRadius != null
