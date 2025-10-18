@@ -12,7 +12,7 @@ import 'package:flutter_custom_cursor/flutter_custom_cursor.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 
 import 'app.dart';
-import 'global.dart';
+import 'engine.dart';
 
 class DesktopScrollBehavior extends MaterialScrollBehavior {
   // Override behavior methods and getters like dragDevices
@@ -56,14 +56,11 @@ void main() {
     // windowManager.addListener(CustomWindowListener());
     await windowManager.setMaximizable(false);
     await windowManager.setResizable(false);
-    const windowSize = Size(1440.0, 900.0);
     await windowManager.waitUntilReadyToShow(
         const WindowOptions(
-          title: 'Heavenly Tribulation',
+          title: 'Samsara Demo',
           // fullScreen: true,
           size: windowSize,
-          maximumSize: windowSize,
-          minimumSize: windowSize,
         ), () async {
       await windowManager.show();
       await windowManager.focus();

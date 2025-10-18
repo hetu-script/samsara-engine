@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:animated_tree_view/animated_tree_view.dart';
 import 'package:samsara/markdown_wiki.dart';
 
-import '../ui/responsive_view.dart';
+import '../widgets/ui/responsive_view.dart';
 import '../engine.dart';
 import 'markdown_page.dart';
 

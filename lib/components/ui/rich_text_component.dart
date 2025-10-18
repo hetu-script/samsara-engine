@@ -1,9 +1,9 @@
 import 'package:samsara/gestures.dart';
 
-import 'border_component.dart';
-import '../paint/paint.dart';
-import '../extensions.dart';
-import '../richtext.dart';
+import '../border_component.dart';
+import '../../paint/paint.dart';
+import '../../extensions.dart';
+import '../../richtext.dart';
 
 class RichTextComponent extends BorderComponent with HandlesGesture {
   ScreenTextConfig config;

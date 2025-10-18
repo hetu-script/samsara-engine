@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../richtext.dart';
+import '../../richtext.dart';
 import 'mouse_region2.dart';
 
 class Label extends StatelessWidget {

@@ -7,3 +7,5 @@ final SamsaraEngine engine = SamsaraEngine(
     showFps: true,
   ),
 );
+
+const windowSize = Size(1440.0, 810.0);

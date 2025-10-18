@@ -48,6 +48,7 @@ flutter:
     - wiki/tutorial/
 
     - assets/images/
+    - assets/images/mini_game/tile_matching/
     - assets/images/text/
     - assets/locale/zh/
     - assets/cards/

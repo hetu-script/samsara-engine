@@ -1,8 +1,8 @@
-import '../paint/paint.dart';
-import 'border_component.dart';
-import '../utils/color.dart';
-import '../extensions.dart';
-import '../gestures/gesture_mixin.dart';
+import '../../paint/paint.dart';
+import '../border_component.dart';
+import '../../utils/color.dart';
+import '../../extensions.dart';
+import '../../gestures/gesture_mixin.dart';
 
 class DynamicColorProgressIndicator extends BorderComponent
     with HandlesGesture {

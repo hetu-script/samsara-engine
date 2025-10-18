@@ -7,7 +7,7 @@ import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
 import '../tilemap/terrain.dart';
 // import '../components/game_component.dart';
-import 'tile_mixin.dart';
+import 'tile_info.dart';
 import '../animation/sprite_animation.dart';
 import 'route.dart';
 import '../animation/animation_state_controller.dart';
@@ -303,9 +303,8 @@ class TileMapComponent extends TaskComponent
     }
   }
 
-  // TODO:计算是否在屏幕上可见
   @override
-  bool get isVisible => true;
+  bool get isVisible => map.isTileOnScreen(this);
 
   @override
   void render(Canvas canvas) {

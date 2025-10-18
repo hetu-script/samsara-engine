@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:samsara/samsara.dart';
+import 'package:window_manager/window_manager.dart';
 
-import 'scene/game.dart';
-import 'global.dart';
+import 'scene/mainmenu.dart';
+import 'scene/mini_game/tile_matching.dart';
+import 'engine.dart';
 
 class LoadingScreen extends StatelessWidget {
   const LoadingScreen({super.key});
@@ -40,8 +42,6 @@ class GameApp extends StatefulWidget {
 }
 
 class _GameAppState extends State<GameApp> {
-  bool _isLoading = false, _isInitted = false;
-
   final _focusNode = FocusNode();
 
   @override
@@ -55,57 +55,71 @@ class _GameAppState extends State<GameApp> {
   @override
   void initState() {
     super.initState();
-    engine.bgm.initialize();
 
-    engine.registerSceneConstructor('game', ([dynamic args]) async {
-      return GameScene(id: 'game', context: context, bgm: engine.bgm);
-    });
+    engine.setLoading(true);
+
+    _initEngine();
   }
 
   // FutureBuilder 根据返回值是否为null来判断是否成功，因此这里无论如何需要返回一个值
-  Future<bool> _initEngine() async {
-    if (_isLoading) return false;
-    _isLoading = true;
+  Future<void> _initEngine() async {
+    engine.bgm.initialize();
 
-    if (!_isInitted) {
-      // 刚打开游戏，需要初始化引擎，载入数据，debug模式下还要初始化一个游戏存档用于测试
-      await engine.init(context);
-      _isInitted = true;
+    engine.registerSceneConstructor('main', ([dynamic args]) async {
+      return MainMenuScene(id: 'main', context: context, bgm: engine.bgm);
+    });
 
-      engine.pushScene('game');
-    } else {
-      // 游戏已经初始化完毕，此时根据当前状态读取或切换场景
-      assert(engine.isInitted);
-    }
+    engine.registerSceneConstructor('tile_matching_game', (
+        [dynamic args]) async {
+      final TileMatchingGameTypes type = TileMatchingGameTypes.values
+          .singleWhere(
+              (e) => e.toString() == 'TileMatchingGameTypes.${args?['type']}',
+              orElse: () => TileMatchingGameTypes.farmland);
+      return TileMatchingGameScene(
+        id: 'tile_matching_game',
+        context: context,
+        bgm: engine.bgm,
+        type: type,
+      );
+    });
+    // 刚打开游戏，需要初始化引擎，载入数据，debug模式下还要初始化一个游戏存档用于测试
+    await engine.init(context);
 
-    _isLoading = false;
-    return true;
+    engine.pushScene('main', onAfterLoaded: () {
+      engine.setLoading(false);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _initEngine(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          throw Exception('${snapshot.error}\n${snapshot.stackTrace}');
-        } else if (!snapshot.hasData) {
-          return const LoadingScreen();
-        } else {
-          final scene = context.watch<SamsaraEngine>().scene;
-          return Scaffold(
-            body: Stack(
-              children: [
-                scene?.build(
-                      context,
-                      loadingBuilder: (context) => LoadingScreen(),
-                    ) ??
-                    const SizedBox.shrink(),
-              ],
-            ),
-          );
-        }
-      },
-    );
+    final screenSize = MediaQuery.sizeOf(context);
+    final desiredSize = windowSize;
+    if (screenSize.width != desiredSize.width ||
+        screenSize.height != desiredSize.height) {
+      final widthDiff = desiredSize.width - screenSize.width;
+      final heightDiff = desiredSize.height - screenSize.height;
+      final newSize = Size(
+          (widthDiff > 0 ? desiredSize.width : screenSize.width) + widthDiff,
+          (heightDiff > 0 ? desiredSize.height : screenSize.height) +
+              heightDiff);
+      windowManager.setSize(newSize);
+      return const LoadingScreen();
+    } else {
+      engine.debug('画面尺寸修改为：${screenSize.width}x${screenSize.height}');
+      final scene = context.watch<SamsaraEngine>().scene;
+      final isLoading = context.watch<SamsaraEngine>().isLoading;
+      return Scaffold(
+        body: Stack(
+          children: [
+            scene?.build(
+                  context,
+                  loadingBuilder: (context) => const LoadingScreen(),
+                ) ??
+                const LoadingScreen(),
+            if (isLoading) const LoadingScreen(),
+          ],
+        ),
+      );
+    }
   }
 }

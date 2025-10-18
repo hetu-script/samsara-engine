@@ -1,10 +1,10 @@
-import '../extensions.dart';
+import '../../extensions.dart';
 
-import '../scene/scene.dart';
-import 'game_component.dart';
-import 'border_component.dart';
-import '../paint/paint.dart';
-import '../richtext.dart';
+import '../../scene/scene.dart';
+import '../game_component.dart';
+import '../border_component.dart';
+import '../../paint/paint.dart';
+import '../../richtext.dart';
 
 enum HovertipDirection {
   none,

@@ -2,7 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 
 import 'engine.dart';
-import 'ui/responsive_view.dart';
+import 'widgets/ui/responsive_view.dart';
 import 'extensions.dart';
 
 class Console extends StatefulWidget {

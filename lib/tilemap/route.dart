@@ -1,5 +1,5 @@
 import 'package:flame/components.dart';
-import 'tile_mixin.dart';
+import 'tile_info.dart';
 
 class TileMapRouteNode {
   final int index;

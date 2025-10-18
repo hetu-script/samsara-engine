@@ -22,8 +22,8 @@ Future<TreeNode<WikiPageData>> buildWikiTreeNodesFromData(
 }) async {
   Future<TreeNode<WikiPageData>> buildNode(Map<String, dynamic> data) async {
     final String key = data['id'];
-    final String path = data['path'];
-    final pageData = await rootBundle.loadString(path);
+    final String? path = data['path'];
+    final pageData = path != null ? await rootBundle.loadString(path) : null;
     final wikiPage = WikiPageData(
       key: key,
       title: data['title'],

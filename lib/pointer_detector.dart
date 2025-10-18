@@ -25,7 +25,7 @@ class TouchDetails {
         currentGlobalPosition = startGlobalPosition;
 }
 
-const kMoveTimeDeltaThresholdByMS = 50;
+const kMoveTimeDeltaThresholdByMS = 10;
 
 class PointerMoveDetails {
   int timestamp;

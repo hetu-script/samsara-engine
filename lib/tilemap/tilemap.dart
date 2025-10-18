@@ -11,7 +11,7 @@ import '../extensions.dart';
 // import '../paint.dart';
 import '../components/game_component.dart';
 import '../gestures/gesture_mixin.dart';
-import 'tile_mixin.dart';
+import 'tile_info.dart';
 import 'component.dart';
 import 'terrain.dart';
 import 'direction.dart';
@@ -21,11 +21,15 @@ import '../paint/paint.dart';
 
 export 'direction.dart';
 
-const kTileMapTerrainPriority = 1000;
-
-// const kTileMapComponentPriority = 1000;
+const kTileMapTerrainPriority = 1;
+const kTileMapComponentPriority = 10000;
 
 const kColorModeNone = -1;
+const kColorModeZone = 0;
+const kColorModeCity = 1;
+const kColorModeNation = 2;
+
+const kScreenEdgeSize = 48;
 
 class TileMap extends GameComponent with HandlesGesture {
   static final Map<Color, Paint> cachedColorPaints = {};
@@ -128,6 +132,7 @@ class TileMap extends GameComponent with HandlesGesture {
   FutureOr<void> Function()? onMounted;
 
   void Function(TileMapTerrain? tile)? onMouseEnterTile;
+  void Function(OrthogonalDirection direction)? onMouseEnterScreenEdge;
 
   TileMap({
     required this.id,
@@ -156,11 +161,22 @@ class TileMap extends GameComponent with HandlesGesture {
         assert(!tileSpriteSrcSize.isZero()),
         random = math.Random() {
     onMouseHover = (Vector2 position) {
-      final tilePosition = worldPosition2Tile(position);
-      final terrain = getTerrain(tilePosition.left, tilePosition.top);
-      if (terrain != hoveringTerrain) {
-        hoveringTerrain = terrain;
-        onMouseEnterTile?.call(hoveringTerrain);
+      final screenPosition = game.worldPosition2Screen(position);
+      if (screenPosition.x < kScreenEdgeSize) {
+        onMouseEnterScreenEdge?.call(OrthogonalDirection.west);
+      } else if (screenPosition.x > game.size.x - kScreenEdgeSize) {
+        onMouseEnterScreenEdge?.call(OrthogonalDirection.east);
+      } else if (screenPosition.y < kScreenEdgeSize) {
+        onMouseEnterScreenEdge?.call(OrthogonalDirection.north);
+      } else if (screenPosition.y > game.size.y - kScreenEdgeSize) {
+        onMouseEnterScreenEdge?.call(OrthogonalDirection.south);
+      } else {
+        final tilePosition = worldPosition2Tile(position);
+        final terrain = getTerrain(tilePosition.left, tilePosition.top);
+        if (terrain != hoveringTerrain) {
+          hoveringTerrain = terrain;
+          onMouseEnterTile?.call(hoveringTerrain);
+        }
       }
     };
   }
@@ -172,13 +188,14 @@ class TileMap extends GameComponent with HandlesGesture {
     // tile.renderPosition = tilePosition2RenderPosition(tile.left, tile.top);
     tile.centerPosition = tilePosition2TileCenter(tile.left, tile.top);
 
-    int basePriority = kTileMapTerrainPriority;
-
+    int basePriority;
     if (tile is TileMapComponent) {
-      basePriority += 5;
+      basePriority = kTileMapComponentPriority;
       tile.position =
           tilePosition2RenderPosition(tile.left, tile.top) + tileOffset;
-    } else {}
+    } else {
+      basePriority = kTileMapTerrainPriority;
+    }
 
     double bleedingPixelHorizontal = tile.srcSize.x * 0.04;
     double bleedingPixelVertical = tile.srcSize.y * 0.04;
@@ -487,9 +504,9 @@ class TileMap extends GameComponent with HandlesGesture {
   }
 
   // TODO: 计算tile是否在屏幕上
-  bool isTileOnScreen(TileMapTerrain tile) {
-    final leftTopPos = worldPosition2Screen(tile.renderPosition);
-    final bottomRightPos = worldPosition2Screen(tile.renderBottomRight);
+  bool isTileOnScreen(TileInfo tile) {
+    final leftTopPos = game.worldPosition2Screen(tile.renderPosition);
+    final bottomRightPos = game.worldPosition2Screen(tile.renderBottomRight);
     final isOnScreen = bottomRightPos.x > 0 &&
         bottomRightPos.y > 0 &&
         leftTopPos.x < game.size.x &&
@@ -831,17 +848,6 @@ class TileMap extends GameComponent with HandlesGesture {
     } while (peremeterTiles.isNotEmpty);
   }
 
-  Vector2 worldPosition2Screen(Vector2 position) {
-    return (position - game.camera.viewfinder.position) *
-            game.camera.viewfinder.zoom +
-        game.size / 2;
-  }
-
-  Vector2 screenPosition2World(Vector2 position) {
-    return (position - game.size / 2) / game.camera.viewfinder.zoom +
-        game.camera.viewfinder.position;
-  }
-
   int tilePosition2Index(int left, int top) {
     return (left - 1) + (top - 1) * tileMapWidth;
   }
@@ -912,7 +918,7 @@ class TileMap extends GameComponent with HandlesGesture {
 
   Vector2 tilePosition2TileCenterOnScreen(int left, int top) {
     final worldPos = tilePosition2TileCenter(left, top);
-    final result = worldPosition2Screen(worldPos);
+    final result = game.worldPosition2Screen(worldPos);
     return result;
   }
 
@@ -1315,7 +1321,10 @@ class TileMap extends GameComponent with HandlesGesture {
   // canvas.restore();
   @override
   void renderTree(Canvas canvas) {
-    super.renderTree(canvas);
+    for (var c in children.whereType<TileMapTerrain>()) {
+      if (!c.isVisible) continue;
+      c.renderTree(canvas);
+    }
 
     for (final tile in terrains) {
       if (!isTileOnScreen(tile)) continue;
@@ -1330,6 +1339,18 @@ class TileMap extends GameComponent with HandlesGesture {
           fogSprite?.render(canvas,
               position: tile.renderPosition + tileFogOffset,
               size: tile.renderSize - tileFogOffset * 2);
+        }
+      }
+
+      if (colorMode != kColorModeNone) {
+        // 涂色视图地块填充色
+        final color = zoneColors[colorMode][tile.index];
+        if (color != null) {
+          var paint = cachedPaints[color];
+          paint ??= cachedPaints[color] = Paint()
+            ..style = PaintingStyle.fill
+            ..color = color.withAlpha(120);
+          canvas.drawPath(tile.borderPath, paint);
         }
       }
 
@@ -1362,9 +1383,11 @@ class TileMap extends GameComponent with HandlesGesture {
       if (isEditorMode || !showFogOfWar || hoveringTerrain!.isLighted) {
         canvas.drawPath(hoveringTerrain!.borderPath, hoverPaint);
       }
-      // if (kDebugMode) {
-      //   canvas.drawRect(hoveringTerrain!.renderRect, hoverPaint);
-      // }
+    }
+
+    for (var c in children.whereType<TileMapComponent>()) {
+      if (!c.isVisible) continue;
+      c.renderTree(canvas);
     }
   }
 

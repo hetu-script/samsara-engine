@@ -76,6 +76,16 @@ abstract class Scene extends FlameGame with TaskController {
     // camera.viewfinder.anchor = Anchor.topLeft;
   }
 
+  Vector2 worldPosition2Screen(Vector2 position) {
+    return (position - camera.viewfinder.position) * camera.viewfinder.zoom +
+        size / 2;
+  }
+
+  Vector2 screenPosition2World(Vector2 position) {
+    return (position - size / 2) / camera.viewfinder.zoom +
+        camera.viewfinder.position;
+  }
+
   void addHintText(
     String text, {
     Vector2? position,

@@ -5,10 +5,10 @@ import 'package:quiver/core.dart';
 import '../components/game_component.dart';
 
 class TilePosition {
-  int left, top;
+  final int left, top;
 
-  TilePosition(this.left, this.top);
-  TilePosition.leftTop() : this(1, 1);
+  const TilePosition(this.left, this.top);
+  const TilePosition.leftTop() : this(1, 1);
 
   @override
   String toString() => '[$left, $top]';
@@ -51,7 +51,6 @@ mixin TileInfo on GameComponent {
   int index = 0;
   // int tileMapWidth = 0;
 
-  TilePosition _tilePosition = TilePosition.leftTop();
   Vector2 _renderSize = Vector2.zero();
   Vector2 get renderSize => _renderSize;
   set renderSize(Vector2 value) {
@@ -96,30 +95,32 @@ mixin TileInfo on GameComponent {
   /// 画布位置，不要和tilemap的tile坐标混淆
   Vector2 centerPosition = Vector2.zero();
 
-  int get left => _tilePosition.left;
-  int get top => _tilePosition.top;
-  TilePosition get tilePosition => _tilePosition;
-
-  // 切换为 horizontal hexgonal tile map 的坐标系
+  // horizontal hexgonal tile map 的坐标系
   // 用于距离计算的函数
   // slashLeft: 以 (1, 1) 为原点，该格子相对向右下行的斜线的距离
   // slashTop: 以 (1, 1) 为原点，该格子相对向右上行的斜线的距离
   int slashLeft = 0, slashTop = 0;
 
+  int _left = 0;
+  int get left => _left;
   set left(int value) {
-    _tilePosition.left = value;
+    _left = value;
 
     slashLeft = ((left.isOdd ? (left + 1) / 2 : left / 2) - top).truncate();
   }
 
+  int _top = 0;
+  int get top => _top;
   set top(int value) {
-    _tilePosition.top = value;
+    _top = value;
 
     slashTop = left - slashLeft - 1;
   }
 
+  TilePosition get tilePosition => TilePosition(_left, _top);
   set tilePosition(TilePosition value) {
-    _tilePosition = value;
+    left = value.left;
+    top = value.top;
 
     slashLeft = ((left.isOdd ? (left + 1) / 2 : left / 2) - top).truncate();
     slashTop = left - slashLeft - 1;

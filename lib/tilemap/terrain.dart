@@ -6,7 +6,7 @@ import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
 
 import '../components/game_component.dart';
-import 'tile_mixin.dart';
+import 'tile_info.dart';
 import '../animation/sprite_animation.dart';
 import '../utils/json.dart';
 import 'tilemap.dart';
@@ -312,65 +312,49 @@ class TileMapTerrain extends GameComponent with TileInfo {
   void render(Canvas canvas) {
     if (!isVisible) return;
 
-    bool hasColorModeColor = false;
-    if (map.colorMode != kColorModeNone) {
-      // 涂色视图地块填充色
-      final color = map.zoneColors[map.colorMode][index];
-      if (color != null) {
-        var paint = map.cachedPaints[color];
-        paint ??= map.cachedPaints[color] = Paint()
-          ..style = PaintingStyle.fill
-          ..color = color;
-        canvas.drawPath(borderPath, paint);
-        hasColorModeColor = true;
-      }
+    _sprite?.render(canvas, position: renderPosition, size: renderSize);
+    _animation?.ticker.currentFrame.sprite
+        .render(canvas, position: renderPosition, size: renderSize);
+    _overlaySprite?.render(canvas,
+        position: renderPosition2 + overlaySpriteOffset, size: renderSize);
+    if (map.isEditorMode || !map.showFogOfWar || map.isTileWithinSight(this)) {
+      _overlayAnimation?.ticker.currentFrame.sprite
+          .render(canvas, position: renderPosition2, size: renderSize);
     }
 
-    if (hasColorModeColor || map.isEditorMode) {
+    if (map.isEditorMode) {
       canvas.drawPath(borderPath, gridPaint);
-    } else {
-      _sprite?.render(canvas, position: renderPosition, size: renderSize);
-      _animation?.ticker.currentFrame.sprite
-          .render(canvas, position: renderPosition, size: renderSize);
-      _overlaySprite?.render(canvas,
-          position: renderPosition2 + overlaySpriteOffset, size: renderSize);
-      if (map.isEditorMode ||
-          !map.showFogOfWar ||
-          map.isTileWithinSight(this)) {
-        _overlayAnimation?.ticker.currentFrame.sprite
-            .render(canvas, position: renderPosition2, size: renderSize);
-      }
-      // 国界线
-      if (nationId != null) {
-        // 取出门派模式下此地块所属门派的颜色
-        final Color? color = map.zoneColors[1][index];
-        assert(color != null,
-            'TileMapTerrain.render: tile (index: $index, left: $left, top: $top, nationId: $nationId) has no color defined in map.zoneColors');
+    }
 
-        final bordersData = data['borders'] ?? {};
+    // 国界线
+    if (nationId != null) {
+      // 取出门派模式下此地块所属门派的颜色
+      final Color? color = map.zoneColors[kColorModeNation][index];
+      assert(color != null,
+          'TileMapTerrain.render: tile (index: $index, left: $left, top: $top, nationId: $nationId) has no color defined in map.zoneColors');
 
-        for (final neighborIndex in kNeighborIndexes) {
-          if (bordersData[neighborIndex] == true) {
-            assert(innerBorderPaths[neighborIndex] != null);
+      final bordersData = data['borders'] ?? {};
 
-            var borderPaint = map.cachedBorderPaints[index];
-            borderPaint ??= map.cachedBorderPaints[index] = Paint()
-              ..strokeWidth = 1.5
-              ..style = PaintingStyle.stroke
-              ..color = color!;
+      for (final neighborIndex in kNeighborIndexes) {
+        if (bordersData[neighborIndex] == true) {
+          assert(innerBorderPaths[neighborIndex] != null);
 
-            // canvas.drawPath(
-            //     innerBorderPaths[neighborIndex]!, TileMap.borderShadowPaint);
-            canvas.drawShadow(
-                innerBorderPaths[neighborIndex]!, Colors.black, 5.0, false);
-            canvas.drawPath(innerBorderPaths[neighborIndex]!, borderPaint);
-          }
+          var borderPaint = map.cachedBorderPaints[index];
+          borderPaint ??= map.cachedBorderPaints[index] = Paint()
+            ..strokeWidth = 1.5
+            ..style = PaintingStyle.stroke
+            ..color = color!;
+
+          // canvas.drawPath(
+          //     innerBorderPaths[neighborIndex]!, TileMap.borderShadowPaint);
+          canvas.drawShadow(
+              innerBorderPaths[neighborIndex]!, Colors.black, 5.0, false);
+          canvas.drawPath(innerBorderPaths[neighborIndex]!, borderPaint);
         }
       }
     }
   }
 
-  // TODO:计算是否在屏幕上可见
   @override
   bool get isVisible => map.isTileOnScreen(this);
 

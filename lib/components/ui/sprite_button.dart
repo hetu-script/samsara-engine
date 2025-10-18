@@ -2,13 +2,15 @@ import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
 import 'package:meta/meta.dart';
 
-import 'border_component.dart';
-import '../gestures.dart';
-import '../paint/paint.dart';
+import '../border_component.dart';
+import '../../gestures.dart';
+import '../../paint/paint.dart';
 
-class SpriteButton extends BorderComponent with HandlesGesture {
+class SpriteButton<T> extends BorderComponent with HandlesGesture {
   static ScreenTextConfig defaultTextConfig =
       ScreenTextConfig(anchor: Anchor.center);
+
+  T? value;
 
   late Paint hoverTintPaint, unselectedPaint, invalidPaint; // shadowPaint;
 
@@ -42,6 +44,7 @@ class SpriteButton extends BorderComponent with HandlesGesture {
   bool useSimpleStyle;
 
   SpriteButton({
+    this.value,
     this.text,
     ScreenTextConfig? textConfig,
     super.size,
