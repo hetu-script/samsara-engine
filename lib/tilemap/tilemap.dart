@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'dart:async';
+
 // import 'package:flame/rendering.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flame/flame.dart';
@@ -35,6 +36,11 @@ class TileMap extends GameComponent with HandlesGesture {
   static final Map<Color, Paint> cachedColorPaints = {};
 
   static final halfShadowPaint = Paint()..color = Colors.white.withAlpha(128);
+
+  static final gridPaint = Paint()
+    ..color = Colors.blue.withAlpha(128)
+    ..strokeWidth = 0.5
+    ..style = PaintingStyle.stroke;
 
   static final selectedPaint = Paint()
     ..strokeWidth = 1
@@ -126,11 +132,6 @@ class TileMap extends GameComponent with HandlesGesture {
 
   bool isEditorMode;
 
-  FutureOr<void> Function()? onAfterMapLoaded;
-  bool onAfterLoadedCalled = false;
-
-  FutureOr<void> Function()? onMounted;
-
   void Function(TileMapTerrain? tile)? onMouseEnterTile;
   void Function(OrthogonalDirection direction)? onMouseEnterScreenEdge;
 
@@ -153,15 +154,13 @@ class TileMap extends GameComponent with HandlesGesture {
     required this.captionStyle,
     this.fogSpriteId,
     this.fogSprite,
-    this.onAfterMapLoaded,
-    this.onMounted,
-    this.onMouseEnterTile,
     this.isEditorMode = false,
   })  : assert(!gridSize.isZero()),
         assert(!tileSpriteSrcSize.isZero()),
         random = math.Random() {
     onMouseHover = (Vector2 position) {
       final screenPosition = game.worldPosition2Screen(position);
+
       if (screenPosition.x < kScreenEdgeSize) {
         onMouseEnterScreenEdge?.call(OrthogonalDirection.west);
       } else if (screenPosition.x > game.size.x - kScreenEdgeSize) {
@@ -181,40 +180,38 @@ class TileMap extends GameComponent with HandlesGesture {
     };
   }
 
-  /// 修改 tile 的位置会连带影响很多其他属性，这里一并将其纠正
-  /// 一些信息涉及到地图本身，所以不能放在tile对象上进行
-  void updateTileInfo(TileInfo tile) {
-    tile.index = tilePosition2Index(tile.left, tile.top);
-    // tile.renderPosition = tilePosition2RenderPosition(tile.left, tile.top);
-    tile.centerPosition = tilePosition2TileCenter(tile.left, tile.top);
-
-    int basePriority;
-    if (tile is TileMapComponent) {
-      basePriority = kTileMapComponentPriority;
-      tile.position =
-          tilePosition2RenderPosition(tile.left, tile.top) + tileOffset;
-    } else {
-      basePriority = kTileMapTerrainPriority;
-    }
-
-    double bleedingPixelHorizontal = tile.srcSize.x * 0.04;
-    double bleedingPixelVertical = tile.srcSize.y * 0.04;
+  (double, double) getBleedingEdge(Vector2 srcSize) {
+    double bleedingPixelHorizontal = srcSize.x * 0.04;
+    double bleedingPixelVertical = srcSize.y * 0.04;
     if (bleedingPixelHorizontal > 2) {
       bleedingPixelHorizontal = 2;
     }
     if (bleedingPixelVertical > 2) {
       bleedingPixelVertical = 2;
     }
+    return (bleedingPixelHorizontal, bleedingPixelVertical);
+  }
 
-    late final double l, t; // l, t,
+  /// 修改 tile 的位置会连带影响很多其他属性，这里一并刷新
+  void updateTileInfo(TileInfo tile) {
+    tile.index = tilePosition2Index(tile.left, tile.top);
+    // tile.renderPosition = tilePosition2RenderPosition(tile.left, tile.top);
+    // tile.centerPosition = tilePosition2TileCenter(tile.left, tile.top);
+
+    int basePriority = tile is TileMapComponent
+        ? kTileMapComponentPriority
+        : kTileMapTerrainPriority;
+
+    late final double l, t;
+
+    final (bleedingPixelHorizontal, bleedingPixelVertical) =
+        getBleedingEdge(tile.srcSize);
 
     switch (tileShape) {
       case TileShape.orthogonal:
         // to avoid overlapping, render the tiles in a specific order:
-        // 这里乘以10 是为了给地形上的MapComponent留出空间
         tile.priority =
-            (basePriority + (tile.left - 1 + (tile.top - 1) * tileMapWidth)) *
-                10;
+            (basePriority + (tile.left - 1 + (tile.top - 1) * tileMapWidth));
 
         l = (tile.left - 1) * gridSize.x;
         t = (tile.top - 1) * gridSize.y;
@@ -225,13 +222,11 @@ class TileMap extends GameComponent with HandlesGesture {
         }
       case TileShape.hexagonalVertical:
         // to avoid overlapping, render the tiles in a specific order:
-        // 这里乘以10 是为了给地形上的MapComponent留出空间
         tile.priority = (basePriority +
-                tileMapWidth * (tile.top - 1) +
-                (tile.left.isOdd
-                    ? tile.left ~/ 2
-                    : ((tileMapWidth / 2).ceil() + tile.left ~/ 2))) *
-            10;
+            tileMapWidth * (tile.top - 1) +
+            (tile.left.isOdd
+                ? tile.left ~/ 2
+                : ((tileMapWidth / 2).ceil() + tile.left ~/ 2)));
 
         l = (tile.left - 1) * gridSize.x * (3 / 4);
         t = tile.left.isOdd
@@ -295,23 +290,35 @@ class TileMap extends GameComponent with HandlesGesture {
           innerBorderPath6.close();
           tile.innerBorderPaths[6] = innerBorderPath6;
         }
-      case TileShape.isometric:
-        throw 'Isometric map tile is not supported yet!';
       case TileShape.hexagonalHorizontal:
         throw 'Horizontal hexagonal map tile is not supported yet!';
+      case TileShape.isometric:
+        throw 'Isometric map tile is not supported yet!';
     }
 
-    tile.renderPosition = Vector2(
-        l -
-            (tile.srcSize.x - gridSize.x) / 2 -
-            bleedingPixelHorizontal / 2 +
-            tile.offset.x,
-        t -
-            (tile.srcSize.y - gridSize.y) -
-            bleedingPixelVertical / 2 +
-            tile.offset.y);
-    tile.renderSize = Vector2(tile.srcSize.x + bleedingPixelHorizontal,
-        tile.srcSize.y + bleedingPixelVertical);
+    tile.position =
+        Vector2(l - bleedingPixelHorizontal / 2, t - bleedingPixelVertical / 2);
+
+    // tile.position = Vector2(
+    //   l -
+    //       (tile.srcSize.x - gridSize.x) / 2
+    //       //
+    //       +
+    //       tile.offset.x,
+    //   t -
+    //       (tile.srcSize.y - gridSize.y)
+    //       //
+    //       +
+    //       tile.offset.y,
+    // );
+    // tile.size = Vector2(
+    //   tile.srcSize.x
+    //   //  + bleedingPixelHorizontal
+    //   ,
+    //   tile.srcSize.y
+    //   //  + bleedingPixelVertical
+    //   ,
+    // );
   }
 
   @override
@@ -329,12 +336,7 @@ class TileMap extends GameComponent with HandlesGesture {
 
   @override
   Future<void> onMount() async {
-    if (!onAfterLoadedCalled) {
-      onAfterLoadedCalled = true;
-      await onAfterMapLoaded?.call();
-    }
-
-    await onMounted?.call();
+    super.onMount();
   }
 
   Future<void> loadTerrainData([dynamic mapData]) async {
@@ -349,8 +351,8 @@ class TileMap extends GameComponent with HandlesGesture {
     assert(tileSpriteSrcSize.y == data['tileSpriteSrcHeight']);
     assert(tileOffset.x == data['tileOffsetX']);
     assert(tileOffset.y == data['tileOffsetY']);
-    // assert(tileFogOffset.x == data['tileFogOffsetX']);
-    // assert(tileFogOffset.y == data['tileFogOffsetY']);
+    assert(tileFogOffset.x == data['tileFogOffsetX']);
+    assert(tileFogOffset.y == data['tileFogOffsetY']);
 
     tileMapWidth = data['width'];
     tileMapHeight = data['height'];
@@ -423,13 +425,21 @@ class TileMap extends GameComponent with HandlesGesture {
     tile!.objectId = objectId;
   }
 
-  Future<void> loadHeroFromData(dynamic data, Vector2 spriteSrcSize) async {
+  Future<void> loadHeroFromData(
+    dynamic data, {
+    Vector2? srcSize,
+    Vector2? srcOffset,
+  }) async {
     hero = await loadTileMapComponentFromData(data,
-        spriteSrcSize: spriteSrcSize, isCharacter: true);
+        srcSize: srcSize, isCharacter: true, srcOffset: srcOffset);
   }
 
-  Future<TileMapComponent> loadTileMapComponentFromData(dynamic data,
-      {Vector2? spriteSrcSize, bool isCharacter = false}) async {
+  Future<TileMapComponent> loadTileMapComponentFromData(
+    dynamic data, {
+    Vector2? srcSize,
+    bool isCharacter = false,
+    Vector2? srcOffset,
+  }) async {
     // assert(data['worldPosition'] != null);
 
     String componentId;
@@ -454,9 +464,9 @@ class TileMap extends GameComponent with HandlesGesture {
       data: data,
       left: data['worldPosition']?['left'],
       top: data['worldPosition']?['top'],
-      offset: tileOffset,
+      offset: srcOffset,
       isCharacter: isCharacter,
-      spriteSrcSize: spriteSrcSize,
+      spriteSrcSize: srcSize,
       isHidden: data!['isHidden'] ?? false,
     );
     component.loadFrameData();
@@ -505,12 +515,12 @@ class TileMap extends GameComponent with HandlesGesture {
 
   // TODO: 计算tile是否在屏幕上
   bool isTileOnScreen(TileInfo tile) {
-    final leftTopPos = game.worldPosition2Screen(tile.renderPosition);
-    final bottomRightPos = game.worldPosition2Screen(tile.renderBottomRight);
-    final isOnScreen = bottomRightPos.x > 0 &&
-        bottomRightPos.y > 0 &&
-        leftTopPos.x < game.size.x &&
-        leftTopPos.y < game.size.y;
+    final topLeft = tile.topLeft;
+    final bottomRight = tile.bottomRight;
+    final isOnScreen = topLeft.x > 0 &&
+        topLeft.y > 0 &&
+        bottomRight.x < game.size.x &&
+        bottomRight.y < game.size.y;
 
     return isOnScreen;
   }
@@ -641,16 +651,16 @@ class TileMap extends GameComponent with HandlesGesture {
     return neighbors;
   }
 
-  Vector2 getRandomTerrainPosition() {
-    final left = random.nextInt(tileMapWidth);
-    final top = random.nextInt(tileMapHeight);
+  // Vector2 getRandomTilePositionOnMap() {
+  // final left = random.nextInt(tileMapWidth);
+  // final top = random.nextInt(tileMapHeight);
 
-    final pos = tilePosition2RenderPosition(left, top);
-    // pos.x = pos.x - gridSize.x / 2 + random.nextDouble() * gridSize.x;
-    // pos.y = pos.y - gridSize.y / 2 + random.nextDouble() * gridSize.y;
+  // final pos = tilePosition2RenderPosition(left, top);
+  // pos.x = pos.x - gridSize.x / 2 + random.nextDouble() * gridSize.x;
+  // pos.y = pos.y - gridSize.y / 2 + random.nextDouble() * gridSize.y;
 
-    return Vector2(pos.x, pos.y);
-  }
+  // return Vector2(pos.x, pos.y);
+  // }
 
   TileMapTerrain? getTerrain(int left, int top) {
     if (isPositionWithinMap(left, top)) {
@@ -663,7 +673,15 @@ class TileMap extends GameComponent with HandlesGesture {
 
   TileMapTerrain? getHeroAtTerrain() {
     if (hero != null) {
-      return terrains[tilePosition2Index(hero!.left, hero!.top)];
+      final terrainIndex = tilePosition2Index(hero!.left, hero!.top);
+      if (terrainIndex >= 0 && terrainIndex < terrains.length) {
+        return terrains[terrainIndex];
+      } else {
+        if (kDebugMode) {
+          print(
+              'Hero is out of map bounds! left: ${hero!.left}, top: ${hero!.top}');
+        }
+      }
     }
     return null;
   }
@@ -876,45 +894,45 @@ class TileMap extends GameComponent with HandlesGesture {
     return tilePosition2TileCenter(left, top) - gridSize / 2;
   }
 
-  Vector2 tilePosition2RenderPosition(int left, int top) {
-    late final double l, t; //, l, t;
-    switch (tileShape) {
-      case TileShape.orthogonal:
-        l = ((left - 1) * gridSize.x);
-        t = ((top - 1) * gridSize.y);
-      case TileShape.hexagonalVertical:
-        l = (left - 1) * gridSize.x * (3 / 4);
-        t = left.isOdd
-            ? (top - 1) * gridSize.y
-            : (top - 1) * gridSize.y + gridSize.y / 2;
-      case TileShape.isometric:
-        throw 'Isometric map tile is not supported yet!';
-      case TileShape.hexagonalHorizontal:
-        throw 'Horizontal hexagonal map tile is not supported yet!';
-    }
-    // switch (renderDirection) {
-    //   case TileRenderDirection.bottomRight:
-    //     l = bl - (srcWidth - gridSize.x);
-    //     t = bt - (srcHeight - gridSize.y);
-    //     break;
-    //   case TileRenderDirection.bottomLeft:
-    //     l = bl;
-    //     t = bt - (srcWidth - gridSize.y);
-    //     break;
-    //   case TileRenderDirection.topRight:
-    //     l = bl - (srcHeight - gridSize.x);
-    //     t = bt;
-    //     break;
-    //   case TileRenderDirection.topLeft:
-    //     l = bl;
-    //     t = bt;
-    //     break;
-    //   case TileRenderDirection.bottomCenter:
-    //     break;
-    // }
-    return Vector2(l - (tileSpriteSrcSize.x - gridSize.x) / 2,
-        t - (tileSpriteSrcSize.y - gridSize.y));
-  }
+  // Vector2 tilePosition2RenderPosition(int left, int top) {
+  //   late final double l, t; //, l, t;
+  //   switch (tileShape) {
+  //     case TileShape.orthogonal:
+  //       l = ((left - 1) * gridSize.x);
+  //       t = ((top - 1) * gridSize.y);
+  //     case TileShape.hexagonalVertical:
+  //       l = (left - 1) * gridSize.x * (3 / 4);
+  //       t = left.isOdd
+  //           ? (top - 1) * gridSize.y
+  //           : (top - 1) * gridSize.y + gridSize.y / 2;
+  //     case TileShape.isometric:
+  //       throw 'Isometric map tile is not supported yet!';
+  //     case TileShape.hexagonalHorizontal:
+  //       throw 'Horizontal hexagonal map tile is not supported yet!';
+  //   }
+  // switch (renderDirection) {
+  //   case TileRenderDirection.bottomRight:
+  //     l = bl - (srcWidth - gridSize.x);
+  //     t = bt - (srcHeight - gridSize.y);
+  //     break;
+  //   case TileRenderDirection.bottomLeft:
+  //     l = bl;
+  //     t = bt - (srcWidth - gridSize.y);
+  //     break;
+  //   case TileRenderDirection.topRight:
+  //     l = bl - (srcHeight - gridSize.x);
+  //     t = bt;
+  //     break;
+  //   case TileRenderDirection.topLeft:
+  //     l = bl;
+  //     t = bt;
+  //     break;
+  //   case TileRenderDirection.bottomCenter:
+  //     break;
+  // }
+  //   return Vector2(l - (tileSpriteSrcSize.x - gridSize.x) / 2 + tileOffset.x,
+  //       t - (tileSpriteSrcSize.y - gridSize.y) + tileOffset.y);
+  // }
 
   Vector2 tilePosition2TileCenterOnScreen(int left, int top) {
     final worldPos = tilePosition2TileCenter(left, top);
@@ -1247,15 +1265,15 @@ class TileMap extends GameComponent with HandlesGesture {
     }
 
     final nextTile = component.currentRoute!.last.tilePosition;
-    final nextTerrain = getTerrain(nextTile.left, nextTile.top);
-    if (nextTerrain?.isWater ?? false) {
+    final TileMapTerrain nextTerrain = getTerrain(nextTile.left, nextTile.top)!;
+    if (nextTerrain.isWater) {
       component.isOnWater = true;
     } else {
       component.isOnWater = false;
     }
     // 如果路径上下一个目标是不可进入的，且该目标是路径上最后一个目标
     // 此种情况结束移动，但仍会触发对最终目标的交互
-    if (component.currentRoute!.length == 1 && nextTerrain!.isNonEnterable) {
+    if (component.currentRoute!.length == 1 && nextTerrain.isNonEnterable) {
       componentFinishWalk(component,
           stepCallback: true, terrain: terrain!, target: nextTerrain);
       return;
@@ -1274,8 +1292,7 @@ class TileMap extends GameComponent with HandlesGesture {
 
     component.walkTo(
       target: nextTile,
-      targetRenderPosition:
-          tilePosition2RenderPosition(nextTile.left, nextTile.top),
+      targetPosition: nextTerrain.position,
       targetDirection: direction2Orthogonal(directionTo(
           component.tilePosition, nextTile,
           backward: component.isBackwardWalking)),
@@ -1329,6 +1346,41 @@ class TileMap extends GameComponent with HandlesGesture {
     for (final tile in terrains) {
       if (!isTileOnScreen(tile)) continue;
 
+      if (isEditorMode) {
+        canvas.drawPath(tile.borderPath, gridPaint);
+      }
+
+      // 国界线
+      if (tile.nationId != null) {
+        // 取出门派模式下此地块所属门派的颜色
+        final Color? color = zoneColors[kColorModeNation][tile.index];
+        assert(
+            color != null,
+            'TileMapTerrain.render: tile (index: ${tile.index}, '
+            'left: ${tile.left}, top: ${tile.top}, nationId: ${tile.nationId}) '
+            'has no color defined in map.zoneColors');
+
+        final bordersData = tile.data['borders'] ?? {};
+
+        for (final neighborIndex in kNeighborIndexes) {
+          if (bordersData[neighborIndex] == true) {
+            assert(tile.innerBorderPaths[neighborIndex] != null);
+
+            var borderPaint = cachedBorderPaints[tile.index];
+            borderPaint ??= cachedBorderPaints[tile.index] = Paint()
+              ..strokeWidth = 1.5
+              ..style = PaintingStyle.stroke
+              ..color = color!;
+
+            // canvas.drawPath(
+            //     innerBorderPaths[neighborIndex]!, TileMap.borderShadowPaint);
+            // canvas.drawShadow(
+            //     innerBorderPaths[neighborIndex]!, Colors.black, 5.0, false);
+            canvas.drawPath(tile.innerBorderPaths[neighborIndex]!, borderPaint);
+          }
+        }
+      }
+
       // 战争迷雾
       if (showFogOfWar && !isEditorMode) {
         if (tile.isLighted) {
@@ -1337,13 +1389,13 @@ class TileMap extends GameComponent with HandlesGesture {
           }
         } else {
           fogSprite?.render(canvas,
-              position: tile.renderPosition + tileFogOffset,
-              size: tile.renderSize - tileFogOffset * 2);
+              position: tile.position + tileFogOffset,
+              size: tile.size - tileFogOffset * 2);
         }
       }
 
+      // 地块涂色模式
       if (colorMode != kColorModeNone) {
-        // 涂色视图地块填充色
         final color = zoneColors[colorMode][tile.index];
         if (color != null) {
           var paint = cachedPaints[color];
@@ -1359,15 +1411,16 @@ class TileMap extends GameComponent with HandlesGesture {
         canvas.drawPath(tile.borderPath, uninteractablePaint);
       }
 
+      // 据点或地图对象名字
       if (tile.caption != null) {
         drawScreenText(
           canvas,
           tile.caption!,
-          position: tile.renderPosition.toOffset(),
+          position: tile.position.toOffset(),
           config: ScreenTextConfig(
-            size: tile.renderSize,
+            size: tile.size,
             outlined: true,
-            anchor: Anchor.center,
+            anchor: Anchor.topCenter,
             padding: EdgeInsets.only(top: gridSize.y / 4 * 3),
             textStyle: tile.captionStyle ?? captionStyle,
           ),

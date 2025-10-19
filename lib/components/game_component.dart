@@ -42,6 +42,9 @@ abstract class GameComponent extends PositionComponent
 
   LightConfig? lightConfig;
 
+  bool _onAfterLoadedCalled = false;
+  FutureOr<void> Function()? onAfterLoaded;
+
   GameComponent({
     super.key,
     super.position,
@@ -64,6 +67,7 @@ abstract class GameComponent extends PositionComponent
   }
 
   @override
+  @mustCallSuper
   void onMount() {
     var p = parent;
     while (p != null) {
@@ -72,6 +76,11 @@ abstract class GameComponent extends PositionComponent
         break;
       }
       p = p.parent;
+    }
+
+    if (!_onAfterLoadedCalled) {
+      _onAfterLoadedCalled = true;
+      onAfterLoaded?.call();
     }
   }
 

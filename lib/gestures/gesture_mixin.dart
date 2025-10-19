@@ -34,6 +34,9 @@ class TappingDetails {
 }
 
 mixin HandlesGesture on GameComponent {
+  /// A specific duration to detect double tap
+  static int doubleTapTimeConsider = 400;
+
   static Map<int, TappingDetails> tappingDetails = {};
 
   bool enableGesture = true;
@@ -49,9 +52,6 @@ mixin HandlesGesture on GameComponent {
 
   /// 鼠标光标是否在此控件上
   bool isHovering = false;
-
-  /// A specific duration to detect double tap
-  int doubleTapTimeConsider = 400;
   Timer? doubleTapTimer;
 
   void Function(int button, Vector2 position)? onTap;

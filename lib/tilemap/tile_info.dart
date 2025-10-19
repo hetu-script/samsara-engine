@@ -51,49 +51,44 @@ mixin TileInfo on GameComponent {
   int index = 0;
   // int tileMapWidth = 0;
 
-  Vector2 _renderSize = Vector2.zero();
-  Vector2 get renderSize => _renderSize;
-  set renderSize(Vector2 value) {
-    _renderSize = value;
-    _renderBottomRight = Vector2(
-      _renderPosition.x + _renderSize.x,
-      _renderPosition.y + _renderSize.y,
-    );
-  }
+  // Vector2 _renderSize = Vector2.zero();
+  // Vector2 get renderSize => _renderSize;
+  // set renderSize(Vector2 value) {
+  //   _renderSize = value;
+  //   _renderBottomRight = Vector2(
+  //     _renderPosition.x + _renderSize.x,
+  //     _renderPosition.y + _renderSize.y,
+  //   );
+  // }
 
-  Vector2 _renderBottomRight = Vector2.zero();
-  Vector2 get renderBottomRight => _renderBottomRight;
+  // Vector2 _renderBottomRight = Vector2.zero();
+  // Vector2 get renderBottomRight => _renderBottomRight;
 
-  Vector2 _renderPosition = Vector2.zero();
-  Vector2 get renderPosition => _renderPosition;
-  set renderPosition(Vector2 value) {
-    _renderPosition = value;
-    _renderPosition2 = Vector2(
-      _renderPosition.x + _offset.x,
-      _renderPosition.y + _offset.y,
-    );
-    _renderBottomRight = Vector2(
-      _renderPosition.x + _renderSize.x,
-      _renderPosition.y + _renderSize.y,
-    );
-  }
+  // Vector2 _renderPosition = Vector2.zero();
+  // Vector2 get renderPosition => _renderPosition;
+  // set renderPosition(Vector2 value) {
+  //   _renderPosition = value;
+  //   _renderBottomRight = Vector2(
+  //     _renderPosition.x + _renderSize.x,
+  //     _renderPosition.y + _renderSize.y,
+  //   );
+  // }
 
-  Vector2 _renderPosition2 = Vector2.zero();
-  Vector2 get renderPosition2 => _renderPosition2;
+  // Vector2 _offset = Vector2.zero();
+  // Vector2 get offset => _offset;
 
-  Vector2 _offset = Vector2.zero();
-  Vector2 get offset => _offset;
+  Vector2 offset = Vector2.zero();
 
-  set offset(Vector2 value) {
-    _offset = value;
-    _renderPosition2 = Vector2(
-      renderPosition.x + _offset.x,
-      renderPosition.y + _offset.y,
-    );
-  }
+  // set offset(Vector2 value) {
+  //   _offset = value;
+  //   _renderPosition = Vector2(
+  //     _renderPosition.x + _offset.x,
+  //     _renderPosition.y + _offset.y,
+  //   );
+  // }
 
   /// 画布位置，不要和tilemap的tile坐标混淆
-  Vector2 centerPosition = Vector2.zero();
+  // Vector2 centerPosition = Vector2.zero();
 
   // horizontal hexgonal tile map 的坐标系
   // 用于距离计算的函数

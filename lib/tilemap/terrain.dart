@@ -17,11 +17,6 @@ const kNeighborIndexes = [1, 2, 3, 4, 5, 6];
 class TileMapTerrain extends GameComponent with TileInfo {
   static const defaultAnimationStepTime = 0.2;
 
-  static final gridPaint = Paint()
-    ..color = Colors.blue.withAlpha(128)
-    ..strokeWidth = 0.5
-    ..style = PaintingStyle.stroke;
-
   TileMapTerrain({
     required this.map,
     required this.mapId,
@@ -65,6 +60,12 @@ class TileMapTerrain extends GameComponent with TileInfo {
     this.tileShape = tileShape;
     this.gridSize = gridSize;
     this.srcSize = srcSize;
+    final (bleedingPixelHorizontal, bleedingPixelVertical) =
+        map.getBleedingEdge(srcSize);
+    size = Vector2(
+      srcSize.x + bleedingPixelHorizontal,
+      srcSize.y + bleedingPixelVertical,
+    );
     this.offset = offset ?? Vector2.zero();
 
     tilePosition = TilePosition(left, top);
@@ -147,7 +148,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   /// 显示贴图
   Sprite? _sprite, _overlaySprite;
-  Vector2 overlaySpriteOffset = Vector2.zero();
+  Vector2 overlayOffset = Vector2.zero();
   SpriteAnimationWithTicker? _animation, _overlayAnimation;
 
   // 随机数，用来让多个 tile 的贴图动画错开播放
@@ -156,7 +157,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
   Future<void> _tryLoadSprite({bool isOverlay = false}) async {
     final spriteData = isOverlay ? (data?['overlaySprite']) : data;
-    final offset =
+    final srcOffset =
         Vector2(spriteData?['offsetX'] ?? 0.0, spriteData?['offsetY'] ?? 0.0);
 
     Vector2 spriteSrcSize = srcSize;
@@ -178,7 +179,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     if (!isOverlay) {
       _sprite = sprite;
     } else {
-      this.offset = offset;
+      offset = offset + srcOffset;
       _overlaySprite = sprite;
     }
   }
@@ -188,7 +189,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     final animationData =
         isOverlay ? data?['overlaySprite']?['animation'] : data?['animation'];
 
-    final offset =
+    final srcOffset =
         Vector2(spriteData?['offsetX'] ?? 0.0, spriteData?['offsetY'] ?? 0.0);
     Vector2 spriteSrcSize = srcSize;
     if (spriteData?['srcWidth'] != null && spriteData?['srcHeight'] != null) {
@@ -233,7 +234,7 @@ class TileMapTerrain extends GameComponent with TileInfo {
     if (!isOverlay) {
       _animation = animation;
     } else {
-      overlaySpriteOffset = offset;
+      overlayOffset = offset + srcOffset;
       _overlayAnimation = animation;
     }
   }
@@ -312,46 +313,13 @@ class TileMapTerrain extends GameComponent with TileInfo {
   void render(Canvas canvas) {
     if (!isVisible) return;
 
-    _sprite?.render(canvas, position: renderPosition, size: renderSize);
+    _sprite?.render(canvas, position: offset, size: size);
     _animation?.ticker.currentFrame.sprite
-        .render(canvas, position: renderPosition, size: renderSize);
-    _overlaySprite?.render(canvas,
-        position: renderPosition2 + overlaySpriteOffset, size: renderSize);
+        .render(canvas, position: offset, size: size);
+    _overlaySprite?.render(canvas, position: overlayOffset, size: size);
     if (map.isEditorMode || !map.showFogOfWar || map.isTileWithinSight(this)) {
       _overlayAnimation?.ticker.currentFrame.sprite
-          .render(canvas, position: renderPosition2, size: renderSize);
-    }
-
-    if (map.isEditorMode) {
-      canvas.drawPath(borderPath, gridPaint);
-    }
-
-    // 国界线
-    if (nationId != null) {
-      // 取出门派模式下此地块所属门派的颜色
-      final Color? color = map.zoneColors[kColorModeNation][index];
-      assert(color != null,
-          'TileMapTerrain.render: tile (index: $index, left: $left, top: $top, nationId: $nationId) has no color defined in map.zoneColors');
-
-      final bordersData = data['borders'] ?? {};
-
-      for (final neighborIndex in kNeighborIndexes) {
-        if (bordersData[neighborIndex] == true) {
-          assert(innerBorderPaths[neighborIndex] != null);
-
-          var borderPaint = map.cachedBorderPaints[index];
-          borderPaint ??= map.cachedBorderPaints[index] = Paint()
-            ..strokeWidth = 1.5
-            ..style = PaintingStyle.stroke
-            ..color = color!;
-
-          // canvas.drawPath(
-          //     innerBorderPaths[neighborIndex]!, TileMap.borderShadowPaint);
-          canvas.drawShadow(
-              innerBorderPaths[neighborIndex]!, Colors.black, 5.0, false);
-          canvas.drawPath(innerBorderPaths[neighborIndex]!, borderPaint);
-        }
-      }
+          .render(canvas, position: overlayOffset, size: size);
     }
   }
 

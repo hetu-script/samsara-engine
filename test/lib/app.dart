@@ -4,7 +4,6 @@ import 'package:samsara/samsara.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'scene/mainmenu.dart';
-import 'scene/mini_game/tile_matching.dart';
 import 'engine.dart';
 
 class LoadingScreen extends StatelessWidget {
@@ -69,19 +68,6 @@ class _GameAppState extends State<GameApp> {
       return MainMenuScene(id: 'main', context: context, bgm: engine.bgm);
     });
 
-    engine.registerSceneConstructor('tile_matching_game', (
-        [dynamic args]) async {
-      final TileMatchingGameTypes type = TileMatchingGameTypes.values
-          .singleWhere(
-              (e) => e.toString() == 'TileMatchingGameTypes.${args?['type']}',
-              orElse: () => TileMatchingGameTypes.farmland);
-      return TileMatchingGameScene(
-        id: 'tile_matching_game',
-        context: context,
-        bgm: engine.bgm,
-        type: type,
-      );
-    });
     // 刚打开游戏，需要初始化引擎，载入数据，debug模式下还要初始化一个游戏存档用于测试
     await engine.init(context);
 

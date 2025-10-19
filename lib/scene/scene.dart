@@ -20,6 +20,8 @@ import '../task.dart';
 
 const kHintTextPriority = 999999999;
 
+const kMinHintInterval = Duration(milliseconds: 200);
+
 abstract class Scene extends FlameGame with TaskController {
   static const overlayUIBuilderMapKey = 'overlayUI';
   static final random = math.Random();
@@ -55,9 +57,9 @@ abstract class Scene extends FlameGame with TaskController {
 
   final _hintTextController = TaskController();
 
-  void Function()? onAfterLoaded;
-
   bool _isFirstLoad = true;
+
+  void Function()? onAfterLoaded;
 
   Scene({
     required this.id,
@@ -103,7 +105,6 @@ abstract class Scene extends FlameGame with TaskController {
         position ?? (onViewport ? target!.absoluteCenter : target!.center);
 
     _hintTextController.schedule(() async {
-      await Future.delayed(Duration(milliseconds: 500));
       final component = FadingText(
         text,
         position: Vector2(
@@ -116,9 +117,7 @@ abstract class Scene extends FlameGame with TaskController {
         ),
         movingUpOffset: offsetY,
         duration: duration,
-        textStyle: TextStyle(
-          color: color ?? Colors.white,
-        ).merge(textStyle),
+        textStyle: textStyle?.copyWith(color: color),
         priority: kHintTextPriority,
       );
       if (onViewport) {
@@ -126,6 +125,7 @@ abstract class Scene extends FlameGame with TaskController {
       } else {
         world.add(component);
       }
+      await Future.delayed(kMinHintInterval);
     });
   }
 

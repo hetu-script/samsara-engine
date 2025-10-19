@@ -102,7 +102,10 @@ class TileMapComponent extends TaskComponent
     bool isHidden = false,
   }) : _isHidden = isHidden {
     this.offset = offset ?? Vector2.zero();
-    tilePosition = TilePosition(left ?? 1, top ?? 1);
+    tilePosition = TilePosition(
+      left ?? 1,
+      top ?? 1,
+    );
   }
 
   void stopAnimation() {
@@ -165,17 +168,21 @@ class TileMapComponent extends TaskComponent
         );
 
         animations['walk_south'] = SpriteAnimationWithTicker(
-            animation: walkAnimationSpriteSheet.createAnimation(
-                row: 0, stepTime: TileMapComponent.defaultAnimationStepTime));
+          animation: walkAnimationSpriteSheet.createAnimation(
+              row: 0, stepTime: TileMapComponent.defaultAnimationStepTime),
+        );
         animations['walk_east'] = SpriteAnimationWithTicker(
-            animation: walkAnimationSpriteSheet.createAnimation(
-                row: 1, stepTime: TileMapComponent.defaultAnimationStepTime));
+          animation: walkAnimationSpriteSheet.createAnimation(
+              row: 1, stepTime: TileMapComponent.defaultAnimationStepTime),
+        );
         animations['walk_north'] = SpriteAnimationWithTicker(
-            animation: walkAnimationSpriteSheet.createAnimation(
-                row: 2, stepTime: TileMapComponent.defaultAnimationStepTime));
+          animation: walkAnimationSpriteSheet.createAnimation(
+              row: 2, stepTime: TileMapComponent.defaultAnimationStepTime),
+        );
         animations['walk_west'] = SpriteAnimationWithTicker(
-            animation: walkAnimationSpriteSheet.createAnimation(
-                row: 3, stepTime: TileMapComponent.defaultAnimationStepTime));
+          animation: walkAnimationSpriteSheet.createAnimation(
+              row: 3, stepTime: TileMapComponent.defaultAnimationStepTime),
+        );
       }
       if (shipModelId != null) {
         final image = await Flame.images.load('animation/$shipModelId.png');
@@ -185,17 +192,21 @@ class TileMapComponent extends TaskComponent
         );
 
         animations['swim_south'] = SpriteAnimationWithTicker(
-            animation: swimAnimationSpriteSheet.createAnimation(
-                row: 0, stepTime: TileMapComponent.defaultAnimationStepTime));
+          animation: swimAnimationSpriteSheet.createAnimation(
+              row: 0, stepTime: TileMapComponent.defaultAnimationStepTime),
+        );
         animations['swim_east'] = SpriteAnimationWithTicker(
-            animation: swimAnimationSpriteSheet.createAnimation(
-                row: 1, stepTime: TileMapComponent.defaultAnimationStepTime));
+          animation: swimAnimationSpriteSheet.createAnimation(
+              row: 1, stepTime: TileMapComponent.defaultAnimationStepTime),
+        );
         animations['swim_north'] = SpriteAnimationWithTicker(
-            animation: swimAnimationSpriteSheet.createAnimation(
-                row: 2, stepTime: TileMapComponent.defaultAnimationStepTime));
+          animation: swimAnimationSpriteSheet.createAnimation(
+              row: 2, stepTime: TileMapComponent.defaultAnimationStepTime),
+        );
         animations['swim_west'] = SpriteAnimationWithTicker(
-            animation: swimAnimationSpriteSheet.createAnimation(
-                row: 3, stepTime: TileMapComponent.defaultAnimationStepTime));
+          animation: swimAnimationSpriteSheet.createAnimation(
+              row: 3, stepTime: TileMapComponent.defaultAnimationStepTime),
+        );
       }
 
       for (final key in animations.keys) {
@@ -258,7 +269,7 @@ class TileMapComponent extends TaskComponent
 
   void walkTo({
     required TilePosition target,
-    required Vector2 targetRenderPosition,
+    required Vector2 targetPosition,
     required OrthogonalDirection targetDirection,
     bool backward = false,
   }) {
@@ -266,7 +277,7 @@ class TileMapComponent extends TaskComponent
     _walkTargetTilePosition = target;
     _isWalking = true;
     // _isBackward = backward;
-    _walkTargetRenderPosition = targetRenderPosition + offset;
+    _walkTargetRenderPosition = targetPosition;
     setDirection(targetDirection);
 
     // 计算地图上的斜方向实际距离
@@ -310,7 +321,7 @@ class TileMapComponent extends TaskComponent
   void render(Canvas canvas) {
     if (!map.isEditorMode && isHidden) return;
 
-    sprite?.render(canvas);
-    currentAnimation?.render(canvas);
+    sprite?.render(canvas, position: offset);
+    currentAnimation?.render(canvas, position: offset);
   }
 }

@@ -63,14 +63,7 @@ class MainMenuScene extends Scene {
       useSpriteSrcSize: true,
       position: center,
     );
-    button1.onTap = (button, position) async {
-      engine.pushScene(
-        'tile_matching_game',
-        arguments: {
-          'type': 'farmland',
-        },
-      );
-    };
+    button1.onTap = (button, position) async {};
     background.add(button1);
 
     engine.setLoading(false);

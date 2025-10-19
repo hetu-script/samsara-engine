@@ -28,7 +28,8 @@ const kHovertipBackgroundBorderRadius = 5.0;
 const kHovertipDefautWidth = 400.0;
 
 class Hovertip extends BorderComponent {
-  static final Map<String, Hovertip> _cached = {};
+  static Hovertip? _globalInstance;
+  static final Map<String, Hovertip> _cachedInstances = {};
 
   static final Map<GameComponent, Hovertip> _instances = {};
 
@@ -55,106 +56,177 @@ class Hovertip extends BorderComponent {
 
   static void show({
     required Scene scene,
-    required GameComponent target,
+    GameComponent? target,
     String? content,
     ScreenTextConfig? config,
     HovertipDirection direction = HovertipDirection.topLeft,
     double width = kHovertipDefautWidth,
-    EdgeInsets? padding,
+    EdgeInsets? margin,
   }) {
-    hide(target);
-
     final escapedContent =
         (content?.trim() ?? '').replaceAllEscapedLineBreaks();
 
     Hovertip instance;
-    if (_cached[escapedContent] != null) {
-      instance = _cached[escapedContent]!;
+    if (_cachedInstances[escapedContent] != null) {
+      instance = _cachedInstances[escapedContent]!;
     } else {
       instance = Hovertip();
-      _cached[escapedContent] = instance;
+      instance.setContent(escapedContent, config: config, width: width);
+      _cachedInstances[escapedContent] = instance;
     }
-    instance.setContent(escapedContent, config: config, width: width);
-    _instances[target] = instance;
-
-    final targetPosition = target.absoluteTopLeftPosition;
-    Vector2 targetPositionGlobal = targetPosition;
-    if (!target.isHud) {
-      targetPositionGlobal = scene.camera.localToGlobal(targetPosition);
+    hide(target);
+    if (target != null) {
+      _instances[target] = instance;
+    } else {
+      _globalInstance = instance;
     }
-    final targetSizeGlobal = target.size * scene.camera.zoom;
 
     Vector2 calculatedPosition;
-    switch (direction) {
-      case HovertipDirection.topLeft:
-        calculatedPosition = Vector2(
-            targetPositionGlobal.x + (padding?.left ?? 0),
-            targetPositionGlobal.y -
-                (padding?.bottom ?? kHovertipScreenIndent) -
-                instance.height);
-      case HovertipDirection.topCenter:
-        calculatedPosition = Vector2(
-            targetPositionGlobal.x - (instance.width - targetSizeGlobal.x) / 2,
-            targetPositionGlobal.y -
-                (padding?.bottom ?? kHovertipScreenIndent) -
-                instance.height);
-      case HovertipDirection.topRight:
-        calculatedPosition = Vector2(
-            targetPositionGlobal.x +
-                targetSizeGlobal.x -
-                instance.width -
-                (padding?.right ?? 0),
-            targetPositionGlobal.y - kHovertipScreenIndent - instance.height);
-      case HovertipDirection.leftTop:
-        calculatedPosition = Vector2(
-            targetPositionGlobal.x -
-                (padding?.right ?? kHovertipScreenIndent) -
-                instance.width,
-            targetPositionGlobal.y + (padding?.top ?? 0));
-      case HovertipDirection.leftCenter:
-        calculatedPosition = Vector2(
-            targetPositionGlobal.x - kHovertipScreenIndent - instance.width,
-            targetPositionGlobal.y -
-                (instance.height - targetSizeGlobal.y) / 2);
-      case HovertipDirection.leftBottom:
-        calculatedPosition = Vector2(
-            targetPositionGlobal.x - kHovertipScreenIndent - instance.width,
-            targetPositionGlobal.y + targetSizeGlobal.y - instance.height);
-      case HovertipDirection.rightTop:
-        calculatedPosition = Vector2(
-            targetPositionGlobal.x + targetSizeGlobal.x + kHovertipScreenIndent,
-            targetPositionGlobal.y);
-      case HovertipDirection.rightCenter:
-        calculatedPosition = Vector2(
-            targetPositionGlobal.x + targetSizeGlobal.x + kHovertipScreenIndent,
-            targetPositionGlobal.y -
-                (instance.height - targetSizeGlobal.y) / 2);
-      case HovertipDirection.rightBottom:
-        calculatedPosition = Vector2(
-            targetPositionGlobal.x + targetSizeGlobal.x + kHovertipScreenIndent,
-            targetPositionGlobal.y + targetSizeGlobal.y - instance.height);
-      case HovertipDirection.bottomLeft:
-        calculatedPosition = Vector2(
-            targetPositionGlobal.x,
-            targetPositionGlobal.y +
-                targetSizeGlobal.y +
-                kHovertipScreenIndent);
-      case HovertipDirection.bottomCenter:
-        calculatedPosition = Vector2(
-            targetPositionGlobal.x - (instance.width - targetSizeGlobal.x) / 2,
-            targetPositionGlobal.y +
-                targetSizeGlobal.y +
-                kHovertipScreenIndent);
-      case HovertipDirection.bottomRight:
-        calculatedPosition = Vector2(
-            targetPositionGlobal.x + targetSizeGlobal.x - instance.width,
-            targetPositionGlobal.y +
-                targetSizeGlobal.y +
-                kHovertipScreenIndent);
-      case HovertipDirection.none:
-        final targetCenter = target.absoluteCenter;
-        final targetCenterGlobal = scene.camera.localToGlobal(targetCenter);
-        calculatedPosition = targetCenterGlobal;
+
+    if (target != null) {
+      final targetPosition = target.absoluteTopLeftPosition;
+      Vector2 targetGlobalPosition = targetPosition;
+      Vector2 targetGlobalSize = target.size;
+      if (!target.isHud) {
+        targetGlobalPosition = scene.camera.localToGlobal(targetPosition);
+        targetGlobalSize = target.size * scene.camera.zoom;
+      }
+
+      switch (direction) {
+        case HovertipDirection.topLeft:
+          calculatedPosition = Vector2(
+              targetGlobalPosition.x + (margin?.left ?? 0),
+              targetGlobalPosition.y -
+                  (margin?.bottom ?? kHovertipScreenIndent) -
+                  instance.height);
+        case HovertipDirection.topCenter:
+          calculatedPosition = Vector2(
+              targetGlobalPosition.x -
+                  (instance.width - targetGlobalSize.x) / 2,
+              targetGlobalPosition.y -
+                  (margin?.bottom ?? kHovertipScreenIndent) -
+                  instance.height);
+        case HovertipDirection.topRight:
+          calculatedPosition = Vector2(
+              targetGlobalPosition.x +
+                  targetGlobalSize.x -
+                  instance.width -
+                  (margin?.right ?? 0),
+              targetGlobalPosition.y - kHovertipScreenIndent - instance.height);
+        case HovertipDirection.leftTop:
+          calculatedPosition = Vector2(
+              targetGlobalPosition.x -
+                  (margin?.right ?? kHovertipScreenIndent) -
+                  instance.width,
+              targetGlobalPosition.y + (margin?.top ?? 0));
+        case HovertipDirection.leftCenter:
+          calculatedPosition = Vector2(
+              targetGlobalPosition.x - kHovertipScreenIndent - instance.width,
+              targetGlobalPosition.y -
+                  (instance.height - targetGlobalSize.y) / 2);
+        case HovertipDirection.leftBottom:
+          calculatedPosition = Vector2(
+              targetGlobalPosition.x - kHovertipScreenIndent - instance.width,
+              targetGlobalPosition.y + targetGlobalSize.y - instance.height);
+        case HovertipDirection.rightTop:
+          calculatedPosition = Vector2(
+              targetGlobalPosition.x +
+                  targetGlobalSize.x +
+                  kHovertipScreenIndent,
+              targetGlobalPosition.y);
+        case HovertipDirection.rightCenter:
+          calculatedPosition = Vector2(
+              targetGlobalPosition.x +
+                  targetGlobalSize.x +
+                  kHovertipScreenIndent,
+              targetGlobalPosition.y -
+                  (instance.height - targetGlobalSize.y) / 2);
+        case HovertipDirection.rightBottom:
+          calculatedPosition = Vector2(
+              targetGlobalPosition.x +
+                  targetGlobalSize.x +
+                  kHovertipScreenIndent,
+              targetGlobalPosition.y + targetGlobalSize.y - instance.height);
+        case HovertipDirection.bottomLeft:
+          calculatedPosition = Vector2(
+              targetGlobalPosition.x,
+              targetGlobalPosition.y +
+                  targetGlobalSize.y +
+                  kHovertipScreenIndent);
+        case HovertipDirection.bottomCenter:
+          calculatedPosition = Vector2(
+              targetGlobalPosition.x -
+                  (instance.width - targetGlobalSize.x) / 2,
+              targetGlobalPosition.y +
+                  targetGlobalSize.y +
+                  kHovertipScreenIndent);
+        case HovertipDirection.bottomRight:
+          calculatedPosition = Vector2(
+              targetGlobalPosition.x + targetGlobalSize.x - instance.width,
+              targetGlobalPosition.y +
+                  targetGlobalSize.y +
+                  kHovertipScreenIndent);
+        case HovertipDirection.none:
+          final targetCenter = target.absoluteCenter;
+          final targetCenterGlobal = scene.camera.localToGlobal(targetCenter);
+          calculatedPosition = targetCenterGlobal;
+      }
+    } else {
+      // target is null, position based on screen and margin
+      double x = 0;
+      double y = 0;
+
+      if (margin != null) {
+        if (margin.left != 0) {
+          x = margin.left;
+          if (margin.top == 0 && margin.bottom == 0) {
+            if (direction == HovertipDirection.leftTop) {
+              y = kHovertipScreenIndent;
+            } else if (direction == HovertipDirection.leftCenter) {
+              y = scene.size.y / 2 - instance.height / 2;
+            } else if (direction == HovertipDirection.leftBottom) {
+              y = scene.size.y - instance.height - kHovertipScreenIndent;
+            }
+          }
+        } else if (margin.right != 0) {
+          x = scene.size.x - instance.width - margin.right;
+        }
+
+        if ((margin.left != 0 || margin.right != 0) &&
+            (margin.top == 0 && margin.bottom == 0)) {
+          if (direction == HovertipDirection.leftTop ||
+              direction == HovertipDirection.rightTop) {
+            y = kHovertipScreenIndent;
+          } else if (direction == HovertipDirection.leftCenter ||
+              direction == HovertipDirection.rightCenter) {
+            y = scene.size.y / 2 - instance.height / 2;
+          } else if (direction == HovertipDirection.leftBottom ||
+              direction == HovertipDirection.rightBottom) {
+            y = scene.size.y - instance.height - kHovertipScreenIndent;
+          }
+        }
+
+        if (margin.top != 0) {
+          y = margin.top;
+        } else if (margin.bottom != 0) {
+          y = scene.size.y - instance.height - margin.bottom;
+        }
+
+        if ((margin.top != 0 || margin.bottom != 0) &&
+            (margin.left == 0 && margin.right == 0)) {
+          if (direction == HovertipDirection.topLeft ||
+              direction == HovertipDirection.bottomLeft) {
+            x = kHovertipScreenIndent;
+          } else if (direction == HovertipDirection.topCenter ||
+              direction == HovertipDirection.bottomCenter) {
+            x = scene.size.x / 2 - instance.width / 2;
+          } else if (direction == HovertipDirection.topRight ||
+              direction == HovertipDirection.bottomRight) {
+            x = scene.size.x - instance.width - kHovertipScreenIndent;
+          }
+        }
+      }
+      calculatedPosition = Vector2(x, y);
     }
 
     // 检查是否超出了游戏屏幕
@@ -175,11 +247,16 @@ class Hovertip extends BorderComponent {
     scene.camera.viewport.add(instance);
   }
 
-  static void hide(GameComponent target) async {
-    if (_instances.containsKey(target)) {
-      final instance = _instances[target];
-      instance!.removeFromParent();
-      _instances.remove(target);
+  static void hide([GameComponent? target]) async {
+    if (target == null) {
+      _globalInstance?.removeFromParent();
+      _globalInstance = null;
+    } else {
+      if (_instances.containsKey(target)) {
+        final instance = _instances[target];
+        instance!.removeFromParent();
+        _instances.remove(target);
+      }
     }
   }
 
