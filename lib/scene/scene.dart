@@ -26,6 +26,10 @@ abstract class Scene extends FlameGame with TaskController {
   static const overlayUIBuilderMapKey = 'overlayUI';
   static final random = math.Random();
 
+  // fix framerate to 60 updates per second
+  static double fixedRate = 1 / 60;
+  double _dtSum = 0.0;
+
   final String id;
   // final SceneController controller;
   final BuildContext context;
@@ -332,6 +336,15 @@ abstract class Scene extends FlameGame with TaskController {
   void onMouseScroll(MouseScrollDetails details) {
     for (final c in gestureComponents) {
       c.handleMouseScroll(details);
+    }
+  }
+
+  @override
+  void updateTree(double dt) {
+    _dtSum += dt;
+    if (_dtSum > fixedRate) {
+      super.updateTree(fixedRate);
+      _dtSum -= fixedRate;
     }
   }
 

@@ -12,12 +12,14 @@ class Console extends StatefulWidget {
     this.margin,
     this.backgroundColor,
     this.closeButton,
+    this.cursor = MouseCursor.defer,
   });
 
   final SamsaraEngine engine;
   final EdgeInsetsGeometry? margin;
   final Color? backgroundColor;
   final Widget? closeButton;
+  final MouseCursor cursor;
 
   @override
   State<Console> createState() => _ConsoleState();
@@ -59,6 +61,7 @@ class _ConsoleState extends State<Console> {
   Widget build(BuildContext context) {
     _consoleOutputTextController.text = widget.engine.getLogs().join('\n');
     return ResponsiveView(
+      cursor: widget.cursor,
       alignment: AlignmentDirectional.center,
       margin: widget.margin,
       backgroundColor: widget.backgroundColor,

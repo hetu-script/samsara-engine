@@ -117,7 +117,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
       if (arguments != null) {
         _cachedArguments[sceneId] = arguments;
       } else {
-        arguments = _cachedArguments[sceneId];
+        arguments = _cachedArguments[sceneId] ?? const {};
       }
       scene = await _createScene(sceneId,
           constructorId: constructorId, arguments: arguments);
@@ -125,7 +125,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
       notifyListeners();
     }
     if (triggerOnStart) {
-      scene?.onStart(arguments);
+      await scene?.onStart(arguments);
     }
     return scene!;
   }
@@ -154,10 +154,10 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     if (arguments != null) {
       _cachedArguments[sceneId] = arguments;
     } else {
-      arguments ??= _cachedArguments[sceneId];
+      arguments = _cachedArguments[sceneId] ?? const {};
     }
     if (triggerOnStart) {
-      scene!.onStart(arguments);
+      await scene!.onStart(arguments);
     }
     return scene!;
   }

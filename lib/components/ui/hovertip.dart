@@ -61,6 +61,7 @@ class Hovertip extends BorderComponent {
     ScreenTextConfig? config,
     HovertipDirection direction = HovertipDirection.topLeft,
     double width = kHovertipDefautWidth,
+    Vector2? position,
     EdgeInsets? margin,
   }) {
     final escapedContent =

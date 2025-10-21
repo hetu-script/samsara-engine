@@ -38,7 +38,7 @@ class MarkdownWiki extends StatefulWidget {
     this.closeButton,
     this.homePage = '/',
     this.onTreeReady,
-    this.cursor = MouseCursor.defer,
+    this.cursor,
   });
 
   final SamsaraEngine engine;
@@ -50,7 +50,7 @@ class MarkdownWiki extends StatefulWidget {
   final String homePage;
   final void Function(TreeViewController<WikiPageData, TreeNode<WikiPageData>>)?
       onTreeReady;
-  final MouseCursor cursor;
+  final WidgetStateMouseCursor? cursor;
 
   @override
   State<MarkdownWiki> createState() => _MarkdownWikiState();
@@ -91,6 +91,7 @@ class _MarkdownWikiState extends State<MarkdownWiki> {
   @override
   Widget build(BuildContext context) {
     return ResponsiveView(
+      cursor: widget.cursor ?? MouseCursor.defer,
       alignment: AlignmentDirectional.center,
       margin: widget.margin,
       backgroundColor: widget.backgroundColor,
@@ -134,7 +135,8 @@ class _MarkdownWikiState extends State<MarkdownWiki> {
                           child: Padding(
                             padding: const EdgeInsets.all(2.0),
                             child: ListTile(
-                              mouseCursor: widget.cursor,
+                              mouseCursor:
+                                  widget.cursor?.resolve({WidgetState.hovered}),
                               dense: true,
                               title: Text(widget.engine
                                   .locale(node.data?.title ?? 'Untitled page')),

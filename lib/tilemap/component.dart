@@ -60,6 +60,13 @@ class TileMapComponent extends TaskComponent
 
   OrthogonalDirection get direction => _direction;
 
+  bool _isHidden;
+  bool get isHidden => _isHidden;
+  set isHidden(bool value) {
+    _isHidden = value;
+    data?['isHidden'] = value;
+  }
+
   bool _isWalking = false;
   bool get isWalking => _isWalking;
   bool _isStoppingWalk = false;
@@ -81,12 +88,7 @@ class TileMapComponent extends TaskComponent
       onStepCallback;
   OrthogonalDirection? finishWalkDirection;
 
-  bool _isHidden;
-  bool get isHidden => _isHidden;
-  set isHidden(bool value) {
-    _isHidden = value;
-    data?['isHidden'] = value;
-  }
+  List<int>? changedRoute;
 
   /// For moving object, animations must contains all [kObjectWalkAnimations]
   TileMapComponent({

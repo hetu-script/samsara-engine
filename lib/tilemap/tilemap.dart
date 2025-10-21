@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
+import 'package:hetu_script/hetu_script.dart';
 import 'package:hetu_script/utils/uid.dart';
 
 import '../extensions.dart';
@@ -96,8 +97,8 @@ class TileMap extends GameComponent with HandlesGesture {
 
   final TextStyle captionStyle;
 
-  final TileShape tileShape;
-  final Vector2 gridSize, tileSpriteSrcSize, tileOffset;
+  TileShape tileShape;
+  Vector2 gridSize, tileSpriteSrcSize, tileOffset;
 
   int tileMapWidth, tileMapHeight;
 
@@ -106,6 +107,7 @@ class TileMap extends GameComponent with HandlesGesture {
   TileMapTerrain? selectedTerrain;
   List<TileMapComponent>? selectedActors;
 
+  TilePosition? hoveringTilePosition;
   TileMapTerrain? hoveringTerrain;
   List<TileMapComponent>? hoveringActors;
 
@@ -135,7 +137,10 @@ class TileMap extends GameComponent with HandlesGesture {
   void Function(TileMapTerrain? tile)? onMouseEnterTile;
   void Function(OrthogonalDirection direction)? onMouseEnterScreenEdge;
 
+  final HTLogger logger;
+
   TileMap({
+    required this.logger,
     required this.id,
     required this.tileShape,
     required this.tileMapWidth,
@@ -171,9 +176,9 @@ class TileMap extends GameComponent with HandlesGesture {
         onMouseEnterScreenEdge?.call(OrthogonalDirection.south);
       } else {
         final tilePosition = worldPosition2Tile(position);
-        final terrain = getTerrain(tilePosition.left, tilePosition.top);
-        if (terrain != hoveringTerrain) {
-          hoveringTerrain = terrain;
+        if (tilePosition != hoveringTilePosition) {
+          hoveringTilePosition = tilePosition;
+          hoveringTerrain = getTerrain(tilePosition.left, tilePosition.top);
           onMouseEnterTile?.call(hoveringTerrain);
         }
       }
@@ -517,10 +522,10 @@ class TileMap extends GameComponent with HandlesGesture {
   bool isTileOnScreen(TileInfo tile) {
     final topLeft = tile.topLeft;
     final bottomRight = tile.bottomRight;
-    final isOnScreen = topLeft.x > 0 &&
-        topLeft.y > 0 &&
-        bottomRight.x < game.size.x &&
-        bottomRight.y < game.size.y;
+    final isOnScreen = topLeft.x + 5 > 0 &&
+        topLeft.y + 5 > 0 &&
+        bottomRight.x - 5 < game.size.x &&
+        bottomRight.y - 5 < game.size.y;
 
     return isOnScreen;
   }
@@ -678,7 +683,7 @@ class TileMap extends GameComponent with HandlesGesture {
         return terrains[terrainIndex];
       } else {
         if (kDebugMode) {
-          print(
+          logger.warn(
               'Hero is out of map bounds! left: ${hero!.left}, top: ${hero!.top}');
         }
       }
@@ -1187,20 +1192,33 @@ class TileMap extends GameComponent with HandlesGesture {
       return;
     }
 
-    assert(tilePosition2Index(component.left, component.top) == route.first);
+    if (tilePosition2Index(component.left, component.top) != route.first) {
+      if (kDebugMode) {
+        print(
+            'tilemap warning: the start position of the route does not match the current position of the component');
+      }
+      final tilePosition = index2TilePosition(route.first);
+      component.tilePosition = tilePosition;
+      updateTileInfo(component);
+    }
 
     component.isBackwardWalking = backwardMoving;
 
     // component.onStepCallback = onStepCallback;
-    if (component == hero && isCameraFollowHero) {
-      setCameraFollowHero(true);
-      component.onStepCallback = (terrain, target, isFinished) async {
-        setCameraFollowHero(false);
-        onStepCallback?.call(terrain, target, isFinished);
-      };
-    } else {
+    // if (component == hero && isCameraFollowHero) {
+    //   setCameraFollowHero(true);
+    //   component.onStepCallback = (terrain, target, isFinished) async {
+    //     setCameraFollowHero(false);
+    //     onStepCallback?.call(terrain, target, isFinished);
+    //   };
+    // } else {
+    // component.onStepCallback = onStepCallback;
+    // }
+
+    if (onStepCallback != null) {
       component.onStepCallback = onStepCallback;
     }
+
     // 默认移动结束后面朝主视角
     component.finishWalkDirection = finishMoveDirection;
     component.currentRoute = route
@@ -1218,15 +1236,16 @@ class TileMap extends GameComponent with HandlesGesture {
         .toList();
   }
 
-  void componentFinishWalk(TileMapComponent component,
-      {bool stepCallback = false,
-      TileMapTerrain? terrain,
-      TileMapTerrain? target}) async {
+  void componentFinishWalk(
+    TileMapComponent component, {
+    bool stepCallback = false,
+    TileMapTerrain? terrain,
+    TileMapTerrain? target,
+  }) async {
     if (stepCallback) {
       assert(terrain != null);
       await component.onStepCallback?.call(terrain!, target, true);
     }
-    component.onStepCallback = null;
     component.prevRouteNode = null;
     component.currentRoute = null;
     if (component.finishWalkDirection != null) {
@@ -1235,6 +1254,16 @@ class TileMap extends GameComponent with HandlesGesture {
     component.finishWalkDirection = null;
     component.isWalkCanceled = false;
     component.stopAnimation();
+    if (component.changedRoute != null) {
+      componentWalkToTilePositionByRoute(
+        component,
+        component.changedRoute!,
+        onStepCallback: component.onStepCallback,
+      );
+      component.changedRoute = null;
+    } else {
+      component.onStepCallback = null;
+    }
   }
 
   void componentUpdateWalkPosition(TileMapComponent component) {

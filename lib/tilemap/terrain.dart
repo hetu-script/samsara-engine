@@ -155,10 +155,20 @@ class TileMapTerrain extends GameComponent with TileInfo {
   late final double _overlayAnimationPlaytimeOffset;
   double _overlayAnimationOffsetValue = 0;
 
+  Vector2 spriteOffset = Vector2.zero();
+  Vector2 overlaySpriteOffset = Vector2.zero();
+  Vector2 animationOffset = Vector2.zero();
+  Vector2 overlayAnimationOffset = Vector2.zero();
+
   Future<void> _tryLoadSprite({bool isOverlay = false}) async {
     final spriteData = isOverlay ? (data?['overlaySprite']) : data;
     final srcOffset =
         Vector2(spriteData?['offsetX'] ?? 0.0, spriteData?['offsetY'] ?? 0.0);
+    if (isOverlay) {
+      overlaySpriteOffset = offset + srcOffset;
+    } else {
+      spriteOffset = offset + srcOffset;
+    }
 
     Vector2 spriteSrcSize = srcSize;
     if (spriteData?['srcWidth'] != null && spriteData?['srcHeight'] != null) {
@@ -179,7 +189,6 @@ class TileMapTerrain extends GameComponent with TileInfo {
     if (!isOverlay) {
       _sprite = sprite;
     } else {
-      offset = offset + srcOffset;
       _overlaySprite = sprite;
     }
   }
@@ -191,6 +200,12 @@ class TileMapTerrain extends GameComponent with TileInfo {
 
     final srcOffset =
         Vector2(spriteData?['offsetX'] ?? 0.0, spriteData?['offsetY'] ?? 0.0);
+    if (isOverlay) {
+      overlayAnimationOffset = offset + srcOffset;
+    } else {
+      animationOffset = offset + srcOffset;
+    }
+
     Vector2 spriteSrcSize = srcSize;
     if (spriteData?['srcWidth'] != null && spriteData?['srcHeight'] != null) {
       spriteSrcSize =
@@ -234,7 +249,6 @@ class TileMapTerrain extends GameComponent with TileInfo {
     if (!isOverlay) {
       _animation = animation;
     } else {
-      overlayOffset = offset + srcOffset;
       _overlayAnimation = animation;
     }
   }
@@ -313,13 +327,13 @@ class TileMapTerrain extends GameComponent with TileInfo {
   void render(Canvas canvas) {
     if (!isVisible) return;
 
-    _sprite?.render(canvas, position: offset, size: size);
+    _sprite?.render(canvas, position: spriteOffset);
     _animation?.ticker.currentFrame.sprite
-        .render(canvas, position: offset, size: size);
-    _overlaySprite?.render(canvas, position: overlayOffset, size: size);
+        .render(canvas, position: animationOffset);
+    _overlaySprite?.render(canvas, position: overlaySpriteOffset);
     if (map.isEditorMode || !map.showFogOfWar || map.isTileWithinSight(this)) {
       _overlayAnimation?.ticker.currentFrame.sprite
-          .render(canvas, position: overlayOffset, size: size);
+          .render(canvas, position: overlayAnimationOffset);
     }
   }
 

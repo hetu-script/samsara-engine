@@ -1,6 +1,6 @@
 import 'dart:ui' show Color;
 
-abstract final class HTColors {
+abstract final class GameColors {
   static const almond = Color(0xffefdecd);
   static const amber = Color(0xffffbf00);
   static const amethyst = Color(0xff9966cc);
