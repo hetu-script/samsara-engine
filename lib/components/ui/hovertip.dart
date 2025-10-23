@@ -261,10 +261,12 @@ class Hovertip extends BorderComponent {
   static void hideAll() {
     _globalInstance?.removeFromParent();
     _globalInstance = null;
-    for (final target in _instances.keys.toList()) {
-      final instance = _instances[target];
-      instance!.removeFromParent();
-      _instances.remove(target);
+    for (final instance in _instances.values) {
+      instance.removeFromParent();
+    }
+    _instances.clear();
+    for (final instance in _cachedInstances.values) {
+      instance.removeFromParent();
     }
     _cachedInstances.clear();
   }

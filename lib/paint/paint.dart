@@ -193,6 +193,7 @@ abstract class PresetPaints {
 }
 
 final Map<TextPaint, TextPaint> _cachedOutline = {};
+final Map<ScreenTextConfig, TextPaint> _cachedTextPaints = {};
 
 abstract class PresetTextPaints {
   static final TextPaint light = TextPaint(
@@ -348,54 +349,58 @@ class ScreenTextConfig {
       textAlign: textAlign ?? other?.textAlign,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is ScreenTextConfig &&
+        other.size == size &&
+        other.anchor == anchor &&
+        other.padding == padding &&
+        other.outlined == outlined &&
+        other.scale == scale &&
+        other.overflow == overflow &&
+        other.textStyle == textStyle &&
+        other.textAlign == textAlign;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        size,
+        anchor,
+        padding,
+        outlined,
+        scale,
+        overflow,
+        textStyle,
+        textAlign,
+      );
 }
 
-TextPaint getTextPaint({
-  TextStyle? style,
-  ScreenTextConfig? config,
-  int alpha = 255,
-}) {
-  if (config == null) {
-    return PresetTextPaints.light;
+TextPaint getTextPaint(
+    {ScreenTextConfig? config, int alpha = 255, TextStyle? style}) {
+  TextStyle textStyle = (style ?? config?.textStyle ?? TextStyle());
+  if (textStyle.color != null) {
+    textStyle = textStyle.copyWith(color: textStyle.color!.withAlpha(alpha));
   } else {
-    TextStyle inputStyle = (style ?? config.textStyle ?? TextStyle());
-    if (inputStyle.color != null) {
-      inputStyle =
-          inputStyle.copyWith(color: inputStyle.color!.withAlpha(alpha));
-    } else {
-      inputStyle =
-          inputStyle.copyWith(color: PresetColors.light.withAlpha(alpha));
-    }
-    return TextPaint(
-      style: inputStyle.merge(
+    textStyle = textStyle.copyWith(color: PresetColors.light.withAlpha(alpha));
+  }
+  config ??= ScreenTextConfig();
+  config = config.copyWith(textStyle: textStyle);
+
+  TextPaint? textPaint = _cachedTextPaints[config];
+  if (textPaint != null) {
+    return textPaint;
+  } else {
+    textPaint = TextPaint(
+      style: textStyle.merge(
         TextStyle(
-          fontSize: (style?.fontSize ??
-                  config.textStyle?.fontSize ??
-                  kDefaultRichTextFontSize) *
-              (config.scale ?? (1.0)),
-          // shadows: config.outlined == true
-          //     ? [
-          //         Shadow(
-          //             // bottomLeft
-          //             offset: const Offset(-1, -1),
-          //             color: Colors.black.withAlpha(128)),
-          //         Shadow(
-          //             // bottomRight
-          //             offset: const Offset(1, -1),
-          //             color: Colors.black.withAlpha(128)),
-          //         Shadow(
-          //             // topRight
-          //             offset: const Offset(1, 1),
-          //             color: Colors.black.withAlpha(128)),
-          //         Shadow(
-          //             // topLeft
-          //             offset: const Offset(-1, 1),
-          //             color: Colors.black.withAlpha(128)),
-          //       ]
-          //     : null,
+          fontSize: (config.textStyle?.fontSize ?? kDefaultRichTextFontSize) *
+              (config.scale ?? 1.0),
         ),
       ),
     );
+    _cachedTextPaints[config] = textPaint;
+    return textPaint;
   }
 }
 

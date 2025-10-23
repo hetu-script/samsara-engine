@@ -217,6 +217,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.3.1+2"
+  fluent_ui:
+    dependency: "direct main"
+    description:
+      path: "../fluent_ui"
+      relative: true
+    source: path
+    version: "4.13.0"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -238,6 +245,11 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "6.0.0"
+  flutter_localizations:
+    dependency: transitive
+    description: flutter
+    source: sdk
+    version: "0.0.0"
   flutter_markdown_plus:
     dependency: "direct main"
     description:
@@ -310,6 +322,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "4.5.4"
+  intl:
+    dependency: transitive
+    description:
+      name: intl
+      sha256: "3df61194eb431efc39c4ceba583b95633a403f46c9fd341e550ce0bfa50e9aa5"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.20.2"
   leak_tracker:
     dependency: transitive
     description:
@@ -374,6 +394,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.11.1"
+  math_expressions:
+    dependency: transitive
+    description:
+      name: math_expressions
+      sha256: "218dc65bed4726562bb31c53d8daa3cc824664b26fb72d77bc592757edf74ba0"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.7.0"
   matrix2d:
     dependency: transitive
     description:
@@ -458,10 +486,10 @@ packages:
     dependency: transitive
     description:
       name: petitparser
-      sha256: "1a97266a94f7350d30ae522c0af07890c70b8e62c71e8e3920d1db4d23c057d1"
+      sha256: "07c8f0b1913bcde1ff0d26e57ace2f3012ccbf2b204e070290dad3bb22797646"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "7.0.1"
+    version: "6.1.0"
   platform:
     dependency: transitive
     description:
@@ -510,6 +538,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "4.1.0"
+  scroll_pos:
+    dependency: transitive
+    description:
+      name: scroll_pos
+      sha256: cebf602b2dd939de6832bb902ffefb574608d1b84f420b82b381a4007d3c1e1b
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.5.0"
   scroll_to_index:
     dependency: transitive
     description:
@@ -639,10 +675,10 @@ packages:
     dependency: transitive
     description:
       name: xml
-      sha256: "971043b3a0d3da28727e40ed3e0b5d18b742fa5a68665cca88e74b7876d5e025"
+      sha256: b015a8ad1c488f66851d762d3090a21c600e479dc75e68328c52774040cf9226
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "6.6.1"
+    version: "6.5.0"
 sdks:
   dart: ">=3.8.0 <4.0.0"
   flutter: ">=3.32.0"

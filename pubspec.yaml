@@ -20,6 +20,9 @@ dependencies:
     path: ../hetu-script/packages/hetu_script
   hetu_script_flutter:
     path: ../hetu-script/packages/hetu_script_flutter
+  fluent_ui:
+    path: ../fluent_ui
+
   html: ^0.15.1
   vector_math: ^2.1.4
   path_provider: ^2.0.13

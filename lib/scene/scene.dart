@@ -20,7 +20,7 @@ import '../task.dart';
 
 const kHintTextPriority = 999999999;
 
-const kMinHintInterval = Duration(milliseconds: 200);
+const kMinHintInterval = Duration(milliseconds: 250);
 
 abstract class Scene extends FlameGame with TaskController {
   static const overlayUIBuilderMapKey = 'overlayUI';

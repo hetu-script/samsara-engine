@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:fluent_ui/fluent_ui.dart' as fluent;
 
 import 'engine.dart';
 import 'extensions.dart';
@@ -13,6 +14,8 @@ class Console extends StatefulWidget {
     this.backgroundColor,
     this.closeButton,
     this.cursor = MouseCursor.defer,
+    this.label,
+    this.labelStyle,
   });
 
   final SamsaraEngine engine;
@@ -20,6 +23,8 @@ class Console extends StatefulWidget {
   final Color? backgroundColor;
   final Widget? closeButton;
   final MouseCursor cursor;
+  final String? label;
+  final TextStyle? labelStyle;
 
   @override
   State<Console> createState() => _ConsoleState();
@@ -30,7 +35,7 @@ class _ConsoleState extends State<Console> {
   static final _commandHistory = <String>[];
   final TextEditingController _textEditingController = TextEditingController();
   final FocusNode _keyboardListenerFocusNode = FocusNode();
-  final FocusNode _textFieldFocusNode = FocusNode();
+  late final FocusNode _textFieldFocusNode;
   late final ScrollController _scrollController = ScrollController();
 
   @override
@@ -52,7 +57,65 @@ class _ConsoleState extends State<Console> {
   void initState() {
     super.initState();
 
+    _textFieldFocusNode = FocusNode(onKeyEvent: (_, KeyEvent event) {
+      if (event is KeyUpEvent) {
+        switch (event.logicalKey) {
+          case LogicalKeyboardKey.escape:
+            Navigator.maybePop(context, null);
+          case LogicalKeyboardKey.enter:
+            if (HardwareKeyboard.instance.isControlPressed) {
+              submit();
+              return KeyEventResult.handled;
+            }
+          case LogicalKeyboardKey.arrowUp: // up
+            if (HardwareKeyboard.instance.isControlPressed) {
+              if (_commandHistoryIndex > 0) {
+                --_commandHistoryIndex;
+              }
+              if (_commandHistory.isNotEmpty) {
+                _textEditingController.text =
+                    _commandHistory[_commandHistoryIndex];
+              } else {
+                _textEditingController.text = '';
+              }
+              return KeyEventResult.handled;
+            }
+          case LogicalKeyboardKey.arrowDown: // down
+            if (HardwareKeyboard.instance.isControlPressed) {
+              if (_commandHistoryIndex < _commandHistory.length - 1) {
+                ++_commandHistoryIndex;
+                _textEditingController.text =
+                    _commandHistory[_commandHistoryIndex];
+              } else {
+                _textEditingController.text = '';
+              }
+              return KeyEventResult.handled;
+            }
+        }
+      }
+      return KeyEventResult.ignored;
+    });
+
     jumpToEnd();
+  }
+
+  void submit() {
+    final text = _textEditingController.text.trim();
+    _textEditingController.text = '';
+    if (text.isNotBlank) {
+      _commandHistory.add(text);
+      _commandHistoryIndex = _commandHistory.length;
+      try {
+        widget.engine.debug('>>>$text');
+        final result = widget.engine.hetu.eval(text, globallyImport: true);
+        final formatted = widget.engine.hetu.lexicon.stringify(result);
+        widget.engine.log('execution result: $formatted');
+      } catch (error) {
+        widget.engine.error(error.toString());
+      }
+    }
+    jumpToEnd();
+    setState(() {});
   }
 
   @override
@@ -89,67 +152,15 @@ class _ConsoleState extends State<Console> {
               ),
             ),
           ),
-          KeyboardListener(
-            focusNode: _keyboardListenerFocusNode,
-            onKeyEvent: (KeyEvent key) {
-              if (key is KeyUpEvent) {
-                switch (key.logicalKey) {
-                  case LogicalKeyboardKey.escape:
-                    Navigator.maybePop(context, null);
-                  case LogicalKeyboardKey.arrowUp: // up
-                    if (_commandHistoryIndex > 0) {
-                      --_commandHistoryIndex;
-                    }
-                    if (_commandHistory.isNotEmpty) {
-                      _textEditingController.text =
-                          _commandHistory[_commandHistoryIndex];
-                    } else {
-                      _textEditingController.text = '';
-                    }
-                  case LogicalKeyboardKey.arrowDown: // down
-                    if (_commandHistoryIndex < _commandHistory.length - 1) {
-                      ++_commandHistoryIndex;
-                      _textEditingController.text =
-                          _commandHistory[_commandHistoryIndex];
-                    } else {
-                      _textEditingController.text = '';
-                    }
-                }
-              }
-            },
-            child: TextField(
+          fluent.InfoLabel(
+            label: widget.label ??
+                'Press Ctrl+Enter to submit. Press Ctrl+Up/Down to navigate command history.',
+            labelStyle: widget.labelStyle,
+            child: fluent.TextBox(
+              maxLines: null,
               focusNode: _textFieldFocusNode,
               controller: _textEditingController,
-              decoration: const InputDecoration(
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                ),
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey, width: 0.0),
-                ),
-              ),
               autofocus: true,
-              onSubmitted: (value) {
-                final text = _textEditingController.text;
-                _textEditingController.text = '';
-                _textFieldFocusNode.requestFocus();
-                if (text.isNotBlank) {
-                  _commandHistory.add(text);
-                  _commandHistoryIndex = _commandHistory.length;
-                  try {
-                    widget.engine.debug('>>>$text');
-                    final result =
-                        widget.engine.hetu.eval(text, globallyImport: true);
-                    final formatted =
-                        widget.engine.hetu.lexicon.stringify(result);
-                    widget.engine.log('execution result: $formatted');
-                  } catch (error) {
-                    widget.engine.error(error.toString());
-                  }
-                }
-                jumpToEnd();
-                setState(() {});
-              },
             ),
           ),
         ],
