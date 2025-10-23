@@ -1,4 +1,18 @@
-import 'dart:ui' show Color;
+import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
+
+Color? getColorForLogLevel(Level level) {
+  switch (level) {
+    case Level.error:
+      return Colors.red;
+    case Level.warning:
+      return Colors.yellow;
+    case Level.info:
+      return Colors.green;
+    default:
+      return Colors.grey;
+  }
+}
 
 abstract final class GameColors {
   static const almond = Color(0xffefdecd);

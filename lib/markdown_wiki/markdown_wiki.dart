@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:animated_tree_view/animated_tree_view.dart';
 import 'package:samsara/markdown_wiki.dart';
 
-import '../widgets/ui/responsive_view.dart';
 import '../engine.dart';
 import 'markdown_page.dart';
 
@@ -33,8 +32,6 @@ class MarkdownWiki extends StatefulWidget {
     required this.engine,
     required this.treeNodes,
     this.builder,
-    this.margin,
-    this.backgroundColor,
     this.closeButton,
     this.homePage = '/',
     this.onTreeReady,
@@ -44,8 +41,6 @@ class MarkdownWiki extends StatefulWidget {
   final SamsaraEngine engine;
   final TreeNode<WikiPageData> treeNodes;
   final Widget Function(BuildContext, TreeNode<WikiPageData>)? builder;
-  final EdgeInsetsGeometry? margin;
-  final Color? backgroundColor;
   final Widget? closeButton;
   final String homePage;
   final void Function(TreeViewController<WikiPageData, TreeNode<WikiPageData>>)?
@@ -90,82 +85,76 @@ class _MarkdownWikiState extends State<MarkdownWiki> {
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveView(
-      cursor: widget.cursor ?? MouseCursor.defer,
-      alignment: AlignmentDirectional.center,
-      margin: widget.margin,
-      backgroundColor: widget.backgroundColor,
-      child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: Text(
-              '${_rootTitle != null ? widget.engine.locale(_rootTitle) : ''}${_title != null ? ' - ${widget.engine.locale(_title)}' : ''}'),
-          actions: [widget.closeButton ?? CloseButton()],
-        ),
-        body: Row(
-          children: [
-            SizedBox(
-              width: treeWidth,
-              child: Material(
-                type: MaterialType.transparency,
-                child: TreeView.simple<WikiPageData>(
-                  tree: widget.treeNodes,
-                  showRootNode: false,
-                  expansionIndicatorBuilder: (context, node) =>
-                      ChevronIndicator.rightDown(
-                    tree: node,
-                    color: Colors.blue[700],
-                    padding: const EdgeInsets.all(8),
-                  ),
-                  indentation: const Indentation(style: IndentStyle.roundJoint),
-                  onTreeReady: (controller) {
-                    _treeController = controller;
-                    final home = _treeController.elementAt(widget.homePage);
-                    _rootTitle = home.data?.title;
-                    _pageData =
-                        widget.engine.locale(home.data?.content ?? 'empty');
-                    _treeController.expandNode(home);
-                    widget.onTreeReady?.call(_treeController);
-                    setState(() {});
-                  },
-                  builder: widget.builder ??
-                      (context, node) {
-                        return Material(
-                          type: MaterialType.transparency,
-                          child: Padding(
-                            padding: const EdgeInsets.all(2.0),
-                            child: ListTile(
-                              mouseCursor:
-                                  widget.cursor?.resolve({WidgetState.hovered}),
-                              dense: true,
-                              title: Text(widget.engine
-                                  .locale(node.data?.title ?? 'Untitled page')),
-                              onTap: () {
-                                _onSelectedNode(node);
-                                setState(() {});
-                              },
-                              selected: _selectedNode == node,
-                              shape: RoundedRectangleBorder(
-                                side: BorderSide(color: Colors.black, width: 1),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              selectedColor: Colors.white,
-                              selectedTileColor: Colors.lightBlue,
-                            ),
-                          ),
-                        );
-                      },
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(
+            '${_rootTitle != null ? widget.engine.locale(_rootTitle) : ''}${_title != null ? ' - ${widget.engine.locale(_title)}' : ''}'),
+        actions: [widget.closeButton ?? CloseButton()],
+      ),
+      body: Row(
+        children: [
+          SizedBox(
+            width: treeWidth,
+            child: Material(
+              type: MaterialType.transparency,
+              child: TreeView.simple<WikiPageData>(
+                tree: widget.treeNodes,
+                showRootNode: false,
+                expansionIndicatorBuilder: (context, node) =>
+                    ChevronIndicator.rightDown(
+                  tree: node,
+                  color: Colors.blue[700],
+                  padding: const EdgeInsets.all(8),
                 ),
+                indentation: const Indentation(style: IndentStyle.roundJoint),
+                onTreeReady: (controller) {
+                  _treeController = controller;
+                  final home = _treeController.elementAt(widget.homePage);
+                  _rootTitle = home.data?.title;
+                  _pageData =
+                      widget.engine.locale(home.data?.content ?? 'empty');
+                  _treeController.expandNode(home);
+                  widget.onTreeReady?.call(_treeController);
+                  setState(() {});
+                },
+                builder: widget.builder ??
+                    (context, node) {
+                      return Material(
+                        type: MaterialType.transparency,
+                        child: Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: ListTile(
+                            mouseCursor:
+                                widget.cursor?.resolve({WidgetState.hovered}),
+                            dense: true,
+                            title: Text(widget.engine
+                                .locale(node.data?.title ?? 'Untitled page')),
+                            onTap: () {
+                              _onSelectedNode(node);
+                              setState(() {});
+                            },
+                            selected: _selectedNode == node,
+                            shape: RoundedRectangleBorder(
+                              side: BorderSide(color: Colors.black, width: 1),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            selectedColor: Colors.white,
+                            selectedTileColor: Colors.lightBlue,
+                          ),
+                        ),
+                      );
+                    },
               ),
             ),
-            Expanded(
-              child: MarkdownPage(
-                scrollController: _scrollController,
-                _pageData ?? '',
-              ),
+          ),
+          Expanded(
+            child: MarkdownPage(
+              scrollController: _scrollController,
+              _pageData ?? '',
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

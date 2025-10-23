@@ -14,14 +14,11 @@ const kConsoleColorWhite = '\x1B[37m';
 const kConsoleColorReset = '\x1B[0m';
 
 class CustomLoggerOutput extends LogOutput {
-  final List<String> logs = [];
-  final List<OutputEvent> events = [];
+  final List<(Level, String)> logs = [];
 
   @override
   void output(OutputEvent event) {
-    events.add(event);
-    logs.addAll(event.lines);
-
+    logs.add((event.level, event.lines.join('\n')));
     // release 模式只保存到内存，不输出到控制台
     if (kDebugMode || kProfileMode) {
       // 开发模式：输出到控制台
@@ -34,13 +31,9 @@ class CustomLoggerOutput extends LogOutput {
               '${kConsoleColorYellow}samsara - ${event.level.name}:$kConsoleColorReset');
         } else if (event.level == Level.info) {
           stdout.writeln(
-              '${kConsoleColorWhite}samsara - ${event.level.name}:$kConsoleColorReset');
-        } else if (event.level == Level.debug) {
-          stdout.writeln(
               '${kConsoleColorGreen}samsara - ${event.level.name}:$kConsoleColorReset');
         } else {
-          stdout.writeln(
-              '${kConsoleColorBlue}samsara - ${event.level.name}:$kConsoleColorReset');
+          stdout.writeln('samsara - ${event.level.name}:');
         }
         for (final line in event.lines) {
           if (event.level == Level.error) {
@@ -48,11 +41,9 @@ class CustomLoggerOutput extends LogOutput {
           } else if (event.level == Level.warning) {
             stdout.writeln('$kConsoleColorYellow$line$kConsoleColorReset');
           } else if (event.level == Level.info) {
-            stdout.writeln('$kConsoleColorWhite$line$kConsoleColorReset');
-          } else if (event.level == Level.debug) {
             stdout.writeln('$kConsoleColorGreen$line$kConsoleColorReset');
           } else {
-            stdout.writeln('$kConsoleColorBlue$line$kConsoleColorReset');
+            stdout.writeln(line);
           }
         }
       } else {
@@ -64,13 +55,9 @@ class CustomLoggerOutput extends LogOutput {
               '${kConsoleColorYellow}samsara - ${event.level.name}: ${event.lines.first}$kConsoleColorReset');
         } else if (event.level == Level.info) {
           stdout.writeln(
-              '${kConsoleColorWhite}samsara - ${event.level.name}: ${event.lines.first}$kConsoleColorReset');
-        } else if (event.level == Level.debug) {
-          stdout.writeln(
               '${kConsoleColorGreen}samsara - ${event.level.name}: ${event.lines.first}$kConsoleColorReset');
         } else {
-          stdout.writeln(
-              '${kConsoleColorBlue}samsara - ${event.level.name}: ${event.lines.first}$kConsoleColorReset');
+          stdout.writeln('samsara - ${event.level.name}: ${event.lines.first}');
         }
       }
     }

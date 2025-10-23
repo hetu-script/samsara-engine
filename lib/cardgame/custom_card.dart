@@ -3,10 +3,9 @@ import 'package:flame/flame.dart';
 import 'package:flame/text.dart';
 import 'package:hetu_script/utils/collection.dart';
 
-import '../extensions.dart';
 import 'card.dart';
-import '../paint/paint.dart';
 import '../richtext/richtext_builder.dart';
+import '../samsara.dart';
 
 class CustomGameCard extends GameCard {
   /// 卡牌的原始数据，可能是一个Json，或者一个河图struct对象，

@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import 'game_component.dart';
-
-export '../types.dart';
+import '../samsara.dart';
 
 class BorderComponent extends GameComponent {
   late Paint borderPaint;

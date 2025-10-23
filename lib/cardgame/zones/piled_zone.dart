@@ -1,8 +1,7 @@
 import 'dart:async';
 
-import '../../components/border_component.dart';
 import '../card.dart';
-import '../../paint/paint.dart';
+import '../../samsara.dart';
 
 enum PileStyle {
   /// new cards put to bottom of pile

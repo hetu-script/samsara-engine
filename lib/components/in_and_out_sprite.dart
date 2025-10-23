@@ -2,8 +2,8 @@ import 'package:flame/components.dart' hide Timer;
 import 'package:flame/effects.dart';
 import 'package:flame/flame.dart';
 
-import 'game_component.dart';
 import 'timer.dart';
+import '../samsara.dart';
 
 class InAndOutSprite extends GameComponent {
   final String spriteId;

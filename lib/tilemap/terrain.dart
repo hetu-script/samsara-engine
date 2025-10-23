@@ -5,12 +5,10 @@ import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
 
-import '../components/game_component.dart';
 import 'tile_info.dart';
-import '../animation/sprite_animation.dart';
 import '../utils/json.dart';
 import 'tilemap.dart';
-import '../extensions.dart';
+import '../samsara.dart';
 
 const kNeighborIndexes = [1, 2, 3, 4, 5, 6];
 

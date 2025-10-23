@@ -6,13 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:hetu_script/hetu_script.dart';
 import 'package:hetu_script_flutter/hetu_script_flutter.dart';
-// import 'package:path_provider/path_provider.dart';
-// import 'package:path/path.dart' as path;
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_audio/bgm.dart';
 import 'package:flutter_custom_cursor/cursor_manager.dart';
 import 'package:image/image.dart' as img2;
 import 'package:hetu_script/bytecode/bytecode_module.dart';
+import 'package:path/path.dart' as path;
 
 import 'binding/engine_binding.dart';
 import '../event.dart';
@@ -23,6 +22,11 @@ import 'logger/printer.dart';
 import 'logger/output.dart';
 import 'logger/filter.dart';
 import 'tilemap/tilemap.dart';
+import 'task.dart';
+
+export 'package:logger/src/log_level.dart';
+
+const logFilename = 'samsara_engine.log';
 
 class EngineConfig {
   final String name;
@@ -53,6 +57,8 @@ class SamsaraEngine extends SceneController
     with EventAggregator
     implements HTLogger, AudioPlayerInterface {
   static const modeFileExtension = '.mod';
+
+  final TaskController taskController = TaskController();
 
   EngineConfig config;
 
@@ -241,6 +247,8 @@ class SamsaraEngine extends SceneController
     // isLoading = true;
     // notifyListeners();
 
+    await clearLogFile();
+
     this.context = context;
     if (config.debugMode) {
       const root = 'scripts/';
@@ -325,8 +333,25 @@ class SamsaraEngine extends SceneController
   //   broadcast(SceneEvent.ended(sceneKey: key));
   // }
 
-  List<OutputEvent> getLogEvents() => _loggerOutput.events;
-  List<String> getLogs() => _loggerOutput.logs;
+  List<(Level, String)> getLogsRaw() => _loggerOutput.logs;
+
+  List<String> getLogs({
+    Level? level,
+    bool richText = false,
+  }) {
+    if (level != null) {
+      return _loggerOutput.logs
+          .where((element) => element.$1 <= level)
+          .map((e) => e.$2)
+          .toList();
+    } else {
+      return _loggerOutput.logs.map((e) => e.$2).toList();
+    }
+  }
+
+  void clearLogs() {
+    _loggerOutput.logs.clear();
+  }
 
   String stringify(dynamic args) {
     if (args is List) {
@@ -359,9 +384,39 @@ class SamsaraEngine extends SceneController
     }
   }
 
+  /// clear log file
+  Future<void> clearLogFile() async {
+    final directory = Directory.current;
+    final logPath = path.join(directory.path, logFilename);
+    final logSaveFile = File(logPath);
+    if (logSaveFile.existsSync()) {
+      // 使用 FileMode.write 打开文件，这将立即清空文件内容
+      final sink = logSaveFile.openWrite(mode: FileMode.write);
+      // 不写入任何内容，直接关闭 sink
+      await sink.close();
+    }
+  }
+
+  Future<void> writeLogFile(String content) async {
+    final directory = Directory.current;
+    final logPath = path.join(directory.path, logFilename);
+    final logSaveFile = File(logPath);
+    if (!logSaveFile.existsSync()) {
+      logSaveFile.createSync(recursive: true);
+    }
+    final sink = logSaveFile.openWrite(mode: FileMode.append);
+    sink.writeln(content);
+    await sink.flush();
+    await sink.close();
+  }
+
   @override
   void log(String message, {MessageSeverity severity = MessageSeverity.none}) {
     logger.log(_getLogLevel(severity), message);
+    taskController.schedule(() async {
+      await writeLogFile(
+          '[${DateTime.now().toIso8601String()}] [${severity.name.toUpperCase()}]: $message');
+    });
   }
 
   @override

@@ -16,11 +16,13 @@ class WikiPageData {
   });
 }
 
-Future<TreeNode<WikiPageData>> buildWikiTreeNodesFromData(
+typedef WikiTreeNode = TreeNode<WikiPageData>;
+
+Future<WikiTreeNode> buildWikiTreeNodesFromData(
   List<dynamic> data, {
   dynamic root,
 }) async {
-  Future<TreeNode<WikiPageData>> buildNode(Map<String, dynamic> data) async {
+  Future<WikiTreeNode> buildNode(Map<String, dynamic> data) async {
     final String key = data['id'];
     final String? path = data['path'];
     final pageData = path != null ? await rootBundle.loadString(path) : null;

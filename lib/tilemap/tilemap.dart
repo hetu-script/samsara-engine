@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'dart:async';
 
-// import 'package:flame/rendering.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/components.dart';
@@ -9,9 +8,6 @@ import 'package:flame/sprite.dart';
 import 'package:hetu_script/hetu_script.dart';
 import 'package:hetu_script/utils/uid.dart';
 
-import '../extensions.dart';
-// import '../paint.dart';
-import '../components/game_component.dart';
 import '../gestures/gesture_mixin.dart';
 import 'tile_info.dart';
 import 'component.dart';
@@ -19,7 +15,8 @@ import 'terrain.dart';
 import 'direction.dart';
 import 'route.dart';
 import '../utils/color.dart';
-import '../paint/paint.dart';
+
+import '../samsara.dart';
 
 export 'direction.dart';
 
@@ -518,7 +515,6 @@ class TileMap extends GameComponent with HandlesGesture {
     }
   }
 
-  // TODO: 计算tile是否在屏幕上
   bool isTileOnScreen(TileInfo tile) {
     final topLeft = tile.topLeft;
     final bottomRight = tile.bottomRight;
@@ -837,10 +833,14 @@ class TileMap extends GameComponent with HandlesGesture {
 
   void lightUpAroundTile(TilePosition tilePosition,
       {int size = 1, List<dynamic> excludeTerrainKinds = const []}) {
-    final start = getTerrain(tilePosition.left, tilePosition.top);
-    assert(start != null);
+    final center = getTerrain(tilePosition.left, tilePosition.top);
+    if (center == null) {
+      logger.warn(
+          'lightUpAroundTile: tile at position (${tilePosition.left}, ${tilePosition.top}) does not exist!');
+      return;
+    }
     _tilesWithinSight.clear();
-    Set<TileMapTerrain> peremeterTiles = {start!};
+    Set<TileMapTerrain> peremeterTiles = {center};
     Set<TileMapTerrain> pendingTiles = {};
     int lightedLayers = 0;
     do {
@@ -1136,23 +1136,22 @@ class TileMap extends GameComponent with HandlesGesture {
     return completer.future;
   }
 
-  void unselectTile() {
-    // selectedTerrain?.isSelected = false;
-    selectedTerrain = null;
-  }
+  // void unselectTile() {
+  //   // selectedTerrain?.isSelected = false;
+  //   selectedTerrain = null;
+  // }
 
-  bool trySelectTile(int left, int top) {
+  TileMapTerrain? trySelectTile(int left, int top) {
     final terrain = getTerrain(left, top);
     if (terrain != null) {
       if (terrain != selectedTerrain) {
-        unselectTile();
+        // unselectTile();
         // &&  (!terrain.isNonEnterable || selectNonInteractable)) {
         // terrain.isSelected = true;
         selectedTerrain = terrain;
       }
-      return true;
     }
-    return false;
+    return terrain;
   }
 
   void componentWalkToPreviousTile(TileMapComponent component) {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:samsara/samsara.dart';
-import 'package:window_manager/window_manager.dart';
 
 import 'scene/mainmenu.dart';
 import 'engine.dart';
@@ -78,34 +77,19 @@ class _GameAppState extends State<GameApp> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.sizeOf(context);
-    final desiredSize = windowSize;
-    if (screenSize.width != desiredSize.width ||
-        screenSize.height != desiredSize.height) {
-      final widthDiff = desiredSize.width - screenSize.width;
-      final heightDiff = desiredSize.height - screenSize.height;
-      final newSize = Size(
-          (widthDiff > 0 ? desiredSize.width : screenSize.width) + widthDiff,
-          (heightDiff > 0 ? desiredSize.height : screenSize.height) +
-              heightDiff);
-      windowManager.setSize(newSize);
-      return const LoadingScreen();
-    } else {
-      engine.debug('画面尺寸修改为：${screenSize.width}x${screenSize.height}');
-      final scene = context.watch<SamsaraEngine>().scene;
-      final isLoading = context.watch<SamsaraEngine>().isLoading;
-      return Scaffold(
-        body: Stack(
-          children: [
-            scene?.build(
-                  context,
-                  loadingBuilder: (context) => const LoadingScreen(),
-                ) ??
-                const LoadingScreen(),
-            if (isLoading) const LoadingScreen(),
-          ],
-        ),
-      );
-    }
+    final scene = context.watch<SamsaraEngine>().scene;
+    final isLoading = context.watch<SamsaraEngine>().isLoading;
+    return Scaffold(
+      body: Stack(
+        children: [
+          scene?.build(
+                context,
+                loadingBuilder: (context) => const LoadingScreen(),
+              ) ??
+              const LoadingScreen(),
+          if (isLoading) const LoadingScreen(),
+        ],
+      ),
+    );
   }
 }

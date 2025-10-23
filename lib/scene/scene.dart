@@ -10,7 +10,7 @@ import 'package:flame_audio/bgm.dart';
 import '../components/game_component.dart';
 import '../extensions.dart';
 // import 'scene_controller.dart';
-import '../pointer_detector.dart';
+import '../widgets/pointer_detector.dart';
 import '../gestures/gesture_mixin.dart';
 // import '../components/border_component.dart';
 import '../camera/camera2.dart';

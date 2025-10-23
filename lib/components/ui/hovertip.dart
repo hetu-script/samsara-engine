@@ -1,10 +1,5 @@
-import '../../extensions.dart';
-
-import '../../scene/scene.dart';
-import '../game_component.dart';
-import '../border_component.dart';
-import '../../paint/paint.dart';
 import '../../richtext.dart';
+import '../../samsara.dart';
 
 enum HovertipDirection {
   none,
@@ -36,7 +31,9 @@ class Hovertip extends BorderComponent {
   static ScreenTextConfig defaultContentConfig = ScreenTextConfig();
 
   // static bool showBorder = false;
-  static late Paint backgroundPaint;
+  static Paint backgroundPaint = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.black.withAlpha(200);
 
   static void clearAll([List<GameComponent>? list]) {
     if (list == null) {
@@ -261,6 +258,17 @@ class Hovertip extends BorderComponent {
     }
   }
 
+  static void hideAll() {
+    _globalInstance?.removeFromParent();
+    _globalInstance = null;
+    for (final target in _instances.keys.toList()) {
+      final instance = _instances[target];
+      instance!.removeFromParent();
+      _instances.remove(target);
+    }
+    _cachedInstances.clear();
+  }
+
   static void toogle(GameComponent target,
       {required Scene scene, bool justShow = false}) async {
     assert(_instances.containsKey(target));
@@ -294,10 +302,6 @@ class Hovertip extends BorderComponent {
     this.contentConfig = (contentConfig ?? const ScreenTextConfig())
         .fillFrom(defaultContentConfig);
     // _contentPaint = getTextPaint(config: contentConfig);
-
-    backgroundPaint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = Colors.black.withAlpha(200);
   }
 
   void setContent(String content,

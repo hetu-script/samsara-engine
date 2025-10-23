@@ -4,16 +4,11 @@ import 'dart:async';
 import 'package:flame/components.dart' hide SpriteComponent;
 import 'package:flame/effects.dart';
 import 'package:flame/flame.dart';
-// import 'package:flutter/widgets.dart';
-// import 'package:flame/effects.dart';
 
-import '../components/border_component.dart';
-import '../components/game_component.dart';
-import '../paint/paint.dart';
 import 'zones/piled_zone.dart';
-// import '../mixin.dart';
 import '../task.dart';
 import '../gestures.dart';
+import '../samsara.dart';
 
 class GameCard extends BorderComponent with HandlesGesture, TaskController {
   late Vector2 _savedPosition, _savedSize;

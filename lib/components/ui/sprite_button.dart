@@ -2,9 +2,8 @@ import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
 import 'package:meta/meta.dart';
 
-import '../border_component.dart';
 import '../../gestures.dart';
-import '../../paint/paint.dart';
+import '../../samsara.dart';
 
 class SpriteButton<T> extends BorderComponent with HandlesGesture {
   static ScreenTextConfig defaultTextConfig =

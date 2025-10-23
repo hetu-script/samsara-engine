@@ -1,5 +1,5 @@
-import '../types.dart';
 import '../utils/color.dart';
+import '../samsara.dart';
 
 enum LightShape {
   rect,

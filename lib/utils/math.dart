@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:hetu_script/utils/math.dart' as math;
 
-import '../types.dart' show Vector2;
+import '../samsara.dart';
 
 export 'package:hetu_script/utils/math.dart';
 

@@ -1,24 +1,11 @@
 import 'dart:ui' show PointMode;
 
 import 'package:flutter/material.dart' hide LineMetrics;
-import 'package:flame/components.dart';
-import 'package:flame/text.dart';
 
 import 'package:colorfilter_generator/colorfilter_generator.dart';
 import 'package:colorfilter_generator/addons.dart';
 
-// import 'package:colorfilter_generator/presets.dart';
-
-import '../extensions.dart';
-// import '../widgets/sprite_widget.dart';
-
-export '../extensions.dart' show Vector2Ex;
-export 'package:flame/extensions.dart' show Vector2Extension;
-export '../types.dart';
-
-// import 'text_paint2.dart';
-
-// export 'text_paint2.dart';
+import '../samsara.dart';
 
 RegExp newLineExp = RegExp(r'\n');
 double kLineSpacing = 0.0;

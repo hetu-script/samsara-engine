@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import '../../components/border_component.dart';
 import '../../gestures.dart';
 import '../card.dart';
-import '../../paint/paint.dart';
+import '../../samsara.dart';
 
 class DrawingZone extends BorderComponent with HandlesGesture {
   String? ownedBy;

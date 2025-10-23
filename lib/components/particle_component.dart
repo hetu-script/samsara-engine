@@ -1,6 +1,6 @@
 import 'package:flame/particles.dart';
 
-import 'game_component.dart';
+import '../samsara.dart';
 
 /// A modified version of Flame's [ParticleSystemComponent]
 /// A [GameComponent] that renders a [Particle] at the designated

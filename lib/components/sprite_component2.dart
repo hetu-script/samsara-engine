@@ -4,8 +4,8 @@ import 'package:flutter/painting.dart';
 import 'package:flame/components.dart';
 import 'package:meta/meta.dart';
 
-import 'game_component.dart';
 import '../gestures.dart';
+import '../samsara.dart';
 
 /// A modification of Flame's SpriteComponent that allows for visibility control.
 class SpriteComponent2 extends GameComponent with HandlesGesture {

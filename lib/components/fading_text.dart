@@ -1,11 +1,8 @@
 import 'package:flame/effects.dart';
 
-import 'game_component.dart';
-import '../paint/paint.dart';
 import '../effect/fade.dart';
 import 'timer.dart';
-import '../effect/advanced_move.dart';
-// import '../extensions.dart';
+import '../samsara.dart';
 
 class FadingText extends GameComponent {
   static TextStyle defaultTextStyle = TextStyle();

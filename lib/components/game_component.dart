@@ -1,19 +1,14 @@
 import 'dart:async';
 
-// import 'package:flame/game.dart';
 import 'package:flutter/material.dart' hide Viewport;
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
-// import 'package:flame/experimental.dart';
 import 'package:flame/camera.dart';
 
 import '../effect/fade.dart';
-import '../effect/advanced_move.dart';
-import '../scene/scene.dart';
 import '../gestures/gesture_mixin.dart';
-import '../lighting/light_config.dart';
 
-export '../types.dart';
+import '../samsara.dart';
 
 abstract class GameComponent extends PositionComponent
     with HasGameReference<Scene>, HasPaint
