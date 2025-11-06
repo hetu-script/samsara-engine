@@ -106,10 +106,10 @@ class _ConsoleState extends State<Console> {
       _commandHistory.add(text);
       _commandHistoryIndex = _commandHistory.length;
       try {
-        widget.engine.debug('>>>$text');
+        widget.engine.info('>>>$text');
         final result = widget.engine.hetu.eval(text, globallyImport: true);
         final formatted = widget.engine.hetu.lexicon.stringify(result);
-        widget.engine.log('execution result: $formatted');
+        widget.engine.warn('execution result: $formatted');
       } catch (error) {
         widget.engine.error(error.toString());
       }

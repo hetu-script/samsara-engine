@@ -55,53 +55,48 @@ class DynamicColorProgressBar extends StatelessWidget {
     return MouseRegion2(
       onEnter: onMouseEnter,
       onExit: onMouseExit,
-      child: Row(
-        children: [
-          Container(
-            width: width,
-            height: height,
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(borderRadius),
-              border: (borderWidth != null && borderWidth! > 0)
-                  ? Border.all(
-                      color: borderColor ??
-                          Theme.of(context).colorScheme.onSurface,
-                      width: borderWidth!,
-                    )
-                  : null,
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: Colors.white24,
+          borderRadius: BorderRadius.circular(borderRadius),
+          border: (borderWidth != null && borderWidth! > 0)
+              ? Border.all(
+                  color: borderColor ?? Theme.of(context).colorScheme.onSurface,
+                  width: borderWidth!,
+                )
+              : null,
+        ),
+        child: Stack(
+          alignment: AlignmentDirectional.centerStart,
+          children: [
+            Container(
+              alignment: Alignment.centerLeft,
+              width: value / max * width,
+              height: height,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: colors),
+                // color: lerpGradient(
+                //   percentage: value / max,
+                //   colors: colors,
+                //   stops: stops,
+                // ),
+              ),
             ),
-            child: Stack(
-              alignment: AlignmentDirectional.centerStart,
-              children: [
-                Container(
-                  alignment: Alignment.centerLeft,
-                  width: value / max * width,
-                  height: height,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: colors),
-                    // color: lerpGradient(
-                    //   percentage: value / max,
-                    //   colors: colors,
-                    //   stops: stops,
-                    // ),
-                  ),
+            if (showNumber)
+              Align(
+                alignment: Alignment.center,
+                child: OutlinedText(
+                  showNumberAsPercentage
+                      ? (value / max).toPercentageString()
+                      : valueString,
+                  textColor: Theme.of(context).colorScheme.onSurface,
+                  style: const TextStyle(fontSize: 12.0),
                 ),
-                if (showNumber)
-                  Align(
-                    alignment: Alignment.center,
-                    child: OutlinedText(
-                      showNumberAsPercentage
-                          ? (value / max).toPercentageString()
-                          : valueString,
-                      textColor: Theme.of(context).colorScheme.onSurface,
-                      style: const TextStyle(fontSize: 12.0),
-                    ),
-                  )
-              ],
-            ),
-          ),
-        ],
+              )
+          ],
+        ),
       ),
     );
   }

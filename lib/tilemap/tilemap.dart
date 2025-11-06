@@ -13,7 +13,6 @@ import 'tile_info.dart';
 import 'component.dart';
 import 'terrain.dart';
 import 'direction.dart';
-import 'route.dart';
 import '../utils/color.dart';
 
 import '../samsara.dart';
@@ -408,7 +407,9 @@ class TileMap extends GameComponent with HandlesGesture {
     // 处理非地块显示组件
     components.clear();
     for (final componentData in data['components']) {
-      await loadTileMapComponentFromData(componentData);
+      await loadTileMapComponentFromData(
+        componentData,
+      );
     }
   }
 
@@ -481,6 +482,14 @@ class TileMap extends GameComponent with HandlesGesture {
   void saveComponentsFrameData() {
     for (final component in components.values) {
       component.saveFrameData();
+    }
+  }
+
+  void clearMapComponents() {
+    final ids = components.keys.toList();
+    for (final id in ids) {
+      if (id == hero?.id) continue;
+      removeTileMapComponentById(id);
     }
   }
 
@@ -681,102 +690,6 @@ class TileMap extends GameComponent with HandlesGesture {
         if (kDebugMode) {
           logger.warn(
               'Hero is out of map bounds! left: ${hero!.left}, top: ${hero!.top}');
-        }
-      }
-    }
-    return null;
-  }
-
-  /// manhattan 距离算法
-  int getTileDistance(TileMapTerrain start, TileMapTerrain end) {
-    int result;
-    final dx = end.slashLeft - start.slashLeft;
-    final dy = end.slashTop - start.slashTop;
-    if ((dx >= 0 && dy >= 0) || (dx <= 0 && dy <= 0)) {
-      result = (dx + dy).abs();
-    } else {
-      result = math.max(dx.abs(), dy.abs());
-    }
-    // print('getTileDistance: ${start}, ${end}, result: ${result}')
-    return result;
-  }
-
-  /// hScore(n) 是曼哈顿距离时的 A* 算法
-  List<int>? calculateRoute(TileMapTerrain start, TileMapTerrain end,
-      {List terrainKinds = const []}) {
-    // print('calculating route: ${start.left},${start.top} to ${end.left},${end.top}')
-
-    if (start == end || start.index == end.index) {
-      return null;
-    }
-
-    // g(n): 原点到该点的距离
-    final gScore = <int, int>{};
-    gScore[start.index] = 0;
-    // h(n): 该点到终点的距离
-    final hScore = <int, int>{};
-    hScore[start.index] = getTileDistance(start, end);
-    // f(n) = g(n) + h(n)
-    final fScore = <int, int>{};
-    fScore[start.index] = hScore[start.index]!;
-
-    // 节点返回路径，每个 key 对应的 value 代表了 key 的坐标的上一步骤的坐标
-    final cameFrom = <int, int>{};
-    List<int> reconstructPath(Map<int, int> cameFrom, int current) {
-      final from = cameFrom[current];
-      if (from != null) {
-        final path = reconstructPath(cameFrom, from);
-        return [...path, current];
-      } else {
-        return [current];
-      }
-    }
-
-    // 已被计算的坐标
-    final closed = <int>{};
-    // 将要计算的坐标, key 是 tile index，value 是 离起点的距离
-    final open = <int>[];
-    open.add(start.index);
-    // final distance = getTileDistance(start, end);
-
-    while (open.isNotEmpty) {
-      // 找到 f(x) 最小的节点
-      open.sort((t1, t2) {
-        assert(fScore.containsKey(t1));
-        assert(fScore.containsKey(t2));
-        return fScore[t1]!.compareTo(fScore[t2]!);
-      });
-      final nextIndex = open.first;
-      final nextTile = terrains[nextIndex];
-      if (nextIndex == end.index) {
-        // route.path = reconstructPath(cameFrom, end.index)
-        final route = reconstructPath(cameFrom, end.index);
-        return route;
-      }
-      open.remove(nextIndex);
-      closed.add(nextIndex);
-      final neighbors = getTileNeighbors(nextTile, terrainKinds: terrainKinds);
-      for (final neighbor in neighbors.values) {
-        if (neighbor.isNonEnterable && neighbor.index != end.index) continue;
-        if (closed.contains(neighbor.index)) continue;
-        assert(gScore.containsKey(nextIndex));
-        final tentetiveGScore = gScore[nextIndex]! + 1;
-        var tentativelyBetter = false;
-        if (!open.contains(neighbor.index) ||
-            (tentetiveGScore < gScore[neighbor.index]!)) {
-          tentativelyBetter = true;
-        }
-        if (tentativelyBetter) {
-          cameFrom[neighbor.index] = nextIndex;
-          gScore[neighbor.index] = tentetiveGScore;
-          hScore[neighbor.index] = getTileDistance(neighbor, end);
-          assert(gScore.containsKey(neighbor.index));
-          assert(hScore.containsKey(neighbor.index));
-          fScore[neighbor.index] =
-              gScore[neighbor.index]! + hScore[neighbor.index]!;
-          if (!open.contains(neighbor.index)) {
-            open.add(neighbor.index);
-          }
         }
       }
     }
@@ -1154,180 +1067,6 @@ class TileMap extends GameComponent with HandlesGesture {
     return terrain;
   }
 
-  void componentWalkToPreviousTile(TileMapComponent component) {
-    if (component.prevRouteNode == null) return;
-
-    assert(components.containsKey(component.id));
-
-    component.currentRoute = null;
-    componentWalkToTilePositionByRoute(
-      component,
-      [
-        // 这里不能直接使用 component.index，因为 component 的 tileinfo 还没有被更新
-        tilePosition2Index(component.left, component.top),
-        component.prevRouteNode!.index
-      ],
-      backwardMoving: true,
-    );
-
-    component.prevRouteNode = null;
-  }
-
-  void componentWalkToTilePositionByRoute(
-    TileMapComponent component,
-    List<int> route, {
-    OrthogonalDirection? finishMoveDirection,
-    FutureOr<void> Function(TileMapTerrain terrain, TileMapTerrain? nextTerrain,
-            bool isFinished)?
-        onStepCallback,
-    bool backwardMoving = false,
-  }) {
-    assert(components.containsKey(component.id));
-
-    if (component.isWalking) {
-      if (kDebugMode) {
-        print('tilemap warning: try to move object while it is already moving');
-      }
-      return;
-    }
-
-    if (tilePosition2Index(component.left, component.top) != route.first) {
-      if (kDebugMode) {
-        print(
-            'tilemap warning: the start position of the route does not match the current position of the component');
-      }
-      final tilePosition = index2TilePosition(route.first);
-      component.tilePosition = tilePosition;
-      updateTileInfo(component);
-    }
-
-    component.isBackwardWalking = backwardMoving;
-
-    // component.onStepCallback = onStepCallback;
-    // if (component == hero && isCameraFollowHero) {
-    //   setCameraFollowHero(true);
-    //   component.onStepCallback = (terrain, target, isFinished) async {
-    //     setCameraFollowHero(false);
-    //     onStepCallback?.call(terrain, target, isFinished);
-    //   };
-    // } else {
-    // component.onStepCallback = onStepCallback;
-    // }
-
-    if (onStepCallback != null) {
-      component.onStepCallback = onStepCallback;
-    }
-
-    // 默认移动结束后面朝主视角
-    component.finishWalkDirection = finishMoveDirection;
-    component.currentRoute = route
-        .map((index) {
-          final tilePos = index2TilePosition(index);
-          final worldPos = tilePosition2TileCenter(tilePos.left, tilePos.top);
-          return TileMapRouteNode(
-            index: index,
-            tilePosition: tilePos,
-            worldPosition: worldPos,
-          );
-        })
-        .toList()
-        .reversed
-        .toList();
-  }
-
-  void componentFinishWalk(
-    TileMapComponent component, {
-    bool stepCallback = false,
-    TileMapTerrain? terrain,
-    TileMapTerrain? target,
-  }) async {
-    if (stepCallback) {
-      assert(terrain != null);
-      await component.onStepCallback?.call(terrain!, target, true);
-    }
-    component.prevRouteNode = null;
-    component.currentRoute = null;
-    if (component.finishWalkDirection != null) {
-      component.setDirection(component.finishWalkDirection!);
-    }
-    component.finishWalkDirection = null;
-    component.isWalkCanceled = false;
-    component.stopAnimation();
-    if (component.changedRoute != null) {
-      componentWalkToTilePositionByRoute(
-        component,
-        component.changedRoute!,
-        onStepCallback: component.onStepCallback,
-      );
-      component.changedRoute = null;
-    } else {
-      component.onStepCallback = null;
-    }
-  }
-
-  void componentUpdateWalkPosition(TileMapComponent component) {
-    if (component.isWalking) return;
-    if (component.currentRoute == null) return;
-
-    if (component.currentRoute!.isEmpty) {
-      componentFinishWalk(component);
-      return;
-    }
-
-    final prevRouteNode = component.currentRoute!.last;
-    component.currentRoute!.removeLast();
-
-    // refreshTileInfo(object);
-    final tile = prevRouteNode.tilePosition;
-    final terrain = getTerrain(tile.left, tile.top);
-    assert(terrain != null);
-
-    if (component.currentRoute!.isEmpty) {
-      componentFinishWalk(component, stepCallback: true, terrain: terrain!);
-      return;
-    }
-
-    if (component.isWalkCanceled) {
-      componentFinishWalk(component);
-      return;
-    }
-
-    final nextTile = component.currentRoute!.last.tilePosition;
-    final TileMapTerrain nextTerrain = getTerrain(nextTile.left, nextTile.top)!;
-    if (nextTerrain.isWater) {
-      component.isOnWater = true;
-    } else {
-      component.isOnWater = false;
-    }
-    // 如果路径上下一个目标是不可进入的，且该目标是路径上最后一个目标
-    // 此种情况结束移动，但仍会触发对最终目标的交互
-    if (component.currentRoute!.length == 1 && nextTerrain.isNonEnterable) {
-      componentFinishWalk(component,
-          stepCallback: true, terrain: terrain!, target: nextTerrain);
-      return;
-    }
-
-    component.onStepCallback?.call(terrain!, nextTerrain, false);
-    // prevRouteNode 记录了前一次移动时的位置，但第一次移动时，此值为Null
-    component.prevRouteNode = prevRouteNode;
-
-    // 这里要多检查一次，因为有可能在 onBeforeStepCallback 中被取消移动
-    // 但这里的finishMove 不传递 terrain，这样不会再次触发 onAfterMoveCallback
-    if (component.isWalkCanceled) {
-      componentFinishWalk(component);
-      return;
-    }
-
-    component.walkTo(
-      target: nextTile,
-      targetPosition: nextTerrain.position,
-      targetDirection: direction2Orthogonal(directionTo(
-          component.tilePosition, nextTile,
-          backward: component.isBackwardWalking)),
-      backward: component.isBackwardWalking,
-    );
-  }
-
   void darkenAllTiles() {
     for (final tile in terrains) {
       tile.isLighted = false;
@@ -1342,21 +1081,21 @@ class TileMap extends GameComponent with HandlesGesture {
     // _tilesWithinSight.clear();
   }
 
-  @override
-  void updateTree(double dt) {
-    super.updateTree(dt);
+  // @override
+  // void updateTree(double dt) {
+  //   super.updateTree(dt);
 
-    if (hero != null) {
-      componentUpdateWalkPosition(hero!);
-    }
+  //   if (hero != null) {
+  //     componentUpdateWalkPosition(hero!);
+  //   }
 
-    if (autoUpdateComponent || (hero?.isWalking ?? false)) {
-      for (final component in components.values) {
-        if (component == hero) continue;
-        componentUpdateWalkPosition(component);
-      }
-    }
-  }
+  //   if (autoUpdateComponent || (hero?.isWalking ?? false)) {
+  //     for (final component in components.values) {
+  //       if (component == hero) continue;
+  //       componentUpdateWalkPosition(component);
+  //     }
+  //   }
+  // }
 
   @override
   bool get isVisible => true;

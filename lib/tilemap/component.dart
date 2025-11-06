@@ -50,7 +50,8 @@ class TileMapComponent extends TaskComponent
   final dynamic data;
   final TileMap map;
 
-  final double velocityFactor;
+  final double speed;
+  double speedMultiplier = 1.0;
 
   final bool isCharacter;
 
@@ -67,15 +68,11 @@ class TileMapComponent extends TaskComponent
     data?['isHidden'] = value;
   }
 
-  bool _isWalking = false;
-  bool get isWalking => _isWalking;
-  bool _isStoppingWalk = false;
+  bool isWalking = false;
 
   Vector2 _walkTargetRenderPosition = Vector2.zero();
   TilePosition _walkTargetTilePosition = TilePosition.leftTop();
   Vector2 _velocity = Vector2.zero();
-
-  // void Function(int left, int top)? onMoved;
 
   // 下面这些是公开属性，由 tilemap 直接修改和管理
   bool isOnWater = false;
@@ -90,6 +87,11 @@ class TileMapComponent extends TaskComponent
 
   List<int>? changedRoute;
 
+  int tik = 0;
+
+  @override
+  bool get isVisible => map.isTileOnScreen(this);
+
   /// For moving object, animations must contains all [kObjectWalkAnimations]
   TileMapComponent({
     required this.map,
@@ -98,7 +100,7 @@ class TileMapComponent extends TaskComponent
     int? left,
     int? top,
     Vector2? offset,
-    this.velocityFactor = 0.8,
+    this.speed = 1.0,
     this.isCharacter = false,
     this.spriteSrcSize,
     bool isHidden = false,
@@ -115,7 +117,7 @@ class TileMapComponent extends TaskComponent
     currentAnimation?.ticker.setToLast();
   }
 
-  void setDirection(OrthogonalDirection value, {bool jumpToEnd = false}) {
+  void setDirection(OrthogonalDirection value, {bool jumpToEnd = true}) {
     _direction = value;
     if (isOnWater) {
       setState('swim_${_direction.name}', jumpToEnd: jumpToEnd);
@@ -255,18 +257,13 @@ class TileMapComponent extends TaskComponent
 
   void stopWalk() {
     tilePosition = _walkTargetTilePosition;
-    _isStoppingWalk = true;
+    isWalking = false;
     position = _walkTargetRenderPosition;
-    // 这里要先取消移动，再调用事件
-    // 检查isBackward的目的，是为了在英雄倒退到entity上时，不触发
-    // 只有玩家自己主动经过某个entity，才触发事件
-    // if (!_isBackward) {
-    //   onMoved?.call(tilePosition.left, tilePosition.top);
-    // }
     // _isBackward = false;
     _walkTargetRenderPosition = Vector2.zero();
     _velocity = Vector2.zero();
     _walkTargetTilePosition = TilePosition.leftTop();
+    // print('work time: ${DateTime.now().millisecondsSinceEpoch - tik} ms');
   }
 
   void walkTo({
@@ -275,12 +272,13 @@ class TileMapComponent extends TaskComponent
     required OrthogonalDirection targetDirection,
     bool backward = false,
   }) {
+    // tik = DateTime.now().millisecondsSinceEpoch;
     assert(tilePosition != target);
+    isWalking = true;
     _walkTargetTilePosition = target;
-    _isWalking = true;
-    // _isBackward = backward;
     _walkTargetRenderPosition = targetPosition;
     setDirection(targetDirection);
+    currentAnimation?.ticker.paused = false;
 
     // 计算地图上的斜方向实际距离
     final sx = _walkTargetRenderPosition.x - position.x;
@@ -288,20 +286,104 @@ class TileMapComponent extends TaskComponent
     final dx = sx.abs();
     final dy = sy.abs();
     final d = math.sqrt(dx * dx + dy * dy);
-    final t = d / velocityFactor;
+    final t = d / (speed * speedMultiplier);
     final tx = dx / t;
     final ty = dy / t;
     final vx = tx * sx.sign;
     final vy = ty * sy.sign;
+
     _velocity = Vector2(vx, vy);
+  }
+
+  void walkToTilePositionByRoute(
+    List<int> route, {
+    OrthogonalDirection? finishDirection,
+    FutureOr<void> Function(TileMapTerrain terrain, TileMapTerrain? nextTerrain,
+            bool isFinished)?
+        onStepCallback,
+    bool backwardMoving = false,
+    double speedMultiplier = 1.0,
+  }) {
+    if (isWalking) {
+      map.logger.error('try to move object while it is already moving');
+      return;
+    }
+
+    if (map.tilePosition2Index(left, top) != route.first) {
+      map.logger.warn(
+          'the start position of the route does not match the current position of the component');
+      final tilePosition = map.index2TilePosition(route.first);
+      this.tilePosition = tilePosition;
+      map.updateTileInfo(this);
+    }
+
+    isBackwardWalking = backwardMoving;
+    this.speedMultiplier = speedMultiplier;
+
+    // component.onStepCallback = onStepCallback;
+    // if (component == hero && isCameraFollowHero) {
+    //   setCameraFollowHero(true);
+    //   component.onStepCallback = (terrain, target, isFinished) async {
+    //     setCameraFollowHero(false);
+    //     onStepCallback?.call(terrain, target, isFinished);
+    //   };
+    // } else {
+    // component.onStepCallback = onStepCallback;
+    // }
+
+    if (onStepCallback != null) {
+      this.onStepCallback = onStepCallback;
+    }
+
+    // 默认移动结束后面朝主视角
+    finishWalkDirection = finishDirection;
+    currentRoute = route
+        .map((index) {
+          final tilePos = map.index2TilePosition(index);
+          final worldPos =
+              map.tilePosition2TileCenter(tilePos.left, tilePos.top);
+          return TileMapRouteNode(
+            index: index,
+            tilePosition: tilePos,
+            worldPosition: worldPos,
+          );
+        })
+        .toList()
+        .reversed
+        .toList();
+  }
+
+  void finishWalk({
+    bool stepCallback = false,
+    TileMapTerrain? terrain,
+    TileMapTerrain? target,
+  }) async {
+    if (stepCallback) {
+      assert(terrain != null);
+      await onStepCallback?.call(terrain!, target, true);
+    }
+    prevRouteNode = null;
+    currentRoute = null;
+    if (finishWalkDirection != null) {
+      setDirection(finishWalkDirection!);
+    }
+    finishWalkDirection = null;
+    isWalkCanceled = false;
+    stopAnimation();
+    if (changedRoute != null) {
+      walkToTilePositionByRoute(
+        changedRoute!,
+        onStepCallback: onStepCallback,
+      );
+      changedRoute = null;
+    } else {
+      onStepCallback = null;
+    }
   }
 
   @override
   void update(double dt) {
-    if (_isStoppingWalk) {
-      _isWalking = false;
-      _isStoppingWalk = false;
-    } else if (_isWalking) {
+    if (isWalking) {
       currentAnimation?.ticker.update(dt);
       position += _velocity;
       if (_velocity.y < 0 && position.y < _walkTargetRenderPosition.y) {
@@ -313,11 +395,83 @@ class TileMapComponent extends TaskComponent
       } else if (_velocity.x > 0 && position.x > _walkTargetRenderPosition.x) {
         stopWalk();
       }
+    } else {
+      if (currentRoute == null) return;
+
+      if (currentRoute!.isEmpty) {
+        finishWalk();
+        return;
+      }
+
+      final prev = currentRoute!.last;
+      currentRoute!.removeLast();
+
+      // refreshTileInfo(object);
+      final tile = prev.tilePosition;
+      final terrain = map.getTerrain(tile.left, tile.top);
+      assert(terrain != null);
+
+      if (currentRoute!.isEmpty) {
+        finishWalk(stepCallback: true, terrain: terrain!);
+        return;
+      }
+
+      if (isWalkCanceled) {
+        finishWalk();
+        return;
+      }
+
+      final nextTile = currentRoute!.last.tilePosition;
+      final TileMapTerrain nextTerrain =
+          map.getTerrain(nextTile.left, nextTile.top)!;
+      if (nextTerrain.isWater) {
+        isOnWater = true;
+      } else {
+        isOnWater = false;
+      }
+      // 如果路径上下一个目标是不可进入的，且该目标是路径上最后一个目标
+      // 此种情况结束移动，但仍会触发对最终目标的交互
+      if (currentRoute!.length == 1 && nextTerrain.isNonEnterable) {
+        finishWalk(stepCallback: true, terrain: terrain!, target: nextTerrain);
+        return;
+      }
+
+      onStepCallback?.call(terrain!, nextTerrain, false);
+      // prevRouteNode 记录了前一次移动时的位置，但第一次移动时，此值为Null
+      prevRouteNode = prev;
+
+      // 这里要多检查一次，因为有可能在 onBeforeStepCallback 中被取消移动
+      // 但这里的finishMove 不传递 terrain，这样不会再次触发 onAfterMoveCallback
+      if (isWalkCanceled) {
+        finishWalk();
+        return;
+      }
+
+      walkTo(
+        target: nextTile,
+        targetPosition: nextTerrain.position,
+        targetDirection: direction2Orthogonal(map
+            .directionTo(tilePosition, nextTile, backward: isBackwardWalking)),
+        backward: isBackwardWalking,
+      );
     }
   }
 
-  @override
-  bool get isVisible => map.isTileOnScreen(this);
+  void walkToPreviousTile() {
+    if (prevRouteNode == null) return;
+
+    currentRoute = null;
+    walkToTilePositionByRoute(
+      [
+        // 这里不能直接使用 component.index，因为 component 的 tileinfo 还没有被更新
+        map.tilePosition2Index(left, top),
+        prevRouteNode!.index
+      ],
+      backwardMoving: true,
+    );
+
+    prevRouteNode = null;
+  }
 
   @override
   void render(Canvas canvas) {

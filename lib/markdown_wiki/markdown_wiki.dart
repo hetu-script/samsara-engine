@@ -36,6 +36,8 @@ class MarkdownWiki extends StatefulWidget {
     this.homePage = '/',
     this.onTreeReady,
     this.cursor,
+    this.path,
+    this.onPageChanged,
   });
 
   final SamsaraEngine engine;
@@ -46,6 +48,8 @@ class MarkdownWiki extends StatefulWidget {
   final void Function(TreeViewController<WikiPageData, TreeNode<WikiPageData>>)?
       onTreeReady;
   final WidgetStateMouseCursor? cursor;
+  final String? path;
+  final void Function(String path)? onPageChanged;
 
   @override
   State<MarkdownWiki> createState() => _MarkdownWikiState();
@@ -74,13 +78,12 @@ class _MarkdownWikiState extends State<MarkdownWiki> {
   }
 
   void _onSelectedNode(TreeNode<WikiPageData> node) {
-    setState(() {
-      _selectedNode = node;
-      _title = node.data?.title;
-      _pageData = node.data?.content;
-      _treeController.toggleExpansion(node);
-      _scrollController.jumpTo(_scrollController.position.minScrollExtent);
-    });
+    _selectedNode = node;
+    _title = node.data?.title;
+    _pageData = node.data?.content;
+    _scrollController.jumpTo(_scrollController.position.minScrollExtent);
+    widget.onPageChanged?.call(node.path);
+    setState(() {});
   }
 
   @override
@@ -108,15 +111,21 @@ class _MarkdownWikiState extends State<MarkdownWiki> {
                   padding: const EdgeInsets.all(8),
                 ),
                 indentation: const Indentation(style: IndentStyle.roundJoint),
-                onTreeReady: (controller) {
+                onTreeReady: (controller) async {
                   _treeController = controller;
                   final home = _treeController.elementAt(widget.homePage);
                   _rootTitle = home.data?.title;
-                  _pageData =
-                      widget.engine.locale(home.data?.content ?? 'empty');
-                  _treeController.expandNode(home);
+                  final path = widget.path ?? widget.homePage;
+                  final node = _treeController.elementAt(path);
                   widget.onTreeReady?.call(_treeController);
-                  setState(() {});
+                  _onSelectedNode(node);
+                  var parent = node.parent;
+                  while (parent != null) {
+                    _treeController
+                        .expandNode(parent as TreeNode<WikiPageData>);
+                    parent = parent.parent;
+                  }
+                  _treeController.expandNode(node);
                 },
                 builder: widget.builder ??
                     (context, node) {
@@ -132,7 +141,7 @@ class _MarkdownWikiState extends State<MarkdownWiki> {
                                 .locale(node.data?.title ?? 'Untitled page')),
                             onTap: () {
                               _onSelectedNode(node);
-                              setState(() {});
+                              _treeController.toggleExpansion(node);
                             },
                             selected: _selectedNode == node,
                             shape: RoundedRectangleBorder(

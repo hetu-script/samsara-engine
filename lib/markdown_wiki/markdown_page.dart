@@ -17,6 +17,7 @@ class MarkdownPage extends StatelessWidget {
     return Markdown(
       data: data,
       controller: scrollController,
+      selectable: true,
       // styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
       //   p: Theme.of(context).textTheme.bodyMedium,
       //   h1: Theme.of(context).textTheme.headlineLarge,

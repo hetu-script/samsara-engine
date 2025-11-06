@@ -31,6 +31,8 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     _cachedArguments[sceneId] = arguments;
   }
 
+  final _sw = Stopwatch();
+
   /// 当前场景
   Scene? scene;
 
@@ -74,8 +76,8 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
       final ctorId = constructorId ?? sceneId;
       final constructor = _constructors[ctorId];
       assert(constructor != null, 'constructor [$ctorId] not found!');
-      final tik = DateTime.now().millisecondsSinceEpoch;
       try {
+        _sw.start();
         final Scene created = (await constructor!(arguments));
         _cached[sceneId] = created;
         if ((created.id != sceneId) && kDebugMode) {
@@ -84,9 +86,10 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
         }
         newScene = created;
         if (kDebugMode) {
-          warn(
-              'created scene: [$sceneId] in ${DateTime.now().millisecondsSinceEpoch - tik}ms');
+          warn('created scene: [$sceneId] in ${_sw.elapsedMilliseconds}ms');
         }
+        _sw.stop();
+        _sw.reset();
       } catch (e) {
         rethrow;
       }

@@ -30,7 +30,7 @@ class Label extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final defaultStyle = Theme.of(context).textTheme.bodyMedium;
+    final defaultStyle = Theme.of(context).textTheme.bodySmall;
     return MouseRegion2(
       cursor: cursor,
       onEnter: onMouseEnter,
@@ -58,8 +58,7 @@ class Label extends StatelessWidget {
 }
 
 class LabelsWrap extends StatelessWidget {
-  const LabelsWrap(
-    this.text, {
+  const LabelsWrap({
     super.key,
     this.minWidth = 0.0,
     this.minHeight = 0.0,
@@ -67,13 +66,9 @@ class LabelsWrap extends StatelessWidget {
     this.children = const <Widget>[],
   });
 
-  final String text;
-
   final double minWidth, minHeight;
-
   final EdgeInsetsGeometry? padding;
-
-  final Iterable<Widget> children;
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
@@ -83,13 +78,7 @@ class LabelsWrap extends StatelessWidget {
         minHeight: minHeight,
       ),
       child: Wrap(
-        children: [
-          Label(
-            text,
-            textAlign: TextAlign.left,
-          ),
-          ...children,
-        ],
+        children: children,
       ),
     );
   }

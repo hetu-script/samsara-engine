@@ -14,6 +14,15 @@ Color? getColorForLogLevel(Level level) {
   }
 }
 
+abstract class RankedColors {
+  static const common = Color(0xFFB4B4B4);
+  static const rare = Color(0xFFD4FFFF);
+  static const epic = Color(0xFFACACFF);
+  static const legendary = Color(0xFF8D66C4);
+  static const mythic = Color(0xFFE7E7AC);
+  static const arcane = Color(0xFFC65043);
+}
+
 abstract final class GameColors {
   static const almond = Color(0xffefdecd);
   static const amber = Color(0xffffbf00);

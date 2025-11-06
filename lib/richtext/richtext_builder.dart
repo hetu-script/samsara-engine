@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-// import 'components/text_component2.dart';
-// import 'package:flutter/gestures.dart';
 import 'package:flame/text.dart';
-// ignore: implementation_imports
 
 import 'textstyle_extension.dart';
 import 'richtext_node.dart';
 import '../extensions.dart';
+import '../colors.dart';
 
 export 'package:flame/src/text/elements/group_element.dart';
 
@@ -159,17 +157,17 @@ TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
     } else if (currentTag == 'blueGrey') {
       textColor = Colors.blueGrey;
     } else if (currentTag == 'rank0' || currentTag == 'common') {
-      textColor = HexColor.fromString('#B4B4B4');
+      textColor = RankedColors.common;
     } else if (currentTag == 'rank1' || currentTag == 'rare') {
-      textColor = HexColor.fromString('#D4FFFF');
+      textColor = RankedColors.rare;
     } else if (currentTag == 'rank2' || currentTag == 'epic') {
-      textColor = HexColor.fromString('#9D9DFF');
+      textColor = RankedColors.epic;
     } else if (currentTag == 'rank3' || currentTag == 'legendary') {
-      textColor = HexColor.fromString('#693DA8');
+      textColor = RankedColors.legendary;
     } else if (currentTag == 'rank4' || currentTag == 'mythic') {
-      textColor = HexColor.fromString('#E7E7AC');
+      textColor = RankedColors.mythic;
     } else if (currentTag == 'rank5' || currentTag == 'arcane') {
-      textColor = HexColor.fromString('#C65043');
+      textColor = RankedColors.arcane;
     } else if (currentTag.startsWith('color=')) {
       textColor = HexColor.fromString(currentTag.substring(6));
     } else if (currentTag.startsWith('icon=')) {

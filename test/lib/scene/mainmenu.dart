@@ -6,27 +6,17 @@ import 'package:samsara/gestures.dart';
 import 'package:flame/flame.dart';
 import 'package:samsara/components/ui/sprite_button.dart';
 import 'package:flame/components.dart';
-import 'package:samsara/cardgame/cardgame.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:samsara/markdown_wiki.dart';
-import 'package:samsara/task.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 import 'package:animated_tree_view/animated_tree_view.dart';
 
 import '../engine.dart';
 
-const richTextSource = 'rich text is <yellow italic>awesome</> !!!';
-
 class MainMenuScene extends Scene {
   final random = math.Random();
 
   late FpsComponent fps;
-
-  late final PiledZone piledZone;
-
-  CustomGameCard? card;
-
-  final TaskController taskController = TaskController();
 
   final fluent.FlyoutController menuController = fluent.FlyoutController();
 
