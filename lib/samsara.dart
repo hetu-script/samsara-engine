@@ -8,7 +8,7 @@ export 'components/border_component.dart';
 export 'effect/advanced_move.dart';
 export 'animation/sprite_animation.dart';
 export 'lighting/light_config.dart';
-export 'console.dart';
+export 'console/console.dart';
 export 'extensions.dart';
 export 'paint/paint.dart';
 export 'error.dart';

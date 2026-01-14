@@ -47,8 +47,8 @@ class SamsaraEngineClassBinding extends HTExternalClass {
             positionalArgs
                 .map((object) => engine.hetu.lexicon.stringify(object))
                 .join(' '));
-      case 'warn':
-        return ({object, positionalArgs, namedArgs}) => engine.warn(
+      case 'warning':
+        return ({object, positionalArgs, namedArgs}) => engine.warning(
             positionalArgs
                 .map((object) => engine.hetu.lexicon.stringify(object))
                 .join(' '));
@@ -110,7 +110,7 @@ external class SamsaraEngine {
   function log(...content: string)
   function debug(...content: string)
   function info(...content: string)
-  function warn(...content: string)
+  function warning(...content: string)
   function error(...content: string)
   function play(filename: string)
   function loop(filename: string)

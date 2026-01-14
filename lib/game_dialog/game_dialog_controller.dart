@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
-import 'package:samsara/hover_info.dart';
 
 import 'game_dialog.dart';
 import 'game_dialog_content.dart';
@@ -22,7 +21,6 @@ class GameDialogController extends StatefulWidget {
     this.onAvatarPressed,
     this.selectionButtonStyle,
     this.selectionTextStyle,
-    this.hoverContent,
   });
 
   final MouseCursor? cursor;
@@ -32,7 +30,6 @@ class GameDialogController extends StatefulWidget {
   final void Function(dynamic)? onAvatarPressed;
   final fluent.ButtonStyle? selectionButtonStyle;
   final TextStyle? selectionTextStyle;
-  final HoverContent? hoverContent;
 
   @override
   State<GameDialogController> createState() => _GameDialogControllerState();
@@ -200,17 +197,18 @@ class _GameDialogControllerState extends State<GameDialogController>
             color: Colors.transparent,
             child: Stack(
               children: [
-                // ModalBarrier(
-                //   color: GameUI.barrierColor,
-                //   onDismiss: () {},
-                // ),
+                if (widget.barrierColor != null)
+                  ModalBarrier(
+                    color: widget.barrierColor,
+                    onDismiss: () {},
+                  ),
                 if (background != null) background,
                 if (illustrations.isNotEmpty) ...illustrations,
                 if (dialogContentData != null)
                   GameDialogContent(
                     data: dialogContentData,
                     cursor: widget.cursor,
-                    barrierColor: widget.barrierColor,
+                    // barrierColor: widget.barrierColor,
                     textStyle: widget.dialogTextStyle,
                     decoration: widget.dialogDecoration,
                     onAvatarPressed: widget.onAvatarPressed,
@@ -219,12 +217,10 @@ class _GameDialogControllerState extends State<GameDialogController>
                   SelectionDialog(
                     data: selectionsData,
                     cursor: widget.cursor,
-                    barrierColor: widget.barrierColor,
+                    // barrierColor: widget.barrierColor,
                     buttonStyle: widget.selectionButtonStyle,
                     textStyle: widget.selectionTextStyle,
                   ),
-                if (widget.hoverContent != null)
-                  HoverInfo(widget.hoverContent!),
               ],
             ),
           );

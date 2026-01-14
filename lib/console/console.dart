@@ -2,27 +2,23 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 
-import 'engine.dart';
-import 'extensions.dart';
-import 'colors.dart';
+import '../engine.dart';
+import '../extensions.dart';
+import '../colors.dart';
 
 class Console extends StatefulWidget {
   const Console({
     super.key,
     required this.engine,
-    this.margin,
     this.backgroundColor,
     this.closeButton,
-    this.cursor = MouseCursor.defer,
     this.label,
     this.labelStyle,
   });
 
   final SamsaraEngine engine;
-  final EdgeInsetsGeometry? margin;
   final Color? backgroundColor;
   final Widget? closeButton;
-  final MouseCursor cursor;
   final String? label;
   final TextStyle? labelStyle;
 
@@ -109,7 +105,7 @@ class _ConsoleState extends State<Console> {
         widget.engine.info('>>>$text');
         final result = widget.engine.hetu.eval(text, globallyImport: true);
         final formatted = widget.engine.hetu.lexicon.stringify(result);
-        widget.engine.warn('execution result: $formatted');
+        widget.engine.warning('execution result: $formatted');
       } catch (error) {
         widget.engine.error(error.toString());
       }
@@ -122,6 +118,7 @@ class _ConsoleState extends State<Console> {
   Widget build(BuildContext context) {
     final rawLogs = widget.engine.getLogsRaw();
     return Scaffold(
+      backgroundColor: widget.backgroundColor,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text(widget.engine.locale('console')),
@@ -152,15 +149,18 @@ class _ConsoleState extends State<Console> {
               ),
             ),
           ),
-          fluent.InfoLabel(
-            label: widget.label ??
-                'Press Ctrl+Enter to submit. Press Ctrl+Up/Down to navigate command history.',
-            labelStyle: widget.labelStyle,
-            child: fluent.TextBox(
-              maxLines: null,
-              focusNode: _textFieldFocusNode,
-              controller: _textEditingController,
-              autofocus: true,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+            child: fluent.InfoLabel(
+              label: widget.label ??
+                  'Press Ctrl+Enter to submit. Press Ctrl+Up/Down to navigate command history.',
+              labelStyle: widget.labelStyle,
+              child: fluent.TextBox(
+                maxLines: null,
+                focusNode: _textFieldFocusNode,
+                controller: _textEditingController,
+                autofocus: true,
+              ),
             ),
           ),
         ],

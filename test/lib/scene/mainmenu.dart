@@ -10,8 +10,10 @@ import 'package:window_manager/window_manager.dart';
 import 'package:samsara/markdown_wiki.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 import 'package:animated_tree_view/animated_tree_view.dart';
+import 'package:samsara/llm_chat/llm_chat.dart';
 
 import '../engine.dart';
+import '../prompt.dart';
 
 class MainMenuScene extends Scene {
   final random = math.Random();
@@ -127,6 +129,18 @@ class MainMenuScene extends Scene {
                                 context: context,
                                 builder: (BuildContext context) => Console(
                                   engine: engine,
+                                ),
+                              );
+                            },
+                          ),
+                          fluent.MenuFlyoutItem(
+                            text: const Text('llm chat'),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) => ChatView(
+                                  engine: engine,
+                                  systemPrompt: kSystemPromptTemplate2,
                                 ),
                               );
                             },

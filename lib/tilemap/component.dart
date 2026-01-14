@@ -12,8 +12,9 @@ import '../animation/sprite_animation.dart';
 import 'route.dart';
 import '../animation/animation_state_controller.dart';
 import '../extensions.dart';
-import '../components/task_component.dart';
+import '../components/game_component.dart';
 import 'tilemap.dart';
+import '../task.dart';
 
 enum AnimationDirection {
   south,
@@ -40,8 +41,11 @@ const kObjectWalkAnimationsWithSwim = {
   'swim_west',
 };
 
-class TileMapComponent extends TaskComponent
-    with TileInfo, AnimationStateController {
+typedef OnTileMapComponentStepCallback = FutureOr<bool> Function(
+    TileMapTerrain terrain, TileMapTerrain? nextTerrain, bool isFinished);
+
+class TileMapComponent extends GameComponent
+    with TileInfo, AnimationStateController, TaskController {
   static const defaultAnimationStepTime = 0.2;
 
   Sprite? sprite;
@@ -80,9 +84,7 @@ class TileMapComponent extends TaskComponent
   List<TileMapRouteNode>? currentRoute;
   TileMapRouteNode? prevRouteNode;
   bool isBackwardWalking = false;
-  FutureOr<void> Function(
-          TileMapTerrain terrain, TileMapTerrain? nextTerrain, bool isFinished)?
-      onStepCallback;
+  OnTileMapComponentStepCallback? onStepCallback;
   OrthogonalDirection? finishWalkDirection;
 
   List<int>? changedRoute;
@@ -90,7 +92,9 @@ class TileMapComponent extends TaskComponent
   int tik = 0;
 
   @override
-  bool get isVisible => map.isTileOnScreen(this);
+  bool get isVisible => map.isTileOnScreen(this) && !isHidden;
+
+  bool animateOnlyWhenHeroWalking;
 
   /// For moving object, animations must contains all [kObjectWalkAnimations]
   TileMapComponent({
@@ -102,9 +106,11 @@ class TileMapComponent extends TaskComponent
     Vector2? offset,
     this.speed = 1.0,
     this.isCharacter = false,
-    this.spriteSrcSize,
+    required this.spriteSrcSize,
     bool isHidden = false,
-  }) : _isHidden = isHidden {
+    this.animateOnlyWhenHeroWalking = false,
+  })  : _isHidden = isHidden,
+        super(size: spriteSrcSize) {
     this.offset = offset ?? Vector2.zero();
     tilePosition = TilePosition(
       left ?? 1,
@@ -155,8 +161,6 @@ class TileMapComponent extends TaskComponent
     }
 
     if (isCharacter) {
-      assert(spriteSrcSize != null);
-
       final Map<String, SpriteAnimationWithTicker> animations = {};
 
       SpriteSheet? walkAnimationSpriteSheet, swimAnimationSpriteSheet;
@@ -298,9 +302,7 @@ class TileMapComponent extends TaskComponent
   void walkToTilePositionByRoute(
     List<int> route, {
     OrthogonalDirection? finishDirection,
-    FutureOr<void> Function(TileMapTerrain terrain, TileMapTerrain? nextTerrain,
-            bool isFinished)?
-        onStepCallback,
+    OnTileMapComponentStepCallback? onStepCallback,
     bool backwardMoving = false,
     double speedMultiplier = 1.0,
   }) {
@@ -310,7 +312,7 @@ class TileMapComponent extends TaskComponent
     }
 
     if (map.tilePosition2Index(left, top) != route.first) {
-      map.logger.warn(
+      map.logger.warning(
           'the start position of the route does not match the current position of the component');
       final tilePosition = map.index2TilePosition(route.first);
       this.tilePosition = tilePosition;
@@ -360,7 +362,9 @@ class TileMapComponent extends TaskComponent
   }) async {
     if (stepCallback) {
       assert(terrain != null);
-      await onStepCallback?.call(terrain!, target, true);
+      assert(onStepCallback != null);
+      final continued = await onStepCallback!.call(terrain!, target, true);
+      if (continued) return;
     }
     prevRouteNode = null;
     currentRoute = null;
@@ -383,6 +387,14 @@ class TileMapComponent extends TaskComponent
 
   @override
   void update(double dt) {
+    if (map.hero != null &&
+        this != map.hero &&
+        !map.hero!.isWalking &&
+        animateOnlyWhenHeroWalking &&
+        map.isStandby != true) {
+      return;
+    }
+
     if (isWalking) {
       currentAnimation?.ticker.update(dt);
       position += _velocity;

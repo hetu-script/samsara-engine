@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,11 +13,12 @@ import 'package:flutter_custom_cursor/cursor_manager.dart';
 import 'package:image/image.dart' as img2;
 import 'package:hetu_script/bytecode/bytecode_module.dart';
 import 'package:path/path.dart' as path;
+import 'package:llama_cpp_dart/llama_cpp_dart.dart';
 
 import 'binding/engine_binding.dart';
 import '../event.dart';
 import 'localization/localization.dart';
-import 'extensions.dart' show HexColor;
+import 'extensions.dart' show HexColor, StringEx;
 import 'scene/scene_controller.dart';
 import 'logger/printer.dart';
 import 'logger/output.dart';
@@ -120,7 +122,7 @@ class SamsaraEngine extends SceneController
     _locale.loadData(localeData);
     if (_locale.errors.isNotEmpty) {
       for (final error in _locale.errors) {
-        warn(error);
+        warning(error);
       }
     }
     debug('samsara: loaded ${localeData.length} locale strings...');
@@ -153,6 +155,169 @@ class SamsaraEngine extends SceneController
   late Hetu hetu;
   bool _isInitted = false;
   bool get isInitted => _isInitted;
+
+  // LLM 相关
+  late final LlamaParent llamaParent;
+  bool _isLlamaReady = false;
+  bool get isLlamaReady => _isLlamaReady;
+
+  // 预热 state
+  LlamaScope? _baseScope;
+  LlamaScope? get baseScope => _baseScope;
+
+  Uint8List? _baseState;
+  bool _baseInitialized = false;
+  bool get baseInitialized => _baseInitialized;
+
+  Future<void> _initLlama() async {
+    // 1. 配置模型参数 (请根据你的实际路径修改)
+    Llama.libraryPath = "llama.dll";
+
+    String exePath = Platform.resolvedExecutable;
+    String exeDir = path.dirname(exePath);
+
+    String modelPath = path.join(exeDir, "models/gemma-3n-E2B-it-Q8_0.gguf");
+
+    // 目前采用CPU 模式
+    final modelParams = ModelParams()..mainGpu = -1;
+
+    // Gemma 3 理论支持 128k，但实际使用建议：
+    // - 16384 (16k): 适合内存有限的系统，响应快
+    // - 32768 (32k): 平衡性能和容量，推荐用于聊天应用
+    // - 65536 (64k): 需要 16GB+ 内存，适合长对话
+    // - 131072 (128k): 需要 32GB+ 内存，CPU 模式下会很慢
+    final contextParams = ContextParams()
+      ..nCtx = 32768 // 上下文窗口大小
+      ..nBatch = 2048; // 批处理大小：每次处理的最大 token 数
+    // 必须 <= nCtx，建议设置为 512/1024/2048
+    // 更大的值允许更长的 prompt，但消耗更多内存
+
+    // 调整采样参数以提高响应质量
+    final samplerParams = SamplerParams()
+      ..temp = 0.7
+      ..topK = 64
+      ..topP = 0.95
+      ..penaltyRepeat = 1.1;
+
+    final loadCommand = LlamaLoad(
+      path: modelPath,
+      modelParams: modelParams,
+      contextParams: contextParams,
+      samplingParams: samplerParams,
+      // verbose: kDebugMode,
+    );
+
+    llamaParent = LlamaParent(loadCommand);
+
+    await llamaParent.init();
+
+    // 等待模型就绪，最多30秒
+    int attempts = 0;
+    while (llamaParent.status != LlamaStatus.ready && attempts < 60) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      attempts++;
+    }
+
+    _isLlamaReady = true;
+  }
+
+  /// 预热 systemprompt 并保存 state 到内存
+  /// 这个方法应该在游戏启动时，或基础设定发生较大变化时调用
+  /// 预热完成后，每个对话都可以快速从这个 state 开始
+  Future<void> prepareLlamaBaseState(String systemPrompt) async {
+    if (!_isLlamaReady) {
+      throw ("Llama not ready, cannot prepare base state");
+    }
+    final prompt = systemPrompt.trim();
+    assert(prompt.isNotBlank);
+
+    if (_baseInitialized || _baseState != null) {
+      info("llm base state already initialized, disposing previous state...");
+      disposeBaseState();
+    }
+
+    info("preparing llm base state (this will take 10-30 seconds)...");
+
+    _baseScope = LlamaScope(llamaParent);
+
+    // 创建 Completer 用于等待处理完成
+    final completer = Completer<void>();
+    StreamSubscription? completionSubscription;
+
+    try {
+      final history = ChatHistory();
+      history.addMessage(
+        role: Role.system,
+        content: prompt,
+      );
+
+      final formattedPrompt = history.exportFormat(
+        ChatFormat.gemma,
+        leaveLastAssistantOpen: false,
+      );
+
+      // 监听完成事件
+      completionSubscription = llamaParent.completions.listen((event) {
+        if (event.success && !completer.isCompleted) {
+          info("llm base state processing completed");
+          completer.complete();
+        }
+      });
+
+      // 发送 prompt 让模型处理
+      await llamaParent.sendPrompt(formattedPrompt, scope: _baseScope);
+
+      bool timeout = false;
+      // 等待处理完成（通过监听 completions 事件）
+      await completer.future.timeout(
+        const Duration(minutes: 3), // 最多等待3分钟
+        onTimeout: () {
+          warning("base state preparation timed out after 3 minutes");
+          timeout = true;
+        },
+      );
+
+      // 处理完成后，立即停止
+      await llamaParent.stop();
+
+      if (!timeout) {
+        // 保存 state 到内存
+        _baseState = await _baseScope!.saveState();
+        _baseInitialized = true;
+
+        final stateSize = _baseState!.length / 1024 / 1024;
+        info(
+          "llm base state prepared successfully! "
+          "state size: ${stateSize.toStringAsFixed(2)} MB",
+        );
+      }
+    } catch (e) {
+      error("failed to prepare base state: $e");
+      rethrow;
+    } finally {
+      // 取消监听
+      await completionSubscription?.cancel();
+    }
+  }
+
+  /// 从预热的 state 恢复
+  void restoreBaseScope() async {
+    if (!isLlamaReady ||
+        !baseInitialized ||
+        _baseScope == null ||
+        _baseState == null) {
+      throw 'llama model is not ready or base state not initialized!';
+    }
+
+    await _baseScope!.loadState(_baseState!);
+  }
+
+  /// 清理基础 state（例如在需要重新加载世界信息时）
+  void disposeBaseState() {
+    _baseState = null;
+    _baseInitialized = false;
+    info("base state cleared");
+  }
 
   // HTStruct createStruct([Map<String, dynamic> jsonData = const {}]) =>
   //     hetu.interpreter.createStructfromJson(jsonData);
@@ -304,6 +469,8 @@ class SamsaraEngine extends SceneController
 
     await _locale.init();
 
+    await _initLlama();
+
     _isInitted = true;
     // isLoading = false;
     // notifyListeners();
@@ -426,7 +593,8 @@ class SamsaraEngine extends SceneController
   void info(String message) => log(message, severity: MessageSeverity.info);
 
   @override
-  void warn(String message) => log(message, severity: MessageSeverity.warn);
+  void warning(String message) =>
+      log(message, severity: MessageSeverity.warning);
 
   @override
   void error(String message) => log(message, severity: MessageSeverity.error);

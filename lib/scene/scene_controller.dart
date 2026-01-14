@@ -67,7 +67,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     if (_cached.containsKey(sceneId)) {
       newScene = _cached[sceneId]!;
       if (kDebugMode) {
-        warn('resumed scene: [$sceneId]');
+        info('resumed scene: [$sceneId]');
       }
     } else {
       if (constructorId != null) {
@@ -86,7 +86,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
         }
         newScene = created;
         if (kDebugMode) {
-          warn('created scene: [$sceneId] in ${_sw.elapsedMilliseconds}ms');
+          info('created scene: [$sceneId] in ${_sw.elapsedMilliseconds}ms');
         }
         _sw.stop();
         _sw.reset();
@@ -146,7 +146,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
       scene = _cached[sceneId];
       scene?.onAfterLoaded = null;
       if (kDebugMode) {
-        warn('switched to scene: [$sceneId]');
+        info('switched to scene: [$sceneId]');
       }
       notifyListeners();
     }
@@ -171,7 +171,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
       return null;
     }
     if (kDebugMode) {
-      warn('leaving scene: [${_sceneStack.last}]');
+      info('leaving scene: [${_sceneStack.last}]');
     }
     scene?.onEnd();
     if (_sceneStack.isNotEmpty) {
@@ -207,7 +207,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
       _cachedArguments.remove(sceneId);
     }
     if (kDebugMode) {
-      warn('cleared scene: [$sceneId]');
+      info('cleared scene: [$sceneId]');
     }
     if (scene?.id == sceneId) {
       scene = null;
@@ -253,7 +253,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     }
 
     if (kDebugMode) {
-      warn('cleared all scenes${except != null ? ', except [$except]' : ''}');
+      info('cleared all scenes${except != null ? ', except [$except]' : ''}');
     }
     notifyListeners();
   }

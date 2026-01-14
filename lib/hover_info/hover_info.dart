@@ -150,7 +150,7 @@ class _HoverInfoState extends State<HoverInfo> {
           onKeyEvent: (event) {
             if (event is KeyDownEvent) {
               // if (engine.config.debugMode) {
-              //   engine.warn('keydown: ${event.logicalKey.debugName}');
+              //   engine.warning('keydown: ${event.logicalKey.debugName}');
               // }
               switch (event.logicalKey) {
                 case LogicalKeyboardKey.controlLeft:
@@ -161,11 +161,11 @@ class _HoverInfoState extends State<HoverInfo> {
                     final String text =
                         (widget.content.data as String).split('\n').last;
                     Clipboard.setData(ClipboardData(text: text));
-                    // engine.warn('copied string: [$text]');
+                    // engine.warning('copied string: [$text]');
                   } else if (widget.content.data is HTStruct) {
                     Clipboard.setData(
                         ClipboardData(text: widget.content.data['id']));
-                    // engine.warn(
+                    // engine.warning(
                     //     'copied hetu object id: [${widget.content.data['id']}]');
                   }
               }

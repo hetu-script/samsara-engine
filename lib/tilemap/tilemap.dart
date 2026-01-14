@@ -135,6 +135,8 @@ class TileMap extends GameComponent with HandlesGesture {
 
   final HTLogger logger;
 
+  bool isStandby = false;
+
   TileMap({
     required this.logger,
     required this.id,
@@ -299,27 +301,6 @@ class TileMap extends GameComponent with HandlesGesture {
 
     tile.position =
         Vector2(l - bleedingPixelHorizontal / 2, t - bleedingPixelVertical / 2);
-
-    // tile.position = Vector2(
-    //   l -
-    //       (tile.srcSize.x - gridSize.x) / 2
-    //       //
-    //       +
-    //       tile.offset.x,
-    //   t -
-    //       (tile.srcSize.y - gridSize.y)
-    //       //
-    //       +
-    //       tile.offset.y,
-    // );
-    // tile.size = Vector2(
-    //   tile.srcSize.x
-    //   //  + bleedingPixelHorizontal
-    //   ,
-    //   tile.srcSize.y
-    //   //  + bleedingPixelVertical
-    //   ,
-    // );
   }
 
   @override
@@ -407,9 +388,7 @@ class TileMap extends GameComponent with HandlesGesture {
     // 处理非地块显示组件
     components.clear();
     for (final componentData in data['components']) {
-      await loadTileMapComponentFromData(
-        componentData,
-      );
+      await loadComponentFromData(componentData);
     }
   }
 
@@ -428,20 +407,28 @@ class TileMap extends GameComponent with HandlesGesture {
     tile!.objectId = objectId;
   }
 
-  Future<void> loadHeroFromData(
+  Future<TileMapComponent> loadHeroFromData(
     dynamic data, {
     Vector2? srcSize,
     Vector2? srcOffset,
   }) async {
-    hero = await loadTileMapComponentFromData(data,
-        srcSize: srcSize, isCharacter: true, srcOffset: srcOffset);
+    hero = await loadComponentFromData(
+      data,
+      srcSize: srcSize,
+      isCharacter: true,
+      srcOffset: srcOffset,
+      animateOnlyWhenHeroWalking: false,
+    );
+
+    return hero!;
   }
 
-  Future<TileMapComponent> loadTileMapComponentFromData(
+  Future<TileMapComponent> loadComponentFromData(
     dynamic data, {
-    Vector2? srcSize,
     bool isCharacter = false,
+    Vector2? srcSize,
     Vector2? srcOffset,
+    bool animateOnlyWhenHeroWalking = false,
   }) async {
     // assert(data['worldPosition'] != null);
 
@@ -467,10 +454,11 @@ class TileMap extends GameComponent with HandlesGesture {
       data: data,
       left: data['worldPosition']?['left'],
       top: data['worldPosition']?['top'],
-      offset: srcOffset,
       isCharacter: isCharacter,
-      spriteSrcSize: srcSize,
-      isHidden: data!['isHidden'] ?? false,
+      spriteSrcSize: srcSize ?? data['srcSize'],
+      offset: srcOffset ?? data['srcOffset'],
+      isHidden: data['isHidden'] ?? false,
+      animateOnlyWhenHeroWalking: animateOnlyWhenHeroWalking,
     );
     component.loadFrameData();
     updateTileInfo(component);
@@ -688,7 +676,7 @@ class TileMap extends GameComponent with HandlesGesture {
         return terrains[terrainIndex];
       } else {
         if (kDebugMode) {
-          logger.warn(
+          logger.warning(
               'Hero is out of map bounds! left: ${hero!.left}, top: ${hero!.top}');
         }
       }
@@ -748,7 +736,7 @@ class TileMap extends GameComponent with HandlesGesture {
       {int size = 1, List<dynamic> excludeTerrainKinds = const []}) {
     final center = getTerrain(tilePosition.left, tilePosition.top);
     if (center == null) {
-      logger.warn(
+      logger.warning(
           'lightUpAroundTile: tile at position (${tilePosition.left}, ${tilePosition.top}) does not exist!');
       return;
     }
