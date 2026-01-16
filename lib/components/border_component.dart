@@ -20,6 +20,7 @@ class BorderComponent extends GameComponent {
     super.size,
     super.scale,
     super.angle,
+    super.nativeAngle,
     super.anchor,
     super.priority,
     super.opacity,
@@ -48,11 +49,12 @@ class BorderComponent extends GameComponent {
         RRect.fromLTRBR(0, 0, width, height, Radius.circular(borderRadius));
 
     _clipRRect = RRect.fromLTRBR(
-        0 - borderWidth,
-        0 - borderWidth,
-        width + borderWidth * 2,
-        height + borderWidth * 2,
-        Radius.circular(borderRadius));
+      0 - borderWidth,
+      0 - borderWidth,
+      width + borderWidth * 2,
+      height + borderWidth * 2,
+      Radius.circular(borderRadius),
+    );
   }
 
   // @override

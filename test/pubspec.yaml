@@ -49,6 +49,9 @@ flutter:
 
     - assets/images/
     - assets/images/mini_game/tile_matching/
+    - assets/images/mini_game/difference/
+    - assets/images/mini_game/difference/library/
+    - assets/images/mini_game/difference/library/001/
     - assets/images/text/
     - assets/locale/zh/
     - assets/cards/

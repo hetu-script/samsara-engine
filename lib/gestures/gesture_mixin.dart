@@ -93,7 +93,7 @@ mixin HandlesGesture on GameComponent {
 
   void Function()? onMouseExit;
 
-  void Function()? onMouseScrollUp, onMouseScrollDown;
+  void Function(Vector2 position)? onMouseScrollUp, onMouseScrollDown;
 
   @mustCallSuper
   bool handleTapDown(int pointer, int button, TapDownDetails details) {
@@ -376,10 +376,11 @@ mixin HandlesGesture on GameComponent {
         isHud ? pointerPosition : game.camera.globalToLocal(pointerPosition);
     final isContained = containsPoint(convertedPointerPosition);
     if (isContained) {
+      final positionWithinComponent = convertedPointerPosition - position;
       if (details.scrollDelta.dy > 0) {
-        onMouseScrollDown?.call();
+        onMouseScrollDown?.call(positionWithinComponent);
       } else if (details.scrollDelta.dy < 0) {
-        onMouseScrollUp?.call();
+        onMouseScrollUp?.call(positionWithinComponent);
       }
       return true;
     }

@@ -32,7 +32,7 @@ abstract class Scene extends FlameGame with TaskController {
 
   final String id;
   // final SceneController controller;
-  final BuildContext context;
+  // final BuildContext context;
 
   Rect bounds = Rect.zero;
 
@@ -67,7 +67,7 @@ abstract class Scene extends FlameGame with TaskController {
 
   Scene({
     required this.id,
-    required this.context,
+    // required this.context,
     this.bgm,
     this.bgmFile,
     this.bgmVolume = 0.5,

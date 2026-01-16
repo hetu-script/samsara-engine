@@ -2,13 +2,38 @@ import 'dart:async';
 
 import 'package:flutter/painting.dart';
 import 'package:flame/components.dart';
+import 'package:flame/rendering.dart';
 import 'package:meta/meta.dart';
 
 import '../gestures.dart';
 import '../samsara.dart';
 
-/// A modification of Flame's SpriteComponent that allows for visibility control.
-class SpriteComponent2 extends GameComponent with HandlesGesture {
+/// Custom decorator for handling clip and zoom transformations
+class ClipAndZoomDecorator extends Decorator {
+  final Vector2 clipOffset;
+  final double zoom;
+  final Rect clipRect;
+
+  ClipAndZoomDecorator({
+    required this.clipOffset,
+    required this.zoom,
+    required this.clipRect,
+  });
+
+  @override
+  void apply(void Function(Canvas) draw, Canvas canvas) {
+    canvas.save();
+    canvas.clipRect(clipRect);
+    canvas.translate(-clipOffset.x, -clipOffset.y);
+    canvas.scale(zoom);
+    draw(canvas);
+    canvas.restore();
+  }
+}
+
+/// A modification of Flame's SpriteComponent that allows more functionality:
+/// visibility, clip and zoom options.
+class SpriteComponent2 extends BorderComponent with HandlesGesture {
   /// When set to true, the component is auto-resized to match the
   /// size of underlying sprite.
   bool _autoResize;
@@ -21,6 +46,24 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
   Color? color;
 
   BoxFit boxFit;
+
+  bool clipMode;
+  double _zoom; // 缩放倍数
+
+  /// Updates zoom and refreshes the decorator
+  set zoom(double newZoom) {
+    _zoom = newZoom.clamp(1.0, 2.0);
+    _updateClipDecorator();
+  }
+
+  Vector2 _clipOffset = Vector2.zero(); // 裁剪偏移
+  Vector2 get clipOffset => _clipOffset.clone();
+  set clipOffset(Vector2 newOffset) {
+    _clipOffset = newOffset;
+    _updateClipDecorator();
+  }
+
+  ClipAndZoomDecorator? _clipDecorator;
 
   /// Creates a component with an empty sprite which can be set later
   SpriteComponent2({
@@ -42,6 +85,8 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
     super.key,
     super.lightConfig,
     bool enableGesture = false,
+    double zoom = 1.0,
+    this.clipMode = false,
   })  : assert(
           (size == null) == (autoResize ?? size == null),
           '''If size is set, autoResize should be false or size should be null when autoResize is true.''',
@@ -49,6 +94,7 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
         _autoResize = autoResize ?? size == null,
         _spriteId = spriteId,
         _sprite = sprite,
+        _zoom = zoom.clamp(1.0, 2.0),
         super(size: size ?? sprite?.srcSize) {
     if (paint != null) {
       this.paint = paint;
@@ -59,6 +105,11 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
     /// Register a listener to differentiate between size modification done by
     /// external calls v/s the ones done by [_resizeToSprite].
     this.size.addListener(_handleAutoResizeState);
+
+    // Setup clip decorator if in clip mode
+    if (clipMode) {
+      _updateClipDecorator();
+    }
   }
 
   SpriteComponent2.fromImage(
@@ -138,22 +189,17 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
     await tryLoadSprite();
   }
 
-  // @override
-  // @mustCallSuper
-  // void onMount() {
-  //   assert(
-  //     sprite != null,
-  //     'You have to set the sprite in either the constructor or in onLoad',
-  //   );
-  // }
-
   @mustCallSuper
   @override
   void render(Canvas canvas) {
     if (!isVisible) return;
 
-    if (sprite != null) {
-      if (_autoResize) {
+    if (color != null) {
+      canvas.drawColor(color!, BlendMode.srcATop);
+    } else if (sprite != null) {
+      if (_autoResize || clipMode) {
+        // 在 autoResize 或 clipMode 下，直接渲染
+        // clipMode 的变换由 decorator 处理
         sprite?.render(
           canvas,
           size: size,
@@ -249,10 +295,6 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
         }
       }
     }
-
-    if (color != null) {
-      canvas.drawColor(color!, BlendMode.srcATop);
-    }
   }
 
   /// Updates the size [sprite]'s srcSize if [autoResize] is true.
@@ -276,6 +318,35 @@ class SpriteComponent2 extends GameComponent with HandlesGesture {
   void _handleAutoResizeState() {
     if (_autoResize && (!_isAutoResizing)) {
       _autoResize = false;
+    }
+  }
+
+  /// Updates the clip decorator with current settings
+  void _updateClipDecorator() {
+    if (clipMode) {
+      if (_clipDecorator == null) {
+        // Create and add the clip decorator after the transform decorator
+        _clipDecorator = ClipAndZoomDecorator(
+          clipOffset: _clipOffset,
+          zoom: _zoom,
+          clipRect: border,
+        );
+        decorator.addLast(_clipDecorator!);
+      } else {
+        // Update existing decorator
+        _clipDecorator = ClipAndZoomDecorator(
+          clipOffset: _clipOffset,
+          zoom: _zoom,
+          clipRect: border,
+        );
+        // Replace the decorator
+        decorator.removeLast();
+        decorator.addLast(_clipDecorator!);
+      }
+    } else if (_clipDecorator != null) {
+      // Remove clip decorator if clip mode is disabled
+      decorator.removeLast();
+      _clipDecorator = null;
     }
   }
 }

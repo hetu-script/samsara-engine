@@ -65,7 +65,7 @@ class _GameAppState extends State<GameApp> {
     engine.bgm.initialize();
 
     engine.registerSceneConstructor('main', ([dynamic args]) async {
-      return MainMenuScene(id: 'main', context: context, bgm: engine.bgm);
+      return MainMenuScene(id: 'main', bgm: engine.bgm);
     });
 
     // 刚打开游戏，需要初始化引擎，载入数据，debug模式下还要初始化一个游戏存档用于测试

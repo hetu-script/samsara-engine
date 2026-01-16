@@ -198,17 +198,6 @@ abstract class GameComponent extends PositionComponent
   void renderTree(Canvas canvas) {
     if (!isVisible) return;
 
-    decorator.applyChain((canvas) {
-      render(canvas);
-      for (var c in children) {
-        if (c is GameComponent && !c.isVisible) continue;
-        c.renderTree(canvas);
-      }
-
-      // Any debug rendering should be rendered on top of everything
-      if (debugMode) {
-        renderDebugMode(canvas);
-      }
-    }, canvas);
+    super.renderTree(canvas);
   }
 }

@@ -29,7 +29,7 @@ class MainMenuScene extends Scene {
   MainMenuScene({
     required super.id,
     // required super.controller,
-    required super.context,
+    // required super.context,
     super.bgm,
     super.bgmFile,
     super.bgmVolume = 0.5,
@@ -50,7 +50,7 @@ class MainMenuScene extends Scene {
 
     final button1 = SpriteButton(
       anchor: Anchor.center,
-      text: 'Board Game',
+      text: 'Start Game',
       spriteId: 'button.png',
       useSpriteSrcSize: true,
       position: center,
