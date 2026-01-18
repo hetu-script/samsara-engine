@@ -54,10 +54,9 @@ class _ConsoleState extends State<Console> {
     super.initState();
 
     _textFieldFocusNode = FocusNode(onKeyEvent: (_, KeyEvent event) {
-      if (event is KeyUpEvent) {
+      if (event is KeyDownEvent) {
+        // Handle key down events to prevent default behavior
         switch (event.logicalKey) {
-          case LogicalKeyboardKey.escape:
-            Navigator.maybePop(context, null);
           case LogicalKeyboardKey.enter:
             if (HardwareKeyboard.instance.isControlPressed) {
               submit();
@@ -87,6 +86,11 @@ class _ConsoleState extends State<Console> {
               }
               return KeyEventResult.handled;
             }
+        }
+      } else if (event is KeyUpEvent) {
+        // Handle escape on key up
+        if (event.logicalKey == LogicalKeyboardKey.escape) {
+          Navigator.maybePop(context, null);
         }
       }
       return KeyEventResult.ignored;

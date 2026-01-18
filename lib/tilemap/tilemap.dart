@@ -918,7 +918,8 @@ class TileMap extends GameComponent with HandlesGesture {
   /// 计算 hexagonal tile 的方向，如果是 backward 则是反方向
   TileMapDirection directionTo(TilePosition from, TilePosition to,
       {bool backward = false}) {
-    assert(from != to);
+    if (from == to) return TileMapDirection.south;
+
     if (from.left % 2 != 0) {
       if (to.left == from.left) {
         if (to.top < from.top) {

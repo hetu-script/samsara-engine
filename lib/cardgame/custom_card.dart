@@ -87,7 +87,7 @@ class CustomGameCard extends GameCard {
     super.tags,
     super.priority,
     super.position,
-    super.size,
+    Vector2? size,
     super.borderRadius,
     super.focusedOffset,
     super.focusedPosition,
@@ -146,7 +146,8 @@ class CustomGameCard extends GameCard {
         showStackIcon = (stackIconSpriteId != null || stackIconSprite != null),
         showCostIcon = (costIconSpriteId != null || costIconSprite != null),
         showRarityIcon =
-            (rarityIconSpriteId != null || rarityIconSprite != null) {
+            (rarityIconSpriteId != null || rarityIconSprite != null),
+        super(size: size ?? preferredSize) {
     this.description = description;
   }
 
@@ -280,16 +281,7 @@ class CustomGameCard extends GameCard {
   void onLoad() async {
     super.onLoad();
 
-    if (glowSpriteId != null) {
-      glowSprite = Sprite(await Flame.images.load(glowSpriteId!));
-    }
-    if (illustrationSpriteId != null) {
-      illustrationSprite =
-          Sprite(await Flame.images.load(illustrationSpriteId!));
-    }
-    if (backSpriteId != null) {
-      backSprite = Sprite(await Flame.images.load(backSpriteId!));
-    }
+    await tryLoadSprite();
   }
 
   void _generateDescription() {

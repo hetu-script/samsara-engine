@@ -59,10 +59,10 @@ class PiledZone extends BorderComponent {
   /// 否则起始位置为 zone 自己的位置
   Vector2? pileStartPosition;
 
-  /// [pileMargin] : 堆叠时第一张牌相对起始点的x和y的位移
+  /// [pileMargin] : 第一张牌相对起始点的x和y的位移
   late Vector2 pileMargin;
 
-  /// [pileOffset] : 堆叠时每张牌相比上一张牌的位移
+  /// [pileOffset] : 每张牌相比上一张牌的位移
   late Vector2 pileOffset; //, focusOffset;
 
   final PileStyle pileStyle;

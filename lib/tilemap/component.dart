@@ -277,7 +277,8 @@ class TileMapComponent extends GameComponent
     bool backward = false,
   }) {
     // tik = DateTime.now().millisecondsSinceEpoch;
-    assert(tilePosition != target);
+    if (tilePosition == target) return;
+
     isWalking = true;
     _walkTargetTilePosition = target;
     _walkTargetRenderPosition = targetPosition;

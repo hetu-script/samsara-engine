@@ -71,11 +71,10 @@ mixin HandlesGesture on GameComponent {
   void Function(int button, GameComponent? component)? onDragOver;
 
   /// 此控件被拖动并松开
-  void Function(int button, Vector2 position)? onDragEnd;
+  void Function(Vector2 position)? onDragEnd;
 
   /// 其他对象拖入此控件并松开
-  void Function(int button, Vector2 position, GameComponent? component)?
-      onDragIn;
+  void Function(Vector2 position, GameComponent? component)? onDragIn;
 
   void Function(List<TouchDetails> touches, ScaleStartDetails details)?
       onScaleStart;
@@ -214,22 +213,22 @@ mixin HandlesGesture on GameComponent {
   }
 
   @mustCallSuper
-  void handleDragEnd(int pointer, int button, TapUpDetails details,
-      GameComponent? draggingComponent) {
+  void handleDragEnd(
+      int pointer, TapUpDetails details, GameComponent? draggingComponent) {
     if (!enableGesture || !isVisible) return;
 
     for (final c in gestureComponents) {
-      c.handleDragEnd(pointer, button, details, draggingComponent);
+      c.handleDragEnd(pointer, details, draggingComponent);
     }
 
     final pointerPosition = details.globalPosition.toVector2();
     final convertedPointerPosition =
         isHud ? pointerPosition : game.camera.globalToLocal(pointerPosition);
 
+    final positionWithinComponent = convertedPointerPosition - position;
     // 其他的对象拖入此对象
     if (containsPoint(convertedPointerPosition) && draggingComponent != this) {
-      final positionWithinComponent = convertedPointerPosition - position;
-      onDragIn?.call(button, positionWithinComponent, draggingComponent);
+      onDragIn?.call(positionWithinComponent, draggingComponent);
     }
 
     // handleTapUp(pointer, button, details);
@@ -237,7 +236,12 @@ mixin HandlesGesture on GameComponent {
     // 此对象拖动结束
     if (isDragging) {
       isDragging = false;
-      onDragEnd?.call(button, convertedPointerPosition);
+      onDragEnd?.call(convertedPointerPosition);
+
+      if (isHovering) {
+        onTap?.call(tappingDetails[pointer]!.button, positionWithinComponent);
+        onTapUp?.call(tappingDetails[pointer]!.button, positionWithinComponent);
+      }
     }
   }
 

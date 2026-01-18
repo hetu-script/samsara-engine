@@ -152,6 +152,8 @@ class _ChatViewState extends State<ChatView> {
 
   late String? charname;
 
+  final timer = Stopwatch();
+
   @override
   void initState() {
     super.initState();
@@ -165,31 +167,43 @@ class _ChatViewState extends State<ChatView> {
   }
 
   Future<void> _initChat({required String systemPrompt}) async {
-    widget.engine.info("using prepared base state to initialize chat...");
-    widget.engine.restoreBaseScope();
+    final prompt = systemPrompt.trim();
+    widget.engine.info("llm chat initializing with prompt:\n$prompt");
+    timer.start();
+    try {
+      await widget.engine.restoreBaseScope();
 
-    // 追加角色特定信息
-    final tempHistory = ChatHistory();
-    tempHistory.addMessage(
-      role: Role.system,
-      content: '$systemPrompt\n\n结合以上信息，向用户给出一句话开场白。',
-    );
+      // 追加角色特定信息
+      final tempHistory = ChatHistory();
+      tempHistory.addMessage(
+        role: Role.system,
+        content: '$prompt\n\n结合以上信息，向用户给出一句话开场白。',
+      );
 
-    final characterPrompt = tempHistory.exportFormat(
-      ChatFormat.gemma,
-      leaveLastAssistantOpen: false,
-    );
+      final characterPrompt = tempHistory.exportFormat(
+        ChatFormat.gemma,
+        leaveLastAssistantOpen: false,
+      );
 
-    // 发送角色信息（基于已加载的 base state）
-    await llamaParent.sendPrompt(characterPrompt,
-        scope: widget.engine.baseScope);
+      // 发送角色信息（基于已加载的 base state）
+      await llamaParent.sendPrompt(characterPrompt,
+          scope: widget.engine.baseScope);
 
-    widget.engine.info("llm chat initialized.");
-
-    setState(() {
-      _isGenerating = true;
-      _currentStreamBuffer = "";
-    });
+      setState(() {
+        _isGenerating = true;
+        _currentStreamBuffer = "";
+      });
+    } catch (e) {
+      widget.engine.error("failed to initialize chat: $e");
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+          _isGenerating = false;
+        });
+      }
+      // 确保释放锁
+      widget.engine.releaseBaseScope();
+    }
   }
 
   void _setupListeners() {
@@ -230,7 +244,12 @@ class _ChatViewState extends State<ChatView> {
           content: _currentStreamBuffer.trim(),
         );
         _currentStreamBuffer = "";
-        _isInitializing = false;
+        if (_isInitializing) {
+          _isInitializing = false;
+          timer.stop();
+          widget.engine.info(
+              "llm chat initialization took ${timer.elapsed.inMilliseconds} milliseconds");
+        }
         _isGenerating = false;
       });
       _scrollToBottom();
@@ -281,11 +300,23 @@ class _ChatViewState extends State<ChatView> {
 
   @override
   void dispose() {
+    // 先取消订阅
     _streamSubscription?.cancel();
     _completionSubscription?.cancel();
+
+    // 异步停止并释放 scope
+    // 注意：dispose是同步的，但我们可以启动异步操作
+    llamaParent.stop().then((_) {
+      widget.engine.releaseBaseScope();
+      widget.engine.info('chat session disposed and scope released');
+    }).catchError((e) {
+      widget.engine.warning('error during chat disposal: $e');
+      // 即使出错也要释放
+      widget.engine.releaseBaseScope();
+    });
+
     _textController.dispose();
     _scrollController.dispose();
-    llamaParent.stop();
 
     super.dispose();
   }

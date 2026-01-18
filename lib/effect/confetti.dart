@@ -106,8 +106,8 @@ enum ConfettiShape {
   ribbon,
 }
 
-/// 庆祝效果管理器
-class Celebration extends PositionComponent {
+/// 庆祝效果
+class ConfettiEffect extends PositionComponent {
   static final _random = math.Random();
   static final _celebrationColors = [
     Color(0xFFFF6B6B), // 红
@@ -120,8 +120,8 @@ class Celebration extends PositionComponent {
     Color(0xFFFF8C42), // 橙
   ];
 
-  Celebration({
-    required super.position,
+  ConfettiEffect({
+    super.position,
     required super.size,
     super.priority,
   });
@@ -130,6 +130,16 @@ class Celebration extends PositionComponent {
   void onMount() {
     super.onMount();
     _createConfettiBurst();
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    // 检查是否所有粒子都已消失
+    if (children.isEmpty) {
+      removeFromParent();
+    }
   }
 
   void _createConfettiBurst() {

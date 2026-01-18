@@ -169,6 +169,10 @@ class SamsaraEngine extends SceneController
   bool _baseInitialized = false;
   bool get baseInitialized => _baseInitialized;
 
+  // 互斥锁：防止多个会话同时操作共享的 scope
+  bool _isScopeInUse = false;
+  Completer<void>? _scopeReleaseCompleter;
+
   Future<void> _initLlama() async {
     // 1. 配置模型参数 (请根据你的实际路径修改)
     Llama.libraryPath = "llama.dll";
@@ -231,12 +235,13 @@ class SamsaraEngine extends SceneController
     final prompt = systemPrompt.trim();
     assert(prompt.isNotBlank);
 
+    info("llm base state preparing with system prompt:\n$prompt}");
+    final timer = Stopwatch()..start();
+
     if (_baseInitialized || _baseState != null) {
       info("llm base state already initialized, disposing previous state...");
       disposeBaseState();
     }
-
-    info("preparing llm base state (this will take 10-30 seconds)...");
 
     _baseScope = LlamaScope(llamaParent);
 
@@ -297,11 +302,16 @@ class SamsaraEngine extends SceneController
     } finally {
       // 取消监听
       await completionSubscription?.cancel();
+
+      timer.stop();
+      info(
+          "llm base state preparation took ${timer.elapsed.inMilliseconds} milliseconds");
     }
   }
 
   /// 从预热的 state 恢复
-  void restoreBaseScope() async {
+  /// 如果 scope 正在被使用，会等待直到可用
+  Future<void> restoreBaseScope() async {
     if (!isLlamaReady ||
         !baseInitialized ||
         _baseScope == null ||
@@ -309,7 +319,42 @@ class SamsaraEngine extends SceneController
       throw 'llama model is not ready or base state not initialized!';
     }
 
-    await _baseScope!.loadState(_baseState!);
+    // 等待当前使用者释放 scope
+    while (_isScopeInUse) {
+      info('scope is in use, waiting for release...');
+      _scopeReleaseCompleter ??= Completer<void>();
+      await _scopeReleaseCompleter!.future;
+    }
+
+    // 标记为使用中
+    _isScopeInUse = true;
+    _scopeReleaseCompleter = null;
+
+    try {
+      // 确保停止之前的生成（如果有的话）
+      await llamaParent.stop();
+      // 恢复到基础状态
+      await _baseScope!.loadState(_baseState!);
+      info('base scope restored successfully');
+    } catch (e) {
+      error('failed to restore base scope: $e');
+      // 即使失败也要释放锁
+      _isScopeInUse = false;
+      _scopeReleaseCompleter?.complete();
+      rethrow;
+    }
+  }
+
+  /// 释放 scope 的使用权
+  /// 应该在聊天会话结束时调用
+  void releaseBaseScope() {
+    if (_isScopeInUse) {
+      _isScopeInUse = false;
+      info('base scope released');
+      // 通知等待的会话
+      _scopeReleaseCompleter?.complete();
+      _scopeReleaseCompleter = null;
+    }
   }
 
   /// 清理基础 state（例如在需要重新加载世界信息时）

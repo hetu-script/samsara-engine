@@ -264,7 +264,7 @@ abstract class Scene extends FlameGame with TaskController {
   @mustCallSuper
   void onDragEnd(int pointer, int button, TapUpDetails details) {
     for (final c in gestureComponents) {
-      c.handleDragEnd(pointer, button, details, draggingComponent);
+      c.handleDragEnd(pointer, details, draggingComponent);
     }
 
     if (HandlesGesture.tappingDetails.containsKey(pointer)) {
@@ -314,12 +314,12 @@ abstract class Scene extends FlameGame with TaskController {
     void mouseEnter([HandlesGesture? entered]) {
       if (hoveringComponent == entered) return;
 
-      hoveringComponent?.onMouseExit?.call();
-      hoveringComponent?.isHovering = false;
-      hoveringComponent = entered;
-
       entered?.onMouseEnter?.call();
       entered?.isHovering = true;
+
+      hoveringComponent?.isHovering = false;
+      hoveringComponent?.onMouseExit?.call();
+      hoveringComponent = entered;
     }
 
     for (final c in gestureComponents) {
