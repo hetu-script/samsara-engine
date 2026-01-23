@@ -25,7 +25,7 @@ class FadingText extends GameComponent {
     this.text, {
     this.movingUpOffset = 0,
     this.moveUpCurve = Curves.easeOut,
-    this.fadeOutAfterDuration = 0,
+    double? fadeOutAfterDuration,
     required this.duration,
     super.position,
     super.size,
@@ -34,23 +34,22 @@ class FadingText extends GameComponent {
     super.opacity,
     TextStyle? textStyle,
     this.onComplete,
-  }) : super(anchor: Anchor.center) {
-    if (textStyle != null) {
-      _textConfig =
-          _textConfig.fillWith(textStyle: textStyle).copyWith(size: size);
-    } else {
-      _textConfig = _textConfig.copyWith(size: size);
-    }
+    Anchor? anchor,
+  })  : fadeOutAfterDuration = fadeOutAfterDuration ?? duration / 2,
+        super(anchor: Anchor.center) {
+    _textConfig = _textConfig.copyWith(
+        size: size, anchor: anchor, textStyle: textStyle ?? defaultTextStyle);
 
-    assert(fadeOutAfterDuration < duration);
+    assert(this.fadeOutAfterDuration < duration);
   }
 
   @override
   void onLoad() {
-    void addEffect() {
+    void addFadeEffect() {
       add(FadeEffect(
-        controller: EffectController(duration: duration),
+        controller: EffectController(duration: duration - fadeOutAfterDuration),
         onComplete: onComplete,
+        target: this,
       ));
     }
 
@@ -62,14 +61,15 @@ class FadingText extends GameComponent {
     }
 
     if (fadeOutAfterDuration > 0) {
-      add(Timer(fadeOutAfterDuration, onComplete: addEffect));
+      add(Timer(fadeOutAfterDuration, onComplete: addFadeEffect));
     } else {
-      addEffect();
+      addFadeEffect();
     }
   }
 
   @override
   void render(Canvas canvas) {
-    drawScreenText(canvas, text, config: _textConfig);
+    drawScreenText(canvas, text,
+        alpha: (opacity * 255).toInt(), config: _textConfig);
   }
 }

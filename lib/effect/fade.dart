@@ -16,7 +16,8 @@ class FadeEffect extends Effect with EffectTarget<GameComponent> {
 
   @override
   void apply(double progress) {
-    target.opacity = fadeIn ? (progress * 1.0) : ((1 - progress) * 1.0);
+    final newOpacity = fadeIn ? (progress * 1.0) : ((1 - progress) * 1.0);
+    target.opacity = newOpacity;
   }
 
   @override

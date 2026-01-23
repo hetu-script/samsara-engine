@@ -279,7 +279,6 @@ class ScreenTextConfig {
     Vector2? size,
     Anchor? anchor,
     EdgeInsets? padding,
-    double? opacity,
     bool? outlined,
     double? scale,
     ScreenTextOverflow? overflow,
@@ -293,7 +292,7 @@ class ScreenTextConfig {
       outlined: outlined ?? this.outlined,
       scale: scale ?? this.scale,
       overflow: overflow ?? this.overflow,
-      textStyle: (textStyle ?? TextStyle()).merge(this.textStyle),
+      textStyle: (this.textStyle ?? TextStyle()).merge(textStyle),
       textAlign: textAlign ?? this.textAlign,
     );
   }
@@ -303,7 +302,6 @@ class ScreenTextConfig {
     Vector2? size,
     Anchor? anchor,
     EdgeInsets? padding,
-    double? opacity,
     bool? outlined,
     double? scale,
     ScreenTextOverflow? overflow,

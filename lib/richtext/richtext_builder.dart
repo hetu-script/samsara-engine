@@ -309,8 +309,8 @@ DocumentRoot buildFlameRichText(
           nodes.add(
             RichTextNode(
               text: taggedContent,
-              style: tagResolveResult.style
-                  .merge(style ?? const TextStyle())
+              style: (style ?? const TextStyle())
+                  .merge(tagResolveResult.style)
                   .toInlineTextStyle(),
               // recognizer: route != null
               //     ? (TapGestureRecognizer()

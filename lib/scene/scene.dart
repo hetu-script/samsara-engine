@@ -1,18 +1,15 @@
 import 'dart:math' as math;
 import 'dart:async';
 
-// import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:flame_audio/bgm.dart';
+import 'package:flame/components.dart';
 
-// import '../lighting/lighting_config.dart';
 import '../components/game_component.dart';
 import '../extensions.dart';
-// import 'scene_controller.dart';
 import '../widgets/pointer_detector.dart';
 import '../gestures/gesture_mixin.dart';
-// import '../components/border_component.dart';
 import '../camera/camera2.dart';
 import '../components/fading_text.dart';
 import 'scene_widget.dart';
@@ -103,10 +100,11 @@ abstract class Scene extends FlameGame with TaskController {
     double horizontalVariation = 30.0,
     double verticalVariation = 30.0,
     bool onViewport = true,
+    Anchor anchor = Anchor.center,
   }) {
-    assert(position != null || target != null);
-    Vector2 targetPosition =
-        position ?? (onViewport ? target!.absoluteCenter : target!.center);
+    Vector2 targetPosition = position ??
+        (onViewport ? target?.absoluteCenter : target?.center) ??
+        (size / 2);
 
     _hintTextController.schedule(() async {
       final component = FadingText(
@@ -119,10 +117,13 @@ abstract class Scene extends FlameGame with TaskController {
               random.nextDouble() * verticalVariation -
               verticalVariation,
         ),
+        fadeOutAfterDuration: duration / 2,
         movingUpOffset: offsetY,
         duration: duration,
-        textStyle: textStyle?.copyWith(color: color),
+        textStyle:
+            color != null ? (textStyle?.copyWith(color: color)) : textStyle,
         priority: kHintTextPriority,
+        anchor: anchor,
       );
       if (onViewport) {
         camera.viewport.add(component);
@@ -233,7 +234,6 @@ abstract class Scene extends FlameGame with TaskController {
       if (detail.button == button) {
         detail.component.isPressing = false;
       }
-      HandlesGesture.tappingDetails.remove(pointer);
     }
 
     for (final c in gestureComponents) {
@@ -241,6 +241,8 @@ abstract class Scene extends FlameGame with TaskController {
         return;
       }
     }
+
+    HandlesGesture.tappingDetails.remove(pointer);
   }
 
   @mustCallSuper
