@@ -33,20 +33,22 @@ const logFilename = 'samsara_engine.log';
 class EngineConfig {
   final String name;
   final bool debugMode;
-  final bool desktop;
   final double musicVolume;
   final double soundEffectVolume;
   final Map<String, dynamic> mods;
   final bool showFps;
+  final bool enableLlm;
+  final String? llmModelId;
 
   const EngineConfig({
     this.name = 'A Samsara Engine Game',
-    this.desktop = false,
     this.debugMode = false,
     this.musicVolume = 0.5,
     this.soundEffectVolume = 0.5,
-    this.mods = const {},
     this.showFps = false,
+    this.enableLlm = true,
+    this.llmModelId = 'gemma-3n-E2B-it-Q8_0.gguf',
+    this.mods = const {},
   });
 }
 
@@ -65,10 +67,6 @@ class SamsaraEngine extends SceneController
   EngineConfig config;
 
   math.Random random = math.Random(DateTime.now().millisecondsSinceEpoch);
-
-  String get name => config.name;
-
-  Map<String, dynamic> get mods => config.mods;
 
   late BuildContext context;
 
@@ -180,7 +178,7 @@ class SamsaraEngine extends SceneController
     String exePath = Platform.resolvedExecutable;
     String exeDir = path.dirname(exePath);
 
-    String modelPath = path.join(exeDir, "models/gemma-3n-E2B-it-Q8_0.gguf");
+    String modelPath = path.join(exeDir, "models/${config.llmModelId}");
 
     // 目前采用CPU 模式
     final modelParams = ModelParams()..mainGpu = -1;
@@ -235,7 +233,7 @@ class SamsaraEngine extends SceneController
     final prompt = systemPrompt.trim();
     assert(prompt.isNotBlank);
 
-    info("llm base state preparing with system prompt:\n$prompt}");
+    info("llm base state preparing with system prompt:\n$prompt");
     final timer = Stopwatch()..start();
 
     if (_baseInitialized || _baseState != null) {
@@ -451,7 +449,6 @@ class SamsaraEngine extends SceneController
   Future<void> init(
     BuildContext context, {
     Map<String, Function> externalFunctions = const {},
-    Set<String> mods = const {},
   }) async {
     if (_isInitted) return;
     // isLoading = true;
@@ -514,7 +511,9 @@ class SamsaraEngine extends SceneController
 
     await _locale.init();
 
-    await _initLlama();
+    if (config.enableLlm && config.llmModelId != null) {
+      await _initLlama();
+    }
 
     _isInitted = true;
     // isLoading = false;

@@ -316,12 +316,12 @@ abstract class Scene extends FlameGame with TaskController {
     void mouseEnter([HandlesGesture? entered]) {
       if (hoveringComponent == entered) return;
 
-      entered?.onMouseEnter?.call();
-      entered?.isHovering = true;
-
       hoveringComponent?.isHovering = false;
       hoveringComponent?.onMouseExit?.call();
+
       hoveringComponent = entered;
+      entered?.isHovering = true;
+      entered?.onMouseEnter?.call();
     }
 
     for (final c in gestureComponents) {
