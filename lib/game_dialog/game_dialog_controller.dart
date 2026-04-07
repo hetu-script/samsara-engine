@@ -16,6 +16,7 @@ class GameDialogController extends StatefulWidget {
   const GameDialogController({
     super.key,
     this.cursor,
+    this.screenHintCursor,
     this.barrierColor,
     this.dialogTextStyle,
     this.dialogDecoration,
@@ -25,6 +26,7 @@ class GameDialogController extends StatefulWidget {
   });
 
   final MouseCursor? cursor;
+  final MouseCursor? screenHintCursor;
   final Color? barrierColor;
   final TextStyle? dialogTextStyle;
   final BoxDecoration? dialogDecoration;
@@ -227,7 +229,7 @@ class _GameDialogControllerState extends State<GameDialogController>
                 if (screenHintInfo != null)
                   ScreenHint(
                     hintInfo: screenHintInfo,
-                    cursor: widget.cursor,
+                    cursor: widget.screenHintCursor,
                   ),
               ],
             ),
