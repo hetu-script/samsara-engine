@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart';
 import 'package:samsara/extensions.dart';
 
 class GameLocalization {
@@ -27,11 +27,9 @@ class GameLocalization {
   bool hasLanguage(String id) => _data.containsKey(id);
 
   Future<void> init() async {
-    final manifestContent = await rootBundle.loadString('AssetManifest.json');
-    final Map<String, dynamic> manifestMap = json.decode(manifestContent);
-    final assetKeys = manifestMap.keys;
-
-    for (final filename in assetKeys) {
+    final assetManifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+    final assets = assetManifest.listAssets();
+    for (final filename in assets) {
       for (final languageId in _data.keys) {
         if (filename.startsWith('assets/locale/$languageId')) {
           final Map<String, dynamic> languageData = _data[languageId]!;

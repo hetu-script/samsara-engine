@@ -14,6 +14,9 @@ class BorderComponent extends GameComponent {
   late RRect _clipRRect;
   RRect get clipRRect => _clipRRect;
 
+  Rect _bounds = Rect.zero;
+  Rect get bounds => _bounds;
+
   BorderComponent({
     super.key,
     super.position,
@@ -54,6 +57,14 @@ class BorderComponent extends GameComponent {
       width + borderWidth * 2,
       height + borderWidth * 2,
       Radius.circular(borderRadius),
+    );
+
+    final topLeft = absoluteTopLeft;
+    _bounds = Rect.fromLTWH(
+      topLeft.x,
+      topLeft.y,
+      width,
+      height,
     );
   }
 

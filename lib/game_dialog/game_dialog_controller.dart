@@ -4,6 +4,7 @@ import 'package:fluent_ui/fluent_ui.dart' as fluent;
 
 import 'game_dialog.dart';
 import 'game_dialog_content.dart';
+import 'screen_hint.dart';
 import 'selection_dialog.dart';
 
 const kIllustrationWidth = 600.0;
@@ -86,6 +87,7 @@ class _GameDialogControllerState extends State<GameDialogController>
     final illustrationsInfo = context.watch<GameDialog>().illustrations;
     final dialogContentData = context.watch<GameDialog>().currentContent;
     final selectionsData = context.watch<GameDialog>().selectionsData;
+    final screenHintInfo = context.watch<GameDialog>().screenHintInfo;
 
     Widget? background;
     if (sceneInfo != null) {
@@ -189,7 +191,8 @@ class _GameDialogControllerState extends State<GameDialogController>
     final isEmpty = background == null &&
         illustrations.isEmpty &&
         dialogContentData == null &&
-        selectionsData == null;
+        selectionsData == null &&
+        screenHintInfo == null;
 
     return isEmpty
         ? SizedBox.shrink()
@@ -220,6 +223,11 @@ class _GameDialogControllerState extends State<GameDialogController>
                     // barrierColor: widget.barrierColor,
                     buttonStyle: widget.selectionButtonStyle,
                     textStyle: widget.selectionTextStyle,
+                  ),
+                if (screenHintInfo != null)
+                  ScreenHint(
+                    hintInfo: screenHintInfo,
+                    cursor: widget.cursor,
                   ),
               ],
             ),

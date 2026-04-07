@@ -2,9 +2,29 @@ import 'dart:collection';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:hetu_script/values.dart';
 import 'package:samsara/task.dart';
 import 'package:hetu_script/utils/uid.dart';
+
+class ScreenHintInfo {
+  final double left, top, width, height;
+  final String? text;
+  final String? taskId;
+  final void Function()? onTap;
+  final MouseCursor? cursor;
+
+  ScreenHintInfo({
+    required this.left,
+    required this.top,
+    required this.width,
+    required this.height,
+    this.text,
+    this.taskId,
+    this.onTap,
+    this.cursor,
+  });
+}
 
 class IllustrationInfo {
   final String path;
@@ -48,6 +68,8 @@ class GameDialog with ChangeNotifier, TaskController {
 
   dynamic selectionsData;
 
+  ScreenHintInfo? screenHintInfo;
+
   final storedValues = <String, dynamic>{};
 
   void loadValues(Map<String, dynamic> values) {
@@ -67,6 +89,7 @@ class GameDialog with ChangeNotifier, TaskController {
       scenes.clear();
       contents.clear();
       selectionsData = null;
+      screenHintInfo = null;
       notifyListeners();
     }, id: 'execution_to_end');
   }
@@ -186,6 +209,42 @@ class GameDialog with ChangeNotifier, TaskController {
       },
       id: taskId,
     );
+  }
+
+  void pushScreenHint({
+    required Rect rect,
+    String? text,
+    void Function()? onTap,
+    MouseCursor? cursor,
+  }) {
+    isOpened = true;
+    final taskId = 'push_screen_hint_${randomUID(withTime: true)}';
+    schedule(
+      () {
+        screenHintInfo = ScreenHintInfo(
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height,
+          text: text,
+          taskId: taskId,
+          onTap: onTap,
+          cursor: cursor,
+        );
+        notifyListeners();
+      },
+      id: taskId,
+      isAuto: false,
+    );
+  }
+
+  void finishScreenHint() {
+    final tid = screenHintInfo?.taskId;
+    screenHintInfo = null;
+    if (tid != null && hasTask(tid)) {
+      completeTask(tid);
+    }
+    notifyListeners();
   }
 
   /// 按原始数据推送游戏对话，格式如下

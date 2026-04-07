@@ -11,6 +11,7 @@ import 'package:samsara/markdown_wiki.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 import 'package:animated_tree_view/animated_tree_view.dart';
 import 'package:samsara/llm_chat/llm_chat.dart';
+import 'package:samsara/game_dialog.dart';
 
 import '../engine.dart';
 import '../prompt.dart';
@@ -55,7 +56,10 @@ class MainMenuScene extends Scene {
       useSpriteSrcSize: true,
       position: center,
     );
-    button1.onTap = (button, position) async {};
+    button1.onTap = (button, position) async {
+      dialog.pushScreenHint(rect: button1.bounds);
+      dialog.execute();
+    };
     background.add(button1);
 
     engine.setLoading(false);
@@ -159,6 +163,7 @@ class MainMenuScene extends Scene {
               ),
             ),
           ),
+          GameDialogController(),
         ],
       ),
     );

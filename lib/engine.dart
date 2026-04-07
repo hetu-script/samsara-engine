@@ -47,7 +47,7 @@ class EngineConfig {
     this.soundEffectVolume = 0.5,
     this.showFps = false,
     this.enableLlm = true,
-    this.llmModelId = 'gemma-3n-E2B-it-Q8_0.gguf',
+    this.llmModelId = 'gemma-4-E4B-it-Q5_K_M.gguf',
     this.mods = const {},
   });
 }

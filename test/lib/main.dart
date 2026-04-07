@@ -78,6 +78,7 @@ void main() {
       MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => engine),
+          ChangeNotifierProvider(create: (_) => dialog),
         ],
         child: fluent.FluentTheme(
           data: fluent.FluentThemeData(),

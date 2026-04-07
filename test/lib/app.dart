@@ -70,7 +70,9 @@ class _GameAppState extends State<GameApp> {
 
     // 刚打开游戏，需要初始化引擎，载入数据，debug模式下还要初始化一个游戏存档用于测试
     await engine.init(context);
-    await engine.prepareLlamaBaseState(kSystemPromptTemplate1);
+    if (engine.config.enableLlm) {
+      await engine.prepareLlamaBaseState(kSystemPromptTemplate1);
+    }
 
     engine.pushScene('main', onAfterLoaded: () {
       engine.setLoading(false);
