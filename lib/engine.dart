@@ -47,7 +47,7 @@ class EngineConfig {
     this.soundEffectVolume = 0.5,
     this.showFps = false,
     this.enableLlm = true,
-    this.llmModelId = 'gemma-4-E4B-it-Q5_K_M.gguf',
+    this.llmModelId = 'gemma-4-E4B-it-Q5_K_M',
     this.mods = const {},
   });
 }
@@ -178,7 +178,7 @@ class SamsaraEngine extends SceneController
     String exePath = Platform.resolvedExecutable;
     String exeDir = path.dirname(exePath);
 
-    String modelPath = path.join(exeDir, "models/${config.llmModelId}");
+    String modelPath = path.join(exeDir, "models/${config.llmModelId}.gguf");
 
     // 目前采用CPU 模式
     final modelParams = ModelParams()..mainGpu = -1;
