@@ -85,7 +85,7 @@ class MainMenuScene extends Scene {
   void render(Canvas canvas) {
     super.render(canvas);
 
-    if (engine.config.debugMode || engine.config.showFps) {
+    if (engine.config.developmentMode || engine.config.showFps) {
       drawScreenText(
         canvas,
         'FPS: ${fps.fps.toStringAsFixed(0)}',

@@ -149,7 +149,7 @@ class _HoverInfoState extends State<HoverInfo> {
           focusNode: _focusNode,
           onKeyEvent: (event) {
             if (event is KeyDownEvent) {
-              // if (engine.config.debugMode) {
+              // if (engine.config.developmentMode) {
               //   engine.warning('keydown: ${event.logicalKey.debugName}');
               // }
               switch (event.logicalKey) {

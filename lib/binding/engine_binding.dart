@@ -14,7 +14,7 @@ class SamsaraEngineClassBinding extends HTExternalClass {
       case 'random':
         return engine.random;
       case 'debugMode':
-        return engine.config.debugMode;
+        return engine.config.developmentMode;
       case 'loadLocaleDataFromJSON':
         return ({object, positionalArgs, namedArgs}) =>
             engine.loadLocaleDataFromJSON(positionalArgs.first);

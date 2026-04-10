@@ -32,7 +32,7 @@ const logFilename = 'samsara_engine.log';
 
 class EngineConfig {
   final String name;
-  final bool debugMode;
+  final bool developmentMode;
   final double musicVolume;
   final double soundEffectVolume;
   final Map<String, dynamic> mods;
@@ -42,7 +42,7 @@ class EngineConfig {
 
   const EngineConfig({
     this.name = 'A Samsara Engine Game',
-    this.debugMode = false,
+    this.developmentMode = false,
     this.musicVolume = 0.5,
     this.soundEffectVolume = 0.5,
     this.showFps = false,
@@ -457,7 +457,7 @@ class SamsaraEngine extends SceneController
     await clearLogFile();
 
     this.context = context;
-    if (config.debugMode) {
+    if (config.developmentMode) {
       const root = 'scripts/';
       final filterConfig = HTFilterConfig(root);
       final sourceContext = HTAssetResourceContext(
@@ -466,9 +466,6 @@ class SamsaraEngine extends SceneController
       );
       hetu = Hetu(
         config: HetuConfig(
-          // printPerformanceStatistics: config.debugMode,
-          showDartStackTrace: false,
-          // showDartStackTrace: config.debugMode,
           showHetuStackTrace: true,
           stackTraceDisplayCountLimit: 10,
           allowVariableShadowing: false,
@@ -476,9 +473,9 @@ class SamsaraEngine extends SceneController
           allowImplicitEmptyValueToFalseConversion: true,
           resolveExternalFunctionsDynamically: true,
         ),
-        sourceContext: sourceContext,
         locale: HTLocaleSimplifiedChinese(),
         logger: this,
+        sourceContext: sourceContext,
       );
       await hetu.initFlutter(
         externalFunctions: externalFunctions,
@@ -487,8 +484,10 @@ class SamsaraEngine extends SceneController
       hetu = Hetu(
         config: HetuConfig(
           showHetuStackTrace: true,
+          allowVariableShadowing: false,
           allowImplicitNullToZeroConversion: true,
           allowImplicitEmptyValueToFalseConversion: true,
+          resolveExternalFunctionsDynamically: true,
         ),
         locale: HTLocaleSimplifiedChinese(),
         logger: this,
