@@ -176,7 +176,7 @@ mixin HandlesGesture on GameComponent {
         isHud ? pointerPosition : game.camera.globalToLocal(pointerPosition);
     if (containsPoint(convertedPointerPosition) &&
         tappingDetails.containsKey(pointer)) {
-      _draggingStartPoint = convertedPointerPosition;
+      _draggingStartPoint = pointerPosition;
       final detail = tappingDetails[pointer]!;
       final dragPosition = detail.globalPosition;
       final convertedDraggingPosition =
@@ -240,7 +240,7 @@ mixin HandlesGesture on GameComponent {
       onDragEnd?.call(convertedPointerPosition);
 
       if (isHovering) {
-        if (convertedPointerPosition.distanceTo(_draggingStartPoint!) < 10) {
+        if (pointerPosition.distanceTo(_draggingStartPoint!) < 10) {
           onTap?.call(tappingDetails[pointer]!.button, positionWithinComponent);
           onTapUp?.call(
               tappingDetails[pointer]!.button, positionWithinComponent);
