@@ -37,6 +37,7 @@ class SceneWidget<T extends Scene> extends StatelessWidget {
       child: GameWidget(
         game: scene,
         // mouseCursor: cursor,
+        autofocus: false,
         loadingBuilder: loadingBuilder,
         overlayBuilderMap: overlayBuilderMap,
         initialActiveOverlays: initialActiveOverlays,

@@ -130,8 +130,8 @@ class _SelectionDialogState extends State<SelectionDialog> {
                               final description =
                                   selectionData[key]['description'];
                               context.read<HoverContentState>().show(
-                                    description,
-                                    rect,
+                                    data: description,
+                                    rect: rect,
                                     direction: HoverContentDirection.topCenter,
                                   );
                             }

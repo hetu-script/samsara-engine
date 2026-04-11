@@ -15,7 +15,7 @@ mixin EventAggregator {
     listeners[listenerId] = callback;
   }
 
-  void removeEventListener(String listenerId) {
+  void removeEventListeners(String listenerId) {
     for (final handlers in _eventHandlers.values) {
       handlers
           .removeWhere((registeredId, callback) => registeredId == listenerId);

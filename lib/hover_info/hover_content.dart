@@ -38,22 +38,32 @@ class HoverContent {
 class HoverContentState extends ChangeNotifier {
   bool isDetailed = false;
   HoverContent? content;
+  String? currentId;
 
-  void show(
+  /// 可选的内容构建器，用于在 isDetailed 切换时重新生成内容
+  dynamic Function(bool isDetailed)? _contentBuilder;
+
+  void setCurrentId(String? id) {
+    currentId = id;
+  }
+
+  void show({
+    required Rect rect,
     dynamic data,
-    Rect rect, {
-    dynamic data2,
     double maxWidth = kHoverInfoMaxWidth,
     HoverContentDirection direction = HoverContentDirection.bottomCenter,
     TextAlign textAlign = TextAlign.center,
+    dynamic Function(bool isDetailed)? contentBuilder,
   }) {
+    assert(data != null || contentBuilder != null);
     if (content?.rect == rect) {
       return;
     }
 
+    _contentBuilder = contentBuilder;
     content = HoverContent(
       rect: rect,
-      data: data,
+      data: data ?? contentBuilder!(isDetailed),
       maxWidth: maxWidth,
       direction: direction,
       textAlign: textAlign,
@@ -61,8 +71,18 @@ class HoverContentState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void switchDetailed() {
-    isDetailed = !isDetailed;
+  void setDetailed(bool detailed) {
+    if (isDetailed == detailed) return;
+    isDetailed = detailed;
+    if (_contentBuilder != null && content != null) {
+      content = HoverContent(
+        rect: content!.rect,
+        data: _contentBuilder!(isDetailed),
+        maxWidth: content!.maxWidth,
+        direction: content!.direction,
+        textAlign: content!.textAlign,
+      );
+    }
     notifyListeners();
   }
 
@@ -72,6 +92,7 @@ class HoverContentState extends ChangeNotifier {
       // 因为 HoverInfo 窗口本身可能需要一小段时间才会渲染出来
       // 如果立刻清空有可能窗口本身之后重新显示导致清空不成功
       // Future.delayed(const Duration(milliseconds: 10), () {
+      _contentBuilder = null;
       content = null;
       notifyListeners();
       // });

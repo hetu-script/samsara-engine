@@ -75,7 +75,7 @@ class CustomGameCard extends GameCard {
 
   CustomGameCard({
     required super.id,
-    super.deckId,
+    super.uniqueId,
     super.script,
     super.kind,
     super.enablePreview,
@@ -156,7 +156,7 @@ class CustomGameCard extends GameCard {
   CustomGameCard clone({bool deepCopyData = false}) {
     return CustomGameCard(
       id: id,
-      deckId: deckId,
+      uniqueId: uniqueId,
       script: script,
       kind: kind,
       enablePreview: enablePreview,

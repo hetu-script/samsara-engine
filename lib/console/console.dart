@@ -30,14 +30,12 @@ class _ConsoleState extends State<Console> {
   static int _commandHistoryIndex = 0;
   static final _commandHistory = <String>[];
   final TextEditingController _textEditingController = TextEditingController();
-  final FocusNode _keyboardListenerFocusNode = FocusNode();
   late final FocusNode _textFieldFocusNode;
   late final ScrollController _scrollController = ScrollController();
 
   @override
   void dispose() {
     _textEditingController.dispose();
-    _keyboardListenerFocusNode.dispose();
     _textFieldFocusNode.dispose();
     _scrollController.dispose();
     super.dispose();

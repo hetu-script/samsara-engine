@@ -14,7 +14,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
   late Vector2 _savedPosition, _savedSize;
 
   /// 卡牌id，不同的id对应不同的插画和标题。
-  final String id;
+  String id;
   String? ownedByRole;
 
   Sprite? sprite;
@@ -32,13 +32,13 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
   }
 
   /// 组牌id，有可能不同id的卡牌具有相同的名字和规则效果，组牌时他们被视作同一张牌，共享数量上限
-  final String deckId;
+  String uniqueId;
 
   /// 卡牌脚本函数名
-  final String? script;
+  String? script;
 
-  final String? kind;
-  final Set<String> tags;
+  String? kind;
+  Set<String> tags;
 
   /// 卡牌位置索引，一般由父组件管理。
   int index = 0;
@@ -90,7 +90,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
 
   GameCard({
     required this.id,
-    String? deckId,
+    String? uniqueId,
     this.script,
     this.kind,
     this.enablePreview = false,
@@ -122,7 +122,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
     // this.isEnabled = true,
     bool isEnabled = true,
     int? preferredPriority,
-  })  : deckId = deckId ?? id,
+  })  : uniqueId = uniqueId ?? id,
         tags = tags ?? {} {
     _savedPosition = position.clone();
     _savedSize = size.clone();
@@ -162,7 +162,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
   GameCard clone() {
     return GameCard(
       id: id,
-      deckId: deckId,
+      uniqueId: uniqueId,
       script: script,
       kind: kind,
       enablePreview: enablePreview,

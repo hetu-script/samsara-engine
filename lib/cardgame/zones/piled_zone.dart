@@ -39,13 +39,13 @@ class PiledZone extends BorderComponent {
   /// 即卡牌摆放时允许中间有空位
   // final bool allowEmptySlots;
 
-  /// 按照卡牌 deckId 保存
+  /// 按照卡牌 uniqueId 保存
   // Map<String, PlayingCard> cards = {};
 
   Map<String, int> count = {};
   List<GameCard> cards = [];
 
-  bool containsCard(String deckId) => count.containsKey(deckId);
+  bool containsCard(String uniqueId) => count.containsKey(uniqueId);
 
   /// 按照卡牌 ID 生成的列表，可能出现重复的ID
   // List<String> pile = [];
@@ -200,10 +200,10 @@ class PiledZone extends BorderComponent {
   }) async {
     if (cards.contains(card)) return;
 
-    final existedNumber = count[card.deckId];
+    final existedNumber = count[card.uniqueId];
     if (allowStack && existedNumber != null) {
-      count[card.deckId] = existedNumber + 1;
-      final existedCard = cards.singleWhere((c) => c.deckId == card.deckId);
+      count[card.uniqueId] = existedNumber + 1;
+      final existedCard = cards.singleWhere((c) => c.uniqueId == card.uniqueId);
       existedCard.stack += 1;
       return;
     }
@@ -241,9 +241,9 @@ class PiledZone extends BorderComponent {
     }
 
     if (existedNumber == null) {
-      count[card.deckId] = 1;
+      count[card.uniqueId] = 1;
     } else {
-      count[card.deckId] = existedNumber + 1;
+      count[card.uniqueId] = existedNumber + 1;
     }
 
     card.index = index;
@@ -413,11 +413,11 @@ class PiledZone extends BorderComponent {
       // pile.removeAt(cardIndex);
     }
 
-    final ec = count[card.deckId]!;
+    final ec = count[card.uniqueId]!;
     if (ec == 1) {
-      count.remove(card.deckId);
+      count.remove(card.uniqueId);
     } else {
-      count[card.deckId] = ec - 1;
+      count[card.uniqueId] = ec - 1;
     }
 
     card.removeFromParent();
