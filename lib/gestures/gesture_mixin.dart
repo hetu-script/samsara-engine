@@ -46,7 +46,8 @@ mixin HandlesGesture on GameComponent {
   bool isPressing = false;
 
   /// 此控件是否在被拖动
-  bool isDragging = false;
+  Vector2? _draggingStartPoint;
+  bool get isDragging => _draggingStartPoint != null;
 
   /// 此控件是否在被双指缩放
   bool isScalling = false;
@@ -175,7 +176,7 @@ mixin HandlesGesture on GameComponent {
         isHud ? pointerPosition : game.camera.globalToLocal(pointerPosition);
     if (containsPoint(convertedPointerPosition) &&
         tappingDetails.containsKey(pointer)) {
-      isDragging = true;
+      _draggingStartPoint = convertedPointerPosition;
       final detail = tappingDetails[pointer]!;
       final dragPosition = detail.globalPosition;
       final convertedDraggingPosition =
@@ -236,13 +237,16 @@ mixin HandlesGesture on GameComponent {
 
     // 此对象拖动结束
     if (isDragging) {
-      isDragging = false;
       onDragEnd?.call(convertedPointerPosition);
 
       if (isHovering) {
-        onTap?.call(tappingDetails[pointer]!.button, positionWithinComponent);
-        onTapUp?.call(tappingDetails[pointer]!.button, positionWithinComponent);
+        if (convertedPointerPosition.distanceTo(_draggingStartPoint!) < 10) {
+          onTap?.call(tappingDetails[pointer]!.button, positionWithinComponent);
+          onTapUp?.call(
+              tappingDetails[pointer]!.button, positionWithinComponent);
+        }
       }
+      _draggingStartPoint = null;
     }
   }
 
