@@ -64,6 +64,8 @@ class Hovertip extends BorderComponent {
     final escapedContent =
         (content?.trim() ?? '').replaceAllEscapedLineBreaks();
 
+    clearAll();
+
     Hovertip instance;
     if (_cachedInstances[escapedContent] != null) {
       instance = _cachedInstances[escapedContent]!;

@@ -21,7 +21,7 @@ const kMinHintInterval = Duration(milliseconds: 250);
 
 abstract class Scene extends FlameGame with TaskController {
   static const overlayUIBuilderMapKey = 'overlayUI';
-  static final random = math.Random();
+  final random = math.Random();
 
   // fix framerate to 60 updates per second
   static double fixedRate = 1 / 60;
