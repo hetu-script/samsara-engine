@@ -32,7 +32,7 @@ const logFilename = 'samsara_engine.log';
 
 class EngineConfig {
   final String name;
-  final bool developmentMode;
+  final bool developMode;
   final double musicVolume;
   final double soundEffectVolume;
   final Map<String, dynamic> mods;
@@ -42,7 +42,7 @@ class EngineConfig {
 
   const EngineConfig({
     this.name = 'A Samsara Engine Game',
-    this.developmentMode = false,
+    this.developMode = false,
     this.musicVolume = 0.5,
     this.soundEffectVolume = 0.5,
     this.showFps = false,
@@ -457,7 +457,7 @@ class SamsaraEngine extends SceneController
     await clearLogFile();
 
     this.context = context;
-    if (config.developmentMode) {
+    if (config.developMode) {
       const root = 'scripts/';
       final filterConfig = HTFilterConfig(root);
       final sourceContext = HTAssetResourceContext(

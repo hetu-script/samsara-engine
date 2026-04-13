@@ -4,7 +4,7 @@ import 'package:samsara/game_dialog.dart';
 final SamsaraEngine engine = SamsaraEngine(
   config: const EngineConfig(
     name: 'Samsara Engine Test',
-    developmentMode: true,
+    developMode: true,
     showFps: true,
     enableLlm: false,
   ),
