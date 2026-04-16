@@ -7,6 +7,15 @@ import 'card.dart';
 import '../richtext/richtext_builder.dart';
 import '../samsara.dart';
 
+/// 卡牌标题的排列方式
+enum CardTitleLayout {
+  /// 顶部中间横排
+  horizontalTopCenter,
+
+  /// 从右上角向下竖排
+  verticalRightTop,
+}
+
 class CustomGameCard extends GameCard {
   /// 卡牌的原始数据，可能是一个Json，或者一个河图struct对象，
   /// 也可能是 null，例如资源牌这种情况。
@@ -14,7 +23,13 @@ class CustomGameCard extends GameCard {
 
   Vector2? preferredSize;
 
-  String? title;
+  String? _title;
+  String? _verticalTitle;
+  String? get title => _title;
+  set title(String? value) {
+    _title = value;
+    _verticalTitle = _title!.split('').join('\n');
+  }
 
   String? _description;
   String? get description => _description;
@@ -33,6 +48,7 @@ class CustomGameCard extends GameCard {
   bool showGlow;
   bool showTitle;
   bool showDescription;
+  CardTitleLayout titleLayout;
   bool showStackIcon;
   bool showStackNumber;
   bool showCostIcon;
@@ -107,7 +123,7 @@ class CustomGameCard extends GameCard {
     super.onUnpreviewed,
     super.anchor,
     this.preferredSize,
-    this.title,
+    String? title,
     String? description,
     this.titleConfig,
     this.descriptionConfig,
@@ -133,6 +149,7 @@ class CustomGameCard extends GameCard {
     this.descriptionRelativePaddings = EdgeInsets.zero,
     this.stackIconRelativePaddings = EdgeInsets.zero,
     this.costIconRelativePaddings = EdgeInsets.zero,
+    this.titleLayout = CardTitleLayout.horizontalTopCenter,
     this.showGlow = false,
     bool? showTitle,
     bool? showDescription,
@@ -148,6 +165,7 @@ class CustomGameCard extends GameCard {
         showRarityIcon =
             (rarityIconSpriteId != null || rarityIconSprite != null),
         super(size: size ?? preferredSize) {
+    this.title = title;
     this.description = description;
   }
 
@@ -215,6 +233,7 @@ class CustomGameCard extends GameCard {
       showDescription: showDescription,
       showStackIcon: showStackIcon,
       showStackNumber: showStackNumber,
+      titleLayout: titleLayout,
       showCostIcon: showCostIcon,
       showCostNumber: showCostNumber,
       showRarityIcon: showRarityIcon,
@@ -458,10 +477,18 @@ class CustomGameCard extends GameCard {
       sprite?.renderRect(canvas, border, overridePaint: paint);
 
       if (showTitle && title != null && title?.isNotEmpty == true) {
-        drawScreenText(canvas, title!,
-            alpha: isEnabled ? 255 : 128,
-            position: _titleRect.topLeft,
-            config: titleConfig);
+        switch (titleLayout) {
+          case CardTitleLayout.horizontalTopCenter:
+            drawScreenText(canvas, title!,
+                alpha: isEnabled ? 255 : 128,
+                position: _titleRect.topLeft,
+                config: titleConfig);
+          case CardTitleLayout.verticalRightTop:
+            drawScreenText(canvas, _verticalTitle!,
+                alpha: isEnabled ? 255 : 128,
+                position: _titleRect.topLeft,
+                config: titleConfig?.copyWith(anchor: Anchor.topRight));
+        }
       }
 
       if (showDescription) {

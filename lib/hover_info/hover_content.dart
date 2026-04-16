@@ -56,9 +56,6 @@ class HoverContentState extends ChangeNotifier {
     dynamic Function(bool isDetailed)? contentBuilder,
   }) {
     assert(data != null || contentBuilder != null);
-    if (content?.rect == rect) {
-      return;
-    }
 
     _contentBuilder = contentBuilder;
     content = HoverContent(

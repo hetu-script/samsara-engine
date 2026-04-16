@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
 import 'package:meta/meta.dart';
@@ -40,10 +42,14 @@ class SpriteButton<T> extends BorderComponent with HandlesGesture {
 
   void customRender(Canvas canvas) {}
 
+  /// 用于给白色精灵着色的颜色，如果不为 null 则使用 ColorFilter 进行 tint
+  Color? color;
+
   bool useSimpleStyle;
 
   SpriteButton({
     this.value,
+    this.color,
     this.text,
     ScreenTextConfig? textConfig,
     super.size,
@@ -181,6 +187,9 @@ class SpriteButton<T> extends BorderComponent with HandlesGesture {
   @override
   void onLoad() async {
     await tryLoadSprite();
+    if (color != null) {
+      paint.colorFilter = ui.ColorFilter.mode(color!, ui.BlendMode.modulate);
+    }
   }
 
   @override

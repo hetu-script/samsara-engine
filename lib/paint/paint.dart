@@ -262,6 +262,7 @@ class ScreenTextConfig {
   final ScreenTextOverflow? overflow;
   final TextStyle? textStyle;
   final TextAlign? textAlign;
+  final Color? backgroundColor;
 
   const ScreenTextConfig({
     this.size,
@@ -272,6 +273,7 @@ class ScreenTextConfig {
     this.overflow,
     this.textStyle,
     this.textAlign,
+    this.backgroundColor,
   });
 
   /// 优先使用参数的属性，如果参数为 null，使用自己的属性
@@ -284,6 +286,7 @@ class ScreenTextConfig {
     ScreenTextOverflow? overflow,
     TextStyle? textStyle,
     TextAlign? textAlign,
+    Color? backgroundColor,
   }) {
     return ScreenTextConfig(
       size: size ?? this.size,
@@ -294,6 +297,7 @@ class ScreenTextConfig {
       overflow: overflow ?? this.overflow,
       textStyle: (this.textStyle ?? TextStyle()).merge(textStyle),
       textAlign: textAlign ?? this.textAlign,
+      backgroundColor: backgroundColor ?? this.backgroundColor,
     );
   }
 
@@ -307,6 +311,7 @@ class ScreenTextConfig {
     ScreenTextOverflow? overflow,
     TextStyle? textStyle,
     TextAlign? textAlign,
+    Color? backgroundColor,
   }) {
     return ScreenTextConfig(
       size: this.size ?? size,
@@ -317,6 +322,7 @@ class ScreenTextConfig {
       overflow: this.overflow ?? overflow,
       textStyle: (this.textStyle ?? TextStyle()).merge(textStyle),
       textAlign: this.textAlign ?? textAlign,
+      backgroundColor: this.backgroundColor ?? backgroundColor,
     );
   }
 
@@ -331,6 +337,7 @@ class ScreenTextConfig {
       overflow: other?.overflow ?? overflow,
       textStyle: (other?.textStyle ?? TextStyle()).merge(textStyle),
       textAlign: other?.textAlign ?? textAlign,
+      backgroundColor: other?.backgroundColor ?? backgroundColor,
     );
   }
 
@@ -345,6 +352,7 @@ class ScreenTextConfig {
       overflow: overflow ?? other?.overflow,
       textStyle: (textStyle ?? TextStyle()).merge(other?.textStyle),
       textAlign: textAlign ?? other?.textAlign,
+      backgroundColor: backgroundColor ?? other?.backgroundColor,
     );
   }
 
@@ -358,7 +366,8 @@ class ScreenTextConfig {
         other.scale == scale &&
         other.overflow == overflow &&
         other.textStyle == textStyle &&
-        other.textAlign == textAlign;
+        other.textAlign == textAlign &&
+        other.backgroundColor == backgroundColor;
   }
 
   @override
@@ -371,10 +380,11 @@ class ScreenTextConfig {
         overflow,
         textStyle,
         textAlign,
+        backgroundColor,
       );
 }
 
-TextPaint getTextPaint(
+TextPaint _getTextPaint(
     {ScreenTextConfig? config, int alpha = 255, TextStyle? style}) {
   TextStyle textStyle = (style ?? config?.textStyle ?? TextStyle());
   if (textStyle.color != null) {
@@ -409,7 +419,7 @@ double getLinesHeight(int length, TextPaint textPaint) {
 /// 接受一个文本，按照一个固定宽度计算出换行后的多行文本
 /// 文本中可能存在的硬换行'\n'也会被考虑在内
 /// 计算出多行文字的总体高度，用于垂直区域的对齐
-List<String> getWrappedText(
+List<String> _getWrappedText(
   String text, {
   required double maxWidth,
   required TextPaint textPaint,
@@ -441,7 +451,7 @@ List<String> getWrappedText(
 /// 每一个行字符串中需要确保没有换行符。
 /// 之所以一次绘制多行文本
 /// 是因为需要根据他们的总体高度和宽度统一处理对齐
-Offset drawMultilineText(
+Offset _drawMultilineText(
   Canvas canvas,
   List<String> lines,
   TextPaint textPaint, {
@@ -466,9 +476,15 @@ Offset drawMultilineText(
     config?.size?.x ?? 0.0,
     config?.size?.y ?? 0.0,
   );
-  // if (debugMode) {
-  //   canvas.drawRect(rect, PresetPaints.debug);
-  // }
+  // 绘制背景颜色
+  if (config?.backgroundColor != null) {
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..style = PaintingStyle.fill
+        ..color = config!.backgroundColor!,
+    );
+  }
   late Offset lastCharacterPosition;
   // 这里分别处理每一行的对齐
   double currentLineOffsetY = 0.0;
@@ -580,13 +596,13 @@ void drawScreenText(
 }) {
   text = text.replaceAllEscapedLineBreaks();
 
-  textPaint ??= getTextPaint(config: config, alpha: alpha);
+  textPaint ??= _getTextPaint(config: config, alpha: alpha);
 
   double maxWidth = config?.size?.x ?? 0.0;
   final overflow = config?.overflow ?? ScreenTextOverflow.visible;
   if (overflow != ScreenTextOverflow.visible && maxWidth > 0.0) {
     // 根据文字区域宽度计算出软换行后的多行文本
-    final lines = getWrappedText(
+    final lines = _getWrappedText(
       text,
       maxWidth: maxWidth -
           (config?.padding?.left ?? 0.0) -
@@ -594,7 +610,7 @@ void drawScreenText(
       textPaint: textPaint,
       config: config,
     );
-    drawMultilineText(
+    _drawMultilineText(
       canvas,
       lines,
       textPaint,
@@ -603,7 +619,7 @@ void drawScreenText(
       debugMode: debugMode,
     );
   } else {
-    drawMultilineText(
+    _drawMultilineText(
       canvas,
       [text],
       textPaint,

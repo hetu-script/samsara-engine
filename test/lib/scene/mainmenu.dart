@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/gestures.dart';
@@ -17,8 +15,6 @@ import '../engine.dart';
 import '../prompt.dart';
 
 class MainMenuScene extends Scene {
-  final random = math.Random();
-
   late FpsComponent fps;
 
   final fluent.FlyoutController menuController = fluent.FlyoutController();

@@ -21,6 +21,15 @@ abstract class RankedColors {
   static const legendary = Color(0xFF8D66C4);
   static const mythic = Color(0xFFE7E7AC);
   static const arcane = Color(0xFFC65043);
+
+  static const values = {
+    'common': common,
+    'rare': rare,
+    'epic': epic,
+    'legendary': legendary,
+    'mythic': mythic,
+    'arcane': arcane,
+  };
 }
 
 abstract final class GameColors {
