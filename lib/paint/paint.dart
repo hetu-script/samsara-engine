@@ -476,10 +476,57 @@ Offset _drawMultilineText(
     config?.size?.x ?? 0.0,
     config?.size?.y ?? 0.0,
   );
-  // 绘制背景颜色
+  // 绘制背景颜色（基于实际文字段落尺寸）
   if (config?.backgroundColor != null) {
+    double maxLineWidth = 0.0;
+    int totalVisualLines = 0;
+    for (final line in lines) {
+      final subLines = line.split(newLineExp);
+      totalVisualLines += subLines.length;
+      for (final sub in subLines) {
+        final w = textPaint.getLineMetrics(sub).width;
+        if (w > maxLineWidth) maxLineWidth = w;
+      }
+    }
+    final bgHeight =
+        lineHeight * totalVisualLines + kLineSpacing * (totalVisualLines - 1);
+    double bgLeft, bgTop;
+    if (anchor == Anchor.topCenter) {
+      bgLeft = rect.left + (rect.width - maxLineWidth) / 2;
+      bgTop = rect.top + padding.top;
+    } else if (anchor == Anchor.topRight) {
+      bgLeft = rect.right - maxLineWidth - padding.right;
+      bgTop = rect.top + padding.top;
+    } else if (anchor == Anchor.centerLeft) {
+      bgLeft = rect.left + padding.left;
+      bgTop = rect.top + (rect.height - bgHeight) / 2;
+    } else if (anchor == Anchor.center) {
+      bgLeft = rect.left + (rect.width - maxLineWidth) / 2;
+      bgTop = rect.top + (rect.height - bgHeight) / 2;
+    } else if (anchor == Anchor.centerRight) {
+      bgLeft = rect.right - maxLineWidth - padding.right;
+      bgTop = rect.top + (rect.height - bgHeight) / 2;
+    } else if (anchor == Anchor.bottomLeft) {
+      bgLeft = rect.left + padding.left;
+      bgTop = rect.bottom - bgHeight - padding.bottom;
+    } else if (anchor == Anchor.bottomCenter) {
+      bgLeft = rect.left + (rect.width - maxLineWidth) / 2;
+      bgTop = rect.bottom - bgHeight - padding.bottom;
+    } else if (anchor == Anchor.bottomRight) {
+      bgLeft = rect.right - maxLineWidth - padding.right;
+      bgTop = rect.bottom - bgHeight - padding.bottom;
+    } else {
+      // Anchor.topLeft
+      bgLeft = rect.left + padding.left;
+      bgTop = rect.top + padding.top;
+    }
     canvas.drawRect(
-      rect,
+      Rect.fromLTWH(
+        bgLeft + offsetX,
+        bgTop + offsetY,
+        maxLineWidth,
+        bgHeight,
+      ),
       Paint()
         ..style = PaintingStyle.fill
         ..color = config!.backgroundColor!,
