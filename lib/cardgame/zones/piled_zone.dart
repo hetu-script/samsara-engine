@@ -81,6 +81,12 @@ class PiledZone extends BorderComponent {
 
   void Function()? onPileChanged;
 
+  /// 当牌堆中某张牌被focus时，是否自动将其他牌散开以避免重叠
+  final bool spreadOnFocus;
+
+  /// 散开时的额外间距
+  final double spreadMargin;
+
   @override
   set isVisible(bool value) {
     super.isVisible = value;
@@ -118,6 +124,8 @@ class PiledZone extends BorderComponent {
     this.titlePadding = EdgeInsets.zero,
     // this.cardState,
     this.onPileChanged,
+    this.spreadOnFocus = false,
+    this.spreadMargin = 0,
     int? cardBasePriority,
   }) : cardBasePriority =
             cardBasePriority ?? (pileStyle == PileStyle.stack ? 0 : 5000) {
@@ -433,6 +441,106 @@ class PiledZone extends BorderComponent {
     final index = cards.indexWhere((card) => card.id == id);
 
     return removeCardByIndex(index, sort: sort);
+  }
+
+  /// 计算指定卡牌在指定索引处的正常位置（不含散开偏移）
+  Vector2 getCardNormalPosition(GameCard card, int index) {
+    Vector2 startPosition;
+
+    if (pileStartPosition != null) {
+      startPosition = pileStartPosition!;
+    } else {
+      if (card.parent == this) {
+        startPosition = Vector2.zero();
+      } else {
+        startPosition = Vector2(
+            (pileOffset.x.sign >= 0 ? position.x : position.x + width),
+            (pileOffset.y.sign >= 0 ? position.y : position.y + height));
+      }
+    }
+
+    return Vector2(
+      startPosition.x +
+          piledCardSize.x *
+              (pileOffset.x.sign >= 0 ? card.anchor.x : (1 - card.anchor.x)) *
+              (pileOffset.x.sign >= 0 ? 1 : -1) +
+          index * pileOffset.x +
+          pileMargin.x,
+      startPosition.y +
+          piledCardSize.y *
+              (pileOffset.y.sign >= 0 ? card.anchor.y : (1 - card.anchor.y)) *
+              (pileOffset.y.sign >= 0 ? 1 : -1) +
+          index * pileOffset.y +
+          pileMargin.y,
+    );
+  }
+
+  /// 当牌堆中的卡牌focus状态变化时调用，用于散开/恢复卡牌位置
+  void onCardFocusChanged(GameCard card, bool focused) {
+    if (!spreadOnFocus) return;
+    // 无论是聚焦还是取消聚焦，都根据当前实际状态来决定散开或恢复
+    GameCard? currentFocused;
+    for (final c in cards) {
+      if (c.isFocused) {
+        currentFocused = c;
+        break;
+      }
+    }
+    if (currentFocused != null) {
+      _applySpread(currentFocused);
+    } else {
+      _resetSpread();
+    }
+  }
+
+  /// 将其他卡牌散开，为聚焦的卡牌腾出空间
+  void _applySpread(GameCard focusedCard) {
+    final focusIndex = cards.indexOf(focusedCard);
+    if (focusIndex < 0) return;
+
+    // 只在使用focusedOffset（卡牌相对位移放大）时才散开，
+    // 使用focusedPosition（卡牌跳到固定位置）时不需要散开
+    if (focusedCard.focusedOffset == null) return;
+
+    final normalW = piledCardSize.x;
+    final normalH = piledCardSize.y;
+    final focusedW = focusedCard.focusedSize?.x ?? normalW;
+    final focusedH = focusedCard.focusedSize?.y ?? normalH;
+    final dx = focusedCard.focusedOffset!.x;
+    final dy = focusedCard.focusedOffset!.y;
+
+    // 聚焦卡牌在各方向的最大扩展量，前后卡牌使用相同的偏移值
+    final spreadX = (focusedW - normalW) / 2 + dx.abs() + spreadMargin;
+    final spreadY = (focusedH - normalH) / 2 + dy.abs() + spreadMargin;
+
+    for (var i = 0; i < cards.length; ++i) {
+      final card = cards[i];
+      if (card.isFocused) continue;
+
+      final normalPos = getCardNormalPosition(card, card.index);
+
+      double shiftX = 0, shiftY = 0;
+      if (pileOffset.x != 0) {
+        shiftX = (i < focusIndex ? -1 : 1) * spreadX;
+        if (pileOffset.x < 0) shiftX = -shiftX;
+      }
+      if (pileOffset.y != 0) {
+        shiftY = (i < focusIndex ? -1 : 1) * spreadY;
+        if (pileOffset.y < 0) shiftY = -shiftY;
+      }
+
+      card.snapTo(toPosition: normalPos + Vector2(shiftX, shiftY));
+    }
+  }
+
+  /// 恢复所有卡牌到正常位置
+  void _resetSpread() {
+    for (var i = 0; i < cards.length; ++i) {
+      final card = cards[i];
+      if (card.isFocused) continue;
+      final normalPos = getCardNormalPosition(card, card.index);
+      card.snapTo(toPosition: normalPos);
+    }
   }
 
   // @override

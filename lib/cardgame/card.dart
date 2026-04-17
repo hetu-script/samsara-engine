@@ -209,12 +209,17 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
     if (value) {
       priority += focusedPriority;
 
-      _savedPosition = position.clone();
+      // 在散开模式下，使用牌堆计算的正常位置，避免保存散开后的偏移位置
+      if (pile != null && pile!.spreadOnFocus) {
+        _savedPosition = pile!.getCardNormalPosition(this, index);
+      } else {
+        _savedPosition = position.clone();
+      }
       _savedSize = size.clone();
 
       Vector2? endPosition;
       if (focusedOffset != null) {
-        endPosition = position + focusedOffset!;
+        endPosition = _savedPosition + focusedOffset!;
       } else if (focusedPosition != null) {
         endPosition = focusedPosition!;
       }
@@ -224,6 +229,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
       );
 
       onFocused?.call();
+      pile?.onCardFocusChanged(this, true);
     } else {
       enableGesture = true;
       // if (!stayFocused) {
@@ -234,6 +240,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
 
       resetPriority();
       onUnfocused?.call();
+      pile?.onCardFocusChanged(this, false);
       // }
     }
   }

@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/text.dart';
@@ -66,6 +68,7 @@ class CustomGameCard extends GameCard {
   String? costIconSpriteId;
   String? rarityIconSpriteId;
   Sprite? glowSprite;
+  Color? glowColor;
   Sprite? illustrationSprite;
   Sprite? backSprite;
   Sprite? stackIconSprite;
@@ -88,6 +91,8 @@ class CustomGameCard extends GameCard {
 
   /// Wether this card is shown in a library (isFiltered == false) or not (isFiltered == true).
   bool isFiltered = false;
+
+  Paint glowPaint = Paint()..filterQuality = FilterQuality.medium;
 
   CustomGameCard({
     required super.id,
@@ -133,6 +138,7 @@ class CustomGameCard extends GameCard {
     this.backSprite,
     this.glowSpriteId,
     this.glowSprite,
+    this.glowColor,
     this.stackIconSpriteId,
     this.stackIconSprite,
     this.costIconSpriteId,
@@ -167,6 +173,11 @@ class CustomGameCard extends GameCard {
         super(size: size ?? preferredSize) {
     this.title = title;
     this.description = description;
+
+    if (glowColor != null) {
+      glowPaint.colorFilter =
+          ui.ColorFilter.mode(glowColor!, ui.BlendMode.modulate);
+    }
   }
 
   /// 复制这个卡牌对象，但不会复制onTap之类的交互事件，也不会复制index属性
@@ -213,6 +224,7 @@ class CustomGameCard extends GameCard {
       backSprite: backSprite,
       glowSpriteId: glowSpriteId,
       glowSprite: glowSprite,
+      glowColor: glowColor,
       stackIconSpriteId: stackIconSpriteId,
       stackIconSprite: stackIconSprite,
       costIconSpriteId: costIconSpriteId,
@@ -466,7 +478,7 @@ class CustomGameCard extends GameCard {
     if (!isVisible) return;
 
     if (showGlow) {
-      glowSprite?.renderRect(canvas, border, overridePaint: paint);
+      glowSprite?.renderRect(canvas, border, overridePaint: glowPaint);
     }
 
     if (isFlipped) {
