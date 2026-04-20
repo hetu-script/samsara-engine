@@ -41,7 +41,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
   Set<String> tags;
 
   /// 卡牌位置索引，一般由父组件管理。
-  int index = 0;
+  int index;
 
   /// 堆叠数量，一张卡牌可以代表一叠同名卡牌。
   int stack;
@@ -91,6 +91,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
   GameCard({
     required this.id,
     String? uniqueId,
+    this.index = 0,
     this.script,
     this.kind,
     this.enablePreview = false,

@@ -97,6 +97,7 @@ class CustomGameCard extends GameCard {
   CustomGameCard({
     required super.id,
     super.uniqueId,
+    super.index = 0,
     super.script,
     super.kind,
     super.enablePreview,

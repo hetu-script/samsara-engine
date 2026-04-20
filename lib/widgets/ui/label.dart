@@ -4,8 +4,9 @@ import '../../richtext.dart';
 import 'mouse_region2.dart';
 
 class Label extends StatelessWidget {
-  Label(
+  const Label(
     this.richTextSource, {
+    super.key,
     this.width,
     this.height,
     this.padding,
@@ -15,7 +16,7 @@ class Label extends StatelessWidget {
     this.cursor = MouseCursor.defer,
     this.onMouseEnter,
     this.onMouseExit,
-  }) : super(key: GlobalKey());
+  });
 
   final String richTextSource;
   final double? width, height;

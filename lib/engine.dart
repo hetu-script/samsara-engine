@@ -468,7 +468,7 @@ class SamsaraEngine extends SceneController
         config: HetuConfig(
           showHetuStackTrace: true,
           stackTraceDisplayCountLimit: 10,
-          allowVariableShadowing: false,
+          allowVariableShadowing: true,
           allowImplicitNullToZeroConversion: true,
           allowImplicitEmptyValueToFalseConversion: true,
           resolveExternalFunctionsDynamically: true,
@@ -484,7 +484,7 @@ class SamsaraEngine extends SceneController
       hetu = Hetu(
         config: HetuConfig(
           showHetuStackTrace: true,
-          allowVariableShadowing: false,
+          allowVariableShadowing: true,
           allowImplicitNullToZeroConversion: true,
           allowImplicitEmptyValueToFalseConversion: true,
           resolveExternalFunctionsDynamically: true,

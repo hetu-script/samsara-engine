@@ -496,9 +496,11 @@ class TileMap extends GameComponent with HandlesGesture {
     });
   }
 
-  Future<void> moveCameraToHero({bool animated = true}) async {
+  Future<void> moveCameraToHero(
+      {bool animated = true, double speed = 250.0}) async {
     if (hero != null) {
-      await moveCameraToTilePosition(hero!.left, hero!.top, animated: animated);
+      await moveCameraToTilePosition(hero!.left, hero!.top,
+          animated: animated, speed: speed);
     }
   }
 

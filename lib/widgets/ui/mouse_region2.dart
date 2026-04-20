@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 // import '../pointer_detector.dart';
 
 class MouseRegion2 extends StatelessWidget {
-  MouseRegion2({
+  const MouseRegion2({
+    super.key,
     this.cursor = MouseCursor.defer,
     // this.onTapDown,
     // this.onTapUp,
@@ -11,7 +12,7 @@ class MouseRegion2 extends StatelessWidget {
     this.onExit,
     this.hitTestBehavior,
     this.child,
-  }) : super(key: GlobalKey());
+  });
 
   final MouseCursor cursor;
   // final void Function()? onTapDown;
