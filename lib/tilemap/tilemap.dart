@@ -213,8 +213,12 @@ class TileMap extends GameComponent with HandlesGesture {
     switch (tileShape) {
       case TileShape.orthogonal:
         // to avoid overlapping, render the tiles in a specific order:
-        tile.priority =
-            (basePriority + (tile.left - 1 + (tile.top - 1) * tileMapWidth));
+        tile.priority = (basePriority +
+            (tile.left - 1 + (tile.top - 1) * tileMapWidth) * 20);
+
+        if (tile == hero) {
+          tile.priority += 10;
+        }
 
         l = (tile.left - 1) * gridSize.x;
         t = (tile.top - 1) * gridSize.y;

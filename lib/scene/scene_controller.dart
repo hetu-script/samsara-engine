@@ -199,7 +199,8 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
 
   /// delete a previously cached scene
   void clearCachedScene(String sceneId) {
-    assert(_cached.containsKey(sceneId), 'scene [$sceneId] not found!');
+    if (!_cached.containsKey(sceneId)) return;
+    // assert(_cached.containsKey(sceneId), 'scene [$sceneId] not found!');
 
     _cached.remove(sceneId);
     if (_sceneStack.contains(sceneId)) {
