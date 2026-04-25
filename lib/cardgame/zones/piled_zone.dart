@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import '../card.dart';
 import '../../samsara.dart';
@@ -26,26 +27,20 @@ class PiledZone extends BorderComponent {
 
   ScreenTextConfig? titleStyle;
 
-  /// 是否允许堆叠
-  final bool allowStack;
-
   /// 不允许堆叠时，可设置卡牌数量上限
   int limit;
 
   /// 是否达到了卡牌数量上限
-  bool get isFull => !allowStack && limit >= 0 && cards.length >= limit;
+  bool get isFull => limit >= 0 && cards.length >= limit;
 
   /// 不允许堆叠时，可设置是否为非紧凑型牌堆
   /// 即卡牌摆放时允许中间有空位
   // final bool allowEmptySlots;
 
-  /// 按照卡牌 uniqueId 保存
-  // Map<String, PlayingCard> cards = {};
-
-  Map<String, int> count = {};
   List<GameCard> cards = [];
 
-  bool containsCard(String uniqueId) => count.containsKey(uniqueId);
+  bool containsCard(String uniqueId) =>
+      cards.any((card) => card.uniqueId == uniqueId);
 
   /// 按照卡牌 ID 生成的列表，可能出现重复的ID
   // List<String> pile = [];
@@ -58,9 +53,6 @@ class PiledZone extends BorderComponent {
   /// 如果卡牌被添加到 zone 上，则起始位置为 (0,0)
   /// 否则起始位置为 zone 自己的位置
   Vector2? pileStartPosition;
-
-  /// [pileMargin] : 第一张牌相对起始点的x和y的位移
-  late Vector2 pileMargin;
 
   /// [pileOffset] : 每张牌相比上一张牌的位移
   late Vector2 pileOffset; //, focusOffset;
@@ -87,6 +79,11 @@ class PiledZone extends BorderComponent {
   /// 散开时的额外间距
   final double spreadMargin;
 
+  /// 是否将卡牌整体在组件区域内居中排列
+  final bool centerCards;
+
+  Vector2 _centeringOffset = Vector2.zero();
+
   @override
   set isVisible(bool value) {
     super.isVisible = value;
@@ -95,8 +92,6 @@ class PiledZone extends BorderComponent {
     }
   }
 
-  /// [pileMargin] : 堆叠时第一张牌相对区域的x和y的位移
-  ///
   /// [pileOffset] : 堆叠时每张牌相比上一张牌的位移
   PiledZone({
     this.ownedBy,
@@ -105,7 +100,6 @@ class PiledZone extends BorderComponent {
     super.position,
     super.size,
     super.borderRadius = 5.0,
-    this.allowStack = false,
     this.limit = -1,
     // this.allowEmptySlots = false,
     List<GameCard>? cards,
@@ -114,7 +108,6 @@ class PiledZone extends BorderComponent {
     this.focusedPosition,
     this.focusedSize,
     this.pileStartPosition,
-    Vector2? pileMargin,
     Vector2? pileOffset,
     this.pileStyle = PileStyle.stack,
     this.reverseX = false,
@@ -126,23 +119,16 @@ class PiledZone extends BorderComponent {
     this.onPileChanged,
     this.spreadOnFocus = false,
     this.spreadMargin = 0,
+    this.centerCards = false,
     int? cardBasePriority,
+    super.isVisible,
   }) : cardBasePriority =
             cardBasePriority ?? (pileStyle == PileStyle.stack ? 0 : 5000) {
-    pileMargin ??= Vector2(10.0, 10.0);
-    pileOffset ??= Vector2(50.0, 0.0);
+    pileOffset ??= Vector2(0.0, 0.0);
 
-    this.pileMargin = Vector2(
-        pileMargin.x * (reverseX ? -1 : 1), pileMargin.y * (reverseY ? -1 : 1));
     this.pileOffset = Vector2(
         pileOffset.x * (reverseX ? -1 : 1), pileOffset.y * (reverseY ? -1 : 1));
 
-    if (this.pileMargin.x.sign != 0 && this.pileOffset.x.sign != 0) {
-      assert(this.pileMargin.x.sign == this.pileOffset.x.sign, '堆叠位移和方向必须一致！');
-    }
-    if (this.pileMargin.y.sign != 0 && this.pileOffset.y.sign != 0) {
-      assert(this.pileMargin.y.sign == this.pileOffset.y.sign, '堆叠位移和方向必须一致！');
-    }
     if (limit < -1) limit = -1;
 
     // _largestIndex = cards.length - 1;
@@ -208,14 +194,6 @@ class PiledZone extends BorderComponent {
   }) async {
     if (cards.contains(card)) return;
 
-    final existedNumber = count[card.uniqueId];
-    if (allowStack && existedNumber != null) {
-      count[card.uniqueId] = existedNumber + 1;
-      final existedCard = cards.singleWhere((c) => c.uniqueId == card.uniqueId);
-      existedCard.stack += 1;
-      return;
-    }
-
     if (index == null) {
       if (isFull) return;
 
@@ -246,12 +224,6 @@ class PiledZone extends BorderComponent {
       // if (index > _largestIndex) {
       //   _largestIndex = index;
       // }
-    }
-
-    if (existedNumber == null) {
-      count[card.uniqueId] = 1;
-    } else {
-      count[card.uniqueId] = existedNumber + 1;
     }
 
     card.index = index;
@@ -339,45 +311,19 @@ class PiledZone extends BorderComponent {
     cards.sort((c1, c2) =>
         reversed ? c2.index.compareTo(c1.index) : c1.index.compareTo(c2.index));
     // pile.clear();
-    // calculate the new position of each hand cards.
+
+    // TODO: 有empty slots时，不重新赋值index
+    for (var i = 0; i < cards.length; ++i) {
+      cards[i].index = i;
+      setCardPriority(cards[i], i);
+    }
+
+    _updateCenteringOffset();
+
     for (var i = 0; i < cards.length; ++i) {
       final card = cards[i];
 
-      Vector2 startPosition;
-
-      if (pileStartPosition != null) {
-        startPosition = pileStartPosition!;
-      } else {
-        if (card.parent == this) {
-          startPosition = Vector2.zero();
-        } else {
-          startPosition = Vector2(
-              // 如果堆叠方向是向右，则从区域左侧开始计算x偏移
-              (pileOffset.x.sign >= 0 ? position.x : position.x + width),
-              // 如果堆叠方向是向上，则从区域下侧开始计算y偏移
-              (pileOffset.y.sign >= 0 ? position.y : position.y + height));
-        }
-      }
-
-      // TODO: 有empty slots时，不重新赋值index
-      card.index = i;
-
-      setCardPriority(card, i);
-
-      final endPosition = Vector2(
-        startPosition.x +
-            piledCardSize.x *
-                (pileOffset.x.sign >= 0 ? card.anchor.x : (1 - card.anchor.x)) *
-                (pileOffset.x.sign >= 0 ? 1 : -1) +
-            card.index * pileOffset.x +
-            pileMargin.x,
-        startPosition.y +
-            piledCardSize.y *
-                (pileOffset.y.sign >= 0 ? card.anchor.y : (1 - card.anchor.y)) *
-                (pileOffset.y.sign >= 0 ? 1 : -1) +
-            card.index * pileOffset.y +
-            pileMargin.y,
-      );
+      final endPosition = getCardNormalPosition(card, i);
 
       if (focusedOffset != null) card.focusedOffset = focusedOffset;
       if (focusedPosition != null) card.focusedPosition ??= focusedPosition;
@@ -414,21 +360,10 @@ class PiledZone extends BorderComponent {
     if (index < 0 || index >= cards.length) return null;
 
     final card = cards[index];
-    if (allowStack && card.stack > 1) {
-      --card.stack;
-    } else {
-      cards.removeAt(index);
-      // pile.removeAt(cardIndex);
-    }
-
-    final ec = count[card.uniqueId]!;
-    if (ec == 1) {
-      count.remove(card.uniqueId);
-    } else {
-      count[card.uniqueId] = ec - 1;
-    }
-
     card.removeFromParent();
+
+    cards.removeAt(index);
+
     if (sort) {
       sortCards();
     }
@@ -443,8 +378,38 @@ class PiledZone extends BorderComponent {
     return removeCardByIndex(index, sort: sort);
   }
 
-  /// 计算指定卡牌在指定索引处的正常位置（不含散开偏移）
-  Vector2 getCardNormalPosition(GameCard card, int index) {
+  void _updateCenteringOffset() {
+    if (!centerCards || cards.isEmpty) {
+      _centeringOffset = Vector2.zero();
+      return;
+    }
+
+    double minX = double.infinity, minY = double.infinity;
+    double maxX = double.negativeInfinity, maxY = double.negativeInfinity;
+
+    for (var i = 0; i < cards.length; ++i) {
+      final card = cards[i];
+      final pos = _getCardRawPosition(card, i);
+      final left = pos.x - card.anchor.x * piledCardSize.x;
+      final top = pos.y - card.anchor.y * piledCardSize.y;
+      minX = math.min(minX, left);
+      minY = math.min(minY, top);
+      maxX = math.max(maxX, left + piledCardSize.x);
+      maxY = math.max(maxY, top + piledCardSize.y);
+    }
+
+    final bboxCenter = Vector2((minX + maxX) / 2, (minY + maxY) / 2);
+
+    final isChildOfSelf = cards.first.parent == this;
+    final zoneCenter = isChildOfSelf
+        ? Vector2(width / 2, height / 2)
+        : Vector2(position.x + width / 2, position.y + height / 2);
+
+    _centeringOffset = zoneCenter - bboxCenter;
+  }
+
+  /// 不含居中偏移的原始位置
+  Vector2 _getCardRawPosition(GameCard card, int index) {
     Vector2 startPosition;
 
     if (pileStartPosition != null) {
@@ -464,15 +429,18 @@ class PiledZone extends BorderComponent {
           piledCardSize.x *
               (pileOffset.x.sign >= 0 ? card.anchor.x : (1 - card.anchor.x)) *
               (pileOffset.x.sign >= 0 ? 1 : -1) +
-          index * pileOffset.x +
-          pileMargin.x,
+          index * pileOffset.x,
       startPosition.y +
           piledCardSize.y *
               (pileOffset.y.sign >= 0 ? card.anchor.y : (1 - card.anchor.y)) *
               (pileOffset.y.sign >= 0 ? 1 : -1) +
-          index * pileOffset.y +
-          pileMargin.y,
+          index * pileOffset.y,
     );
+  }
+
+  /// 计算指定卡牌在指定索引处的正常位置（不含散开偏移）
+  Vector2 getCardNormalPosition(GameCard card, int index) {
+    return _getCardRawPosition(card, index) + _centeringOffset;
   }
 
   /// 当牌堆中的卡牌focus状态变化时调用，用于散开/恢复卡牌位置

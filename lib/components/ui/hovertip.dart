@@ -56,11 +56,14 @@ class Hovertip extends BorderComponent {
     GameComponent? target,
     String? content,
     ScreenTextConfig? config,
-    HovertipDirection direction = HovertipDirection.topLeft,
+    HovertipDirection? direction,
     double width = kHovertipDefautWidth,
     Vector2? position,
     EdgeInsets? margin,
   }) {
+    assert(target != null || position != null,
+        'Either target or position must be provided');
+
     final escapedContent =
         (content?.trim() ?? '').replaceAllEscapedLineBreaks();
 
@@ -92,7 +95,7 @@ class Hovertip extends BorderComponent {
         targetGlobalSize = target.size * scene.camera.zoom;
       }
 
-      switch (direction) {
+      switch (direction!) {
         case HovertipDirection.topLeft:
           calculatedPosition = Vector2(
               targetGlobalPosition.x + (margin?.left ?? 0),
@@ -172,61 +175,65 @@ class Hovertip extends BorderComponent {
           calculatedPosition = targetCenterGlobal;
       }
     } else {
-      // target is null, position based on screen and margin
-      double x = 0;
-      double y = 0;
+      if (position == null) {
+        // target is null, position based on screen and margin
+        double x = 0;
+        double y = 0;
 
-      if (margin != null) {
-        if (margin.left != 0) {
-          x = margin.left;
-          if (margin.top == 0 && margin.bottom == 0) {
-            if (direction == HovertipDirection.leftTop) {
+        if (margin != null) {
+          if (margin.left != 0) {
+            x = margin.left;
+            if (margin.top == 0 && margin.bottom == 0) {
+              if (direction == HovertipDirection.leftTop) {
+                y = kHovertipScreenIndent;
+              } else if (direction == HovertipDirection.leftCenter) {
+                y = scene.size.y / 2 - instance.height / 2;
+              } else if (direction == HovertipDirection.leftBottom) {
+                y = scene.size.y - instance.height - kHovertipScreenIndent;
+              }
+            }
+          } else if (margin.right != 0) {
+            x = scene.size.x - instance.width - margin.right;
+          }
+
+          if ((margin.left != 0 || margin.right != 0) &&
+              (margin.top == 0 && margin.bottom == 0)) {
+            if (direction == HovertipDirection.leftTop ||
+                direction == HovertipDirection.rightTop) {
               y = kHovertipScreenIndent;
-            } else if (direction == HovertipDirection.leftCenter) {
+            } else if (direction == HovertipDirection.leftCenter ||
+                direction == HovertipDirection.rightCenter) {
               y = scene.size.y / 2 - instance.height / 2;
-            } else if (direction == HovertipDirection.leftBottom) {
+            } else if (direction == HovertipDirection.leftBottom ||
+                direction == HovertipDirection.rightBottom) {
               y = scene.size.y - instance.height - kHovertipScreenIndent;
             }
           }
-        } else if (margin.right != 0) {
-          x = scene.size.x - instance.width - margin.right;
-        }
 
-        if ((margin.left != 0 || margin.right != 0) &&
-            (margin.top == 0 && margin.bottom == 0)) {
-          if (direction == HovertipDirection.leftTop ||
-              direction == HovertipDirection.rightTop) {
-            y = kHovertipScreenIndent;
-          } else if (direction == HovertipDirection.leftCenter ||
-              direction == HovertipDirection.rightCenter) {
-            y = scene.size.y / 2 - instance.height / 2;
-          } else if (direction == HovertipDirection.leftBottom ||
-              direction == HovertipDirection.rightBottom) {
-            y = scene.size.y - instance.height - kHovertipScreenIndent;
+          if (margin.top != 0) {
+            y = margin.top;
+          } else if (margin.bottom != 0) {
+            y = scene.size.y - instance.height - margin.bottom;
+          }
+
+          if ((margin.top != 0 || margin.bottom != 0) &&
+              (margin.left == 0 && margin.right == 0)) {
+            if (direction == HovertipDirection.topLeft ||
+                direction == HovertipDirection.bottomLeft) {
+              x = kHovertipScreenIndent;
+            } else if (direction == HovertipDirection.topCenter ||
+                direction == HovertipDirection.bottomCenter) {
+              x = scene.size.x / 2 - instance.width / 2;
+            } else if (direction == HovertipDirection.topRight ||
+                direction == HovertipDirection.bottomRight) {
+              x = scene.size.x - instance.width - kHovertipScreenIndent;
+            }
           }
         }
-
-        if (margin.top != 0) {
-          y = margin.top;
-        } else if (margin.bottom != 0) {
-          y = scene.size.y - instance.height - margin.bottom;
-        }
-
-        if ((margin.top != 0 || margin.bottom != 0) &&
-            (margin.left == 0 && margin.right == 0)) {
-          if (direction == HovertipDirection.topLeft ||
-              direction == HovertipDirection.bottomLeft) {
-            x = kHovertipScreenIndent;
-          } else if (direction == HovertipDirection.topCenter ||
-              direction == HovertipDirection.bottomCenter) {
-            x = scene.size.x / 2 - instance.width / 2;
-          } else if (direction == HovertipDirection.topRight ||
-              direction == HovertipDirection.bottomRight) {
-            x = scene.size.x - instance.width - kHovertipScreenIndent;
-          }
-        }
+        calculatedPosition = Vector2(x, y);
+      } else {
+        calculatedPosition = position;
       }
-      calculatedPosition = Vector2(x, y);
     }
 
     // 检查是否超出了游戏屏幕
