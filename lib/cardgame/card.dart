@@ -204,7 +204,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
     p[phase] = true;
   }
 
-  Future<void> setFocused(bool value) async {
+  Future<void> setFocused(bool value, {double duration = 0}) async {
     if (isFocused == value) return;
     isFocused = value;
     if (value) {
@@ -219,25 +219,40 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
       _savedSize = size.clone();
 
       Vector2? endPosition;
-      if (focusedOffset != null) {
-        endPosition = _savedPosition + focusedOffset!;
-      } else if (focusedPosition != null) {
+      if (focusedPosition != null) {
         endPosition = focusedPosition!;
+      } else if (focusedOffset != null) {
+        endPosition = _savedPosition + focusedOffset!;
       }
-      snapTo(
-        toPosition: endPosition,
-        toSize: focusedSize,
-      );
+      if (duration > 0) {
+        await moveTo(
+          toPosition: endPosition,
+          toSize: focusedSize,
+          duration: duration,
+        );
+      } else {
+        snapTo(
+          toPosition: endPosition,
+          toSize: focusedSize,
+        );
+      }
 
       onFocused?.call();
       pile?.onCardFocusChanged(this, true);
     } else {
       enableGesture = true;
-      // if (!stayFocused) {
-      snapTo(
-        toPosition: _savedPosition,
-        toSize: _savedSize,
-      );
+      if (duration > 0) {
+        await moveTo(
+          toPosition: _savedPosition,
+          toSize: _savedSize,
+          duration: duration,
+        );
+      } else {
+        snapTo(
+          toPosition: _savedPosition,
+          toSize: _savedSize,
+        );
+      }
 
       resetPriority();
       onUnfocused?.call();
