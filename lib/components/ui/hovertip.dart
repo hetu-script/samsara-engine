@@ -95,7 +95,8 @@ class Hovertip extends BorderComponent {
         targetGlobalSize = target.size * scene.camera.zoom;
       }
 
-      switch (direction!) {
+      direction ??= HovertipDirection.bottomCenter;
+      switch (direction) {
         case HovertipDirection.topLeft:
           calculatedPosition = Vector2(
               targetGlobalPosition.x + (margin?.left ?? 0),
