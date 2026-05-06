@@ -80,103 +80,103 @@ TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
   Color? textColor;
   String? icon;
   String? link;
-  for (final tag in tagMatches) {
-    final currentTag = tag.group(0)!;
-    if (currentTag == 'bold') {
+  for (final tagMatch in tagMatches) {
+    final tag = tagMatch.group(0)!;
+    if (tag == 'bold') {
       isBold = true;
-    } else if (currentTag == 'italic') {
+    } else if (tag == 'italic') {
       isItalic = true;
-    } else if (currentTag == 't1') {
+    } else if (tag == 't1') {
       fontSize = _FontSize.t1;
-    } else if (currentTag == 't2') {
+    } else if (tag == 't2') {
       fontSize = _FontSize.t2;
-    } else if (currentTag == 't3') {
+    } else if (tag == 't3') {
       fontSize = _FontSize.t3;
-    } else if (currentTag == 't4') {
+    } else if (tag == 't4') {
       fontSize = _FontSize.t4;
-    } else if (currentTag == 't5') {
+    } else if (tag == 't5') {
       fontSize = _FontSize.t5;
-    } else if (currentTag == 't6') {
+    } else if (tag == 't6') {
       fontSize = _FontSize.t6;
-    } else if (currentTag == 't7') {
+    } else if (tag == 't7') {
       fontSize = _FontSize.t7;
-    } else if (currentTag == 'h1') {
+    } else if (tag == 'h1') {
       fontSize = _FontSize.h1;
-    } else if (currentTag == 'h2') {
+    } else if (tag == 'h2') {
       fontSize = _FontSize.h2;
-    } else if (currentTag == 'h3') {
+    } else if (tag == 'h3') {
       fontSize = _FontSize.h3;
-    } else if (currentTag == 'h4') {
+    } else if (tag == 'h4') {
       fontSize = _FontSize.h4;
-    } else if (currentTag == 'h5') {
+    } else if (tag == 'h5') {
       fontSize = _FontSize.h5;
-    } else if (currentTag == 'h6') {
+    } else if (tag == 'h6') {
       fontSize = _FontSize.h6;
-    } else if (currentTag == 'h7') {
+    } else if (tag == 'h7') {
       fontSize = _FontSize.h7;
-    } else if (currentTag == 'white') {
+    } else if (tag == 'white') {
       textColor = Colors.white;
-    } else if (currentTag == 'black') {
+    } else if (tag == 'black') {
       textColor = Colors.black;
-    } else if (currentTag == 'grey') {
+    } else if (tag == 'grey') {
       textColor = Colors.grey;
-    } else if (currentTag == 'red') {
+    } else if (tag == 'red') {
       textColor = Colors.red;
-    } else if (currentTag == 'pink') {
+    } else if (tag == 'pink') {
       textColor = Colors.pink;
-    } else if (currentTag == 'purple') {
+    } else if (tag == 'purple') {
       textColor = Colors.purple;
-    } else if (currentTag == 'deepPurple') {
+    } else if (tag == 'deepPurple') {
       textColor = Colors.deepPurple;
-    } else if (currentTag == 'indigo') {
+    } else if (tag == 'indigo') {
       textColor = Colors.indigo;
-    } else if (currentTag == 'blue') {
+    } else if (tag == 'blue') {
       textColor = Colors.blue;
-    } else if (currentTag == 'lightBlue') {
+    } else if (tag == 'lightBlue') {
       textColor = Colors.lightBlue;
-    } else if (currentTag == 'cyan') {
+    } else if (tag == 'cyan') {
       textColor = Colors.cyan;
-    } else if (currentTag == 'teal') {
+    } else if (tag == 'teal') {
       textColor = Colors.teal;
-    } else if (currentTag == 'green') {
+    } else if (tag == 'green') {
       textColor = Colors.green;
-    } else if (currentTag == 'lightGreen') {
+    } else if (tag == 'lightGreen') {
       textColor = Colors.lightGreen;
-    } else if (currentTag == 'lime') {
+    } else if (tag == 'lime') {
       textColor = Colors.lime;
-    } else if (currentTag == 'yellow') {
+    } else if (tag == 'yellow') {
       textColor = Colors.yellow;
-    } else if (currentTag == 'amber') {
+    } else if (tag == 'amber') {
       textColor = Colors.amber;
-    } else if (currentTag == 'orange') {
+    } else if (tag == 'orange') {
       textColor = Colors.orange;
-    } else if (currentTag == 'deepOrange') {
+    } else if (tag == 'deepOrange') {
       textColor = Colors.deepOrange;
-    } else if (currentTag == 'brown') {
+    } else if (tag == 'brown') {
       textColor = Colors.brown;
-    } else if (currentTag == 'blueGrey') {
+    } else if (tag == 'blueGrey') {
       textColor = Colors.blueGrey;
-    } else if (currentTag == 'rank0' || currentTag == 'common') {
+    } else if (tag == 'rank0' || tag == 'common') {
       textColor = RankedColors.common;
-    } else if (currentTag == 'rank1' || currentTag == 'rare') {
+    } else if (tag == 'rank1' || tag == 'rare') {
       textColor = RankedColors.rare;
-    } else if (currentTag == 'rank2' || currentTag == 'epic') {
+    } else if (tag == 'rank2' || tag == 'epic') {
       textColor = RankedColors.epic;
-    } else if (currentTag == 'rank3' || currentTag == 'legendary') {
+    } else if (tag == 'rank3' || tag == 'legendary') {
       textColor = RankedColors.legendary;
-    } else if (currentTag == 'rank4' || currentTag == 'mythic') {
+    } else if (tag == 'rank4' || tag == 'mythic') {
       textColor = RankedColors.mythic;
-    } else if (currentTag == 'rank5' || currentTag == 'arcane') {
+    } else if (tag == 'rank5' || tag == 'arcane') {
       textColor = RankedColors.arcane;
-    } else if (currentTag.startsWith('color=')) {
-      textColor = HexColor.fromString(currentTag.substring(6));
-    } else if (currentTag.startsWith('icon=')) {
-      final iconId = currentTag.substring(5);
+    } else if (tag.startsWith('color=')) {
+      textColor = HexColor.fromString(tag.substring(6));
+    } else if (tag.startsWith('icon=')) {
+      final iconId = tag.substring(5);
       icon = 'text/$iconId';
-    } else if (currentTag.startsWith('link=')) {
+    } else if (tag.startsWith('link=')) {
       // link='character?name=aleph42'
       // 例如：link=character?name=wendy&age=18
-      link = currentTag.substring(5);
+      link = tag.substring(5);
       // TODO: 进一步解析
       // final separaterIndex = routeString.indexOf('?');
       // if (separaterIndex != -1) {
@@ -247,7 +247,8 @@ List<TextSpan> buildFlutterRichText(
             spanList.add(
               TextSpan(
                 text: taggedContent,
-                style: tagResolveResult.style.merge(style ?? const TextStyle()),
+                style:
+                    (style ?? const TextStyle()).merge(tagResolveResult.style),
                 // recognizer: route != null
                 //     ? (TapGestureRecognizer()
                 //       ..onTap = () => onTap?.call(route!, routeArg)

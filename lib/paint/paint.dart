@@ -384,14 +384,18 @@ class ScreenTextConfig {
       );
 }
 
-TextPaint _getTextPaint(
-    {ScreenTextConfig? config, int alpha = 255, TextStyle? style}) {
+TextPaint _getTextPaint({
+  ScreenTextConfig? config,
+  int alpha = 255,
+  TextStyle? style,
+  Color? color,
+}) {
   TextStyle textStyle = (style ?? config?.textStyle ?? TextStyle());
-  if (textStyle.color != null) {
-    textStyle = textStyle.copyWith(color: textStyle.color!.withAlpha(alpha));
-  } else {
-    textStyle = textStyle.copyWith(color: PresetColors.light.withAlpha(alpha));
-  }
+  final selectedColor = color?.withAlpha(alpha) ??
+      textStyle.color?.withAlpha(alpha) ??
+      config?.textStyle?.color?.withAlpha(alpha) ??
+      PresetColors.light.withAlpha(alpha);
+  textStyle = textStyle.copyWith(color: selectedColor);
   config ??= ScreenTextConfig();
   config = config.copyWith(textStyle: textStyle);
 
@@ -640,10 +644,11 @@ void drawScreenText(
   TextPaint? textPaint,
   ScreenTextConfig? config,
   bool debugMode = false,
+  Color? color,
 }) {
   text = text.replaceAllEscapedLineBreaks();
 
-  textPaint ??= _getTextPaint(config: config, alpha: alpha);
+  textPaint ??= _getTextPaint(config: config, alpha: alpha, color: color);
 
   double maxWidth = config?.size?.x ?? 0.0;
   final overflow = config?.overflow ?? ScreenTextOverflow.visible;

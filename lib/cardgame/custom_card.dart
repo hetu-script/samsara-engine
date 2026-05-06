@@ -44,8 +44,8 @@ class CustomGameCard extends GameCard {
   GroupElement? _descriptionElement;
   ScreenTextConfig? titleConfig;
   ScreenTextConfig? descriptionConfig;
-  ScreenTextConfig? costNumberTextStyle;
-  ScreenTextConfig? stackNumberTextStyle;
+  ScreenTextConfig? costNumberTextConfig;
+  ScreenTextConfig? stackNumberTextConfig;
 
   bool showGlow;
   bool showTitle;
@@ -56,6 +56,7 @@ class CustomGameCard extends GameCard {
   bool showCostIcon;
   bool showCostNumber;
   bool showRarityIcon;
+  bool showGenreIcon;
 
   final int cost;
   int modifiedCost;
@@ -67,6 +68,8 @@ class CustomGameCard extends GameCard {
   String? stackIconSpriteId;
   String? costIconSpriteId;
   String? rarityIconSpriteId;
+  String? genreIconSpriteId;
+
   Sprite? glowSprite;
   Color? glowColor;
   Sprite? illustrationSprite;
@@ -74,6 +77,7 @@ class CustomGameCard extends GameCard {
   Sprite? stackIconSprite;
   Sprite? costIconSprite;
   Sprite? rarityIconSprite;
+  Sprite? genreIconSprite;
 
   /// the relative padding of the illustration, the actual padding will be calculated from the size
   final EdgeInsets titleRelativePaddings;
@@ -82,12 +86,14 @@ class CustomGameCard extends GameCard {
   final EdgeInsets stackIconRelativePaddings;
   final EdgeInsets costIconRelativePaddings;
   final EdgeInsets rarityIconRelativePaddings;
+  final EdgeInsets genreIconRelativePaddings;
   late Rect _titleRect;
   late Rect _descriptionRect;
   late Rect _illustrationRect;
   late Rect _stackIconRect;
   late Rect _costIconRect;
   late Rect _rarityIconRect;
+  late Rect _genreIconRect;
 
   /// Wether this card is shown in a library (isFiltered == false) or not (isFiltered == true).
   bool isFiltered = false;
@@ -146,31 +152,40 @@ class CustomGameCard extends GameCard {
     this.costIconSprite,
     this.rarityIconSpriteId,
     this.rarityIconSprite,
-    this.costNumberTextStyle,
-    this.stackNumberTextStyle,
+    this.genreIconSpriteId,
+    this.genreIconSprite,
+    this.costNumberTextConfig,
+    this.stackNumberTextConfig,
     this.cost = 0,
-    this.modifiedCost = 0,
+    int? modifiedCost,
     this.illustrationRelativePaddings = EdgeInsets.zero,
-    this.rarityIconRelativePaddings = EdgeInsets.zero,
     this.titleRelativePaddings = EdgeInsets.zero,
     this.descriptionRelativePaddings = EdgeInsets.zero,
     this.stackIconRelativePaddings = EdgeInsets.zero,
     this.costIconRelativePaddings = EdgeInsets.zero,
+    this.rarityIconRelativePaddings = EdgeInsets.zero,
+    this.genreIconRelativePaddings = EdgeInsets.zero,
     this.titleLayout = CardTitleLayout.horizontalTopCenter,
     this.showGlow = false,
     bool? showTitle,
     bool? showDescription,
     bool? showStackIcon,
-    this.showStackNumber = false,
     bool? showCostIcon,
-    this.showCostNumber = false,
     bool? showRarityIcon,
-  })  : showTitle = showTitle ?? title != null,
+    bool? showGenreIcon,
+    this.showStackNumber = false,
+    this.showCostNumber = false,
+  })  : modifiedCost = modifiedCost ?? cost,
+        showTitle = showTitle ?? title != null,
         showDescription = showDescription ?? description != null,
-        showStackIcon = (stackIconSpriteId != null || stackIconSprite != null),
-        showCostIcon = (costIconSpriteId != null || costIconSprite != null),
-        showRarityIcon =
+        showStackIcon = showStackIcon ??
+            (stackIconSpriteId != null || stackIconSprite != null),
+        showCostIcon = showCostIcon ??
+            (costIconSpriteId != null || costIconSprite != null),
+        showRarityIcon = showRarityIcon ??
             (rarityIconSpriteId != null || rarityIconSprite != null),
+        showGenreIcon = showGenreIcon ??
+            (genreIconSpriteId != null || genreIconSprite != null),
         super(size: size ?? preferredSize) {
     this.title = title;
     this.description = description;
@@ -232,8 +247,10 @@ class CustomGameCard extends GameCard {
       costIconSprite: costIconSprite,
       rarityIconSpriteId: rarityIconSpriteId,
       rarityIconSprite: rarityIconSprite,
-      costNumberTextStyle: costNumberTextStyle,
-      stackNumberTextStyle: stackNumberTextStyle,
+      genreIconSpriteId: genreIconSpriteId,
+      genreIconSprite: genreIconSprite,
+      costNumberTextConfig: costNumberTextConfig,
+      stackNumberTextConfig: stackNumberTextConfig,
       cost: cost,
       modifiedCost: modifiedCost,
       illustrationRelativePaddings: illustrationRelativePaddings,
@@ -242,14 +259,16 @@ class CustomGameCard extends GameCard {
       descriptionRelativePaddings: descriptionRelativePaddings,
       stackIconRelativePaddings: stackIconRelativePaddings,
       costIconRelativePaddings: costIconRelativePaddings,
+      genreIconRelativePaddings: genreIconRelativePaddings,
       showTitle: showTitle,
       showDescription: showDescription,
       showStackIcon: showStackIcon,
-      showStackNumber: showStackNumber,
-      titleLayout: titleLayout,
       showCostIcon: showCostIcon,
-      showCostNumber: showCostNumber,
       showRarityIcon: showRarityIcon,
+      showGenreIcon: showGenreIcon,
+      showStackNumber: showStackNumber,
+      showCostNumber: showCostNumber,
+      titleLayout: titleLayout,
     );
   }
 
@@ -261,6 +280,7 @@ class CustomGameCard extends GameCard {
     String? stackIconSpriteId,
     String? costIconSpriteId,
     String? rarityIconSpriteId,
+    String? genreIconSpriteId,
   }) async {
     if (spriteId != null) {
       this.spriteId = spriteId;
@@ -307,6 +327,13 @@ class CustomGameCard extends GameCard {
       rarityIconSprite =
           Sprite(await Flame.images.load(this.rarityIconSpriteId!));
     }
+    if (genreIconSpriteId != null) {
+      this.genreIconSpriteId = genreIconSpriteId;
+    }
+    if (this.genreIconSpriteId != null) {
+      genreIconSprite =
+          Sprite(await Flame.images.load(this.genreIconSpriteId!));
+    }
   }
 
   @override
@@ -327,12 +354,7 @@ class CustomGameCard extends GameCard {
     _descriptionDocument =
         buildFlameRichText(_description!, style: descriptionConfig?.textStyle);
     final descriptionAnchor = descriptionConfig?.anchor ?? Anchor.topLeft;
-    TextAlign descriptionAlign = TextAlign.left;
-    if (descriptionAnchor.x == 0.5) {
-      descriptionAlign = TextAlign.center;
-    } else if (descriptionAnchor.x == 1.0) {
-      descriptionAlign = TextAlign.right;
-    }
+    TextAlign descriptionAlign = descriptionConfig?.textAlign ?? TextAlign.left;
 
     _descriptionElement = _descriptionDocument!.format(DocumentStyle(
       paragraph:
@@ -415,6 +437,17 @@ class CustomGameCard extends GameCard {
               height,
     );
 
+    _genreIconRect = Rect.fromLTWH(
+      genreIconRelativePaddings.left * width,
+      genreIconRelativePaddings.top * height,
+      width -
+          (genreIconRelativePaddings.left + genreIconRelativePaddings.right) *
+              width,
+      height -
+          (genreIconRelativePaddings.top + genreIconRelativePaddings.bottom) *
+              height,
+    );
+
     _stackIconRect = Rect.fromLTWH(
       stackIconRelativePaddings.left * width,
       stackIconRelativePaddings.top * height,
@@ -437,10 +470,10 @@ class CustomGameCard extends GameCard {
               height,
     );
 
-    stackNumberTextStyle = (stackNumberTextStyle ?? const ScreenTextConfig())
+    stackNumberTextConfig = (stackNumberTextConfig ?? const ScreenTextConfig())
         .copyWith(size: _stackIconRect.size.toVector2(), scale: fontScale);
 
-    costNumberTextStyle = (costNumberTextStyle ?? const ScreenTextConfig())
+    costNumberTextConfig = (costNumberTextConfig ?? const ScreenTextConfig())
         .copyWith(size: _costIconRect.size.toVector2(), scale: fontScale);
 
     _titleRect = Rect.fromLTWH(
@@ -489,29 +522,17 @@ class CustomGameCard extends GameCard {
           overridePaint: paint);
       sprite?.renderRect(canvas, border, overridePaint: paint);
 
-      if (showTitle && title != null && title?.isNotEmpty == true) {
-        switch (titleLayout) {
-          case CardTitleLayout.horizontalTopCenter:
-            drawScreenText(canvas, title!,
-                alpha: isEnabled ? 255 : 128,
-                position: _titleRect.topLeft,
-                config: titleConfig);
-          case CardTitleLayout.verticalRightTop:
-            drawScreenText(canvas, _verticalTitle!,
-                alpha: isEnabled ? 255 : 128,
-                position: _titleRect.topLeft,
-                config: titleConfig?.copyWith(anchor: Anchor.topRight));
-        }
-      }
-
-      if (showDescription) {
-        if (_descriptionElement != null) {
-          _descriptionElement!.draw(canvas);
-        }
+      if (showDescription && _descriptionElement != null) {
+        _descriptionElement!.draw(canvas);
       }
 
       if (showRarityIcon) {
         rarityIconSprite?.renderRect(canvas, _rarityIconRect,
+            overridePaint: paint);
+      }
+
+      if (showGenreIcon) {
+        genreIconSprite?.renderRect(canvas, _genreIconRect,
             overridePaint: paint);
       }
 
@@ -525,21 +546,44 @@ class CustomGameCard extends GameCard {
           drawScreenText(canvas, '×$stack',
               alpha: isEnabled ? 255 : 128,
               position: _stackIconRect.topLeft,
-              config: stackNumberTextStyle);
+              config: stackNumberTextConfig);
         }
       }
 
-      if (cost > 0) {
-        if (showCostIcon) {
-          costIconSprite?.renderRect(canvas, _costIconRect,
-              overridePaint: paint);
-        }
+      if (showCostIcon) {
+        costIconSprite?.renderRect(canvas, _costIconRect, overridePaint: paint);
+      }
 
-        if (showCostNumber) {
-          drawScreenText(canvas, '$cost',
-              alpha: isEnabled ? 255 : 128,
-              position: _costIconRect.topLeft,
-              config: costNumberTextStyle);
+      if (showCostNumber) {
+        drawScreenText(
+          canvas,
+          '$cost',
+          alpha: isEnabled ? 255 : 128,
+          position: _costIconRect.topLeft,
+          color: modifiedCost > cost
+              ? Colors.red
+              : (modifiedCost < cost ? Colors.green : Colors.white),
+          config: costNumberTextConfig,
+        );
+      }
+
+      if (showGenreIcon) {
+        genreIconSprite?.renderRect(canvas, _genreIconRect,
+            overridePaint: paint);
+      }
+
+      if (showTitle && title != null && title?.isNotEmpty == true) {
+        switch (titleLayout) {
+          case CardTitleLayout.horizontalTopCenter:
+            drawScreenText(canvas, title!,
+                alpha: isEnabled ? 255 : 128,
+                position: _titleRect.topLeft,
+                config: titleConfig);
+          case CardTitleLayout.verticalRightTop:
+            drawScreenText(canvas, _verticalTitle!,
+                alpha: isEnabled ? 255 : 128,
+                position: _titleRect.topLeft,
+                config: titleConfig?.copyWith(anchor: Anchor.topRight));
         }
       }
     }

@@ -20,7 +20,7 @@ enum HovertipDirection {
 const kHovertipScreenIndent = 10.0;
 const kHovertipContentIndent = 10.0;
 const kHovertipBackgroundBorderRadius = 5.0;
-const kHovertipDefautWidth = 400.0;
+const kHovertipDefautWidth = 360.0;
 
 class Hovertip extends BorderComponent {
   static Hovertip? _globalInstance;

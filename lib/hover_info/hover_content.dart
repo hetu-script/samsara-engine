@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 
-const kHoverInfoMaxWidth = 400.0;
+const kHoverInfoMaxWidth = 360.0;
 
 enum HoverContentDirection {
   topLeft,

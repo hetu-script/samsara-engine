@@ -53,8 +53,8 @@ class MainMenuScene extends Scene {
       position: center,
     );
     button1.onTap = (button, position) async {
-      dialog.pushScreenHint(rect: button1.bounds);
-      dialog.execute();
+      // dialog.pushScreenHint(rect: button1.bounds);
+      // dialog.execute();
     };
     background.add(button1);
 
