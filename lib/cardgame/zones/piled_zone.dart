@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:samsara/task.dart';
+
 import '../card.dart';
 import '../../samsara.dart';
 
@@ -15,7 +17,7 @@ enum PileStyle {
   /// shuffle,
 }
 
-class PiledZone extends BorderComponent {
+class PiledZone extends BorderComponent with TaskController {
   String? ownedBy;
 
   bool isOwnedBy(String? player) {
@@ -173,11 +175,15 @@ class PiledZone extends BorderComponent {
     int? index,
     bool animated = true,
     bool clone = false,
+    bool sort = true,
   }) {
     if (clone) {
       card = card.clone();
       game.world.add(card);
     }
+
+    card.removeFromPile();
+
     placeCard(card, index: index, animated: animated);
 
     return true;
@@ -191,6 +197,7 @@ class PiledZone extends BorderComponent {
     // bool insertAndRearrangeAll = false,
     bool animated = true,
     void Function()? onComplete,
+    bool sort = true,
   }) async {
     if (cards.contains(card)) return;
 
@@ -234,7 +241,10 @@ class PiledZone extends BorderComponent {
     // card.onAddedToPileZone?.call(this);
 
     onPileChanged?.call();
-    return sortCards(animated: animated, onComplete: onComplete);
+
+    if (sort) {
+      sortCards(animated: animated, onComplete: onComplete);
+    }
   }
 
   Future<void> reorderCard(
@@ -290,70 +300,71 @@ class PiledZone extends BorderComponent {
     void Function()? onComplete,
     bool reversed = false,
   }) async {
-    basePriority ??= cardBasePriority;
+    if (cards.isEmpty) return;
 
-    final completer = Completer();
-    void onSortComplete() {
-      onComplete?.call();
-      completer.complete();
-    }
+    return schedule(() {
+      basePriority ??= cardBasePriority;
 
-    void setCardPriority(GameCard card, int index) {
-      // pile.add(card.id);
-      if (pileStyle == PileStyle.queue) {
-        card.preferredPriority = basePriority! - index;
-      } else if (pileStyle == PileStyle.stack) {
-        card.preferredPriority = basePriority! + index;
+      final completer = Completer();
+      void onSortComplete() {
+        onComplete?.call();
+        completer.complete();
       }
-      card.resetPriority();
-    }
 
-    cards.sort((c1, c2) =>
-        reversed ? c2.index.compareTo(c1.index) : c1.index.compareTo(c2.index));
-    // pile.clear();
-
-    // TODO: 有empty slots时，不重新赋值index
-    for (var i = 0; i < cards.length; ++i) {
-      cards[i].index = i;
-      setCardPriority(cards[i], i);
-    }
-
-    _updateCenteringOffset();
-
-    for (var i = 0; i < cards.length; ++i) {
-      final card = cards[i];
-
-      final endPosition = getCardNormalPosition(card, i);
-
-      if (focusedOffset != null) card.focusedOffset = focusedOffset;
-      if (focusedPosition != null) card.focusedPosition ??= focusedPosition;
-      if (focusedSize != null) card.focusedSize ??= focusedSize;
-
-      if (animated) {
-        // card.enableGesture = false;
-        card.moveTo(
-          toPosition: endPosition,
-          toSize: piledCardSize,
-          duration: 0.5,
-          curve: Curves.decelerate,
-          onComplete: () {
-            // card.enableGesture = true;
-            if (i == cards.length - 1) {
-              onSortComplete();
-            }
-          },
-        );
-      } else {
-        card.position = endPosition;
-        card.size = piledCardSize;
+      void setCardPriority(GameCard card, int index) {
+        // pile.add(card.id);
+        if (pileStyle == PileStyle.queue) {
+          card.preferredPriority = basePriority! - index;
+        } else if (pileStyle == PileStyle.stack) {
+          card.preferredPriority = basePriority! + index;
+        }
+        card.resetPriority();
       }
-    }
 
-    if (!animated) {
-      onSortComplete();
-    }
+      cards.sort((c1, c2) => reversed
+          ? c2.index.compareTo(c1.index)
+          : c1.index.compareTo(c2.index));
+      // pile.clear();
 
-    return completer.future;
+      // TODO: 有empty slots时，不重新赋值index
+      for (var i = 0; i < cards.length; ++i) {
+        cards[i].index = i;
+        setCardPriority(cards[i], i);
+      }
+
+      _updateCenteringOffset();
+
+      for (var i = 0; i < cards.length; ++i) {
+        final card = cards[i];
+
+        final endPosition = getCardNormalPosition(card, i);
+
+        if (focusedOffset != null) card.focusedOffset = focusedOffset;
+        if (focusedPosition != null) card.focusedPosition ??= focusedPosition;
+        if (focusedSize != null) card.focusedSize ??= focusedSize;
+
+        if (animated) {
+          // card.enableGesture = false;
+          final isLast = i == cards.length - 1;
+          card.moveTo(
+            toPosition: endPosition,
+            toSize: piledCardSize,
+            duration: 0.5,
+            curve: Curves.decelerate,
+            onComplete: isLast ? onSortComplete : null,
+          );
+        } else {
+          card.position = endPosition;
+          card.size = piledCardSize;
+        }
+      }
+
+      if (!animated) {
+        onSortComplete();
+      }
+
+      return completer.future;
+    });
   }
 
   GameCard? removeCardByIndex(int index, {bool sort = true}) {

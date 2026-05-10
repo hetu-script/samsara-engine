@@ -28,8 +28,8 @@ class SpriteButton<T> extends BorderComponent with HandlesGesture {
   Sprite? pressSprite;
   String? pressSpriteId;
 
-  Sprite? unselectedSprite;
-  String? unselectedSpriteId;
+  Sprite? selectedSprite;
+  String? selectedSpriteId;
 
   String? text;
   late ScreenTextConfig textConfig;
@@ -75,8 +75,8 @@ class SpriteButton<T> extends BorderComponent with HandlesGesture {
     this.hoverSpriteId,
     this.pressSprite,
     this.pressSpriteId,
-    this.unselectedSprite,
-    this.unselectedSpriteId,
+    this.selectedSprite,
+    this.selectedSpriteId,
     super.paint,
     Paint? hoverTintPaint,
     Paint? invalidPaint,
@@ -142,10 +142,10 @@ class SpriteButton<T> extends BorderComponent with HandlesGesture {
 
   Future<void> tryLoadSprite({
     String? spriteId,
-    String? borderSpriteId,
     String? hoverSpriteId,
     String? pressSpriteId,
-    String? unselectedSpriteId,
+    String? borderSpriteId,
+    String? selectedSpriteId,
   }) async {
     if (spriteId != null) {
       this.spriteId = spriteId;
@@ -174,12 +174,11 @@ class SpriteButton<T> extends BorderComponent with HandlesGesture {
     if (this.pressSpriteId != null) {
       pressSprite = Sprite(await Flame.images.load(this.pressSpriteId!));
     }
-    if (unselectedSpriteId != null) {
-      this.unselectedSpriteId = unselectedSpriteId;
+    if (selectedSpriteId != null) {
+      this.selectedSpriteId = selectedSpriteId;
     }
-    if (this.unselectedSpriteId != null) {
-      unselectedSprite =
-          Sprite(await Flame.images.load(this.unselectedSpriteId!));
+    if (this.selectedSpriteId != null) {
+      selectedSprite = Sprite(await Flame.images.load(this.selectedSpriteId!));
     }
   }
 
@@ -209,8 +208,8 @@ class SpriteButton<T> extends BorderComponent with HandlesGesture {
         } else if (hoverSprite != null) {
           hoverSprite?.render(canvas, size: size, overridePaint: paint);
         } else {
-          if (isSelectable && !isSelected) {
-            unselectedSprite?.render(canvas, size: size, overridePaint: paint);
+          if (isSelectable && isSelected) {
+            selectedSprite?.render(canvas, size: size, overridePaint: paint);
           } else {
             sprite?.render(canvas, size: size, overridePaint: paint);
           }
@@ -222,8 +221,8 @@ class SpriteButton<T> extends BorderComponent with HandlesGesture {
           hoverSprite?.render(canvas,
               size: size, overridePaint: hoverTintPaint);
         } else {
-          if (isSelectable && !isSelected) {
-            unselectedSprite?.render(canvas,
+          if (isSelectable && isSelected) {
+            selectedSprite?.render(canvas,
                 size: size, overridePaint: hoverTintPaint);
           } else {
             sprite?.render(canvas, size: size, overridePaint: hoverTintPaint);
@@ -233,8 +232,8 @@ class SpriteButton<T> extends BorderComponent with HandlesGesture {
         if (useSimpleStyle) {
           canvas.drawRRect(roundBorder, PresetPaints.successFill);
         } else {
-          if (isSelectable && !isSelected) {
-            unselectedSprite?.render(canvas, size: size, overridePaint: paint);
+          if (isSelectable && isSelected) {
+            selectedSprite?.render(canvas, size: size, overridePaint: paint);
           } else {
             sprite?.render(canvas, size: size, overridePaint: paint);
           }
@@ -246,8 +245,8 @@ class SpriteButton<T> extends BorderComponent with HandlesGesture {
       if (useSimpleStyle) {
         canvas.drawRRect(roundBorder, PresetPaints.invalidFill);
       } else {
-        if (isSelectable && !isSelected) {
-          unselectedSprite?.render(canvas,
+        if (isSelectable && isSelected) {
+          selectedSprite?.render(canvas,
               size: size, overridePaint: invalidPaint);
         } else {
           sprite?.render(canvas, size: size, overridePaint: invalidPaint);
