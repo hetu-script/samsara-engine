@@ -207,7 +207,9 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
       }
 
       onFocused?.call();
-      pile?.onCardFocusChanged(this, true);
+      if (pile?.spreadOnFocus == true) {
+        pile?.setSpreadCenter(this, true);
+      }
     } else {
       enableGesture = true;
       if (duration > 0) {
@@ -225,7 +227,9 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
 
       resetPriority();
       onUnfocused?.call();
-      pile?.onCardFocusChanged(this, false);
+      if (pile?.spreadOnFocus == true) {
+        pile?.setSpreadCenter(this, false);
+      }
       // }
     }
   }

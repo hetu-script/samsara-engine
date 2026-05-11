@@ -87,6 +87,9 @@ class PiledZone extends BorderComponent with TaskController {
   /// 是否将卡牌整体在组件区域内居中排列
   final bool centerCards;
 
+  /// 当前聚焦的卡牌
+  GameCard? centerCard;
+
   Vector2 _centeringOffset = Vector2.zero();
 
   @override
@@ -174,10 +177,10 @@ class PiledZone extends BorderComponent with TaskController {
   /// override 这个函数时，可以修改返回类型，比如改成String 用来返回具体原因
   dynamic tryAddCard(
     GameCard card, {
-    int? index,
-    bool animated = true,
     bool clone = false,
-    bool sort = true,
+    int? index,
+    // bool animated = true,
+    // bool sort = true,
   }) {
     if (clone) {
       card = card.clone();
@@ -186,20 +189,21 @@ class PiledZone extends BorderComponent with TaskController {
 
     card.removeFromPile();
 
-    placeCard(card, index: index, animated: animated);
+    placeCard(card, index: index);
+    // await placeCard(card, index: index, animated: animated, sort: sort);
 
     return true;
   }
 
   /// 将一个已经存在并显示的卡牌，移动到堆叠区域并添加到列表
   /// TODO: [insertAndRearrangeAll]如果为真，并且[allowEmptySlots]为真。并且目前有空位，则在向已经有卡牌的位置插入新卡牌时，会将已有的卡牌向后移动让出位置
-  Future<void> placeCard(
+  void placeCard(
     GameCard card, {
     int? index,
     // bool insertAndRearrangeAll = false,
-    bool animated = true,
+    // bool animated = true,
     void Function()? onComplete,
-    bool sort = true,
+    // bool sort = true,
   }) async {
     if (cards.contains(card)) return;
 
@@ -225,8 +229,7 @@ class PiledZone extends BorderComponent with TaskController {
         index = cards.length;
       } else {
         for (var i = index; i < cards.length; ++i) {
-          final existedCard = cards[i];
-          ++existedCard.index;
+          cards[i].index = i + 1;
         }
       }
       // }
@@ -244,9 +247,9 @@ class PiledZone extends BorderComponent with TaskController {
 
     onPileChanged?.call();
 
-    if (sort) {
-      sortCards(animated: animated, onComplete: onComplete);
-    }
+    // if (sort) {
+    //   return sortCards(animated: animated, onComplete: onComplete);
+    // }
   }
 
   Future<void> reorderCard(
@@ -304,70 +307,67 @@ class PiledZone extends BorderComponent with TaskController {
   }) async {
     if (cards.isEmpty) return;
 
-    return schedule(() {
-      basePriority ??= cardBasePriority;
+    basePriority ??= cardBasePriority;
 
-      final completer = Completer();
-      void onSortComplete() {
-        onComplete?.call();
-        completer.complete();
+    final completer = Completer();
+    void onSortComplete() {
+      onComplete?.call();
+      completer.complete();
+    }
+
+    void setCardPriority(GameCard card, int index) {
+      // pile.add(card.id);
+      if (pileStyle == PileStyle.queue) {
+        card.preferredPriority = basePriority! - index;
+      } else if (pileStyle == PileStyle.stack) {
+        card.preferredPriority = basePriority! + index;
       }
+      card.resetPriority();
+    }
 
-      void setCardPriority(GameCard card, int index) {
-        // pile.add(card.id);
-        if (pileStyle == PileStyle.queue) {
-          card.preferredPriority = basePriority! - index;
-        } else if (pileStyle == PileStyle.stack) {
-          card.preferredPriority = basePriority! + index;
-        }
-        card.resetPriority();
+    cards.sort((c1, c2) =>
+        reversed ? c2.index.compareTo(c1.index) : c1.index.compareTo(c2.index));
+    // pile.clear();
+
+    // TODO: 有empty slots时，不重新赋值index
+    for (var i = 0; i < cards.length; ++i) {
+      cards[i].index = i;
+      setCardPriority(cards[i], i);
+    }
+
+    _updateCenteringOffset();
+
+    for (var i = 0; i < cards.length; ++i) {
+      final card = cards[i];
+
+      final endPosition = getCardNormalPosition(card, i);
+
+      if (focusedOffset != null) card.focusedOffset = focusedOffset;
+      if (focusedPosition != null) card.focusedPosition = focusedPosition;
+      if (focusedSize != null) card.focusedSize = focusedSize;
+      card.focusedPriority = focusedPriority;
+
+      if (animated) {
+        // card.enableGesture = false;
+        final isLast = i == cards.length - 1;
+        card.moveTo(
+          toPosition: endPosition,
+          toSize: piledCardSize,
+          duration: 0.4,
+          curve: Curves.decelerate,
+          onComplete: isLast ? onSortComplete : null,
+        );
+      } else {
+        card.position = endPosition;
+        card.size = piledCardSize;
       }
+    }
 
-      cards.sort((c1, c2) => reversed
-          ? c2.index.compareTo(c1.index)
-          : c1.index.compareTo(c2.index));
-      // pile.clear();
+    if (!animated) {
+      onSortComplete();
+    }
 
-      // TODO: 有empty slots时，不重新赋值index
-      for (var i = 0; i < cards.length; ++i) {
-        cards[i].index = i;
-        setCardPriority(cards[i], i);
-      }
-
-      _updateCenteringOffset();
-
-      for (var i = 0; i < cards.length; ++i) {
-        final card = cards[i];
-
-        final endPosition = getCardNormalPosition(card, i);
-
-        if (focusedOffset != null) card.focusedOffset = focusedOffset;
-        if (focusedPosition != null) card.focusedPosition = focusedPosition;
-        if (focusedSize != null) card.focusedSize = focusedSize;
-        card.focusedPriority = focusedPriority;
-
-        if (animated) {
-          // card.enableGesture = false;
-          final isLast = i == cards.length - 1;
-          card.moveTo(
-            toPosition: endPosition,
-            toSize: piledCardSize,
-            duration: 0.5,
-            curve: Curves.decelerate,
-            onComplete: isLast ? onSortComplete : null,
-          );
-        } else {
-          card.position = endPosition;
-          card.size = piledCardSize;
-        }
-      }
-
-      if (!animated) {
-        onSortComplete();
-      }
-
-      return completer.future;
-    });
+    return completer.future;
   }
 
   void shuffle() {
@@ -375,12 +375,10 @@ class PiledZone extends BorderComponent with TaskController {
     for (var i = 0; i < cards.length; ++i) {
       cards[i].index = i;
     }
-    sortCards(animated: false);
   }
 
   GameCard? removeCardByIndex(
     int index, {
-    bool sort = true,
     bool removeFromParent = false,
   }) {
     if (index < 0 || index >= cards.length) return null;
@@ -393,18 +391,19 @@ class PiledZone extends BorderComponent with TaskController {
 
     cards.removeAt(index);
 
-    if (sort) {
-      sortCards();
+    // 递减后续卡牌的 index
+    for (var i = index; i < cards.length; ++i) {
+      cards[i].index = i;
     }
 
     onPileChanged?.call();
     return card;
   }
 
-  GameCard? removeCardById(String id, {bool sort = true}) {
+  GameCard? removeCardById(String id) {
     final index = cards.indexWhere((card) => card.id == id);
 
-    return removeCardByIndex(index, sort: sort);
+    return removeCardByIndex(index);
   }
 
   void _updateCenteringOffset() {
@@ -473,38 +472,29 @@ class PiledZone extends BorderComponent with TaskController {
   }
 
   /// 当牌堆中的卡牌focus状态变化时调用，用于散开/恢复卡牌位置
-  void onCardFocusChanged(GameCard card, bool focused) {
-    if (!spreadOnFocus) return;
-    // 无论是聚焦还是取消聚焦，都根据当前实际状态来决定散开或恢复
-    GameCard? currentFocused;
-    for (final c in cards) {
-      if (c.isFocused) {
-        currentFocused = c;
-        break;
-      }
-    }
-    if (currentFocused != null) {
-      _applySpread(currentFocused);
+  void setSpreadCenter(GameCard card, bool focused) {
+    if (centerCard != null && centerCard != card) return;
+
+    if (focused) {
+      applySpread(card);
     } else {
-      _resetSpread();
+      centerCard = null;
+      resetSpread();
     }
   }
 
-  /// 将其他卡牌散开，为聚焦的卡牌腾出空间
-  void _applySpread(GameCard focusedCard) {
-    final focusIndex = cards.indexOf(focusedCard);
-    if (focusIndex < 0) return;
-
-    // 只在使用focusedOffset（卡牌相对位移放大）时才散开，
-    // 使用focusedPosition（卡牌跳到固定位置）时不需要散开
-    if (focusedCard.focusedOffset == null) return;
+  /// 将其他卡牌散开，为指定卡牌腾出空间
+  void applySpread(GameCard centerCard) {
+    this.centerCard = centerCard;
+    final centerIndex = cards.indexOf(centerCard);
+    if (centerIndex < 0) return;
 
     final normalW = piledCardSize.x;
     final normalH = piledCardSize.y;
-    final focusedW = focusedCard.focusedSize?.x ?? normalW;
-    final focusedH = focusedCard.focusedSize?.y ?? normalH;
-    final dx = focusedCard.focusedOffset!.x;
-    final dy = focusedCard.focusedOffset!.y;
+    final focusedW = centerCard.focusedSize?.x ?? normalW;
+    final focusedH = centerCard.focusedSize?.y ?? normalH;
+    final dx = centerCard.focusedOffset?.x ?? 0;
+    final dy = centerCard.focusedOffset?.y ?? 0;
 
     // 聚焦卡牌在各方向的最大扩展量，前后卡牌使用相同的偏移值
     final spreadX = (focusedW - normalW) / 2 + dx.abs() + spreadMargin;
@@ -518,11 +508,11 @@ class PiledZone extends BorderComponent with TaskController {
 
       double shiftX = 0, shiftY = 0;
       if (pileOffset.x != 0) {
-        shiftX = (i < focusIndex ? -1 : 1) * spreadX;
+        shiftX = (i < centerIndex ? -1 : 1) * spreadX;
         if (pileOffset.x < 0) shiftX = -shiftX;
       }
       if (pileOffset.y != 0) {
-        shiftY = (i < focusIndex ? -1 : 1) * spreadY;
+        shiftY = (i < centerIndex ? -1 : 1) * spreadY;
         if (pileOffset.y < 0) shiftY = -shiftY;
       }
 
@@ -531,10 +521,9 @@ class PiledZone extends BorderComponent with TaskController {
   }
 
   /// 恢复所有卡牌到正常位置
-  void _resetSpread() {
+  void resetSpread() {
     for (var i = 0; i < cards.length; ++i) {
       final card = cards[i];
-      if (card.isFocused) continue;
       final normalPos = getCardNormalPosition(card, card.index);
       card.snapTo(toPosition: normalPos);
     }

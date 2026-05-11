@@ -166,6 +166,12 @@ abstract class GameComponent extends PositionComponent
       return;
     }
 
+    // 取消正在运行的移动动画，避免并发动画冲突
+    children
+        .whereType<AdvancedMoveEffect>()
+        .toList()
+        .forEach((e) => e.removeFromParent());
+
     final completer = Completer();
     _isMoving = true;
 
