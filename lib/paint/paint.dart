@@ -320,7 +320,7 @@ class ScreenTextConfig {
       outlined: this.outlined ?? outlined,
       scale: this.scale ?? scale,
       overflow: this.overflow ?? overflow,
-      textStyle: (this.textStyle ?? TextStyle()).merge(textStyle),
+      textStyle: (textStyle ?? TextStyle()).merge(this.textStyle),
       textAlign: this.textAlign ?? textAlign,
       backgroundColor: this.backgroundColor ?? backgroundColor,
     );
@@ -335,7 +335,7 @@ class ScreenTextConfig {
       outlined: other?.outlined ?? outlined,
       scale: other?.scale ?? scale,
       overflow: other?.overflow ?? overflow,
-      textStyle: (other?.textStyle ?? TextStyle()).merge(textStyle),
+      textStyle: (textStyle ?? TextStyle()).merge(other?.textStyle),
       textAlign: other?.textAlign ?? textAlign,
       backgroundColor: other?.backgroundColor ?? backgroundColor,
     );
@@ -350,7 +350,7 @@ class ScreenTextConfig {
       outlined: outlined ?? other?.outlined,
       scale: scale ?? other?.scale,
       overflow: overflow ?? other?.overflow,
-      textStyle: (textStyle ?? TextStyle()).merge(other?.textStyle),
+      textStyle: (other?.textStyle ?? TextStyle()).merge(textStyle),
       textAlign: textAlign ?? other?.textAlign,
       backgroundColor: backgroundColor ?? other?.backgroundColor,
     );
@@ -469,6 +469,16 @@ Offset _drawMultilineText(
   /// 计算出多行文字的总体高度，用于垂直方向的对齐
   /// 因为字体中不同字符可能高度有差异，这里只是使用了一个基准高度计算来保证结果一致
   final lineHeight = textPaint.getLineMetrics(' ').height;
+  // 将 lines 中的每个元素按 \n 拆平，确保 paragraphHeight 和逐行渲染都基于实际行数
+  final flatLines = <String>[];
+  for (final line in lines) {
+    if (line.contains(newLineExp)) {
+      flatLines.addAll(line.split(newLineExp));
+    } else {
+      flatLines.add(line);
+    }
+  }
+  lines = flatLines;
   final paragraphHeight = lineHeight * lines.length;
 
   final anchor = config?.anchor ?? Anchor.topLeft;

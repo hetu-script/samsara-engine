@@ -6,6 +6,8 @@ import 'package:samsara/task.dart';
 import '../card.dart';
 import '../../samsara.dart';
 
+const kPiledCardFocusedPriority = 1000;
+
 enum PileStyle {
   /// new cards put to bottom of pile
   queue,
@@ -49,6 +51,7 @@ class PiledZone extends BorderComponent with TaskController {
 
   final Vector2 piledCardSize;
   Vector2? focusedOffset, focusedPosition, focusedSize;
+  int focusedPriority;
 
   /// [pileStartPosition] : 堆叠时的起始位置
   /// 如果此值为 null，则根据如下规则设定：
@@ -109,15 +112,14 @@ class PiledZone extends BorderComponent with TaskController {
     this.focusedOffset,
     this.focusedPosition,
     this.focusedSize,
+    this.focusedPriority = kPiledCardFocusedPriority,
     this.pileStartPosition,
     Vector2? pileOffset,
     this.pileStyle = PileStyle.stack,
     this.reverseX = false,
     this.reverseY = false,
-    // this.pileTopPriority = 5000,
     this.titleAnchor = Anchor.topLeft,
     this.titlePadding = EdgeInsets.zero,
-    // this.cardState,
     this.onPileChanged,
     this.spreadOnFocus = false,
     this.spreadMargin = 0,
@@ -340,8 +342,9 @@ class PiledZone extends BorderComponent with TaskController {
         final endPosition = getCardNormalPosition(card, i);
 
         if (focusedOffset != null) card.focusedOffset = focusedOffset;
-        if (focusedPosition != null) card.focusedPosition ??= focusedPosition;
-        if (focusedSize != null) card.focusedSize ??= focusedSize;
+        if (focusedPosition != null) card.focusedPosition = focusedPosition;
+        if (focusedSize != null) card.focusedSize = focusedSize;
+        card.focusedPriority = focusedPriority;
 
         if (animated) {
           // card.enableGesture = false;
@@ -367,11 +370,26 @@ class PiledZone extends BorderComponent with TaskController {
     });
   }
 
-  GameCard? removeCardByIndex(int index, {bool sort = true}) {
+  void shuffle() {
+    cards.shuffle();
+    for (var i = 0; i < cards.length; ++i) {
+      cards[i].index = i;
+    }
+    sortCards(animated: false);
+  }
+
+  GameCard? removeCardByIndex(
+    int index, {
+    bool sort = true,
+    bool removeFromParent = false,
+  }) {
     if (index < 0 || index >= cards.length) return null;
 
     final card = cards[index];
-    card.removeFromParent();
+
+    if (removeFromParent) {
+      card.removeFromParent();
+    }
 
     cards.removeAt(index);
 

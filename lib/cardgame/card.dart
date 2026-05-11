@@ -49,9 +49,8 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
   GameCard? prev, next;
 
   Vector2? focusedOffset, focusedPosition, focusedSize;
-  int focusedPriority = 0, previewPriority = 0;
+  int focusedPriority;
 
-  bool focusOnPreviewing;
   bool showBorder;
   bool isFocused;
   bool stayFocused;
@@ -66,15 +65,11 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
 
   void Function()? onFocused;
   void Function()? onUnfocused;
-  void Function()? onPreviewed;
-  void Function()? onUnpreviewed;
   int preferredPriority = 0;
 
   void resetPriority() {
     priority = preferredPriority;
   }
-
-  bool enablePreview;
 
   // bool isEnabled;
   late bool _isEnabled;
@@ -94,7 +89,6 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
     this.index = 0,
     this.script,
     this.kind,
-    this.enablePreview = false,
     this.ownedByRole,
     this.stack = 1,
     this.spriteId,
@@ -108,7 +102,6 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
     this.focusedPosition,
     this.focusedSize,
     this.focusedPriority = 0,
-    this.focusOnPreviewing = false,
     this.showBorder = false,
     this.isFocused = false,
     this.stayFocused = false,
@@ -118,10 +111,9 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
     super.anchor,
     this.onFocused,
     this.onUnfocused,
-    this.onPreviewed,
-    this.onUnpreviewed,
     // this.isEnabled = true,
     bool isEnabled = true,
+    bool enableGesture = true,
     int? preferredPriority,
   })  : uniqueId = uniqueId ?? id,
         tags = tags ?? {} {
@@ -135,28 +127,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
     setPaint('invalid', invalidPaint);
 
     this.isEnabled = isEnabled;
-
-    onMouseEnter = () {
-      if (enablePreview) {
-        onPreviewed?.call();
-        if (focusOnPreviewing) {
-          schedule(() => setFocused(true));
-        } else {
-          priority += previewPriority;
-        }
-      }
-    };
-
-    onMouseExit = () {
-      if (enablePreview) {
-        onUnpreviewed?.call();
-        if (focusOnPreviewing) {
-          schedule(() => setFocused(false));
-        } else {
-          resetPriority();
-        }
-      }
-    };
+    this.enableGesture = enableGesture;
   }
 
   /// 复制这个卡牌对象，但不会复制onTap之类的交互事件，也不会复制index属性
@@ -166,7 +137,6 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
       uniqueId: uniqueId,
       script: script,
       kind: kind,
-      enablePreview: enablePreview,
       ownedByRole: ownedByRole,
       sprite: sprite,
       tags: tags,
@@ -179,7 +149,6 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
       focusedPosition: focusedPosition,
       focusedSize: focusedSize,
       focusedPriority: focusedPriority,
-      focusOnPreviewing: focusOnPreviewing,
       showBorder: showBorder,
       isFocused: isFocused,
       stayFocused: stayFocused,
