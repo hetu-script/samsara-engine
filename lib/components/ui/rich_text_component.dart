@@ -13,6 +13,15 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
 
   String? get text => _text;
 
+  Color? _backgroundColor;
+  Color? get backgroundColor => _backgroundColor;
+  Paint _backgroundPaint = Paint()..color = Colors.transparent;
+  set backgroundColor(Color? value) {
+    _backgroundColor = value;
+
+    _backgroundPaint = Paint()..color = value ?? Colors.transparent;
+  }
+
   RichTextComponent({
     super.size,
     super.position,
@@ -22,9 +31,11 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
     String? text,
     this.config = const ScreenTextConfig(),
     bool enableGesture = false,
+    Color? backgroundColor,
   }) {
     this.text = text;
     this.enableGesture = enableGesture;
+    this.backgroundColor = backgroundColor;
   }
 
   set text(String? value) {
@@ -40,12 +51,7 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
         _ducument = buildFlameRichText(escapedContent, style: config.textStyle);
 
         final contentAnchor = config.anchor ?? Anchor.topLeft;
-        TextAlign contentAlign = TextAlign.left;
-        if (contentAnchor.x == 0.5) {
-          contentAlign = TextAlign.center;
-        } else if (contentAnchor.x == 1.0) {
-          contentAlign = TextAlign.right;
-        }
+        TextAlign contentAlign = config.textAlign ?? TextAlign.left;
         // TODO: 将这部分代码同意挪到一个element的extension上
         _element = _ducument!.format(DocumentStyle(
           paragraph:
@@ -110,6 +116,8 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
   @override
   void render(Canvas canvas) {
     if (!isVisible || text == null) return;
+
+    canvas.drawRect(border, _backgroundPaint);
 
     _outlinedElement?.draw(canvas);
     _element?.draw(canvas);

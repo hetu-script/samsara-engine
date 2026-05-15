@@ -196,11 +196,43 @@ TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
   return TagResolveResult(icon: icon, link: link, style: resolvedStyle);
 }
 
+String _normalizeMultilineTags(String source) {
+  final matches = _tagPattern.allMatches(source).toList();
+  if (matches.isEmpty) return source;
+
+  final buffer = StringBuffer();
+  var lastEnd = 0;
+
+  for (final match in matches) {
+    final matchString = match.group(0)!;
+    final taggedContent = match.group(1)!;
+
+    buffer.write(source.substring(lastEnd, match.start));
+
+    if (taggedContent.contains('\n')) {
+      final tagEndIdx = matchString.indexOf('>');
+      final tagPart = matchString.substring(1, tagEndIdx);
+      final lines = taggedContent.split('\n');
+      buffer.write(lines.map((line) => '<$tagPart>$line</>').join('\n'));
+    } else {
+      buffer.write(matchString);
+    }
+
+    lastEnd = match.end;
+  }
+
+  if (lastEnd < source.length) {
+    buffer.write(source.substring(lastEnd));
+  }
+
+  return buffer.toString();
+}
+
 /// 寻找以\<???>xxxxx<\/>标签包裹的文字，并将其替换为富文本字符串
 ///
 /// 返回的是一个段落列表，每个段落的children则是以标签做分隔的文字块或图片块
 ///
-/// 注意：对于换行，标签内只能使用字面转义换行符'\n'，标签外只能使用实际换行符，否则会导致解析失败
+/// 注意：对于换行，支持在标签内外使用实际换行符或字面转义换行符'\n'
 ///
 /// 支持参数：bold, italic, red, blue, color='#ffffffff', link='xxx', image='', etc....
 ///
@@ -217,9 +249,10 @@ List<TextSpan> buildFlutterRichText(
   // final void Function(String id, String? arg)? onTap,
 }) {
   final List<TextSpan> result = [];
-  if (source == null && source!.isEmpty) {
+  if (source == null || source.isEmpty) {
     return result;
   }
+  source = _normalizeMultilineTags(source);
   final paragraphs = source.trim().split(RegExp(r'\n'));
   for (var i = 0; i < paragraphs.length; ++i) {
     final paragraph = paragraphs[i];
@@ -282,6 +315,7 @@ DocumentRoot buildFlameRichText(
   TextStyle? style,
   // final void Function(String id, String? arg)? onTap,
 }) {
+  source = _normalizeMultilineTags(source);
   final paragraphs = source.split(RegExp(r'\n'));
   final paragraphNodes = <ParagraphNode>[];
   for (final paragraph in paragraphs) {

@@ -10,6 +10,7 @@ import 'package:fluent_ui/fluent_ui.dart' as fluent;
 import 'package:animated_tree_view/animated_tree_view.dart';
 import 'package:samsara/llm_chat/llm_chat.dart';
 import 'package:samsara/game_dialog.dart';
+import 'package:samsara/components/ui/rich_text_component.dart';
 
 import '../engine.dart';
 import '../prompt.dart';
@@ -56,7 +57,16 @@ class MainMenuScene extends Scene {
       // dialog.pushScreenHint(rect: button1.bounds);
       // dialog.execute();
     };
-    background.add(button1);
+    world.add(button1);
+
+    final richtext = RichTextComponent(
+      text: "<red>multiline\ntext</>",
+      size: Vector2(200.0, 100.0),
+      position: Vector2(center.x - 100.0, button1.position.y - 120.0),
+      config: ScreenTextConfig(textAlign: TextAlign.center),
+      backgroundColor: Colors.black38,
+    );
+    world.add(richtext);
 
     engine.setLoading(false);
   }
