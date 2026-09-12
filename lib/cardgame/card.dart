@@ -212,7 +212,6 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
         pile?.setSpreadCenter(this, true);
       }
     } else {
-      enableGesture = true;
       if (duration > 0) {
         await moveTo(
           toPosition: _savedPosition,
@@ -294,6 +293,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
 
   void clearInteraction() {
     enableGesture = false;
+    isFocused = false;
     onTapUp = null;
     onMouseEnter = null;
     onMouseExit = null;
