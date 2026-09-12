@@ -27,8 +27,7 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
 
   PiledZone? pile;
   void removeFromPile() {
-    pile?.removeCardByIndex(index);
-    pile = null;
+    pile?.removeCardByUniqueId(uniqueId);
   }
 
   /// 组牌id，有可能不同id的卡牌具有相同的名字和规则效果，组牌时他们被视作同一张牌，共享数量上限
@@ -45,6 +44,8 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
 
   /// 堆叠数量，一张卡牌可以代表一叠同名卡牌。
   int stack;
+
+  bool isSelected = false;
 
   GameCard? prev, next;
 
@@ -289,6 +290,14 @@ class GameCard extends BorderComponent with HandlesGesture, TaskController {
       }
     }
     return completer.future;
+  }
+
+  void clearInteraction() {
+    enableGesture = false;
+    onTapUp = null;
+    onMouseEnter = null;
+    onMouseExit = null;
+    resetPriority();
   }
 
   @override

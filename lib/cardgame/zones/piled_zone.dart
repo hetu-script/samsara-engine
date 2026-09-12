@@ -377,33 +377,52 @@ class PiledZone extends BorderComponent with TaskController {
     }
   }
 
+  GameCard? removeCardByUniqueId(
+    String uniqueId, {
+    bool removeFromGame = false,
+    bool updateIndex = true,
+  }) {
+    final index = cards.indexWhere((card) => card.uniqueId == uniqueId);
+
+    return removeCardByIndex(
+      index,
+      removeFromGame: removeFromGame,
+      updateIndex: updateIndex,
+    );
+  }
+
   GameCard? removeCardByIndex(
     int index, {
-    bool removeFromParent = false,
+    bool removeFromGame = false,
+    bool updateIndex = true,
   }) {
     if (index < 0 || index >= cards.length) return null;
 
     final card = cards[index];
 
-    if (removeFromParent) {
+    if (removeFromGame) {
       card.removeFromParent();
     }
 
     cards.removeAt(index);
+    card.pile = null;
 
-    // 递减后续卡牌的 index
-    for (var i = index; i < cards.length; ++i) {
-      cards[i].index = i;
+    if (updateIndex) {
+      for (var i = index; i < cards.length; ++i) {
+        cards[i].index = i;
+      }
+      onPileChanged?.call();
     }
 
-    onPileChanged?.call();
     return card;
   }
 
-  GameCard? removeCardById(String id) {
-    final index = cards.indexWhere((card) => card.id == id);
-
-    return removeCardByIndex(index);
+  /// 批量移除卡牌后统一更新 index
+  void updateIndices() {
+    for (var i = 0; i < cards.length; ++i) {
+      cards[i].index = i;
+    }
+    onPileChanged?.call();
   }
 
   void _updateCenteringOffset() {
