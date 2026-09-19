@@ -66,7 +66,10 @@ mixin AnimationStateController on GameComponent {
     } else {
       anim.ticker.reset();
     }
-    return anim.ticker.completed;
+    // 循环动画的 completed 永不完成，不能 await
+    if (!anim.loop) {
+      return anim.ticker.completed;
+    }
   }
 
   Future<void> setCompositeState({

@@ -35,22 +35,6 @@ class Hovertip extends BorderComponent {
     ..style = PaintingStyle.fill
     ..color = Colors.black.withAlpha(200);
 
-  static void clearAll([List<GameComponent>? list]) {
-    if (list == null) {
-      for (final instance in _instances.values) {
-        instance.removeFromParent();
-      }
-      _instances.clear();
-    } else {
-      for (final target in list) {
-        if (_instances.containsKey(target)) {
-          _instances[target]!.removeFromParent();
-          _instances.remove(target);
-        }
-      }
-    }
-  }
-
   static void show({
     required Scene scene,
     GameComponent? target,
@@ -67,7 +51,7 @@ class Hovertip extends BorderComponent {
     final escapedContent =
         (content?.trim() ?? '').replaceAllEscapedLineBreaks();
 
-    clearAll();
+    hideAll();
 
     Hovertip instance;
     if (_cachedInstances[escapedContent] != null) {
