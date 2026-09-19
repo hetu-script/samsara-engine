@@ -34,6 +34,8 @@ dependencies:
   quiver: ^3.2.1
   flutter_custom_cursor: ^0.0.4
   image: ^4.5.2
+  ffi: ^2.2.0
+  win32: ^6.4.0
   animated_tree_view: ^2.3.0
   flutter_markdown_plus: ^1.0.5
   provider: ^6.1.5+1

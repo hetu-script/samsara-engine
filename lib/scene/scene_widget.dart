@@ -34,6 +34,7 @@ class SceneWidget<T extends Scene> extends StatelessWidget {
       onLongPress: scene.onLongPress,
       onMouseHover: scene.onMouseHover,
       onMouseScroll: scene.onMouseScroll,
+      endDragAtWindowEdge: true,
       child: GameWidget(
         game: scene,
         // mouseCursor: cursor,

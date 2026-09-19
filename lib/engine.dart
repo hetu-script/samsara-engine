@@ -9,8 +9,6 @@ import 'package:hetu_script/hetu_script.dart';
 import 'package:hetu_script_flutter/hetu_script_flutter.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_audio/bgm.dart';
-import 'package:flutter_custom_cursor/cursor_manager.dart';
-import 'package:image/image.dart' as img2;
 import 'package:hetu_script/bytecode/bytecode_module.dart';
 import 'package:path/path.dart' as path;
 import 'package:llama_cpp_dart/llama_cpp_dart.dart';
@@ -519,17 +517,6 @@ class SamsaraEngine extends SceneController
     // notifyListeners();
   }
 
-  Future<void> registerCursors(Map<String, String> cursors) async {
-    if (cursors.isNotEmpty) {
-      for (final name in cursors.keys) {
-        await registerCursor(
-          name: name,
-          assetPath: cursors[name]!,
-        );
-      }
-    }
-  }
-
   // @override
   // Future<Scene> createScene(String key, [Map<String, dynamic>? args]) async {
   //   final scene = await super.createScene(key, args);
@@ -649,39 +636,5 @@ class SamsaraEngine extends SceneController
   Future<AudioPlayer?> play(String fileName, {double? volume}) async {
     return FlameAudio.play('sound/$fileName',
         volume: volume ?? config.musicVolume);
-  }
-
-  final _cursorManager = CursorManager.instance;
-
-  Future<String> registerCursor({
-    required String name,
-    required String assetPath,
-    int? width,
-    int? height,
-  }) async {
-    final byte = await rootBundle.load(assetPath);
-    final memoryCursorDataRawPNG = byte.buffer.asUint8List();
-    final img = img2.decodePng(memoryCursorDataRawPNG)!;
-    final memoryCursorDataRawBGRA =
-        (img.getBytes(order: img2.ChannelOrder.bgra)).buffer.asUint8List();
-    // register this cursor
-    final cursorName = await CursorManager.instance.registerCursor(CursorData()
-      ..name = name
-      ..buffer =
-          Platform.isWindows ? memoryCursorDataRawBGRA : memoryCursorDataRawPNG
-      ..height = width ?? img.height
-      ..width = height ?? img.width
-      ..hotX = 0
-      ..hotY = 0);
-
-    return cursorName;
-  }
-
-  String? _cursor;
-  String? get cursor => _cursor;
-
-  Future<void> setCursor(String name) async {
-    _cursor = name;
-    await _cursorManager.setSystemCursor(name);
   }
 }

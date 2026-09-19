@@ -12,6 +12,7 @@ export 'console/console.dart';
 export 'extensions.dart';
 export 'paint/paint.dart';
 export 'error.dart';
+export 'game_cursor.dart';
 
 export 'package:flame/components.dart' show Anchor, Vector2, CameraComponent;
 export 'package:flame/text.dart' show TextPaint, LineMetrics;

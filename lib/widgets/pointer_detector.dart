@@ -146,6 +146,8 @@ class PointerDetector extends StatefulWidget {
     // this.onMouseExit,
     this.onMouseScroll,
     this.behavior = HitTestBehavior.deferToChild,
+    this.endDragAtWindowEdge = false,
+    this.edgeExitMargin = 4.0,
   });
 
   /// The widget below this widget in the tree.
@@ -207,6 +209,18 @@ class PointerDetector extends StatefulWidget {
   // final void Function(PointerExitEvent details)? onMouseExit;
 
   final void Function(MouseScrollDetails details)? onMouseScroll;
+
+  /// 拖动中指针到达窗口边缘时，是否自动结束拖动。
+  ///
+  /// 在 Windows 桌面平台上，按住鼠标按钮拖出窗口客户区时，
+  /// 系统会通过 SetCapture 持续向窗口发送 WM_MOUSEMOVE/WM_SETCURSOR，
+  /// 可能导致 Flutter 引擎的帧调度（Ticker）被挂起，使 Flame 场景冻结。
+  /// 开启此选项后，当拖动中的指针到达窗口边缘 [edgeExitMargin] 范围内时，
+  /// 会强制触发一次 onDragEnd 并清理拖动状态，从而避免上述问题。
+  final bool endDragAtWindowEdge;
+
+  /// 判定"到达窗口边缘"的边距（逻辑像素），默认 4.0。
+  final double edgeExitMargin;
 
   @override
   PointerDetectorState createState() => PointerDetectorState();
@@ -290,6 +304,15 @@ class PointerDetectorState extends State<PointerDetector> {
   }
 
   void onPointerMove(PointerMoveEvent event) {
+    // 拖动中的指针到达窗口边缘时，强制结束拖动，
+    // 避免 Windows SetCapture 状态下持续接收窗口外鼠标事件导致的卡死。
+    if (widget.endDragAtWindowEdge &&
+        _gestureState == _GestureState.dragStart &&
+        _isAtWindowEdge(event.localPosition)) {
+      _forceEndDrag(event);
+      return;
+    }
+
     if (_lastMoveDetail != null) {
       _lastMoveDetail!.delta += event.delta;
       _lastMoveDetail!.position = event.position;
@@ -408,6 +431,46 @@ class PointerDetectorState extends State<PointerDetector> {
         },
       );
     }
+  }
+
+  /// 判断指针位置是否已到达当前窗口客户区边缘
+  bool _isAtWindowEdge(Offset localPosition) {
+    if (!mounted) return false;
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.hasSize) return false;
+    final size = renderBox.size;
+    final margin = widget.edgeExitMargin;
+    return localPosition.dx <= margin ||
+        localPosition.dy <= margin ||
+        localPosition.dx >= size.width - margin ||
+        localPosition.dy >= size.height - margin;
+  }
+
+  /// 指针到达窗口边缘时强制结束当前拖动：
+  /// 触发 onDragEnd 回调并清理所有拖动相关状态。
+  void _forceEndDrag(PointerMoveEvent event) {
+    final touches =
+        _touchDetails.where((detail) => detail.pointer == event.pointer);
+    if (touches.isEmpty) return;
+    final touchDetail = touches.first;
+
+    _gestureState = _GestureState.none;
+
+    widget.onDragEnd?.call(
+      event.pointer,
+      touchDetail.button,
+      TapUpDetails(
+        globalPosition: event.position,
+        localPosition: event.localPosition,
+        kind: event.kind,
+      ),
+    );
+
+    _touchDetails.removeWhere((detail) => detail.pointer == event.pointer);
+    _longPressTimer?.cancel();
+    _lastMoveTimer?.cancel();
+    _lastMoveTimer = null;
+    _lastMoveDetail = null;
   }
 
   double _angleBetweenLines(TouchDetails f, TouchDetails s) {
