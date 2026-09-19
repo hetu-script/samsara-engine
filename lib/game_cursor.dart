@@ -21,9 +21,9 @@ class GameCursor extends MouseCursor {
   /// key 为光标名，value 为 HCURSOR 句柄。
   static final Map<String, win32.HCURSOR> cursorHandles = {};
 
-  static Future<void> registerCursors(Map<String, String> data) {
+  static Future<void> registerCursors(Map<String, String> data) async {
     for (final entry in data.entries) {
-      registerCursor(name: entry.key, assetPath: entry.value);
+      await registerCursor(name: entry.key, assetPath: entry.value);
     }
   }
 
