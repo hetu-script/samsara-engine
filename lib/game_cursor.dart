@@ -71,6 +71,13 @@ class GameCursor extends MouseCursor {
                 interpolation: img.Interpolation.cubic,
               );
 
+    // Windows 位图默认是从底向上（bottom-up）存储的，
+    // 而 image 包的像素数据是从顶向下（top-down），
+    // 因此先把图片垂直翻转，之后写入位图时无需再翻转行序。
+    // 注意：AND mask 和 XOR mask 两张位图都必须使用翻转后的同一份数据，
+    // 只翻其中一张会导致光标显示为上下颠倒。
+    // final flipped = img.flipVertical(scaled);
+
     final width = scaled.width;
     final height = scaled.height;
     // image 包按 BGRA 顺序输出字节，正好是 Windows 位图需要的格式
@@ -79,25 +86,22 @@ class GameCursor extends MouseCursor {
     // AND mask（1bpp 单色位图）：位为 1 表示该像素透明（显示屏幕内容），
     // 位为 0 表示该像素由 XOR mask 决定（显示光标颜色）。
     // 根据 PNG 的 alpha 通道生成：alpha < 128 视为透明。
-    // 位图按从下往上的行顺序存储（Windows 默认），因此写入时垂直翻转。
     final maskStride = ((width + 31) ~/ 32) * 4; // 每行字节数，4 字节对齐
     final andBits = calloc<Uint8>(maskStride * height);
     for (int y = 0; y < height; y++) {
-      final srcY = height - 1 - y; // 垂直翻转
       for (int x = 0; x < width; x++) {
-        final a = bgra[(srcY * width + x) * 4 + 3];
+        final a = bgra[(y * width + x) * 4 + 3];
         if (a < 128) {
           andBits[y * maskStride + (x >> 3)] |= (0x80 >> (x & 7));
         }
       }
     }
 
-    // XOR 颜色位图（32bpp BGRA），同样从下往上存储。
+    // XOR 颜色位图（32bpp BGRA）。
     final xorBits = calloc<Uint8>(width * height * 4);
     for (int y = 0; y < height; y++) {
-      final srcY = height - 1 - y; // 垂直翻转
       for (int x = 0; x < width; x++) {
-        final src = (srcY * width + x) * 4;
+        final src = (y * width + x) * 4;
         final dst = (y * width + x) * 4;
         final a = bgra[src + 3];
         if (a < 128) {

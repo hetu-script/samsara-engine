@@ -145,9 +145,9 @@ class PointerDetector extends StatefulWidget {
     // this.onMouseEnter,
     // this.onMouseExit,
     this.onMouseScroll,
+    this.onStaleGestureReset,
     this.behavior = HitTestBehavior.deferToChild,
     this.endDragAtWindowEdge = false,
-    this.edgeExitMargin = 4.0,
   });
 
   /// The widget below this widget in the tree.
@@ -210,17 +210,24 @@ class PointerDetector extends StatefulWidget {
 
   final void Function(MouseScrollDetails details)? onMouseScroll;
 
-  /// 拖动中指针到达窗口边缘时，是否自动结束拖动。
+  /// 检测到陈旧手势残留时的回调。
+  ///
+  /// Flutter 桌面端在按住鼠标拖出窗口再回来时，可能为同一次物理按住
+  /// 分配新的 pointer id，导致旧 id 的按下/拖动记录永远等不到匹配的
+  /// pointerUp 而残留。当本控件在 onPointerDown 入口检测并清理掉
+  /// 自身 _touchDetails 中的残留时，会通过此回调通知上层（通常是 Scene），
+  /// 让上层也同步清理它自己维护的手势状态（如 tappingDetails、
+  /// draggingComponent 等），保证两层状态一致复位。
+  final void Function()? onStaleGestureReset;
+
+  /// 拖动中指针离开窗口时，是否自动结束拖动。
   ///
   /// 在 Windows 桌面平台上，按住鼠标按钮拖出窗口客户区时，
   /// 系统会通过 SetCapture 持续向窗口发送 WM_MOUSEMOVE/WM_SETCURSOR，
   /// 可能导致 Flutter 引擎的帧调度（Ticker）被挂起，使 Flame 场景冻结。
-  /// 开启此选项后，当拖动中的指针到达窗口边缘 [edgeExitMargin] 范围内时，
+  /// 开启此选项后，当拖动中的指针离开本控件区域（即窗口客户区）时，
   /// 会强制触发一次 onDragEnd 并清理拖动状态，从而避免上述问题。
   final bool endDragAtWindowEdge;
-
-  /// 判定"到达窗口边缘"的边距（逻辑像素），默认 4.0。
-  final double edgeExitMargin;
 
   @override
   PointerDetectorState createState() => PointerDetectorState();
@@ -248,19 +255,54 @@ class PointerDetectorState extends State<PointerDetector> {
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      behavior: widget.behavior,
-      onPointerDown: onPointerDown,
-      onPointerUp: onPointerUp,
-      onPointerMove: onPointerMove,
-      onPointerCancel: onPointerUp,
-      onPointerSignal: onPointerSignal,
-      onPointerHover: onMouseHover,
-      child: widget.child,
+    return MouseRegion(
+      // 不设置 cursor（保持 defer），不干扰内层任何 MouseRegion 的光标决策；
+      // 只利用 onExit 在指针离开窗口客户区的瞬间收到通知。
+      onExit: (event) {
+        // 拖动中指针离开窗口：立即强制结束拖动。
+        // MouseRegion 之间互不干扰（各自独立触发回调，不争抢命中测试），
+        // 因此不会影响项目中其他 MouseRegion 的正常工作。
+        if (widget.endDragAtWindowEdge &&
+            _gestureState == _GestureState.dragStart) {
+          _forceEndDrag(event);
+        }
+      },
+      child: Listener(
+        behavior: widget.behavior,
+        onPointerDown: onPointerDown,
+        onPointerUp: onPointerUp,
+        onPointerMove: onPointerMove,
+        onPointerCancel: onPointerUp,
+        onPointerSignal: onPointerSignal,
+        onPointerHover: onMouseHover,
+        child: widget.child,
+      ),
     );
   }
 
   void onPointerDown(PointerDownEvent event) {
+    // 自愈：Flutter 桌面端在按住鼠标拖出窗口再回来时，
+    // 可能为同一次物理按住分配新的 pointer id，
+    // 导致旧 id 的 down 记录永远等不到匹配的 up，残留在 _touchDetails 中。
+    //
+    // 桌面端是单指针设备（一只鼠标），同一时刻物理上只可能有
+    // 一个按下序列在进行；因此收到新的 pointerDown 时，
+    // _touchDetails 中若仍有记录，必然都是残留，直接清空。
+    //（双指缩放等多指手势在桌面端走 PointerPanZoom 事件路径，
+    //  不经过这里的 _touchDetails，不受影响。）
+    if (_touchDetails.isNotEmpty) {
+      _touchDetails.clear();
+      _gestureState = _GestureState.none;
+      _longPressTimer?.cancel();
+      _lastMoveTimer?.cancel();
+      _lastMoveTimer = null;
+      _lastMoveDetail = null;
+
+      // 同步通知上层清理它自己维护的手势状态，
+      // 保证两层状态在同一时刻复位，后续按下不再被旧记录拦截。
+      widget.onStaleGestureReset?.call();
+    }
+
     _touchDetails.add(TouchDetails(
         event.pointer, event.buttons, event.position, event.localPosition));
 
@@ -304,14 +346,12 @@ class PointerDetectorState extends State<PointerDetector> {
   }
 
   void onPointerMove(PointerMoveEvent event) {
-    // 拖动中的指针到达窗口边缘时，强制结束拖动，
-    // 避免 Windows SetCapture 状态下持续接收窗口外鼠标事件导致的卡死。
-    if (widget.endDragAtWindowEdge &&
-        _gestureState == _GestureState.dragStart &&
-        _isAtWindowEdge(event.localPosition)) {
-      _forceEndDrag(event);
-      return;
-    }
+    // 只跟踪按下的触点：未被 _touchDetails 记录的 move 事件
+    //（例如拖动被强制结束后、但物理按键仍按住时的后续移动）直接忽略。
+    final isTracked =
+        _touchDetails.any((detail) => detail.pointer == event.pointer);
+
+    if (!isTracked) return;
 
     if (_lastMoveDetail != null) {
       _lastMoveDetail!.delta += event.delta;
@@ -433,22 +473,12 @@ class PointerDetectorState extends State<PointerDetector> {
     }
   }
 
-  /// 判断指针位置是否已到达当前窗口客户区边缘
-  bool _isAtWindowEdge(Offset localPosition) {
-    if (!mounted) return false;
-    final renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox == null || !renderBox.hasSize) return false;
-    final size = renderBox.size;
-    final margin = widget.edgeExitMargin;
-    return localPosition.dx <= margin ||
-        localPosition.dy <= margin ||
-        localPosition.dx >= size.width - margin ||
-        localPosition.dy >= size.height - margin;
-  }
-
-  /// 指针到达窗口边缘时强制结束当前拖动：
+  /// 指针离开窗口客户区时强制结束当前拖动：
   /// 触发 onDragEnd 回调并清理所有拖动相关状态。
-  void _forceEndDrag(PointerMoveEvent event) {
+  ///
+  /// [event] 可以是 PointerMoveEvent（旧的边缘检测）或 PointerExitEvent，
+  /// 二者都携带有 position/localPosition/kind 信息。
+  void _forceEndDrag(PointerEvent event) {
     final touches =
         _touchDetails.where((detail) => detail.pointer == event.pointer);
     if (touches.isEmpty) return;
@@ -488,10 +518,14 @@ class PointerDetectorState extends State<PointerDetector> {
   }
 
   void onPointerUp(PointerEvent event) {
+    // 该 pointer 的记录可能已被 _forceEndDrag 提前清理，
+    // 此时后续的 pointerUp 事件直接忽略，不做任何处理。
+    final touches =
+        _touchDetails.where((detail) => detail.pointer == event.pointer);
+    if (touches.isEmpty) return;
     // use the original detail's button information instead
     // because this information will be lost in the pointerUp event.
-    final originalDetail =
-        _touchDetails.singleWhere((detail) => detail.pointer == event.pointer);
+    final originalDetail = touches.first;
     final tapUpDetail = TapUpDetails(
         globalPosition: event.position,
         localPosition: event.localPosition,

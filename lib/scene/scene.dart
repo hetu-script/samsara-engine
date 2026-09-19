@@ -224,6 +224,31 @@ abstract class Scene extends FlameGame with TaskController {
         return;
       }
     }
+
+    // 自愈兜底：本次按下没有任何组件响应，复位所有可能残留的手势状态。
+    resetStaleGestures();
+  }
+
+  /// 清理所有陈旧的手势状态。
+  ///
+  /// Flutter 桌面端在按住鼠标拖出窗口再回来时，可能切换 pointer id，
+  /// 导致旧 id 的 TappingDetails/draggingComponent 永远等不到匹配的
+  /// pointerUp/onDragEnd 而残留，进而让后续所有按下都被拦截。
+  /// 由于 id 不可靠，这里不按 id 匹配，而是复位全部手势状态。
+  ///
+  /// 调用时机：
+  /// - [onTapDown] 自愈兜底（无任何组件响应本次按下时）
+  /// - [PointerDetector.onStaleGestureReset] 回调（下层检测到残留时同步）
+  void resetStaleGestures() {
+    if (HandlesGesture.tappingDetails.isNotEmpty) {
+      for (final stale in HandlesGesture.tappingDetails.values) {
+        stale.component.isPressing = false;
+      }
+      HandlesGesture.tappingDetails.clear();
+    }
+    // 旧 id 的拖动可能永远等不到 onDragEnd，导致 draggingComponent 悬挂，
+    // 场景一直停留在拖动状态（光标卡在 drag、相机无响应等）。
+    draggingComponent = null;
   }
 
   @mustCallSuper
@@ -234,6 +259,12 @@ abstract class Scene extends FlameGame with TaskController {
       if (detail.button == button) {
         detail.component.isPressing = false;
       }
+    } else if (HandlesGesture.tappingDetails.isNotEmpty) {
+      // 自愈兜底：本次抬起的 pointer id 在 tappingDetails 中找不到，
+      // 但里面却有其他 id 的记录——说明 Flutter 在按下/抬起之间
+      // 切换了 pointer id（按住拖出窗口再回来时会发生），
+      // 旧 id 的记录永远等不到匹配的 up，属于残留，全部复位。
+      resetStaleGestures();
     }
 
     for (final c in gestureComponents) {

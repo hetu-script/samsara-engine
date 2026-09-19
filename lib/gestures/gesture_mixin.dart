@@ -106,6 +106,10 @@ mixin HandlesGesture on GameComponent {
       }
     }
 
+    // 该 pointer 已在其他组件上处于按下/拖动状态（例如上次拖动意外中断
+    // 导致记录残留），本次按下直接忽略，交由原所有者处理。
+    if (tappingDetails.containsKey(pointer)) return false;
+
     final pointerPosition = details.globalPosition.toVector2();
     final convertedPointerPosition =
         isHud ? pointerPosition : game.camera.globalToLocal(pointerPosition);
