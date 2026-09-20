@@ -10,6 +10,8 @@ class LightConfig {
   // late Paint huePaint;
   late Paint lightPaint;
 
+  bool isLighted;
+
   Color color;
 
   double radius;
@@ -38,6 +40,7 @@ class LightConfig {
 
   LightConfig({
     this.color = Colors.transparent,
+    this.isLighted = true,
     required this.radius,
     double blurBorder = 10.0,
     this.lightUpDuration = 0.0,

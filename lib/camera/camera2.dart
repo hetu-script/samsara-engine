@@ -42,7 +42,7 @@ class Camera2 extends CameraComponent {
           canvas.drawColor(backgroundLightingColor, BlendMode.dstATop);
           for (final c in world!.children.whereType<GameComponent>()) {
             if (!c.isVisible) continue;
-            if (c.lightConfig == null) continue;
+            if (c.lightConfig?.isLighted != true) continue;
             final config = c.lightConfig!;
             canvas.save();
             Vector2 lightCenter;
