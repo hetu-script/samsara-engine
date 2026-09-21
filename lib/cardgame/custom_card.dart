@@ -177,7 +177,7 @@ class CustomGameCard extends GameCard {
     this.showCostNumber = false,
   })  : modifiedCost = modifiedCost ?? cost,
         showTitle = showTitle ?? title != null,
-        _showDescription = showDescription ?? description != null,
+        showDescription = showDescription ?? description != null,
         showStackIcon = showStackIcon ??
             (stackIconSpriteId != null || stackIconSprite != null),
         showCostIcon = showCostIcon ??
