@@ -48,14 +48,7 @@ class CustomGameCard extends GameCard {
 
   bool showGlow;
   bool showTitle;
-  bool _showDescription;
-
-  set showDescription(bool value) {
-    _showDescription = value;
-    _descriptionComponent.isVisible = value;
-  }
-
-  bool get showDescription => _showDescription;
+  bool showDescription;
 
   CardTitleLayout titleLayout;
   bool showStackIcon;
@@ -358,8 +351,7 @@ class CustomGameCard extends GameCard {
 
     await tryLoadSprite();
 
-    _descriptionComponent = RichTextComponent(isVisible: showDescription);
-    add(_descriptionComponent);
+    _descriptionComponent = RichTextComponent();
   }
 
   void _generateDescription() {
@@ -493,6 +485,10 @@ class CustomGameCard extends GameCard {
       illustrationSprite?.renderRect(canvas, _illustrationRect,
           overridePaint: paint);
       sprite?.renderRect(canvas, border, overridePaint: paint);
+
+      if (showDescription) {
+        _descriptionComponent.render(canvas);
+      }
 
       if (showRarityIcon) {
         rarityIconSprite?.renderRect(canvas, _rarityIconRect,
