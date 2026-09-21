@@ -188,6 +188,8 @@ class CustomGameCard extends GameCard {
             (genreIconSpriteId != null || genreIconSprite != null),
         super(size: size ?? preferredSize) {
     this.title = title;
+
+    _descriptionComponent = RichTextComponent();
     this.description = description;
 
     if (glowColor != null) {
