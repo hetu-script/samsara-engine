@@ -39,7 +39,7 @@ class CustomGameCard extends GameCard {
     _generateDescription();
   }
 
-  late final RichTextComponent _descriptionComponent;
+  final RichTextComponent _descriptionComponent = RichTextComponent();
 
   ScreenTextConfig? titleConfig;
   ScreenTextConfig? descriptionConfig;
@@ -189,7 +189,6 @@ class CustomGameCard extends GameCard {
         super(size: size ?? preferredSize) {
     this.title = title;
 
-    _descriptionComponent = RichTextComponent();
     this.description = description;
 
     if (glowColor != null) {
@@ -352,8 +351,6 @@ class CustomGameCard extends GameCard {
     super.onLoad();
 
     await tryLoadSprite();
-
-    _descriptionComponent = RichTextComponent();
   }
 
   void _generateDescription() {
