@@ -76,6 +76,7 @@ class CustomGameCard extends GameCard {
   String? costIconSpriteId;
   String? rarityIconSpriteId;
   String? genreIconSpriteId;
+  String? descriptionBackgroundSpriteId;
 
   Sprite? glowSprite;
   Color? glowColor;
@@ -85,6 +86,7 @@ class CustomGameCard extends GameCard {
   Sprite? costIconSprite;
   Sprite? rarityIconSprite;
   Sprite? genreIconSprite;
+  Sprite? descriptionBackgroundSprite;
 
   /// the relative padding of the illustration, the actual padding will be calculated from the size
   final EdgeInsets titleRelativePaddings;
@@ -157,6 +159,8 @@ class CustomGameCard extends GameCard {
     this.rarityIconSprite,
     this.genreIconSpriteId,
     this.genreIconSprite,
+    this.descriptionBackgroundSpriteId,
+    this.descriptionBackgroundSprite,
     this.costNumberTextConfig,
     this.stackNumberTextConfig,
     this.cost = 0,
@@ -250,6 +254,8 @@ class CustomGameCard extends GameCard {
       rarityIconSprite: rarityIconSprite,
       genreIconSpriteId: genreIconSpriteId,
       genreIconSprite: genreIconSprite,
+      descriptionBackgroundSpriteId: descriptionBackgroundSpriteId,
+      descriptionBackgroundSprite: descriptionBackgroundSprite,
       costNumberTextConfig: costNumberTextConfig,
       stackNumberTextConfig: stackNumberTextConfig,
       cost: cost,
@@ -282,6 +288,7 @@ class CustomGameCard extends GameCard {
     String? costIconSpriteId,
     String? rarityIconSpriteId,
     String? genreIconSpriteId,
+    String? descriptionBackgroundSpriteId,
   }) async {
     if (spriteId != null) {
       this.spriteId = spriteId;
@@ -334,6 +341,14 @@ class CustomGameCard extends GameCard {
     if (this.genreIconSpriteId != null) {
       genreIconSprite =
           Sprite(await Flame.images.load(this.genreIconSpriteId!));
+    }
+    if (descriptionBackgroundSpriteId != null) {
+      this.descriptionBackgroundSpriteId = descriptionBackgroundSpriteId;
+    }
+    if (this.descriptionBackgroundSpriteId != null) {
+      descriptionBackgroundSprite =
+          Sprite(await Flame.images.load(this.descriptionBackgroundSpriteId!));
+      _descriptionComponent.backgroundSprite = descriptionBackgroundSprite;
     }
   }
 

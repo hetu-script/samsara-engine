@@ -1,4 +1,6 @@
 import 'package:samsara/gestures.dart';
+import 'package:flame/sprite.dart';
+import 'package:flame/flame.dart';
 
 import '../../richtext.dart';
 import '../../samsara.dart';
@@ -24,6 +26,9 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
     _backgroundPaint = Paint()..color = value ?? Colors.transparent;
   }
 
+  String? backgroundSpriteId;
+  Sprite? backgroundSprite;
+
   RichTextComponent({
     super.size,
     super.position,
@@ -35,10 +40,21 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
     this.config = const ScreenTextConfig(),
     bool enableGesture = false,
     Color? backgroundColor,
+    this.backgroundSpriteId,
+    this.backgroundSprite,
   }) {
     this.text = text;
     this.enableGesture = enableGesture;
     this.backgroundColor = backgroundColor;
+  }
+
+  @override
+  void onLoad() async {
+    super.onLoad();
+
+    if (backgroundSpriteId != null) {
+      backgroundSprite = Sprite(await Flame.images.load(backgroundSpriteId!));
+    }
   }
 
   set text(String? value) {
@@ -122,6 +138,8 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
   @override
   void render(Canvas canvas) {
     if (!isVisible || text == null) return;
+
+    backgroundSprite?.renderRect(canvas, border);
 
     canvas.drawRect(border, _backgroundPaint);
 
