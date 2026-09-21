@@ -2,12 +2,11 @@ import 'dart:ui' as ui;
 
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
-import 'package:flame/text.dart';
 import 'package:hetu_script/utils/collection.dart';
 
 import 'card.dart';
-import '../richtext/richtext_builder.dart';
 import '../samsara.dart';
+import '../components/ui/rich_text_component.dart';
 
 /// 卡牌标题的排列方式
 enum CardTitleLayout {
@@ -40,8 +39,8 @@ class CustomGameCard extends GameCard {
     _generateDescription();
   }
 
-  DocumentRoot? _descriptionDocument;
-  GroupElement? _descriptionElement;
+  late final RichTextComponent _descriptionComponent;
+
   ScreenTextConfig? titleConfig;
   ScreenTextConfig? descriptionConfig;
   ScreenTextConfig? costNumberTextConfig;
@@ -49,7 +48,15 @@ class CustomGameCard extends GameCard {
 
   bool showGlow;
   bool showTitle;
-  bool showDescription;
+  bool _showDescription;
+
+  set showDescription(bool value) {
+    _showDescription = value;
+    _descriptionComponent.isVisible = value;
+  }
+
+  bool get showDescription => _showDescription;
+
   CardTitleLayout titleLayout;
   bool showStackIcon;
   bool showStackNumber;
@@ -173,7 +180,7 @@ class CustomGameCard extends GameCard {
     this.showCostNumber = false,
   })  : modifiedCost = modifiedCost ?? cost,
         showTitle = showTitle ?? title != null,
-        showDescription = showDescription ?? description != null,
+        _showDescription = showDescription ?? description != null,
         showStackIcon = showStackIcon ??
             (stackIconSpriteId != null || stackIconSprite != null),
         showCostIcon = showCostIcon ??
@@ -335,6 +342,9 @@ class CustomGameCard extends GameCard {
     super.onLoad();
 
     await tryLoadSprite();
+
+    _descriptionComponent = RichTextComponent(isVisible: showDescription);
+    add(_descriptionComponent);
   }
 
   void _generateDescription() {
@@ -345,57 +355,10 @@ class CustomGameCard extends GameCard {
       fontScale = 0;
     }
 
-    _descriptionDocument =
-        buildFlameRichText(_description!, style: descriptionConfig?.textStyle);
-    final descriptionAnchor = descriptionConfig?.anchor ?? Anchor.topLeft;
-    TextAlign descriptionAlign = descriptionConfig?.textAlign ?? TextAlign.left;
-
-    _descriptionElement = _descriptionDocument!.format(DocumentStyle(
-      paragraph:
-          BlockStyle(margin: EdgeInsets.zero, textAlign: descriptionAlign),
-      text: InlineTextStyle(fontScale: fontScale),
-      width: _descriptionRect.width,
-      height: _descriptionRect.height,
-    ));
-    final descriptionBoundingBox = _descriptionElement!.boundingBox;
-    // 文本区域的左中右对齐已经由document.format的textAlign处理
-    // 下面只是单独处理垂直方向的对齐
-    switch (descriptionAnchor) {
-      case Anchor.topLeft:
-        _descriptionElement!
-            .translate(_descriptionRect.left, _descriptionRect.top);
-      case Anchor.topCenter:
-        _descriptionElement!
-            .translate(_descriptionRect.left, _descriptionRect.top);
-      case Anchor.topRight:
-        _descriptionElement!
-            .translate(_descriptionRect.left, _descriptionRect.top);
-      case Anchor.centerLeft:
-        _descriptionElement!.translate(
-            _descriptionRect.left,
-            _descriptionRect.top +
-                (_descriptionRect.height - descriptionBoundingBox.height) / 2);
-      case Anchor.center:
-        _descriptionElement!.translate(
-            _descriptionRect.left,
-            _descriptionRect.top +
-                (_descriptionRect.height - descriptionBoundingBox.height) / 2);
-      case Anchor.centerRight:
-        _descriptionElement!.translate(
-            _descriptionRect.left,
-            _descriptionRect.top +
-                (_descriptionRect.height - descriptionBoundingBox.height) / 2);
-      case Anchor.bottomLeft:
-        _descriptionElement!.translate(_descriptionRect.left,
-            _descriptionRect.bottom - descriptionBoundingBox.height);
-      case Anchor.bottomCenter:
-        _descriptionElement!.translate(_descriptionRect.left,
-            _descriptionRect.bottom - descriptionBoundingBox.height);
-      case Anchor.bottomRight:
-        _descriptionElement!.translate(_descriptionRect.left,
-            _descriptionRect.bottom - descriptionBoundingBox.height);
-      default:
-    }
+    _descriptionComponent.position = _descriptionRect.topLeft.toVector2();
+    _descriptionComponent.size = _descriptionRect.size.toVector2();
+    _descriptionComponent.fontScale = fontScale;
+    _descriptionComponent.text = _description;
   }
 
   @override
@@ -515,10 +478,6 @@ class CustomGameCard extends GameCard {
       illustrationSprite?.renderRect(canvas, _illustrationRect,
           overridePaint: paint);
       sprite?.renderRect(canvas, border, overridePaint: paint);
-
-      if (showDescription && _descriptionElement != null) {
-        _descriptionElement!.draw(canvas);
-      }
 
       if (showRarityIcon) {
         rarityIconSprite?.renderRect(canvas, _rarityIconRect,

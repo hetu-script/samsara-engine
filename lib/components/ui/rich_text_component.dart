@@ -11,6 +11,8 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
   GroupElement? _outlinedElement;
   GroupElement? _element;
 
+  double fontScale;
+
   String? get text => _text;
 
   Color? _backgroundColor;
@@ -29,6 +31,7 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
     super.isVisible,
     super.priority,
     String? text,
+    this.fontScale = 1.0,
     this.config = const ScreenTextConfig(),
     bool enableGesture = false,
     Color? backgroundColor,
@@ -52,11 +55,14 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
 
         final contentAnchor = config.anchor ?? Anchor.topLeft;
         TextAlign contentAlign = config.textAlign ?? TextAlign.left;
+        final inlineTextStyle = (config.textStyle ?? TextStyle())
+            .copyWith()
+            .toInlineTextStyle(fontScale: fontScale);
         // TODO: 将这部分代码同意挪到一个element的extension上
         _element = _ducument!.format(DocumentStyle(
           paragraph:
               BlockStyle(margin: EdgeInsets.zero, textAlign: contentAlign),
-          text: config.textStyle?.toInlineTextStyle(),
+          text: inlineTextStyle,
           width: width,
           height: height,
         ));

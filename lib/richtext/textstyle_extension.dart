@@ -1,11 +1,14 @@
 import 'package:flame/text.dart';
 
 extension FlameTextStyleConversion on TextStyle {
-  InlineTextStyle toInlineTextStyle() {
+  InlineTextStyle toInlineTextStyle({
+    double fontScale = 1.0,
+  }) {
     return InlineTextStyle(
       color: color,
       fontFamily: fontFamily,
       fontSize: fontSize,
+      fontScale: fontScale,
       fontWeight: fontWeight,
       fontStyle: fontStyle,
       letterSpacing: letterSpacing,
