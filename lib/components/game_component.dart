@@ -28,9 +28,11 @@ abstract class GameComponent extends PositionComponent
   set isVisible(bool value) => _isVisible = value;
   bool get isVisible {
     if (!_isVisible) return false;
-    // if (size.isZero()) return false;
     if (!isHud) {
-      return game.camera.canSee(this);
+      final scene = findGame();
+      if (scene != null) {
+        return scene.camera.canSee(this);
+      }
     }
     return true;
   }

@@ -17,7 +17,33 @@ enum CardTitleLayout {
   verticalRightTop,
 }
 
+/// 彩色费用图标的排列方向
+enum ColoredCostDirection {
+  up,
+  down,
+  left,
+  right,
+}
+
 class CustomGameCard extends GameCard {
+  /// 颜色id -> 费用图标的注册表，所有卡牌共享
+  static final Map<String, Sprite> coloredCostSprites = {};
+
+  /// 注册一个颜色的费用图标，spriteId 和 sprite 必须提供其中一个
+  static Future<void> registerColoredCostSprite(
+    String colorId, {
+    String? spriteId,
+    Sprite? sprite,
+  }) async {
+    assert(spriteId != null || sprite != null);
+    coloredCostSprites[colorId] =
+        sprite ?? Sprite(await Flame.images.load(spriteId!));
+  }
+
+  static void unregisterColoredCostSprite(String colorId) {
+    coloredCostSprites.remove(colorId);
+  }
+
   /// 卡牌的原始数据，可能是一个Json，或者一个河图struct对象，
   /// 也可能是 null，例如资源牌这种情况。
   dynamic data;
@@ -29,7 +55,7 @@ class CustomGameCard extends GameCard {
   String? get title => _title;
   set title(String? value) {
     _title = value;
-    _verticalTitle = _title!.split('').join('\n');
+    _verticalTitle = value?.split('').join('\n');
   }
 
   String? _description;
@@ -55,6 +81,7 @@ class CustomGameCard extends GameCard {
   bool showStackNumber;
   bool showCostIcon;
   bool showCostNumber;
+  bool showColoredCost;
   bool showRarityIcon;
   bool showGenreIcon;
 
@@ -89,6 +116,14 @@ class CustomGameCard extends GameCard {
   final EdgeInsets costIconRelativePaddings;
   final EdgeInsets rarityIconRelativePaddings;
   final EdgeInsets genreIconRelativePaddings;
+
+  /// 彩色费用第一个图标的相对位置，其余图标沿 coloredCostDirection
+  /// 按 coloredCostIconMargin 的间隔依次排列
+  final EdgeInsets coloredCostIconRelativePaddings;
+  final ColoredCostDirection coloredCostDirection;
+
+  /// 相邻彩色费用图标的间隔，实际间隔会随卡牌缩放
+  final double coloredCostIconMargin;
   late Rect _titleRect;
   late Rect _descriptionRect;
   late Rect _illustrationRect;
@@ -96,6 +131,7 @@ class CustomGameCard extends GameCard {
   late Rect _costIconRect;
   late Rect _rarityIconRect;
   late Rect _genreIconRect;
+  late Rect _coloredCostIconRect;
 
   /// Wether this card is shown in a library (isFiltered == false) or not (isFiltered == true).
   bool isFiltered = false;
@@ -165,12 +201,16 @@ class CustomGameCard extends GameCard {
     this.costIconRelativePaddings = EdgeInsets.zero,
     this.rarityIconRelativePaddings = EdgeInsets.zero,
     this.genreIconRelativePaddings = EdgeInsets.zero,
+    this.coloredCostIconRelativePaddings = EdgeInsets.zero,
+    this.coloredCostDirection = ColoredCostDirection.right,
+    this.coloredCostIconMargin = 0,
     this.titleLayout = CardTitleLayout.horizontalTopCenter,
     this.showGlow = false,
     bool? showTitle,
     bool? showDescription,
     bool? showStackIcon,
     bool? showCostIcon,
+    bool? showColoredCost,
     bool? showRarityIcon,
     bool? showGenreIcon,
     this.showStackNumber = false,
@@ -182,6 +222,7 @@ class CustomGameCard extends GameCard {
             (stackIconSpriteId != null || stackIconSprite != null),
         showCostIcon = showCostIcon ??
             (costIconSpriteId != null || costIconSprite != null),
+        showColoredCost = showColoredCost ?? (data?['coloredCost'] != null),
         showRarityIcon = showRarityIcon ??
             (rarityIconSpriteId != null || rarityIconSprite != null),
         showGenreIcon = showGenreIcon ??
@@ -261,10 +302,14 @@ class CustomGameCard extends GameCard {
       stackIconRelativePaddings: stackIconRelativePaddings,
       costIconRelativePaddings: costIconRelativePaddings,
       genreIconRelativePaddings: genreIconRelativePaddings,
+      coloredCostIconRelativePaddings: coloredCostIconRelativePaddings,
+      coloredCostDirection: coloredCostDirection,
+      coloredCostIconMargin: coloredCostIconMargin,
       showTitle: showTitle,
       showDescription: showDescription,
       showStackIcon: showStackIcon,
       showCostIcon: showCostIcon,
+      showColoredCost: showColoredCost,
       showRarityIcon: showRarityIcon,
       showGenreIcon: showGenreIcon,
       showStackNumber: showStackNumber,
@@ -367,6 +412,37 @@ class CustomGameCard extends GameCard {
     _descriptionComponent.text = _description;
   }
 
+  /// 从 data['coloredCost'] 展开成有序的颜色id序列，
+  /// 兼容 Map 或者河图 struct 等支持 keys 和 [] 操作的对象
+  List<String>? _expandColoredCost() {
+    final coloredCost = data?['coloredCost'];
+    if (coloredCost == null) return null;
+
+    final result = <String>[];
+    for (final key in coloredCost.keys) {
+      final count = coloredCost[key];
+      if (count is! num || count <= 0) continue;
+      for (var i = 0; i < count; ++i) {
+        result.add(key.toString());
+      }
+    }
+    return result;
+  }
+
+  /// 第 index 个彩色费用图标相对基准图标的偏移量
+  Offset _coloredCostIconOffset(int index, double scale) {
+    final (dx, dy) = switch (coloredCostDirection) {
+      ColoredCostDirection.right => (1.0, 0.0),
+      ColoredCostDirection.left => (-1.0, 0.0),
+      ColoredCostDirection.down => (0.0, 1.0),
+      ColoredCostDirection.up => (0.0, -1.0),
+    };
+    final step =
+        Offset(dx * _coloredCostIconRect.width, dy * _coloredCostIconRect.height) +
+            Offset(dx, dy) * coloredCostIconMargin;
+    return step * scale * index.toDouble();
+  }
+
   @override
   void generateBorder() {
     super.generateBorder();
@@ -430,6 +506,19 @@ class CustomGameCard extends GameCard {
               width,
       height -
           (costIconRelativePaddings.top + costIconRelativePaddings.bottom) *
+              height,
+    );
+
+    _coloredCostIconRect = Rect.fromLTWH(
+      coloredCostIconRelativePaddings.left * width,
+      coloredCostIconRelativePaddings.top * height,
+      width -
+          (coloredCostIconRelativePaddings.left +
+                  coloredCostIconRelativePaddings.right) *
+              width,
+      height -
+          (coloredCostIconRelativePaddings.top +
+                  coloredCostIconRelativePaddings.bottom) *
               height,
     );
 
@@ -513,26 +602,59 @@ class CustomGameCard extends GameCard {
         }
       }
 
-      if (showCostIcon) {
-        costIconSprite?.renderRect(canvas, _costIconRect, overridePaint: paint);
-      }
+      final costColor = modifiedCost > cost
+          ? Colors.red
+          : (modifiedCost < cost ? Colors.green : Colors.white);
+      final coloredCostIcons = showColoredCost ? _expandColoredCost() : null;
+      if (coloredCostIcons != null) {
+        // 万智牌式彩色费用：通用费用数字在第一个位置，彩色图标沿方向排列。
+        // 减费时只影响通用费用数字，为 0 时不显示。
+        final fontScale =
+            preferredSize != null ? width / preferredSize!.x : 1.0;
+        var iconIndex = 0;
+        if (modifiedCost > 0) {
+          costIconSprite?.renderRect(canvas, _coloredCostIconRect,
+              overridePaint: paint);
+          drawScreenText(
+            canvas,
+            '$modifiedCost',
+            alpha: isEnabled ? 255 : 128,
+            position: _coloredCostIconRect.topLeft,
+            color: costColor,
+            config: (costNumberTextConfig ?? const ScreenTextConfig())
+                .copyWith(
+                    size: _coloredCostIconRect.size.toVector2(),
+                    scale: fontScale),
+          );
+          ++iconIndex;
+        }
+        for (final colorId in coloredCostIcons) {
+          final iconSprite = coloredCostSprites[colorId];
+          // 未注册的颜色直接跳过
+          if (iconSprite == null) continue;
+          iconSprite.renderRect(
+              canvas,
+              _coloredCostIconRect
+                  .shift(_coloredCostIconOffset(iconIndex, fontScale)),
+              overridePaint: paint);
+          ++iconIndex;
+        }
+      } else {
+        if (showCostIcon) {
+          costIconSprite?.renderRect(canvas, _costIconRect,
+              overridePaint: paint);
+        }
 
-      if (showCostNumber) {
-        drawScreenText(
-          canvas,
-          '$cost',
-          alpha: isEnabled ? 255 : 128,
-          position: _costIconRect.topLeft,
-          color: modifiedCost > cost
-              ? Colors.red
-              : (modifiedCost < cost ? Colors.green : Colors.white),
-          config: costNumberTextConfig,
-        );
-      }
-
-      if (showGenreIcon) {
-        genreIconSprite?.renderRect(canvas, _genreIconRect,
-            overridePaint: paint);
+        if (showCostNumber) {
+          drawScreenText(
+            canvas,
+            '$modifiedCost',
+            alpha: isEnabled ? 255 : 128,
+            position: _costIconRect.topLeft,
+            color: costColor,
+            config: costNumberTextConfig,
+          );
+        }
       }
 
       if (showTitle && title != null && title?.isNotEmpty == true) {
