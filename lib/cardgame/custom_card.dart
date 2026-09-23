@@ -11,10 +11,10 @@ import '../components/ui/rich_text_component.dart';
 
 /// 卡牌标题的排列方式
 enum CardTitleLayout {
-  /// 顶部横排
-  horizontalTop,
+  /// 按照 titleRelativeRect 计算，横排
+  normal,
 
-  /// 从右上角向下竖排
+  /// 从卡牌右上角向下竖排，忽略 titleRelativeRect
   verticalRightTop,
 }
 
@@ -221,7 +221,7 @@ class CustomGameCard extends GameCard {
     this.coloredCostDirection = ColoredCostDirection.right,
     this.coloredCostIconMargin = 0,
     this.coloredCostLayout = ColoredCostLayout.pips,
-    this.titleLayout = CardTitleLayout.horizontalTop,
+    this.titleLayout = CardTitleLayout.normal,
     this.showGlow = false,
     bool? showTitle,
     bool? showDescription,
@@ -515,8 +515,13 @@ class CustomGameCard extends GameCard {
       titleRelativeRect.width * width,
       titleRelativeRect.height * height,
     );
-    titleConfig = titleConfig?.copyWith(
-        size: _titleRect.size.toVector2(), scale: fontScale);
+    titleConfig = (titleConfig ?? const ScreenTextConfig()).copyWith(
+      size: switch (titleLayout) {
+        CardTitleLayout.normal => _titleRect.size.toVector2(),
+        CardTitleLayout.verticalRightTop => border.size.toVector2(),
+      },
+      scale: fontScale,
+    );
 
     _descriptionRect = Rect.fromLTWH(
       descriptionRelativeRect.left * width,
@@ -660,7 +665,7 @@ class CustomGameCard extends GameCard {
 
       if (showTitle && title != null && title?.isNotEmpty == true) {
         switch (titleLayout) {
-          case CardTitleLayout.horizontalTop:
+          case CardTitleLayout.normal:
             drawScreenText(canvas, title!,
                 alpha: isEnabled ? 255 : 128,
                 position: _titleRect.topLeft,
@@ -668,7 +673,7 @@ class CustomGameCard extends GameCard {
           case CardTitleLayout.verticalRightTop:
             drawScreenText(canvas, _verticalTitle!,
                 alpha: isEnabled ? 255 : 128,
-                position: _titleRect.topLeft,
+                position: Offset.zero,
                 config: titleConfig?.copyWith(anchor: Anchor.topRight));
         }
       }
