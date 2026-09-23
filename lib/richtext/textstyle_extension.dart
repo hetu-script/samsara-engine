@@ -2,7 +2,7 @@ import 'package:flame/text.dart';
 
 extension FlameTextStyleConversion on TextStyle {
   InlineTextStyle toInlineTextStyle({
-    double fontScale = 1.0,
+    double? fontScale,
   }) {
     return InlineTextStyle(
       color: color,

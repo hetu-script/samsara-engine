@@ -140,6 +140,7 @@ class CustomGameCard extends GameCard {
   final ColoredCostLayout coloredCostLayout;
   late Rect _titleRect;
   late Rect _descriptionRect;
+  double _heightDiff = 0;
   late Rect _illustrationRect;
   late Rect _stackIconRect;
   late Rect _costIconRect;
@@ -418,19 +419,7 @@ class CustomGameCard extends GameCard {
   void _generateDescription() {
     if (_description == null) return;
 
-    double fontScale = preferredSize != null ? width / preferredSize!.x : 1.0;
-    if (fontScale < 0) {
-      fontScale = 0;
-    }
-
     _descriptionComponent.text = _description;
-
-    _descriptionRect = Rect.fromLTWH(
-        _descriptionRect.left,
-        _descriptionRect.top,
-        _descriptionRect.width,
-        math.max(_descriptionRect.height,
-            _descriptionComponent.textAreaHeight ?? 0));
   }
 
   /// 从 data['coloredCost'] 读取有序 (颜色id, 数量) 对列表，
@@ -530,19 +519,39 @@ class CustomGameCard extends GameCard {
         size: _titleRect.size.toVector2(), scale: fontScale);
 
     _descriptionRect = Rect.fromLTWH(
-        descriptionRelativeRect.left * width,
-        descriptionRelativeRect.top * height,
-        descriptionRelativeRect.width * width,
-        math.max(descriptionRelativeRect.height * height,
-            _descriptionComponent.textAreaHeight ?? 0));
+      descriptionRelativeRect.left * width,
+      descriptionRelativeRect.top * height,
+      descriptionRelativeRect.width * width,
+      descriptionRelativeRect.height * height,
+    );
 
-    _descriptionComponent.position = _descriptionRect.topLeft.toVector2();
-    _descriptionComponent.size = _descriptionRect.size.toVector2();
-    // _descriptionComponent.fontScale = fontScale;
     _descriptionComponent.config = (descriptionConfig ?? ScreenTextConfig())
-        .copyWith(size: _descriptionRect.size.toVector2(), scale: fontScale);
+        .copyWith(size: _descriptionRect.size.toVector2());
+
+    _descriptionComponent.layout(
+        width: _descriptionRect.width,
+        height: _descriptionRect.height,
+        fontScale: fontScale);
+
+    _descriptionRect = Rect.fromLTWH(
+      descriptionRelativeRect.left * width,
+      descriptionRelativeRect.top * height,
+      descriptionRelativeRect.width * width,
+      math.max(descriptionRelativeRect.height * height,
+          _descriptionComponent.textAreaHeight ?? 0),
+    );
 
     _generateDescription();
+
+    _heightDiff =
+        _descriptionComponent.textAreaHeight ?? 0 - _descriptionRect.height;
+    if (_heightDiff > 0) {
+      _descriptionRect = Rect.fromLTWH(
+          _descriptionRect.left,
+          _descriptionRect.top - _heightDiff,
+          _descriptionRect.width,
+          _descriptionRect.height + _heightDiff);
+    }
   }
 
   @override
@@ -559,12 +568,14 @@ class CustomGameCard extends GameCard {
       illustrationSprite?.renderRect(canvas, _illustrationRect,
           overridePaint: paint);
 
-      if (showDescription) {
-        descriptionBackgroundSprite?.renderRect(canvas, _descriptionRect);
-        _descriptionComponent.renderAt(canvas, _descriptionRect.topLeft);
-      }
+      descriptionBackgroundSprite?.renderRect(canvas, _descriptionRect);
 
       sprite?.renderRect(canvas, border, overridePaint: paint);
+
+      if (showDescription) {
+        _descriptionComponent.renderAt(canvas,
+            Offset(_descriptionRect.left, _descriptionRect.top + _heightDiff));
+      }
 
       if (showRarityIcon) {
         rarityIconSprite?.renderRect(canvas, _rarityIconRect,

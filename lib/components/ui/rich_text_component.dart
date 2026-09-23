@@ -15,6 +15,23 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
 
   String? get text => _text;
 
+  void layout({
+    String? text,
+    double? width,
+    double? height,
+    double? fontScale,
+  }) {
+    final t = text ?? _text;
+    if (t == null) return;
+
+    if (width != null) this.width = width;
+    if (height != null) this.height = height;
+    if (fontScale != null) this.fontScale = fontScale;
+
+    _text = null; // 绕过 setter 的去重判断
+    text = t;
+  }
+
   double? get textAreaHeight => _element?.height;
 
   Color? _backgroundColor;
@@ -52,7 +69,6 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
       final escapedContent = value.replaceAllEscapedLineBreaks();
       if (_text != escapedContent) {
         _text = escapedContent;
-        config.copyWith(size: size);
         _ducument = buildFlameRichText(escapedContent, style: config.textStyle);
 
         final contentAnchor = config.anchor ?? Anchor.topLeft;
