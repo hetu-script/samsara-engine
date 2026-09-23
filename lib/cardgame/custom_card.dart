@@ -538,13 +538,11 @@ class CustomGameCard extends GameCard {
 
     _descriptionComponent.position = _descriptionRect.topLeft.toVector2();
     _descriptionComponent.size = _descriptionRect.size.toVector2();
-    _descriptionComponent.fontScale = fontScale;
+    // _descriptionComponent.fontScale = fontScale;
     _descriptionComponent.config = (descriptionConfig ?? ScreenTextConfig())
         .copyWith(size: _descriptionRect.size.toVector2(), scale: fontScale);
 
-    if (_description != null) {
-      _generateDescription();
-    }
+    _generateDescription();
   }
 
   @override
@@ -563,7 +561,7 @@ class CustomGameCard extends GameCard {
 
       if (showDescription) {
         descriptionBackgroundSprite?.renderRect(canvas, _descriptionRect);
-        _descriptionComponent.render(canvas);
+        _descriptionComponent.renderAt(canvas, _descriptionRect.topLeft);
       }
 
       sprite?.renderRect(canvas, border, overridePaint: paint);

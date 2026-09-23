@@ -89,32 +89,32 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
         // 下面只是单独处理垂直方向的对齐
         switch (contentAnchor) {
           case Anchor.topLeft:
-            _element!.translate(x, y);
-            _outline?.translate(x, y);
+            _element!.translate(0, 0);
+            _outline?.translate(0, 0);
           case Anchor.topCenter:
-            _element!.translate(x, y);
-            _outline?.translate(x, y);
+            _element!.translate(0, 0);
+            _outline?.translate(0, 0);
           case Anchor.topRight:
-            _element!.translate(x, y);
-            _outline?.translate(x, y);
+            _element!.translate(0, 0);
+            _outline?.translate(0, 0);
           case Anchor.centerLeft:
-            _element!.translate(x, y + (height - boundingBox.height) / 2);
-            _outline?.translate(x, y + (height - boundingBox.height) / 2);
+            _element!.translate(0, (height - boundingBox.height) / 2);
+            _outline?.translate(0, (height - boundingBox.height) / 2);
           case Anchor.center:
-            _element!.translate(x, y + (height - boundingBox.height) / 2);
-            _outline?.translate(x, y + (height - boundingBox.height) / 2);
+            _element!.translate(0, (height - boundingBox.height) / 2);
+            _outline?.translate(0, (height - boundingBox.height) / 2);
           case Anchor.centerRight:
-            _element!.translate(x, y + (height - boundingBox.height) / 2);
-            _outline?.translate(x, y + (height - boundingBox.height) / 2);
+            _element!.translate(0, (height - boundingBox.height) / 2);
+            _outline?.translate(0, (height - boundingBox.height) / 2);
           case Anchor.bottomLeft:
-            _element!.translate(x, y + height - boundingBox.height);
-            _outline?.translate(x, y + height - boundingBox.height);
+            _element!.translate(0, height - boundingBox.height);
+            _outline?.translate(0, height - boundingBox.height);
           case Anchor.bottomCenter:
-            _element!.translate(x, y + height - boundingBox.height);
-            _outline?.translate(x, y + height - boundingBox.height);
+            _element!.translate(0, height - boundingBox.height);
+            _outline?.translate(0, height - boundingBox.height);
           case Anchor.bottomRight:
-            _element!.translate(x, y + height - boundingBox.height);
-            _outline?.translate(x, y + height - boundingBox.height);
+            _element!.translate(0, height - boundingBox.height);
+            _outline?.translate(0, height - boundingBox.height);
           default:
         }
       }
@@ -126,8 +126,18 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
     if (!isVisible || text == null) return;
 
     canvas.drawRect(border, _backgroundPaint);
-
     _outline?.draw(canvas);
     _element?.draw(canvas);
+  }
+
+  void renderAt(Canvas canvas, Offset offset) {
+    canvas.save();
+    canvas.translate(offset.dx, offset.dy);
+
+    canvas.drawRect(border, _backgroundPaint);
+    _outline?.draw(canvas);
+    _element?.draw(canvas);
+
+    canvas.restore();
   }
 }
