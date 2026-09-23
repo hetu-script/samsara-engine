@@ -1,6 +1,4 @@
 import 'package:samsara/gestures.dart';
-import 'package:flame/sprite.dart';
-import 'package:flame/flame.dart';
 
 import '../../richtext.dart';
 import '../../samsara.dart';
@@ -10,12 +8,14 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
 
   String? _text;
   DocumentRoot? _ducument;
-  GroupElement? _outlinedElement;
+  GroupElement? _outline;
   GroupElement? _element;
 
   double fontScale;
 
   String? get text => _text;
+
+  double? get textAreaHeight => _element?.height;
 
   Color? _backgroundColor;
   Color? get backgroundColor => _backgroundColor;
@@ -25,9 +25,6 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
 
     _backgroundPaint = Paint()..color = value ?? Colors.transparent;
   }
-
-  String? backgroundSpriteId;
-  Sprite? backgroundSprite;
 
   RichTextComponent({
     super.size,
@@ -40,21 +37,10 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
     this.config = const ScreenTextConfig(),
     bool enableGesture = false,
     Color? backgroundColor,
-    this.backgroundSpriteId,
-    this.backgroundSprite,
   }) {
     this.text = text;
     this.enableGesture = enableGesture;
     this.backgroundColor = backgroundColor;
-  }
-
-  @override
-  void onLoad() async {
-    super.onLoad();
-
-    if (backgroundSpriteId != null) {
-      backgroundSprite = Sprite(await Flame.images.load(backgroundSpriteId!));
-    }
   }
 
   set text(String? value) {
@@ -83,7 +69,7 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
           height: height,
         ));
         if (config.outlined == true) {
-          _outlinedElement = _ducument!.format(DocumentStyle(
+          _outline = _ducument!.format(DocumentStyle(
             paragraph:
                 BlockStyle(margin: EdgeInsets.zero, textAlign: contentAlign),
             text: (config.textStyle ?? TextStyle())
@@ -103,32 +89,32 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
         // 下面只是单独处理垂直方向的对齐
         switch (contentAnchor) {
           case Anchor.topLeft:
-            _element!.translate(0, 0);
-            _outlinedElement?.translate(0, 0);
+            _element!.translate(x, y);
+            _outline?.translate(x, y);
           case Anchor.topCenter:
-            _element!.translate(0, 0);
-            _outlinedElement?.translate(0, 0);
+            _element!.translate(x, y);
+            _outline?.translate(x, y);
           case Anchor.topRight:
-            _element!.translate(0, 0);
-            _outlinedElement?.translate(0, 0);
+            _element!.translate(x, y);
+            _outline?.translate(x, y);
           case Anchor.centerLeft:
-            _element!.translate(0, (height - boundingBox.height) / 2);
-            _outlinedElement?.translate(0, (height - boundingBox.height) / 2);
+            _element!.translate(x, y + (height - boundingBox.height) / 2);
+            _outline?.translate(x, y + (height - boundingBox.height) / 2);
           case Anchor.center:
-            _element!.translate(0, (height - boundingBox.height) / 2);
-            _outlinedElement?.translate(0, (height - boundingBox.height) / 2);
+            _element!.translate(x, y + (height - boundingBox.height) / 2);
+            _outline?.translate(x, y + (height - boundingBox.height) / 2);
           case Anchor.centerRight:
-            _element!.translate(0, (height - boundingBox.height) / 2);
-            _outlinedElement?.translate(0, (height - boundingBox.height) / 2);
+            _element!.translate(x, y + (height - boundingBox.height) / 2);
+            _outline?.translate(x, y + (height - boundingBox.height) / 2);
           case Anchor.bottomLeft:
-            _element!.translate(0, height - boundingBox.height);
-            _outlinedElement?.translate(0, height - boundingBox.height);
+            _element!.translate(x, y + height - boundingBox.height);
+            _outline?.translate(x, y + height - boundingBox.height);
           case Anchor.bottomCenter:
-            _element!.translate(0, height - boundingBox.height);
-            _outlinedElement?.translate(0, height - boundingBox.height);
+            _element!.translate(x, y + height - boundingBox.height);
+            _outline?.translate(x, y + height - boundingBox.height);
           case Anchor.bottomRight:
-            _element!.translate(0, height - boundingBox.height);
-            _outlinedElement?.translate(0, height - boundingBox.height);
+            _element!.translate(x, y + height - boundingBox.height);
+            _outline?.translate(x, y + height - boundingBox.height);
           default:
         }
       }
@@ -139,11 +125,9 @@ class RichTextComponent extends BorderComponent with HandlesGesture {
   void render(Canvas canvas) {
     if (!isVisible || text == null) return;
 
-    backgroundSprite?.renderRect(canvas, border);
-
     canvas.drawRect(border, _backgroundPaint);
 
-    _outlinedElement?.draw(canvas);
+    _outline?.draw(canvas);
     _element?.draw(canvas);
   }
 }

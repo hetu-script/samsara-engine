@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'dart:math' as math;
 
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
@@ -10,8 +11,8 @@ import '../components/ui/rich_text_component.dart';
 
 /// 卡牌标题的排列方式
 enum CardTitleLayout {
-  /// 顶部中间横排
-  horizontalTopCenter,
+  /// 顶部横排
+  horizontalTop,
 
   /// 从右上角向下竖排
   verticalRightTop,
@@ -119,17 +120,17 @@ class CustomGameCard extends GameCard {
   Sprite? descriptionBackgroundSprite;
 
   /// the relative padding of the illustration, the actual padding will be calculated from the size
-  final EdgeInsets titleRelativePaddings;
-  final EdgeInsets descriptionRelativePaddings;
-  final EdgeInsets illustrationRelativePaddings;
-  final EdgeInsets stackIconRelativePaddings;
-  final EdgeInsets costIconRelativePaddings;
-  final EdgeInsets rarityIconRelativePaddings;
-  final EdgeInsets genreIconRelativePaddings;
+  final Rect titleRelativeRect;
+  final Rect descriptionRelativeRect;
+  final Rect illustrationRelativeRect;
+  final Rect stackIconRelativeRect;
+  final Rect costIconRelativeRect;
+  final Rect rarityIconRelativeRect;
+  final Rect genreIconRelativeRect;
 
   /// 彩色费用第一个图标的相对位置，其余图标沿 coloredCostDirection
   /// 按 coloredCostIconMargin 的间隔依次排列
-  final EdgeInsets coloredCostIconRelativePaddings;
+  final Rect coloredCostIconRelativeRect;
   final ColoredCostDirection coloredCostDirection;
 
   /// 相邻彩色费用图标的间隔，实际间隔会随卡牌缩放
@@ -208,18 +209,18 @@ class CustomGameCard extends GameCard {
     this.coloredCostNumberTextConfig,
     this.cost = 0,
     int? modifiedCost,
-    this.illustrationRelativePaddings = EdgeInsets.zero,
-    this.titleRelativePaddings = EdgeInsets.zero,
-    this.descriptionRelativePaddings = EdgeInsets.zero,
-    this.stackIconRelativePaddings = EdgeInsets.zero,
-    this.costIconRelativePaddings = EdgeInsets.zero,
-    this.rarityIconRelativePaddings = EdgeInsets.zero,
-    this.genreIconRelativePaddings = EdgeInsets.zero,
-    this.coloredCostIconRelativePaddings = EdgeInsets.zero,
+    this.illustrationRelativeRect = Rect.zero,
+    this.titleRelativeRect = Rect.zero,
+    this.descriptionRelativeRect = Rect.zero,
+    this.stackIconRelativeRect = Rect.zero,
+    this.costIconRelativeRect = Rect.zero,
+    this.rarityIconRelativeRect = Rect.zero,
+    this.genreIconRelativeRect = Rect.zero,
+    this.coloredCostIconRelativeRect = Rect.zero,
     this.coloredCostDirection = ColoredCostDirection.right,
     this.coloredCostIconMargin = 0,
     this.coloredCostLayout = ColoredCostLayout.pips,
-    this.titleLayout = CardTitleLayout.horizontalTopCenter,
+    this.titleLayout = CardTitleLayout.horizontalTop,
     this.showGlow = false,
     bool? showTitle,
     bool? showDescription,
@@ -311,14 +312,14 @@ class CustomGameCard extends GameCard {
       coloredCostNumberTextConfig: coloredCostNumberTextConfig,
       cost: cost,
       modifiedCost: modifiedCost,
-      illustrationRelativePaddings: illustrationRelativePaddings,
-      rarityIconRelativePaddings: rarityIconRelativePaddings,
-      titleRelativePaddings: titleRelativePaddings,
-      descriptionRelativePaddings: descriptionRelativePaddings,
-      stackIconRelativePaddings: stackIconRelativePaddings,
-      costIconRelativePaddings: costIconRelativePaddings,
-      genreIconRelativePaddings: genreIconRelativePaddings,
-      coloredCostIconRelativePaddings: coloredCostIconRelativePaddings,
+      illustrationRelativeRect: illustrationRelativeRect,
+      rarityIconRelativeRect: rarityIconRelativeRect,
+      titleRelativeRect: titleRelativeRect,
+      descriptionRelativeRect: descriptionRelativeRect,
+      stackIconRelativeRect: stackIconRelativeRect,
+      costIconRelativeRect: costIconRelativeRect,
+      genreIconRelativeRect: genreIconRelativeRect,
+      coloredCostIconRelativeRect: coloredCostIconRelativeRect,
       coloredCostDirection: coloredCostDirection,
       coloredCostIconMargin: coloredCostIconMargin,
       coloredCostLayout: coloredCostLayout,
@@ -404,7 +405,6 @@ class CustomGameCard extends GameCard {
     if (this.descriptionBackgroundSpriteId != null) {
       descriptionBackgroundSprite =
           Sprite(await Flame.images.load(this.descriptionBackgroundSpriteId!));
-      _descriptionComponent.backgroundSprite = descriptionBackgroundSprite;
     }
   }
 
@@ -423,10 +423,14 @@ class CustomGameCard extends GameCard {
       fontScale = 0;
     }
 
-    _descriptionComponent.position = _descriptionRect.topLeft.toVector2();
-    _descriptionComponent.size = _descriptionRect.size.toVector2();
-    _descriptionComponent.fontScale = fontScale;
     _descriptionComponent.text = _description;
+
+    _descriptionRect = Rect.fromLTWH(
+        _descriptionRect.left,
+        _descriptionRect.top,
+        _descriptionRect.width,
+        math.max(_descriptionRect.height,
+            _descriptionComponent.textAreaHeight ?? 0));
   }
 
   /// 从 data['coloredCost'] 读取有序 (颜色id, 数量) 对列表，
@@ -453,9 +457,9 @@ class CustomGameCard extends GameCard {
       ColoredCostDirection.down => (0.0, 1.0),
       ColoredCostDirection.up => (0.0, -1.0),
     };
-    final step =
-        Offset(dx * _coloredCostIconRect.width, dy * _coloredCostIconRect.height) +
-            Offset(dx, dy) * coloredCostIconMargin;
+    final step = Offset(
+            dx * _coloredCostIconRect.width, dy * _coloredCostIconRect.height) +
+        Offset(dx, dy) * coloredCostIconMargin;
     return step * scale * index.toDouble();
   }
 
@@ -469,73 +473,45 @@ class CustomGameCard extends GameCard {
     }
 
     _illustrationRect = Rect.fromLTWH(
-      illustrationRelativePaddings.left * width,
-      illustrationRelativePaddings.top * height,
-      width -
-          (illustrationRelativePaddings.left +
-                  illustrationRelativePaddings.right) *
-              width,
-      height -
-          (illustrationRelativePaddings.top +
-                  illustrationRelativePaddings.bottom) *
-              height,
+      illustrationRelativeRect.left * width,
+      illustrationRelativeRect.top * height,
+      illustrationRelativeRect.width * width,
+      illustrationRelativeRect.height * height,
     );
 
     _rarityIconRect = Rect.fromLTWH(
-      rarityIconRelativePaddings.left * width,
-      rarityIconRelativePaddings.top * height,
-      width -
-          (rarityIconRelativePaddings.left + rarityIconRelativePaddings.right) *
-              width,
-      height -
-          (rarityIconRelativePaddings.top + rarityIconRelativePaddings.bottom) *
-              height,
+      rarityIconRelativeRect.left * width,
+      rarityIconRelativeRect.top * height,
+      rarityIconRelativeRect.width * width,
+      rarityIconRelativeRect.height * height,
     );
 
     _genreIconRect = Rect.fromLTWH(
-      genreIconRelativePaddings.left * width,
-      genreIconRelativePaddings.top * height,
-      width -
-          (genreIconRelativePaddings.left + genreIconRelativePaddings.right) *
-              width,
-      height -
-          (genreIconRelativePaddings.top + genreIconRelativePaddings.bottom) *
-              height,
+      genreIconRelativeRect.left * width,
+      genreIconRelativeRect.top * height,
+      genreIconRelativeRect.width * width,
+      genreIconRelativeRect.height * height,
     );
 
     _stackIconRect = Rect.fromLTWH(
-      stackIconRelativePaddings.left * width,
-      stackIconRelativePaddings.top * height,
-      width -
-          (stackIconRelativePaddings.left + stackIconRelativePaddings.right) *
-              width,
-      height -
-          (stackIconRelativePaddings.top + stackIconRelativePaddings.bottom) *
-              height,
+      stackIconRelativeRect.left * width,
+      stackIconRelativeRect.top * height,
+      stackIconRelativeRect.width * width,
+      stackIconRelativeRect.height * height,
     );
 
     _costIconRect = Rect.fromLTWH(
-      costIconRelativePaddings.left * width,
-      costIconRelativePaddings.top * height,
-      width -
-          (costIconRelativePaddings.left + costIconRelativePaddings.right) *
-              width,
-      height -
-          (costIconRelativePaddings.top + costIconRelativePaddings.bottom) *
-              height,
+      costIconRelativeRect.left * width,
+      costIconRelativeRect.top * height,
+      costIconRelativeRect.width * width,
+      costIconRelativeRect.height * height,
     );
 
     _coloredCostIconRect = Rect.fromLTWH(
-      coloredCostIconRelativePaddings.left * width,
-      coloredCostIconRelativePaddings.top * height,
-      width -
-          (coloredCostIconRelativePaddings.left +
-                  coloredCostIconRelativePaddings.right) *
-              width,
-      height -
-          (coloredCostIconRelativePaddings.top +
-                  coloredCostIconRelativePaddings.bottom) *
-              height,
+      coloredCostIconRelativeRect.left * width,
+      coloredCostIconRelativeRect.top * height,
+      coloredCostIconRelativeRect.width * width,
+      coloredCostIconRelativeRect.height * height,
     );
 
     stackNumberTextConfig = (stackNumberTextConfig ?? const ScreenTextConfig())
@@ -545,30 +521,26 @@ class CustomGameCard extends GameCard {
         .copyWith(size: _costIconRect.size.toVector2(), scale: fontScale);
 
     _titleRect = Rect.fromLTWH(
-      titleRelativePaddings.left * width,
-      titleRelativePaddings.top * height,
-      width -
-          (titleRelativePaddings.left + titleRelativePaddings.right) * width,
-      height -
-          (titleRelativePaddings.top + titleRelativePaddings.bottom) * height,
+      titleRelativeRect.left * width,
+      titleRelativeRect.top * height,
+      titleRelativeRect.width * width,
+      titleRelativeRect.height * height,
     );
     titleConfig = titleConfig?.copyWith(
         size: _titleRect.size.toVector2(), scale: fontScale);
 
     _descriptionRect = Rect.fromLTWH(
-      descriptionRelativePaddings.left * width,
-      descriptionRelativePaddings.top * height,
-      width -
-          (descriptionRelativePaddings.left +
-                  descriptionRelativePaddings.right) *
-              width,
-      height -
-          (descriptionRelativePaddings.top +
-                  descriptionRelativePaddings.bottom) *
-              height,
-    );
-    descriptionConfig = descriptionConfig?.copyWith(
-        size: _descriptionRect.size.toVector2(), scale: fontScale);
+        descriptionRelativeRect.left * width,
+        descriptionRelativeRect.top * height,
+        descriptionRelativeRect.width * width,
+        math.max(descriptionRelativeRect.height * height,
+            _descriptionComponent.textAreaHeight ?? 0));
+
+    _descriptionComponent.position = _descriptionRect.topLeft.toVector2();
+    _descriptionComponent.size = _descriptionRect.size.toVector2();
+    _descriptionComponent.fontScale = fontScale;
+    _descriptionComponent.config = (descriptionConfig ?? ScreenTextConfig())
+        .copyWith(size: _descriptionRect.size.toVector2(), scale: fontScale);
 
     if (_description != null) {
       _generateDescription();
@@ -588,11 +560,13 @@ class CustomGameCard extends GameCard {
     } else {
       illustrationSprite?.renderRect(canvas, _illustrationRect,
           overridePaint: paint);
-      sprite?.renderRect(canvas, border, overridePaint: paint);
 
       if (showDescription) {
+        descriptionBackgroundSprite?.renderRect(canvas, _descriptionRect);
         _descriptionComponent.render(canvas);
       }
+
+      sprite?.renderRect(canvas, border, overridePaint: paint);
 
       if (showRarityIcon) {
         rarityIconSprite?.renderRect(canvas, _rarityIconRect,
@@ -621,8 +595,7 @@ class CustomGameCard extends GameCard {
       final costColor = modifiedCost > cost
           ? Colors.red
           : (modifiedCost < cost ? Colors.green : Colors.white);
-      final coloredCostEntries =
-          showColoredCost ? _coloredCostEntries() : null;
+      final coloredCostEntries = showColoredCost ? _coloredCostEntries() : null;
       if (coloredCostEntries != null) {
         // 彩色费用：从基准位置起沿 coloredCostDirection 依次排列，
         // 未注册的颜色跳过且不留空位
@@ -678,7 +651,7 @@ class CustomGameCard extends GameCard {
 
       if (showTitle && title != null && title?.isNotEmpty == true) {
         switch (titleLayout) {
-          case CardTitleLayout.horizontalTopCenter:
+          case CardTitleLayout.horizontalTop:
             drawScreenText(canvas, title!,
                 alpha: isEnabled ? 255 : 128,
                 position: _titleRect.topLeft,
