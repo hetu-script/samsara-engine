@@ -422,18 +422,47 @@ class CustomGameCard extends GameCard {
     _descriptionComponent.text = _description;
   }
 
-  /// 从 data['coloredCost'] 读取有序 (颜色id, 数量) 对列表，
+  /// 从 data['coloredCost'] 读取有序 (颜色id, 数量, 数字颜色) 元组列表，
   /// 兼容 Map 或者河图 struct 等支持 keys 和 [] 操作的对象；
-  /// 数量为 0 或负数的条目跳过；data['coloredCost'] 为 null 时返回 null
-  List<(String, int)>? _coloredCostEntries() {
+  /// data['coloredCost'] 为 null 时返回 null。
+  /// 若 data['originalColoredCost']（原始费用基线，由费用求值处写入）存在：
+  /// 按基线顺序排列条目，数量相对基线减少（含减至 0）标黄、增加标红，
+  /// 被减至 0 的颜色仍保留条目（显示图标与黄色 0）；
+  /// 基线中不存在的新增颜色追加在末尾并标红。
+  /// 无基线时维持旧行为：数量为 0 或负数的条目跳过，数字不着色（null）。
+  List<(String, int, Color?)>? _coloredCostEntries() {
     final coloredCost = data?['coloredCost'];
     if (coloredCost == null) return null;
 
-    final result = <(String, int)>[];
-    for (final key in coloredCost.keys) {
-      final count = coloredCost[key];
-      if (count is! num || count <= 0) continue;
-      result.add((key.toString(), count.toInt()));
+    final result = <(String, int, Color?)>[];
+    final original = data?['originalColoredCost'];
+    if (original != null) {
+      final seen = <String>{};
+      for (final key in original.keys) {
+        final base = original[key];
+        if (base is! num || base <= 0) continue;
+        final current = coloredCost[key];
+        final count = current is num ? current.toInt() : 0;
+        seen.add(key.toString());
+        result.add((
+          key.toString(),
+          count,
+          count < base ? Colors.yellow : (count > base ? Colors.red : null),
+        ));
+      }
+      // 基线中不存在的新增颜色（动态加费），追加在末尾
+      for (final key in coloredCost.keys) {
+        if (seen.contains(key.toString())) continue;
+        final count = coloredCost[key];
+        if (count is! num || count <= 0) continue;
+        result.add((key.toString(), count.toInt(), Colors.red));
+      }
+    } else {
+      for (final key in coloredCost.keys) {
+        final count = coloredCost[key];
+        if (count is! num || count <= 0) continue;
+        result.add((key.toString(), count.toInt(), null));
+      }
     }
     return result;
   }
@@ -616,11 +645,12 @@ class CustomGameCard extends GameCard {
         final fontScale =
             preferredSize != null ? width / preferredSize!.x : 1.0;
         var iconIndex = 0;
-        for (final (colorId, count) in coloredCostEntries) {
+        for (final (colorId, count, numberColor) in coloredCostEntries) {
           final iconSprite = coloredCostSprites[colorId];
           if (iconSprite == null) continue;
           switch (coloredCostLayout) {
             case ColoredCostLayout.pips:
+              // pips 布局按数量逐个绘制图标，无法表达 0，零值条目不占位
               for (var i = 0; i < count; ++i) {
                 iconSprite.renderRect(
                     canvas,
@@ -638,6 +668,7 @@ class CustomGameCard extends GameCard {
                 '$count',
                 alpha: isEnabled ? 255 : 128,
                 position: rect.topLeft,
+                color: numberColor,
                 config: (coloredCostNumberTextConfig ??
                         const ScreenTextConfig())
                     .copyWith(size: rect.size.toVector2(), scale: fontScale),
