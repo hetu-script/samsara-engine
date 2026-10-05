@@ -422,47 +422,42 @@ class CustomGameCard extends GameCard {
     _descriptionComponent.text = _description;
   }
 
-  /// 从 data['coloredCost'] 读取有序 (颜色id, 数量, 数字颜色) 元组列表，
+  /// 从 data['coloredCost'] 读取有序 (颜色id, 基础门槛, 动态标记, 数字颜色) 元组列表，
   /// 兼容 Map 或者河图 struct 等支持 keys 和 [] 操作的对象；
   /// data['coloredCost'] 为 null 时返回 null。
   /// 若 data['originalColoredCost']（原始费用基线，由费用求值处写入）存在：
   /// 按基线顺序排列条目，数量相对基线减少（含减至 0）标黄、增加标红，
   /// 被减至 0 的颜色仍保留条目（显示图标与黄色 0）；
   /// 基线中不存在的新增颜色追加在末尾并标红。
-  /// 无基线时维持旧行为：数量为 0 或负数的条目跳过，数字不着色（null）。
-  List<(String, int, Color?)>? _coloredCostEntries() {
-    final coloredCost = data?['coloredCost'];
-    if (coloredCost == null) return null;
-
-    final result = <(String, int, Color?)>[];
+  /// 无基线时维持旧行为：普通数量为 0 或负数的条目跳过，动态 0 显示 X，数字不着色（null）。
+  List<(String, int, bool, Color?)>? _coloredCostEntries() {
+    final costs = data?['coloredCost'];
+    if (costs == null) return null;
     final original = data?['originalColoredCost'];
-    if (original != null) {
-      final seen = <String>{};
-      for (final key in original.keys) {
-        final base = original[key];
-        if (base is! num || base <= 0) continue;
-        final current = coloredCost[key];
-        final count = current is num ? current.toInt() : 0;
-        seen.add(key.toString());
-        result.add((
-          key.toString(),
-          count,
-          count < base ? Colors.yellow : (count > base ? Colors.red : null),
-        ));
-      }
-      // 基线中不存在的新增颜色（动态加费），追加在末尾
-      for (final key in coloredCost.keys) {
-        if (seen.contains(key.toString())) continue;
-        final count = coloredCost[key];
-        if (count is! num || count <= 0) continue;
-        result.add((key.toString(), count.toInt(), Colors.red));
-      }
-    } else {
-      for (final key in coloredCost.keys) {
-        final count = coloredCost[key];
-        if (count is! num || count <= 0) continue;
-        result.add((key.toString(), count.toInt(), null));
-      }
+    int amount(dynamic entry) =>
+        entry is num ? entry.toInt() : (entry?['base'] as num?)?.toInt() ?? 0;
+    bool dynamicCost(dynamic entry) =>
+        entry != null && entry is! num && entry['isDynamic'] == true;
+    final result = <(String, int, bool, Color?)>[];
+    final seen = <String>{};
+    for (final key in [...?original?.keys, ...costs.keys]) {
+      if (!seen.add(key.toString())) continue;
+      final baseline = original?[key];
+      final current = costs[key];
+      final count = amount(current);
+      final isDynamic = dynamicCost(current);
+      if (!isDynamic && count <= 0 && amount(baseline) <= 0) continue;
+      final base = amount(baseline);
+      result.add((
+        key.toString(),
+        count,
+        isDynamic,
+        original == null
+            ? null
+            : (count < base
+                ? Colors.yellow
+                : (count > base ? Colors.red : null)),
+      ));
     }
     return result;
   }
@@ -645,35 +640,34 @@ class CustomGameCard extends GameCard {
         final fontScale =
             preferredSize != null ? width / preferredSize!.x : 1.0;
         var iconIndex = 0;
-        for (final (colorId, count, numberColor) in coloredCostEntries) {
+        for (final (colorId, count, isDynamic, numberColor)
+            in coloredCostEntries) {
           final iconSprite = coloredCostSprites[colorId];
           if (iconSprite == null) continue;
-          switch (coloredCostLayout) {
-            case ColoredCostLayout.pips:
-              // pips 布局按数量逐个绘制图标，无法表达 0，零值条目不占位
-              for (var i = 0; i < count; ++i) {
-                iconSprite.renderRect(
-                    canvas,
-                    _coloredCostIconRect
-                        .shift(_coloredCostIconOffset(iconIndex, fontScale)),
-                    overridePaint: paint);
-                ++iconIndex;
-              }
-            case ColoredCostLayout.compact:
-              final rect = _coloredCostIconRect
-                  .shift(_coloredCostIconOffset(iconIndex, fontScale));
-              iconSprite.renderRect(canvas, rect, overridePaint: paint);
-              drawScreenText(
-                canvas,
-                '$count',
-                alpha: isEnabled ? 255 : 128,
-                position: rect.topLeft,
-                color: numberColor,
-                config: (coloredCostNumberTextConfig ??
-                        const ScreenTextConfig())
-                    .copyWith(size: rect.size.toVector2(), scale: fontScale),
-              );
+          if (coloredCostLayout == ColoredCostLayout.pips && !isDynamic) {
+            for (var i = 0; i < count; ++i) {
+              iconSprite.renderRect(
+                  canvas,
+                  _coloredCostIconRect
+                      .shift(_coloredCostIconOffset(iconIndex, fontScale)),
+                  overridePaint: paint);
               ++iconIndex;
+            }
+          } else {
+            final rect = _coloredCostIconRect
+                .shift(_coloredCostIconOffset(iconIndex, fontScale));
+            iconSprite.renderRect(canvas, rect, overridePaint: paint);
+            final text = isDynamic ? (count == 0 ? 'X' : '$count+X') : '$count';
+            drawScreenText(
+              canvas,
+              text,
+              alpha: isEnabled ? 255 : 128,
+              position: rect.topLeft,
+              color: numberColor,
+              config: (coloredCostNumberTextConfig ?? const ScreenTextConfig())
+                  .copyWith(size: rect.size.toVector2(), scale: fontScale),
+            );
+            ++iconIndex;
           }
         }
       } else {
