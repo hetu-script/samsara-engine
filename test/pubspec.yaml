@@ -49,6 +49,7 @@ flutter:
     - assets/images/
     - assets/images/mini_game/tile_matching/
     - assets/images/text/
+    - assets/images/icon/
     - assets/locale/zh/
     - assets/cards/
 

@@ -11,6 +11,7 @@ import 'package:animated_tree_view/animated_tree_view.dart';
 import 'package:samsara/llm_chat/llm_chat.dart';
 import 'package:samsara/game_dialog.dart';
 import 'package:samsara/components/ui/rich_text_component.dart';
+import 'package:samsara/richtext.dart';
 
 import '../engine.dart';
 import '../prompt.dart';
@@ -60,7 +61,7 @@ class MainMenuScene extends Scene {
     world.add(button1);
 
     final richtext = RichTextComponent(
-      text: "<red>multiline\ntext</>",
+      text: "<icon=sword></><red>multiline\ntext</>\n第二行<icon=spirit></><icon=quest></>",
       size: Vector2(200.0, 100.0),
       position: Vector2(center.x - 100.0, button1.position.y - 120.0),
       config: ScreenTextConfig(textAlign: TextAlign.center),
@@ -167,6 +168,15 @@ class MainMenuScene extends Scene {
                   },
                 ),
               ),
+            ),
+          ),
+          // Flutter 侧富文本图标验证
+          Positioned(
+            left: 20,
+            bottom: 20,
+            child: Label(
+              "<icon=sword></><red>攻击力 +5</> <icon=spirit></>灵力<icon=quest></>",
+              textStyle: const TextStyle(fontSize: 20),
             ),
           ),
           GameDialogController(),

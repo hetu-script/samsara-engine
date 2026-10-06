@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:samsara/samsara.dart';
+import 'package:samsara/richtext.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 
 import 'app.dart';
@@ -70,6 +71,22 @@ void main() {
       name: 'default',
       assetPath: 'assets/images/sword.png',
     );
+
+    // 注册富文本内嵌图标并载入 Flame 图片缓存
+    RichTextIcons.registerAll({
+      'cultivate': 'icon/cultivate.png',
+      'information': 'icon/information.png',
+      'inventory': 'icon/inventory.png',
+      'library': 'icon/library.png',
+      'material': 'icon/material.png',
+      'quest': 'icon/quest.png',
+      'shard': 'icon/shard.png',
+      'spirit': 'icon/spirit.png',
+      'stats': 'icon/stats.png',
+      'sword': 'icon/sword.png',
+      'wiki': 'icon/wiki.png',
+    });
+    await RichTextIcons.preload();
 
     runApp(
       MultiProvider(

@@ -32,68 +32,53 @@ class _InlineIconLayoutBuilder extends TextNodeLayoutBuilder {
 
   final InlineIconNode node;
 
+  bool _isDone = false;
+
   @override
-  bool get isDone => true;
+  bool get isDone => _isDone;
 
   @override
   InlineIconElement? layOutNextLine(
     double availableWidth, {
     required bool isStartOfLine,
   }) {
-    return InlineIconElement(node.spriteId);
+    if (_isDone) return null;
+    _isDone = true;
+    // 图标高度与文字渲染尺寸一致，见 inline_text_style2.dart 的换算公式
+    final style = node.style;
+    final height = (style.fontSize ?? 16.0) * (style.fontScale ?? 1.0);
+    return InlineIconElement(node.spriteId, height: height);
   }
 }
 
 /// [InlineIconElement] is a class that represents a single icon,
 /// prepared for rendering.
 class InlineIconElement extends InlineTextElement {
-  InlineIconElement(String spriteId) {
-    sprite = Sprite(Flame.images.fromCache(spriteId));
+  InlineIconElement(String spriteId, {required double height})
+    : sprite = Sprite(Flame.images.fromCache(spriteId)) {
+    final srcSize = sprite.srcSize;
+    _size = Vector2(srcSize.x * (height / srcSize.y), height);
+    // baseline 为 0、ascent 为图标全高：图标底部与文字基线对齐
+    _box = LineMetrics(ascent: height, width: _size.x);
   }
 
-  Vector2 position = Vector2.zero();
-
-  late Sprite sprite;
+  final Sprite sprite;
+  late final Vector2 _size;
+  late final LineMetrics _box;
 
   @override
-  LineMetrics get metrics {
-    return LineMetrics(
-      width: sprite.srcSize.x,
-      height: sprite.srcSize.y,
-    );
-  }
-
-  @override
-  void render(
-    Canvas canvas,
-    Vector2 position, {
-    Anchor anchor = Anchor.topLeft,
-  }) {
-    final box = metrics;
-    translate(
-      position.x - box.width * anchor.x,
-      position.y - box.height * anchor.y - box.top,
-    );
-    draw(canvas);
-  }
+  LineMetrics get metrics => _box;
 
   /// Moves the element by ([dx], [dy]) relative to its current location.
   @override
   void translate(double dx, double dy) {
-    position.translate(dx, dy);
+    _box.translate(dx, dy);
   }
 
   /// Renders the element on the [canvas], at coordinates determined during the
   /// layout.
-  ///
-  /// In order to render the element at a different location, consider either
-  /// calling the [translate] method, or applying a translation transform to the
-  /// canvas itself.
   @override
   void draw(Canvas canvas) {
-    sprite.render(canvas, position: position);
+    sprite.render(canvas, position: Vector2(_box.left, _box.top), size: _size);
   }
-
-  @override
-  Rect get boundingBox => metrics.toRect();
 }

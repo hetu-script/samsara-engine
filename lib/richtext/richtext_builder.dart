@@ -3,6 +3,8 @@ import 'package:flame/text.dart';
 
 import 'textstyle_extension.dart';
 import 'richtext_node.dart';
+import 'icon_node.dart';
+import 'icon_registry.dart';
 import '../extensions.dart';
 import '../colors.dart';
 
@@ -169,14 +171,14 @@ TagResolveResult _resolveTagStyle(Iterable<RegExpMatch> tagMatches) {
     } else if (tag == 'rank5' || tag == 'arcane') {
       textColor = RankedColors.arcane;
     } else if (tag.startsWith('color=')) {
-      textColor = HexColor.fromString(tag.substring(6));
+      textColor = HexColor.fromString(tagMatch.group(2) ?? tag.substring(6));
     } else if (tag.startsWith('icon=')) {
-      final iconId = tag.substring(5);
-      icon = 'text/$iconId';
+      // group(2) 是不含引号的属性值（当使用 icon='xxx' 形式时）
+      icon = tagMatch.group(2) ?? tag.substring(5);
     } else if (tag.startsWith('link=')) {
       // link='character?name=aleph42'
       // 例如：link=character?name=wendy&age=18
-      link = tag.substring(5);
+      link = tagMatch.group(2) ?? tag.substring(5);
       // TODO: 进一步解析
       // final separaterIndex = routeString.indexOf('?');
       // if (separaterIndex != -1) {
@@ -234,9 +236,12 @@ String _normalizeMultilineTags(String source) {
 ///
 /// 注意：对于换行，支持在标签内外使用实际换行符或字面转义换行符'\n'
 ///
-/// 支持参数：bold, italic, red, blue, color='#ffffffff', link='xxx', image='', etc....
+/// 支持参数：bold, italic, red, blue, color='#ffffffff', icon=xxx, link='xxx', etc....
 ///
-/// 图片会被调整为对应于文字高度的尺寸
+/// 图标通过 `<icon=xxx></>` 语法内嵌显示，xxx 为 [RichTextIcons.register]
+/// 注册的 id，图标尺寸与文字大小一致
+///
+/// 图标会被调整为对应于文字高度的尺寸
 ///
 /// 文字格式不支持不同的文字大小，span的文字样式中不会包含字体大小
 ///
@@ -268,20 +273,38 @@ List<TextSpan> buildFlutterRichText(
           spanList.add(TextSpan(text: before, style: style));
         }
         processingText = processingText.substring(match.end);
-        if (taggedContent.isNotEmpty) {
-          String taggedString =
-              matchString.substring(1, matchString.indexOf(taggedContent) - 1);
+        {
+          // 标签部分为 matchString 中第一个 '>' 之前的部分，
+          // 图标标签的内容通常为空，因此不能依赖 taggedContent 定位标签
+          final tagEndIndex = matchString.indexOf('>');
+          String taggedString = matchString.substring(1, tagEndIndex);
           taggedString = taggedString.replaceAll('\n', '');
           final tags = _tagContentPattern.allMatches(taggedString);
           final tagResolveResult = _resolveTagStyle(tags);
+          final mergedStyle =
+              (style ?? const TextStyle()).merge(tagResolveResult.style);
 
-          if (tagResolveResult.icon != null) {
-          } else {
+          final iconId = tagResolveResult.icon;
+          final iconAsset =
+              iconId != null ? RichTextIcons.resolveFlutterAsset(iconId) : null;
+          if (iconAsset != null) {
+            // 图标尺寸与文字大小一致
+            final iconSize = mergedStyle.fontSize ?? 14.0;
+            spanList.add(
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: Image.asset(
+                  iconAsset,
+                  width: iconSize,
+                  height: iconSize,
+                ),
+              ),
+            );
+          } else if (taggedContent.isNotEmpty) {
             spanList.add(
               TextSpan(
                 text: taggedContent,
-                style:
-                    (style ?? const TextStyle()).merge(tagResolveResult.style),
+                style: mergedStyle,
                 // recognizer: route != null
                 //     ? (TapGestureRecognizer()
                 //       ..onTap = () => onTap?.call(route!, routeArg)
@@ -332,29 +355,33 @@ DocumentRoot buildFlameRichText(
               RichTextNode(text: before, style: style?.toInlineTextStyle()));
         }
         processingText = processingText.substring(match.end);
-        if (taggedContent.isNotEmpty) {
-          String taggedString =
-              matchString.substring(1, matchString.indexOf(taggedContent) - 1);
+        {
+          final tagEndIndex = matchString.indexOf('>');
+          String taggedString = matchString.substring(1, tagEndIndex);
           taggedString = taggedString.replaceAll('\n', '');
           final tags = _tagContentPattern.allMatches(taggedString);
           final tagResolveResult = _resolveTagStyle(tags);
 
-          // if (tagResolveResult.icon != null) {
-          // } else {
-          nodes.add(
-            RichTextNode(
-              text: taggedContent,
-              style: (style ?? const TextStyle())
-                  .merge(tagResolveResult.style)
-                  .toInlineTextStyle(),
-              // recognizer: route != null
-              //     ? (TapGestureRecognizer()
-              //       ..onTap = () => onTap?.call(route!, routeArg)
-              //       )
-              //     : null,
-            ),
-          );
-          // }
+          final iconId = tagResolveResult.icon;
+          final flameKey =
+              iconId != null ? RichTextIcons.resolveFlameKey(iconId) : null;
+          if (flameKey != null) {
+            nodes.add(InlineIconNode(spriteId: flameKey));
+          } else if (taggedContent.isNotEmpty) {
+            nodes.add(
+              RichTextNode(
+                text: taggedContent,
+                style: (style ?? const TextStyle())
+                    .merge(tagResolveResult.style)
+                    .toInlineTextStyle(),
+                // recognizer: route != null
+                //     ? (TapGestureRecognizer()
+                //       ..onTap = () => onTap?.call(route!, routeArg)
+                //       )
+                //     : null,
+              ),
+            );
+          }
         }
       }
 
