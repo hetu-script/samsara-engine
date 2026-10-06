@@ -79,6 +79,7 @@ class CustomGameCard extends GameCard {
 
   ScreenTextConfig? titleConfig;
   ScreenTextConfig? descriptionConfig;
+  ScreenTextConfig? tagsConfig;
   ScreenTextConfig? costNumberTextConfig;
   ScreenTextConfig? stackNumberTextConfig;
   ScreenTextConfig? coloredCostNumberTextConfig;
@@ -86,6 +87,10 @@ class CustomGameCard extends GameCard {
   bool showGlow;
   bool showTitle;
   bool showDescription;
+  bool showTags;
+
+  /// 显示 tags 文本时多个标签之间的分隔符
+  String tagsSeparator;
 
   CardTitleLayout titleLayout;
   bool showStackIcon;
@@ -122,6 +127,7 @@ class CustomGameCard extends GameCard {
   /// the relative padding of the illustration, the actual padding will be calculated from the size
   final Rect titleRelativeRect;
   final Rect descriptionRelativeRect;
+  final Rect tagsRelativeRect;
   final Rect illustrationRelativeRect;
   final Rect stackIconRelativeRect;
   final Rect costIconRelativeRect;
@@ -140,6 +146,7 @@ class CustomGameCard extends GameCard {
   final ColoredCostLayout coloredCostLayout;
   late Rect _titleRect;
   late Rect _descriptionRect;
+  late Rect _tagsRect;
   double _heightDiff = 0;
   late Rect _illustrationRect;
   late Rect _stackIconRect;
@@ -208,11 +215,14 @@ class CustomGameCard extends GameCard {
     this.costNumberTextConfig,
     this.stackNumberTextConfig,
     this.coloredCostNumberTextConfig,
+    this.tagsConfig,
     this.cost = 0,
     int? modifiedCost,
     this.illustrationRelativeRect = Rect.zero,
     this.titleRelativeRect = Rect.zero,
     this.descriptionRelativeRect = Rect.zero,
+    this.tagsRelativeRect = Rect.zero,
+    this.tagsSeparator = ' ',
     this.stackIconRelativeRect = Rect.zero,
     this.costIconRelativeRect = Rect.zero,
     this.rarityIconRelativeRect = Rect.zero,
@@ -225,6 +235,7 @@ class CustomGameCard extends GameCard {
     this.showGlow = false,
     bool? showTitle,
     bool? showDescription,
+    bool? showTags,
     bool? showStackIcon,
     bool? showCostIcon,
     bool? showColoredCost,
@@ -235,6 +246,7 @@ class CustomGameCard extends GameCard {
   })  : modifiedCost = modifiedCost ?? cost,
         showTitle = showTitle ?? title != null,
         showDescription = showDescription ?? description != null,
+        showTags = showTags ?? (tags?.isNotEmpty ?? false),
         showStackIcon = showStackIcon ??
             (stackIconSpriteId != null || stackIconSprite != null),
         showCostIcon = showCostIcon ??
@@ -291,6 +303,7 @@ class CustomGameCard extends GameCard {
       description: _description,
       titleConfig: titleConfig,
       descriptionConfig: descriptionConfig,
+      tagsConfig: tagsConfig,
       illustrationSpriteId: illustrationSpriteId,
       illustrationSprite: illustrationSprite,
       backSpriteId: backSpriteId,
@@ -317,6 +330,8 @@ class CustomGameCard extends GameCard {
       rarityIconRelativeRect: rarityIconRelativeRect,
       titleRelativeRect: titleRelativeRect,
       descriptionRelativeRect: descriptionRelativeRect,
+      tagsRelativeRect: tagsRelativeRect,
+      tagsSeparator: tagsSeparator,
       stackIconRelativeRect: stackIconRelativeRect,
       costIconRelativeRect: costIconRelativeRect,
       genreIconRelativeRect: genreIconRelativeRect,
@@ -326,6 +341,7 @@ class CustomGameCard extends GameCard {
       coloredCostLayout: coloredCostLayout,
       showTitle: showTitle,
       showDescription: showDescription,
+      showTags: showTags,
       showStackIcon: showStackIcon,
       showCostIcon: showCostIcon,
       showColoredCost: showColoredCost,
@@ -547,6 +563,17 @@ class CustomGameCard extends GameCard {
       scale: fontScale,
     );
 
+    _tagsRect = Rect.fromLTWH(
+      tagsRelativeRect.left * width,
+      tagsRelativeRect.top * height,
+      tagsRelativeRect.width * width,
+      tagsRelativeRect.height * height,
+    );
+    tagsConfig = (tagsConfig ?? const ScreenTextConfig()).copyWith(
+      size: _tagsRect.size.toVector2(),
+      scale: fontScale,
+    );
+
     _descriptionRect = Rect.fromLTWH(
       descriptionRelativeRect.left * width,
       descriptionRelativeRect.top * height,
@@ -701,6 +728,13 @@ class CustomGameCard extends GameCard {
                 position: Offset.zero,
                 config: titleConfig?.copyWith(anchor: Anchor.topRight));
         }
+      }
+
+      if (showTags && tags.isNotEmpty) {
+        drawScreenText(canvas, tags.join(tagsSeparator),
+            alpha: isEnabled ? 255 : 128,
+            position: _tagsRect.topLeft,
+            config: tagsConfig);
       }
     }
   }
