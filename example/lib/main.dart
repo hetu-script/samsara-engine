@@ -9,6 +9,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/richtext.dart';
+import 'package:samsara/hover_info.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 
 import 'app.dart';
@@ -93,6 +94,7 @@ void main() {
         providers: [
           ChangeNotifierProvider(create: (_) => engine),
           ChangeNotifierProvider(create: (_) => dialog),
+          ChangeNotifierProvider(create: (_) => HoverContentState()),
         ],
         child: fluent.FluentTheme(
           data: fluent.FluentThemeData(),

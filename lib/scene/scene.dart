@@ -42,7 +42,7 @@ abstract class Scene extends FlameGame with TaskController {
 
   Vector2 get topLeft => bounds.topLeft.toVector2();
   Vector2 get topCenter => bounds.topCenter.toVector2();
-  Vector2 get topRight => bounds.topCenter.toVector2();
+  Vector2 get topRight => bounds.topRight.toVector2();
   Vector2 get centerLeft => bounds.centerLeft.toVector2();
   Vector2 get center => bounds.center.toVector2();
   Vector2 get centerRight => bounds.centerRight.toVector2();

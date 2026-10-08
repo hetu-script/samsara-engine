@@ -424,9 +424,12 @@ class PointerDetectorState extends State<PointerDetector> {
                 );
               }
             case _GestureState.scaleStart:
-              touchDetail.startGlobalPosition =
-                  touchDetail.currentGlobalPosition;
-              touchDetail.startLocalPosition = touchDetail.currentLocalPosition;
+              // 以当前两触点位置作为缩放/旋转的基准，
+              // 之后 scalling 状态下不再更新 start 位置。
+              for (final detail in _touchDetails) {
+                detail.startGlobalPosition = detail.currentGlobalPosition;
+                detail.startLocalPosition = detail.currentLocalPosition;
+              }
               _gestureState = _GestureState.scalling;
               initScaleAndRotate();
               if (widget.onScaleStart != null) {
@@ -504,14 +507,14 @@ class PointerDetectorState extends State<PointerDetector> {
   }
 
   double _angleBetweenLines(TouchDetails f, TouchDetails s) {
-    double angle1 = math.atan2(
-        f.currentLocalPosition.dy - s.currentLocalPosition.dy,
-        f.currentLocalPosition.dx - s.currentLocalPosition.dx);
-    double angle2 = math.atan2(
+    double startAngle = math.atan2(
+        f.startLocalPosition.dy - s.startLocalPosition.dy,
+        f.startLocalPosition.dx - s.startLocalPosition.dx);
+    double currentAngle = math.atan2(
         f.currentLocalPosition.dy - s.currentLocalPosition.dy,
         f.currentLocalPosition.dx - s.currentLocalPosition.dx);
 
-    double angle = degrees(angle1 - angle2) % 360;
+    double angle = degrees(currentAngle - startAngle) % 360;
     if (angle < -180.0) angle += 360.0;
     if (angle > 180.0) angle -= 360.0;
     return radians(angle);

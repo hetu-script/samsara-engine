@@ -58,7 +58,7 @@ abstract class AudioPlayerInterface {
 class SamsaraEngine extends SceneController
     with EventAggregator
     implements HTLogger, AudioPlayerInterface {
-  static const modeFileExtension = '.mod';
+  static const modFileExtension = '.mod';
 
   final TaskController taskController = TaskController();
 
@@ -635,6 +635,6 @@ class SamsaraEngine extends SceneController
   @override
   Future<AudioPlayer?> play(String fileName, {double? volume}) async {
     return FlameAudio.play('sound/$fileName',
-        volume: volume ?? config.musicVolume);
+        volume: volume ?? config.soundEffectVolume);
   }
 }

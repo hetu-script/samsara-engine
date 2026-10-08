@@ -72,29 +72,28 @@ extension HexColor on Color {
   static Color fromString(String hexCode) {
     // 移除 '#' 符号
     final String hex = hexCode.startsWith('#') ? hexCode.substring(1) : hexCode;
+    int? value;
     if (hex.length == 6) {
-      return Color(int.parse('FF$hex', radix: 16));
+      value = int.tryParse('FF$hex', radix: 16);
     } else if (hex.length == 8) {
-      // 如果是8位颜色码 (RRGGBBAA)，则需要将其转换为 AARRGGBB
-      return Color(
-        int.parse(
-          '${hex.substring(6, 8)}${hex.substring(0, 6)}',
-          radix: 16,
-        ),
-      );
-    } else {
-      // 如果长度不符合要求，则抛出异常
+      // 8位颜色码为 RRGGBBAA，需要转换为 AARRGGBB
+      value =
+          int.tryParse('${hex.substring(6, 8)}${hex.substring(0, 6)}', radix: 16);
+    }
+    if (value == null) {
       throw ArgumentError('Invalid hex color code: $hexCode');
     }
+    return Color(value);
   }
 
   /// HexColor String is in the format "rrggbb" or "rrggbbaa" with an optional leading "#".
   /// Prefixes a hash sign if [leadingHashSign] is set to `true` (default is `true`).
-  String toHex({bool leadingHashSign = true}) => '${leadingHashSign ? '#' : ''}'
-      '${r.round().toRadixString(16).padLeft(2, '0')}'
-      '${g.round().toRadixString(16).padLeft(2, '0')}'
-      '${b.round().toRadixString(16).padLeft(2, '0')}'
-      '${a.round().toRadixString(16).padLeft(2, '0')}';
+  String toHex({bool leadingHashSign = true}) {
+    String channel(double v) =>
+        (v * 255).round().toRadixString(16).padLeft(2, '0');
+    return '${leadingHashSign ? '#' : ''}'
+        '${channel(r)}${channel(g)}${channel(b)}${channel(a)}';
+  }
 }
 
 extension Vector2Ex on Vector2 {

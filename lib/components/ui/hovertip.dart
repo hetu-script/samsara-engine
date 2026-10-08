@@ -20,7 +20,7 @@ enum HovertipDirection {
 const kHovertipScreenIndent = 10.0;
 const kHovertipContentIndent = 10.0;
 const kHovertipBackgroundBorderRadius = 5.0;
-const kHovertipDefautWidth = 360.0;
+const kHovertipDefaultWidth = 360.0;
 
 class Hovertip extends BorderComponent {
   static Hovertip? _globalInstance;
@@ -41,7 +41,7 @@ class Hovertip extends BorderComponent {
     String? content,
     ScreenTextConfig? config,
     HovertipDirection? direction,
-    double width = kHovertipDefautWidth,
+    double width = kHovertipDefaultWidth,
     Vector2? position,
     EdgeInsets? margin,
   }) {
@@ -265,7 +265,7 @@ class Hovertip extends BorderComponent {
     _cachedInstances.clear();
   }
 
-  static void toogle(GameComponent target,
+  static void toggle(GameComponent target,
       {required Scene scene, bool justShow = false}) async {
     assert(_instances.containsKey(target));
     final instance = _instances[target];
@@ -278,7 +278,7 @@ class Hovertip extends BorderComponent {
     }
   }
 
-  static bool hastip(GameComponent target) {
+  static bool hasTip(GameComponent target) {
     return _instances.containsKey(target);
   }
 

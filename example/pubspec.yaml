@@ -1,5 +1,5 @@
-name: test
-description: A new Flutter project.
+name: samsara_example
+description: Example app showcasing the samsara engine library.
 
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 

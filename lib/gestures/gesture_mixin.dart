@@ -50,7 +50,10 @@ mixin HandlesGesture on GameComponent {
   bool get isDragging => _draggingStartPoint != null;
 
   /// 此控件是否在被双指缩放
-  bool isScalling = false;
+  bool isScaling = false;
+
+  /// 参与当前缩放的指针 id，用于缩放结束时精确清理静态表中的记录
+  Set<int> _scalingPointers = {};
 
   /// 鼠标光标是否在此控件上
   bool isHovering = false;
@@ -272,7 +275,8 @@ mixin HandlesGesture on GameComponent {
         isHud ? pointerPosition2 : game.camera.globalToLocal(pointerPosition2);
     if (containsPoint(convertedPointerPosition1) &&
         containsPoint(convertedPointerPosition2)) {
-      isScalling = true;
+      isScaling = true;
+      _scalingPointers = touches.map((t) => t.pointer).toSet();
       onScaleStart?.call(touches, details);
       return true;
     } else {
@@ -285,7 +289,7 @@ mixin HandlesGesture on GameComponent {
   @mustCallSuper
   void handleScaleUpdate(
       List<TouchDetails> touches, ScaleUpdateDetails details) {
-    if (!enableGesture || !isVisible || !isScalling) return;
+    if (!enableGesture || !isVisible || !isScaling) return;
 
     assert(touches.length == 2);
 
@@ -315,11 +319,17 @@ mixin HandlesGesture on GameComponent {
       c.handleScaleEnd();
     }
 
-    if (isScalling) {
+    if (isScaling) {
       onScaleEnd?.call();
-      isScalling = false;
+      isScaling = false;
     }
-    tappingDetails.clear();
+    // 缩放结束后，参与缩放的指针不会再收到 tapUp（PointerDetector 已
+    // 重置手势状态），其在静态表中的记录会成为陈旧数据，因此只移除这些
+    // 指针；不能整体 clear()，否则会误清其他仍在按下的指针。
+    for (final pointer in _scalingPointers) {
+      tappingDetails.remove(pointer);
+    }
+    _scalingPointers = {};
   }
 
   @mustCallSuper

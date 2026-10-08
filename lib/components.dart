@@ -5,6 +5,7 @@ export 'components/game_component.dart';
 export 'components/gesture_component.dart';
 export 'components/in_and_out_sprite.dart';
 export 'components/particle_component.dart';
+export 'components/sprite_component2.dart';
 export 'components/ui/progress_indicator.dart';
 export 'components/ui/sprite_button.dart';
 export 'components/ui/rich_text_component.dart';

@@ -41,7 +41,19 @@ SceneController (abstract + ChangeNotifier)
 
 ### Barrel Exports
 
-Public API is exposed via barrel files at `lib/` root: `samsara.dart`, `engine.dart`, `components.dart`, `tilemap.dart`, `cardgame.dart`, etc. New public types must be re-exported from the appropriate barrel file.
+Public API is exposed via barrel files at `lib/` root: `samsara.dart` (main), `engine.dart`, `components.dart`, `gestures.dart`, `effect.dart`, `richtext.dart`, `hover_info.dart`, `cardgame.dart`, `game_dialog.dart`, `tilemap.dart`, `markdown_wiki.dart`. New public types must be re-exported from the appropriate barrel file — check the module's barrel before treating a file as internal; several types (`SpriteComponent2`, `Avatar`, most effects) were once accidentally left unexported.
+
+## Documentation
+
+- Module guides live in `docs/` as a **bilingual mirror**: `docs/en/` (English, default) and `docs/zh/` (Simplified Chinese). Every guide exists in both languages with the same structure, and starts with a language-switcher line linking to its counterpart.
+- Indexes: `docs/README.md` / `docs/README_ZH.md`; the root `README.md` (English) and `README_ZH.md` (Chinese) link into them.
+- **Keep docs in sync with code**: when changing public behavior, update the matching doc in both languages — including removing "known limitations" entries for bugs that get fixed.
+
+## Example App
+
+- `example/` (package `samsara_example`) is both the smoke-test app and the runnable demo collection: **one demo scene per documented module** (`example/lib/scene/*.dart`), navigated from the main menu via `pushScene`/`popScene`.
+- When adding or changing a documented feature, add/adjust a demo scene (or a section of an existing one) and reference the scene file from the module doc.
+- Reuse assets already in `example/assets/` for demos.
 
 ## Code Style
 
@@ -59,15 +71,15 @@ Public API is exposed via barrel files at `lib/` root: `samsara.dart`, `engine.d
 # From project root — resolve dependencies
 flutter pub get
 
-# Test project is a separate Flutter app at test/
-cd test
+# Example project is a separate Flutter app at example/
+cd example
 flutter pub get
-flutter run      # runs the test app (desktop/Windows)
+flutter run      # runs the example app (desktop/Windows)
 ```
 
 - **No CI/CD pipeline** currently configured
 - **Local path dependencies**: `hetu_script`, `hetu_script_flutter`, `fluent_ui` are resolved via relative paths to sibling directories
-- Test app assets: `test/wiki/`, `test/assets/`, `test/scripts/`
+- Example app assets: `example/wiki/`, `example/assets/`, `example/scripts/`
 
 ## Conventions
 

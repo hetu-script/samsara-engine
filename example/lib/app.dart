@@ -3,6 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:samsara/samsara.dart';
 
 import 'scene/mainmenu.dart';
+import 'scene/components_scene.dart';
+import 'scene/lighting_scene.dart';
+import 'scene/richtext_scene.dart';
+import 'scene/hover_scene.dart';
+import 'scene/cardgame_scene.dart';
+import 'scene/dialog_scene.dart';
 import 'engine.dart';
 import 'prompt.dart';
 
@@ -66,6 +72,24 @@ class _GameAppState extends State<GameApp> {
 
     engine.registerSceneConstructor('main', ([dynamic args]) async {
       return MainMenuScene(id: 'main', bgm: engine.bgm);
+    });
+    engine.registerSceneConstructor('components', ([dynamic args]) async {
+      return ComponentsScene(id: 'components');
+    });
+    engine.registerSceneConstructor('lighting', ([dynamic args]) async {
+      return LightingScene(id: 'lighting');
+    });
+    engine.registerSceneConstructor('richtext', ([dynamic args]) async {
+      return RichTextScene(id: 'richtext');
+    });
+    engine.registerSceneConstructor('hover', ([dynamic args]) async {
+      return HoverScene(id: 'hover');
+    });
+    engine.registerSceneConstructor('cardgame', ([dynamic args]) async {
+      return CardGameScene(id: 'cardgame');
+    });
+    engine.registerSceneConstructor('dialog', ([dynamic args]) async {
+      return DialogScene(id: 'dialog');
     });
 
     // 刚打开游戏，需要初始化引擎，载入数据，debug模式下还要初始化一个游戏存档用于测试

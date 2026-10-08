@@ -47,27 +47,40 @@ class MainMenuScene extends Scene {
     );
     world.add(background);
 
-    final button1 = SpriteButton(
-      anchor: Anchor.center,
-      text: 'Start Game',
-      spriteId: 'button.png',
-      useSpriteSrcSize: true,
-      position: center,
-    );
-    button1.onTap = (button, position) async {
-      // dialog.pushScreenHint(rect: button1.bounds);
-      // dialog.execute();
-    };
-    world.add(button1);
-
-    final richtext = RichTextComponent(
-      text: "<icon=sword></><red>multiline\ntext</>\n第二行<icon=spirit></><icon=quest></>",
-      size: Vector2(200.0, 100.0),
-      position: Vector2(center.x - 100.0, button1.position.y - 120.0),
+    final title = RichTextComponent(
+      text: "<bold h2>Samsara Engine</>\n<grey>showcase scenes</>",
+      size: Vector2(400.0, 90.0),
+      position: Vector2(center.x - 200.0, 40.0),
       config: ScreenTextConfig(textAlign: TextAlign.center),
-      backgroundColor: Colors.black38,
     );
-    world.add(richtext);
+    world.add(title);
+
+    final demoScenes = <(String, String)>[
+      ('Components', 'components'),
+      ('Lighting', 'lighting'),
+      ('RichText', 'richtext'),
+      ('Hover', 'hover'),
+      ('CardGame', 'cardgame'),
+      ('Dialog', 'dialog'),
+    ];
+
+    // 导航按钮：纵向排列，间距 70px
+    const buttonSpacing = 70.0;
+    final firstY = center.y - (demoScenes.length - 1) * buttonSpacing / 2;
+    for (var i = 0; i < demoScenes.length; ++i) {
+      final (label, sceneId) = demoScenes[i];
+      final button = SpriteButton(
+        anchor: Anchor.center,
+        text: label,
+        spriteId: 'button.png',
+        useSpriteSrcSize: true,
+        position: Vector2(center.x, firstY + i * buttonSpacing),
+      );
+      button.onTap = (button, position) {
+        engine.pushScene(sceneId);
+      };
+      world.add(button);
+    }
 
     engine.setLoading(false);
   }

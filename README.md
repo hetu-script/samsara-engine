@@ -1,58 +1,84 @@
-# Samsara Engine — Project Guidelines
+# Samsara Engine
 
-## Overview
+**English** | [中文](README_ZH.md)
 
-Samsara is a Dart/Flutter utility library wrapping the **Flame game engine**. It provides reusable subsystems: scene management, gesture handling, hex tilemaps, card games, rich text rendering, dialog systems, animation task scheduling, and more.
+A Dart/Flutter utility library wrapping the [Flame game engine](https://flame-engine.org/).
+It adds the pieces Flame leaves to you: scene management with a navigation
+stack, a unified gesture system, rich text, game dialogs, card game
+primitives, lighting, and a sequential animation task scheduler.
 
-## Architecture
+## Features
 
-### Class Hierarchy
+| Module | Highlights | Guide |
+|---|---|---|
+| Core | `SamsaraEngine`, stack-based scene navigation with lazy caching, `GameComponent` base with named paints / `moveTo` / fades, camera effects, dark-overlay lighting, `TaskController`, event bus | [docs/en/core.md](docs/en/core.md) |
+| Gestures | One mixin (`HandlesGesture`) + one widget (`PointerDetector`) for tap, double-tap, drag & drop, two-finger scale, long-press, hover and mouse scroll — unified for mouse and touch | [docs/en/gestures.md](docs/en/gestures.md) |
+| Hover tooltips | Flutter-layer `hover_info` tooltips with 12-direction positioning, and Flame-layer `Hovertip` for in-world objects | [docs/en/hover_info.md](docs/en/hover_info.md) |
+| Rich text | HTML-like tags (`<bold>`, `<h2>`, `<red>`, `<legendary>`, `color='#ffd700'`, inline `<icon=...>`) rendered in both Flutter widgets and Flame components | [docs/en/richtext.md](docs/en/richtext.md) |
+| Card game | Card model with pile linked-list semantics, flip/rotate/focus animations, data-driven card faces, draw & pile zones | [docs/en/cardgame.md](docs/en/cardgame.md) |
+| Game dialog | Visual-novel style dialog model + overlay controller: conversations, selections, tutorial screen hints | [docs/en/game_dialog.md](docs/en/game_dialog.md) |
+| Misc | In-game HetuScript console, hex tilemap with fog of war, markdown wiki — project-specific, documented briefly | [docs/en/misc.md](docs/en/misc.md) |
 
+Full index: [docs/README.md](docs/README.md)
+
+## Quick start
+
+```dart
+import 'package:samsara/samsara.dart';
+
+// 1. A scene is a full Flame game instance.
+class MainScene extends Scene {
+  MainScene({required super.id});
+
+  @override
+  Future<void> onLoad() async {
+    super.onLoad();
+    final button = SpriteButton(
+      anchor: Anchor.center,
+      text: 'Hello',
+      spriteId: 'button.png',
+      useSpriteSrcSize: true,
+      position: center,
+    );
+    button.onTap = (button, position) =>
+        addHintText('Hello samsara!', position: center);
+    world.add(button);
+  }
+}
+
+// 2. The engine owns the scene stack.
+final engine = SamsaraEngine(config: const EngineConfig(enableLlm: false));
+
+// 3. In your root StatefulWidget's initState:
+//    engine.registerSceneConstructor('main', ([args]) async => MainScene(id: 'main'));
+//    await engine.init(context);
+//    engine.pushScene('main');
+// 4. In build(): provide the engine with Provider and render the current scene —
+//    context.watch<SamsaraEngine>().scene?.build(context)
 ```
-PositionComponent (Flame)
-  └─ GameComponent (abstract base for all game objects)
-      ├─ GestureComponent (+ HandlesGesture mixin)
-      ├─ TileMap (hex tilemap + HandlesGesture)
-      ├─ BorderComponent, SpriteComponent2, etc.
 
-FlameGame (Flame)
-  └─ Scene (+ TaskController mixin) — standalone game instances
+The complete, commented project skeleton (window setup, loading screen,
+error handling) is in [docs/en/core.md](docs/en/core.md#4-getting-started--project-skeleton) and
+runs as the [`example/`](example/) app.
 
-SceneController (abstract + ChangeNotifier)
-  └─ SamsaraEngine (+ EventAggregator, HTLogger) — top-level engine
+## Example app
+
+```bash
+cd example
+flutter pub get
+flutter run -d windows
 ```
 
-### Key Subsystems
+The example app is a single game whose main menu pushes one demo scene per
+module: components & gestures & effects, lighting, rich text, hover tooltips,
+card game, and game dialog.
 
-| Module     | Path               | Purpose                                         |
-| ---------- | ------------------ | ----------------------------------------------- |
-| Scene      | `lib/scene/`       | Stack-based scene navigation with lazy caching  |
-| Components | `lib/components/`  | Base game objects with paint management         |
-| Gestures   | `lib/gestures/`    | Unified pointer/touch/drag/scale mixin          |
-| TileMap    | `lib/tilemap/`     | Hexagonal tilemap with terrain/routing          |
-| Card Game  | `lib/cardgame/`    | Card mechanics, zones, flip/rotate animations   |
-| Effects    | `lib/effect/`      | Camera shake, fade, confetti, zoom              |
-| Task       | `lib/task.dart`    | Sequential async animation scheduling           |
-| Event      | `lib/event.dart`   | Pub/sub between Flame components and Flutter    |
-| Rich Text  | `lib/richtext/`    | HTML-like rich text builder for Flutter & Flame |
-| Dialog     | `lib/game_dialog/` | In-game dialog with avatar & selection          |
-| Console    | `lib/console/`     | In-game HetuScript console                      |
-| Paint      | `lib/paint/`       | Custom TextPaint and TextElement wrappers       |
+## Dependencies
 
-### Barrel Exports
+`hetu_script`, `hetu_script_flutter` and `fluent_ui` are resolved via relative
+paths to sibling directories (`../hetu-script/...`, `../fluent_ui`), so those
+repositories must sit next to this one or `flutter pub get` will fail.
 
-Public API is exposed via barrel files at `lib/` root: `samsara.dart`, `engine.dart`, `components.dart`, `tilemap.dart`, `cardgame.dart`, etc.
+## License
 
-## Conventions
-
-- **Scene lifecycle**: scenes are lazily constructed, cached in `SceneController`, and navigated via `pushScene`/`popScene`/`switchScene`
-- **Task scheduling**: use `TaskController.schedule()` for sequential async work (animations, transitions) — never `await` raw futures for chained animations
-- **Event communication**: use `EventAggregator.emit()`/`addEventListener()` to bridge Flame game state to Flutter widget layer
-- **Component paint**: use `GameComponent.setPaint(name, paint)` for named paint state management
-- **Opacity**: implement `OpacityProvider` and use `FadeEffect` for fade-in/out
-
-## Pitfalls
-
-- Path dependencies (`hetu_script`, `fluent_ui`) must exist as sibling folders — `flutter pub get` will fail otherwise
-- Gesture mixin methods (`onTapDown`, `onDragUpdate`, etc.) should call `super` to preserve the chain
-- `Scene` extends `FlameGame` — each scene is a full game instance, not a lightweight object
+See [LICENSE](LICENSE).

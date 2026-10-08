@@ -11,7 +11,7 @@ extension FixedTextStyle on InlineTextStyle {
     return TextStyle(
       color: foreground == null ? color : null,
       fontFamily: fontFamily,
-      fontSize: fontSize! * (fontScale ?? 1.0),
+      fontSize: fontSize == null ? null : fontSize! * (fontScale ?? 1.0),
       fontWeight: fontWeight,
       fontStyle: fontStyle,
       letterSpacing: letterSpacing,
