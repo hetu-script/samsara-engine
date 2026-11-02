@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/effects.dart';
 import 'package:samsara/samsara.dart';
 import 'package:samsara/components.dart';
+import 'package:samsara/effect.dart';
 
 import '../engine.dart';
 

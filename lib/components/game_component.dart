@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' hide Viewport;
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/camera.dart';
+import 'package:samsara/effect.dart';
 
 import '../gestures/gesture_mixin.dart';
 

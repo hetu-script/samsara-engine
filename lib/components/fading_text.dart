@@ -1,4 +1,5 @@
 import 'package:flame/effects.dart';
+import 'package:samsara/effect.dart';
 
 import 'timer.dart';
 import '../samsara.dart';

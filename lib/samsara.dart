@@ -5,7 +5,6 @@ export 'scene/scene.dart';
 export 'scene/scene_controller.dart';
 export 'components/game_component.dart';
 export 'components/border_component.dart';
-export 'effect.dart';
 export 'animation/sprite_animation.dart';
 export 'lighting/light_config.dart';
 export 'console/console.dart';

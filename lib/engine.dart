@@ -44,7 +44,7 @@ class EngineConfig {
     this.musicVolume = 0.5,
     this.soundEffectVolume = 0.5,
     this.showFps = false,
-    this.enableLlm = true,
+    this.enableLlm = false,
     this.llmModelId = 'gemma-4-E4B-it-Q5_K_M',
     this.mods = const {},
   });

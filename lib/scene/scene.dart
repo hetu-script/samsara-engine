@@ -39,6 +39,7 @@ abstract class Scene extends FlameGame with TaskController {
 
   HandlesGesture? hoveringComponent;
   HandlesGesture? draggingComponent;
+  HandlesGesture? tappingComponent;
 
   Vector2 get topLeft => bounds.topLeft.toVector2();
   Vector2 get topCenter => bounds.topCenter.toVector2();
@@ -221,6 +222,7 @@ abstract class Scene extends FlameGame with TaskController {
   void onTapDown(int pointer, int button, TapDownDetails details) {
     for (final c in gestureComponents) {
       if (c.handleTapDown(pointer, button, details)) {
+        tappingComponent = c;
         return;
       }
     }
@@ -253,6 +255,8 @@ abstract class Scene extends FlameGame with TaskController {
 
   @mustCallSuper
   void onTapUp(int pointer, int button, TapUpDetails details) {
+    tappingComponent = null;
+
     if (HandlesGesture.tappingDetails.containsKey(pointer)) {
       // use stored tap positions because this will be lost on tap up event.
       final detail = HandlesGesture.tappingDetails[pointer]!;
