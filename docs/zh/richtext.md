@@ -23,7 +23,7 @@
 - **闭合标签固定写作 `</>`**，不需要与开标签同名；写具名闭合（如 `</bold>`）会使整个片段无法匹配，按原文输出。
 - 属性值可以用单引号包裹（如 `color='#ffd700'`、`icon='sword'`），也可以裸写（如 `color=#ffd700`）；**值中包含空格时必须加引号**。
 - 标签**不支持嵌套**，每个 `<...></>` 片段是独立的扁平 span。
-- 标签内容不能包含 `<`、`/`、`>` 字符（由解析正则的字符集决定），内容里带 `/` 的片段（如 `<red>and/or</>`）无法被识别为标签，会按原文输出。
+- 标签内容不能包含 `<`、`>` 字符；`/` 可以作为普通文本使用，例如 `<red>and/or</>`。
 - 换行支持真实的 `\n` 字符，也支持字面转义序列 `\\n`（普通文本部分会自动转换，见 `lib/extensions.dart` 的 `StringEx.replaceAllEscapedLineBreaks`）。
 - 带标签的内容本身跨多行时，框架会自动把标签按行拆分（`_normalizeMultilineTags`），等价于每行各自包一层同样的标签。
 - 标签按源码中的字面量匹配，**大小写敏感**：`<red>` 有效，`<RED>` 不会被识别。
@@ -272,7 +272,7 @@ final tokens = getRichTextStream('获得 <epic>史诗武器</>！');
 - `link=` 目前仅解析、不响应点击（recognizer 代码处于注释状态）。
 - `color=` 的格式是 `#RRGGBB` 或 `#RRGGBBAA`（透明度在最后两位，不是 `#AARRGGBB`），位数非法会抛 `ArgumentError`。
 - `asTextStyle2()` / `asTextRenderer2()` 在 `InlineTextStyle.fontSize` 为 null 时按原样透传（不做缩放换算）；需要 `fontScale` 换算时请设置 `fontSize`。
-- 标签内容不能包含 `<`、`/`、`>` 字符，内容含 `/` 的片段不会被识别为标签。
+- 标签内容不能包含 `<`、`>` 字符；`/` 是普通文本，不影响标签识别。
 
 ## 运行示例
 

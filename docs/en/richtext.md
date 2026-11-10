@@ -23,7 +23,7 @@ Rules:
 - **The closing tag must be written `</>`** and never carries a name; a named closer (e.g. `</bold>`) prevents the whole fragment from matching and is output as literal text.
 - Attribute values may be single-quoted (e.g. `color='#ffd700'`, `icon='sword'`) or bare (e.g. `color=#ffd700`); **values containing spaces must be quoted**.
 - Tags **do not nest** — each `<...></>` fragment is an independent flat span.
-- Tag content cannot contain `<`, `/`, or `>` (enforced by the parser's character set); a fragment whose content contains `/` (e.g. `<red>and/or</>`) is not recognized as a tag and is output literally.
+- Tag content cannot contain `<` or `>`; `/` is treated as ordinary text, so fragments such as `<red>and/or</>` are parsed normally.
 - Line breaks support both a real `\n` character and the literal escape sequence `\\n` (plain-text portions are converted automatically — see `StringEx.replaceAllEscapedLineBreaks` in `lib/extensions.dart`).
 - If tagged content spans multiple lines, the framework splits the tags per line automatically (`_normalizeMultilineTags`), equivalent to wrapping each line in the same tags.
 - Tags are matched against literals in the source and are **case-sensitive**: `<red>` works, `<RED>` is not recognized.
@@ -273,7 +273,7 @@ final tokens = getRichTextStream('Loot: <epic>epic weapon</>!');
 - `link=` is parsed but not clickable (recognizer code is commented out).
 - The `color=` format is `#RRGGBB` or `#RRGGBBAA` (alpha last — not `#AARRGGBB`); an invalid digit count throws an `ArgumentError`.
 - With `asTextStyle2()` / `asTextRenderer2()`, a null `InlineTextStyle.fontSize` is passed through as-is (no scaling applied); set `fontSize` when you need the `fontScale` multiplication.
-- Tag content cannot contain `<`, `/`, or `>`; fragments whose content contains `/` are not recognized as tags.
+- Tag content cannot contain `<` or `>`; `/` is ordinary text and does not prevent tag recognition.
 
 ## Runnable demo
 

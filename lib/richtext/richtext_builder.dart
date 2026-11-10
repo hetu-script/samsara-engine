@@ -28,7 +28,7 @@ abstract class _FontSize {
 }
 
 RegExp _tagPattern = RegExp(
-  r"<.*?>([^<\/>]*)<\/>",
+  r"<.*?>([^<>]*)<\/>",
   caseSensitive: false,
   multiLine: false,
   unicode: true,
