@@ -123,8 +123,8 @@ Full registry API:
 
 Then reference icons in rich text with `<icon=sword></>`. Rendering on each side:
 
-- **Flutter side**: a `WidgetSpan` (`PlaceholderAlignment.middle`) + `Image.asset`, with width and height set to the merged style's `fontSize ?? 14`.
-- **Flame side**: an `InlineIconNode` (`lib/richtext/icon_node.dart`); the image is fetched from the `Flame.images` cache at layout time, with height `fontSize * fontScale` (default `fontSize` 16), width scaled by the source aspect ratio, and the bottom aligned to the text baseline.
+- **Flutter side**: a `WidgetSpan` (`PlaceholderAlignment.middle`) + `Image.asset`, with width and height set to the merged style's `fontSize ?? 14`. The merged text style is also applied to the placeholder, vertically centering the icon within the text line.
+- **Flame side**: an `InlineIconNode` (`lib/richtext/icon_node.dart`); the image is fetched from the `Flame.images` cache at layout time, with height `fontSize * fontScale` (default `fontSize` 16) and width scaled by the source aspect ratio. Its metrics include the text line's vertical leading, centering the icon within the text line.
 
 ## Using it in Flutter
 

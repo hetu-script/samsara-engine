@@ -1,11 +1,11 @@
 // ignore: implementation_imports
 import 'package:flame/src/text/nodes/inline_text_node.dart';
 import 'package:flame/text.dart';
-// import 'package:flutter/material.dart';
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
 
 import '../samsara.dart';
+import 'inline_text_style2.dart';
 
 /// An [InlineTextNode] representing an icon.
 class InlineIconNode extends InlineTextNode {
@@ -44,22 +44,35 @@ class _InlineIconLayoutBuilder extends TextNodeLayoutBuilder {
   }) {
     if (_isDone) return null;
     _isDone = true;
-    // 图标高度与文字渲染尺寸一致，见 inline_text_style2.dart 的换算公式
     final style = node.style;
     final height = (style.fontSize ?? 16.0) * (style.fontScale ?? 1.0);
-    return InlineIconElement(node.spriteId, height: height);
+    final textMetrics = style.asTextRenderer2().getLineMetrics('0');
+    return InlineIconElement(
+      node.spriteId,
+      height: height,
+      textMetrics: textMetrics,
+    );
   }
 }
 
 /// [InlineIconElement] is a class that represents a single icon,
 /// prepared for rendering.
 class InlineIconElement extends InlineTextElement {
-  InlineIconElement(String spriteId, {required double height})
-    : sprite = Sprite(Flame.images.fromCache(spriteId)) {
+  InlineIconElement(
+    String spriteId, {
+    required double height,
+    LineMetrics? textMetrics,
+  }) : sprite = Sprite(Flame.images.fromCache(spriteId)) {
     final srcSize = sprite.srcSize;
     _size = Vector2(srcSize.x * (height / srcSize.y), height);
-    // baseline 为 0、ascent 为图标全高：图标底部与文字基线对齐
-    _box = LineMetrics(ascent: height, width: _size.x);
+    final verticalOffset =
+        textMetrics == null ? 0.0 : (textMetrics.height - height) / 2;
+    final ascent = (textMetrics?.ascent ?? height) - verticalOffset;
+    _box = LineMetrics(
+      ascent: ascent,
+      descent: height - ascent,
+      width: _size.x,
+    );
   }
 
   final Sprite sprite;

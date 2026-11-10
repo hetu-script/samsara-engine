@@ -27,43 +27,72 @@ abstract class _FontSize {
   static const double h7 = 48;
 }
 
-RegExp _tagPattern = RegExp(
-  r"<.*?>([^<>]*)<\/>",
-  caseSensitive: false,
-  multiLine: false,
+final _tagPattern = RegExp(
+  r'<(?<tags>[^<>\r\n]*)>(?<content>[^<>]*)</>',
   unicode: true,
 );
 
-RegExp _tagContentPattern = RegExp(
-  r"(\S+='([^']*)')|(\S+)",
-  multiLine: false,
+final _tagContentPattern = RegExp(
+  r"([^\s=]+)(?:='([^']*)'|=([^\s]*))?",
   unicode: true,
 );
 
-List<String> getRichTextStream(String source) {
-  final List<String> splitedList = [];
+class _RichTextSegment {
+  const _RichTextSegment.text(String text)
+      : source = text,
+        tags = null,
+        content = null;
 
-  String processingText = source;
+  const _RichTextSegment.tag({
+    required this.source,
+    required this.tags,
+    required this.content,
+  });
 
-  if (_tagPattern.hasMatch(processingText)) {
-    while (_tagPattern.hasMatch(processingText)) {
-      final match = _tagPattern.firstMatch(processingText)!;
-      final matchString = match.group(0)!;
-      final before = processingText.substring(0, match.start);
-      if (before.isNotEmpty) {
-        splitedList.addAll(before.split(''));
-      }
-      processingText = processingText.substring(match.end);
-      splitedList.add(matchString);
-    }
-    if (processingText.isNotEmpty) {
-      splitedList.addAll(processingText.split(''));
-    }
-  } else {
-    splitedList.addAll(processingText.split(''));
+  final String source;
+  final String? tags;
+  final String? content;
+
+  bool get isTag => tags != null;
+}
+
+Iterable<_RichTextSegment> _parseRichText(String source) sync* {
+  if (source.isEmpty) {
+    yield const _RichTextSegment.text('');
+    return;
   }
 
-  return splitedList;
+  var lastEnd = 0;
+
+  for (final match in _tagPattern.allMatches(source)) {
+    if (match.start > lastEnd) {
+      yield _RichTextSegment.text(source.substring(lastEnd, match.start));
+    }
+    yield _RichTextSegment.tag(
+      source: match.group(0)!,
+      tags: match.namedGroup('tags')!,
+      content: match.namedGroup('content')!,
+    );
+    lastEnd = match.end;
+  }
+
+  if (lastEnd < source.length) {
+    yield _RichTextSegment.text(source.substring(lastEnd));
+  }
+}
+
+List<String> getRichTextStream(String source) {
+  final tokens = <String>[];
+
+  for (final segment in _parseRichText(source)) {
+    if (segment.isTag) {
+      tokens.add(segment.source);
+    } else {
+      tokens.addAll(segment.source.split(''));
+    }
+  }
+
+  return tokens;
 }
 
 class TagResolveResult {
@@ -207,15 +236,14 @@ String _normalizeMultilineTags(String source) {
 
   for (final match in matches) {
     final matchString = match.group(0)!;
-    final taggedContent = match.group(1)!;
+    final tags = match.namedGroup('tags')!;
+    final taggedContent = match.namedGroup('content')!;
 
     buffer.write(source.substring(lastEnd, match.start));
 
     if (taggedContent.contains('\n')) {
-      final tagEndIdx = matchString.indexOf('>');
-      final tagPart = matchString.substring(1, tagEndIdx);
       final lines = taggedContent.split('\n');
-      buffer.write(lines.map((line) => '<$tagPart>$line</>').join('\n'));
+      buffer.write(lines.map((line) => '<$tags>$line</>').join('\n'));
     } else {
       buffer.write(matchString);
     }
@@ -251,83 +279,59 @@ String _normalizeMultilineTags(String source) {
 List<TextSpan> buildFlutterRichText(
   String? source, {
   TextStyle? style,
-  // final void Function(String id, String? arg)? onTap,
 }) {
-  final List<TextSpan> result = [];
   if (source == null || source.isEmpty) {
-    return result;
+    return const [];
   }
-  source = _normalizeMultilineTags(source);
-  final paragraphs = source.trim().split(RegExp(r'\n'));
+
+  final result = <TextSpan>[];
+  final paragraphs = _normalizeMultilineTags(source).trim().split('\n');
   for (var i = 0; i < paragraphs.length; ++i) {
-    final paragraph = paragraphs[i];
-    final List<InlineSpan> spanList = [];
-    String processingText = paragraph;
-    if (_tagPattern.hasMatch(processingText)) {
-      while (_tagPattern.hasMatch(processingText)) {
-        final match = _tagPattern.firstMatch(processingText)!;
-        final matchString = match.group(0)!;
-        final taggedContent = match.group(1)!;
-        final before = processingText.substring(0, match.start);
-        if (before.isNotEmpty) {
-          spanList.add(TextSpan(text: before, style: style));
-        }
-        processingText = processingText.substring(match.end);
-        {
-          // 标签部分为 matchString 中第一个 '>' 之前的部分，
-          // 图标标签的内容通常为空，因此不能依赖 taggedContent 定位标签
-          final tagEndIndex = matchString.indexOf('>');
-          String taggedString = matchString.substring(1, tagEndIndex);
-          taggedString = taggedString.replaceAll('\n', '');
-          final tags = _tagContentPattern.allMatches(taggedString);
-          final tagResolveResult = _resolveTagStyle(tags);
-          final mergedStyle =
-              (style ?? const TextStyle()).merge(tagResolveResult.style);
+    final spans = <InlineSpan>[];
 
-          final iconId = tagResolveResult.icon;
-          final iconAsset =
-              iconId != null ? RichTextIcons.resolveFlutterAsset(iconId) : null;
-          if (iconAsset != null) {
-            // 图标尺寸与文字大小一致
-            final iconSize = mergedStyle.fontSize ?? 14.0;
-            spanList.add(
-              WidgetSpan(
-                alignment: PlaceholderAlignment.middle,
-                child: Image.asset(
-                  iconAsset,
-                  width: iconSize,
-                  height: iconSize,
-                ),
-              ),
-            );
-          } else if (taggedContent.isNotEmpty) {
-            spanList.add(
-              TextSpan(
-                text: taggedContent,
-                style: mergedStyle,
-                // recognizer: route != null
-                //     ? (TapGestureRecognizer()
-                //       ..onTap = () => onTap?.call(route!, routeArg)
-                //       )
-                //     : null,
-              ),
-            );
-          }
-        }
+    for (final segment in _parseRichText(paragraphs[i])) {
+      if (!segment.isTag) {
+        spans.add(TextSpan(
+          text: segment.source.replaceAllEscapedLineBreaks(),
+          style: style,
+        ));
+        continue;
       }
 
-      if (processingText.isNotEmpty) {
-        spanList.add(TextSpan(
-            text: processingText.replaceAllEscapedLineBreaks(), style: style));
+      final tagResolveResult = _resolveTagStyle(
+        _tagContentPattern.allMatches(segment.tags!),
+      );
+      final mergedStyle =
+          (style ?? const TextStyle()).merge(tagResolveResult.style);
+      final iconId = tagResolveResult.icon;
+      final iconAsset =
+          iconId != null ? RichTextIcons.resolveFlutterAsset(iconId) : null;
+
+      if (iconAsset != null) {
+        final iconSize = mergedStyle.fontSize ?? 14.0;
+        spans.add(
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            style: mergedStyle,
+            child: Image.asset(
+              iconAsset,
+              width: iconSize,
+              height: iconSize,
+            ),
+          ),
+        );
+      } else if (segment.content!.isNotEmpty) {
+        spans.add(TextSpan(
+          text: segment.content,
+          style: mergedStyle,
+        ));
       }
-    } else {
-      spanList.add(TextSpan(
-          text: processingText.replaceAllEscapedLineBreaks(), style: style));
     }
+
     if (i < paragraphs.length - 1) {
-      spanList.add(const TextSpan(text: '\n'));
+      spans.add(const TextSpan(text: '\n'));
     }
-    result.add(TextSpan(children: spanList));
+    result.add(TextSpan(children: spans));
   }
 
   return result;
@@ -336,72 +340,43 @@ List<TextSpan> buildFlutterRichText(
 DocumentRoot buildFlameRichText(
   String source, {
   TextStyle? style,
-  // final void Function(String id, String? arg)? onTap,
 }) {
-  source = _normalizeMultilineTags(source);
-  final paragraphs = source.split(RegExp(r'\n'));
+  final paragraphs = _normalizeMultilineTags(source).split('\n');
   final paragraphNodes = <ParagraphNode>[];
+
   for (final paragraph in paragraphs) {
     final nodes = <InlineTextNode>[];
-    String processingText = paragraph;
-    if (_tagPattern.hasMatch(processingText)) {
-      while (_tagPattern.hasMatch(processingText)) {
-        final match = _tagPattern.firstMatch(processingText)!;
-        final matchString = match.group(0)!;
-        final taggedContent = match.group(1)!;
-        final before = processingText.substring(0, match.start);
-        if (before.isNotEmpty) {
-          nodes.add(
-              RichTextNode(text: before, style: style?.toInlineTextStyle()));
-        }
-        processingText = processingText.substring(match.end);
-        {
-          final tagEndIndex = matchString.indexOf('>');
-          String taggedString = matchString.substring(1, tagEndIndex);
-          taggedString = taggedString.replaceAll('\n', '');
-          final tags = _tagContentPattern.allMatches(taggedString);
-          final tagResolveResult = _resolveTagStyle(tags);
 
-          final iconId = tagResolveResult.icon;
-          final flameKey =
-              iconId != null ? RichTextIcons.resolveFlameKey(iconId) : null;
-          if (flameKey != null) {
-            nodes.add(InlineIconNode(spriteId: flameKey));
-          } else if (taggedContent.isNotEmpty) {
-            nodes.add(
-              RichTextNode(
-                text: taggedContent,
-                style: (style ?? const TextStyle())
-                    .merge(tagResolveResult.style)
-                    .toInlineTextStyle(),
-                // recognizer: route != null
-                //     ? (TapGestureRecognizer()
-                //       ..onTap = () => onTap?.call(route!, routeArg)
-                //       )
-                //     : null,
-              ),
-            );
-          }
-        }
+    for (final segment in _parseRichText(paragraph)) {
+      if (!segment.isTag) {
+        nodes.add(RichTextNode(
+          text: segment.source.replaceAllEscapedLineBreaks(),
+          style: style?.toInlineTextStyle(),
+        ));
+        continue;
       }
 
-      if (processingText.isNotEmpty) {
-        nodes.add(
-          RichTextNode(
-              text: processingText.replaceAllEscapedLineBreaks(),
-              style: style?.toInlineTextStyle()),
-        );
-      }
-    } else {
-      nodes.add(
-        RichTextNode(
-            text: processingText.replaceAllEscapedLineBreaks(),
-            style: style?.toInlineTextStyle()),
+      final tagResolveResult = _resolveTagStyle(
+        _tagContentPattern.allMatches(segment.tags!),
       );
+      final iconId = tagResolveResult.icon;
+      final flameKey =
+          iconId != null ? RichTextIcons.resolveFlameKey(iconId) : null;
+
+      if (flameKey != null) {
+        nodes.add(InlineIconNode(spriteId: flameKey));
+      } else if (segment.content!.isNotEmpty) {
+        nodes.add(RichTextNode(
+          text: segment.content!,
+          style: (style ?? const TextStyle())
+              .merge(tagResolveResult.style)
+              .toInlineTextStyle(),
+        ));
+      }
     }
+
     paragraphNodes.add(ParagraphNode.group(nodes));
   }
 
-  final document = DocumentRoot(paragraphNodes);
-  return document;
+  return DocumentRoot(paragraphNodes);
 }

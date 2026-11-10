@@ -123,8 +123,8 @@ await RichTextIcons.preload();
 
 之后在富文本中用 `<icon=sword></>` 引用，两端的渲染方式：
 
-- **Flutter 端**：`WidgetSpan`（`PlaceholderAlignment.middle`）+ `Image.asset`，宽高取合并后样式的 `fontSize ?? 14`。
-- **Flame 端**：`InlineIconNode`（`lib/richtext/icon_node.dart`），排版时从 `Flame.images` 缓存取图，高度为 `fontSize * fontScale`（`fontSize` 缺省 16），宽度按原图宽高比缩放，底部与文字基线对齐。
+- **Flutter 端**：`WidgetSpan`（`PlaceholderAlignment.middle`）+ `Image.asset`，宽高取合并后样式的 `fontSize ?? 14`；占位符同时应用合并后的文字样式，使图标在文字行内垂直居中。
+- **Flame 端**：`InlineIconNode`（`lib/richtext/icon_node.dart`），排版时从 `Flame.images` 缓存取图，高度为 `fontSize * fontScale`（`fontSize` 缺省 16），宽度按原图宽高比缩放；布局指标会计入文字行高的上下余量，使图标在文字行内垂直居中。
 
 ## 在 Flutter 中使用
 
