@@ -93,27 +93,30 @@ class HoverInfo extends StatelessWidget {
     this.backgroundColor = Colors.black87,
   });
 
-  final HoverContent content;
+  const HoverInfo.fromState({
+    super.key,
+    this.backgroundColor = Colors.black87,
+  }) : content = null;
+
+  final HoverContent? content;
   final Color backgroundColor;
 
   @override
   Widget build(BuildContext context) {
-    final hoverContent = context.read<HoverContentState>().content;
+    final hoverContent = context.watch<HoverContentState>().content ?? content;
     if (hoverContent == null) {
       return const SizedBox.shrink();
     }
 
     final screenSize = MediaQuery.sizeOf(context);
 
-    context.watch<HoverContentState>().isDetailed;
-
     Widget? child;
-    dynamic data = content.data;
+    dynamic data = hoverContent.data;
 
     if (data is String) {
       final defaultStyle = Theme.of(context).textTheme.bodySmall;
       child = RichText(
-        textAlign: content.textAlign,
+        textAlign: hoverContent.textAlign,
         text: TextSpan(
           children: buildFlutterRichText(
             data,
@@ -130,14 +133,14 @@ class HoverInfo extends StatelessWidget {
 
     return CustomSingleChildLayout(
       delegate: _HoverInfoLayoutDelegate(
-        content: content,
+        content: hoverContent,
         screenSize: screenSize,
       ),
       child: IgnorePointer(
         child: Container(
           color: backgroundColor,
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-          constraints: BoxConstraints(maxWidth: content.maxWidth),
+          constraints: BoxConstraints(maxWidth: hoverContent.maxWidth),
           child: child,
         ),
       ),

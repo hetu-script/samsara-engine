@@ -79,30 +79,15 @@ rightTop, rightCenter, rightBottom,
 bottomLeft, bottomCenter, bottomRight
 ```
 
-### `HoverInfo` 控件 —— 以及"过期数据"陷阱
+### `HoverInfo` 控件
+
+`HoverInfo`（lib/hover_info/hover_info.dart:89）是浮动信息框本身。既可以通过 `HoverInfo(content)` 显式传入内容，也可以通过 `HoverInfo.fromState()` 直接读取 Provider 状态。
 
 ```dart
-const HoverInfo(
-  this.content, {
-  super.key,
-  this.backgroundColor = Colors.black87,
-});
+const HoverInfo.fromState();
 ```
 
-`HoverInfo`（lib/hover_info/hover_info.dart:89）是浮动信息框本身。源码验证过的行为：
-
-- 它的**可见性由 provider 状态决定**——`context.read<HoverContentState>().content == null` 时渲染 `SizedBox.shrink()`——但**渲染的却是构造参数 `content`**。必须把状态里的*当前* content 喂给它，否则会显示过期数据。
-- 正确接法：在状态变化时重建并传入最新的 content，例如像 `example/lib/scene/hover_scene.dart:153` 那样用 `Consumer<HoverContentState>`：
-
-```dart
-Consumer<HoverContentState>(
-  builder: (context, hoverState, _) {
-    final content = hoverState.content;
-    if (content == null) return const SizedBox.shrink();
-    return HoverInfo(content);
-  },
-),
-```
+`fromState` 会自行监听 `HoverContentState`，始终渲染当前内容，无内容时返回 `SizedBox.shrink()`。因此父组件不必为了传递最新内容而跟随浮窗重建，浮窗更新可以限制在自身子树。显式内容构造函数仍可用于独立场景；两者同时存在时优先使用 Provider 内容。
 
 - 定位：由 `SingleChildLayoutDelegate` 按 `direction` 把信息框放到 `content.rect` 旁边，间隔 `kHoverInfoIndent`（10），并被夹紧在屏幕范围内（lib/hover_info/hover_info.dart:69）。
 - 信息框包裹在 `IgnorePointer` 中——永远不会拦截输入。

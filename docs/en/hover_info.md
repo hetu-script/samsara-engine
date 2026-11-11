@@ -79,30 +79,15 @@ rightTop, rightCenter, rightBottom,
 bottomLeft, bottomCenter, bottomRight
 ```
 
-### The `HoverInfo` widget — and the stale-data gotcha
+### The `HoverInfo` widget
+
+`HoverInfo` (lib/hover_info/hover_info.dart:89) is the floating box. It supports explicit content through `HoverInfo(content)` and provider-driven content through `HoverInfo.fromState()`.
 
 ```dart
-const HoverInfo(
-  this.content, {
-  super.key,
-  this.backgroundColor = Colors.black87,
-});
+const HoverInfo.fromState();
 ```
 
-`HoverInfo` (lib/hover_info/hover_info.dart:89) is the floating box. Behavior verified from source:
-
-- It **gates visibility on the provider** — `context.read<HoverContentState>().content == null` renders `SizedBox.shrink()` — but it **renders its constructor `content` parameter**. Feed it the state's *current* content or it displays stale data.
-- Correct wiring: rebuild on state changes and pass the fresh content, e.g. a `Consumer<HoverContentState>` as in `example/lib/scene/hover_scene.dart:153`:
-
-```dart
-Consumer<HoverContentState>(
-  builder: (context, hoverState, _) {
-    final content = hoverState.content;
-    if (content == null) return const SizedBox.shrink();
-    return HoverInfo(content);
-  },
-),
-```
+`fromState` watches `HoverContentState` itself, renders the current content, and returns `SizedBox.shrink()` when no content is available. This keeps hover updates scoped to the tooltip instead of requiring a parent to rebuild and pass fresh content. The explicit-content constructor remains available for isolated use; provider content takes precedence when both are present.
 
 - Positioning: a `SingleChildLayoutDelegate` places the box relative to `content.rect` per `direction`, with a `kHoverInfoIndent` (10) gap, clamped so the box never leaves the screen (lib/hover_info/hover_info.dart:69).
 - The box is wrapped in `IgnorePointer` — it never intercepts input.
