@@ -148,6 +148,7 @@ class ComponentsScene extends Scene {
       text: 'Camera Shake',
       spriteId: 'button.png',
       useSpriteSrcSize: true,
+      pressedTextOffset: 6.0,
       position: Vector2(400.0, 620.0),
     );
     shakeButton.onTap = (button, position) {
