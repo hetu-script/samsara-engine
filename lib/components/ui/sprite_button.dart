@@ -34,9 +34,6 @@ class SpriteButton<T> extends BorderComponent with HandlesGesture {
   String? text;
   late ScreenTextConfig textConfig;
 
-  /// 按下时是否将文字向下偏移
-  bool offsetTextOnPress;
-
   /// 按下时文字向下偏移的像素距离
   double pressedTextOffset;
 
@@ -58,8 +55,7 @@ class SpriteButton<T> extends BorderComponent with HandlesGesture {
     this.color,
     this.text,
     ScreenTextConfig? textConfig,
-    this.offsetTextOnPress = true,
-    this.pressedTextOffset = 10.0,
+    this.pressedTextOffset = 3.0,
     super.size,
     super.anchor,
     super.priority,
@@ -269,7 +265,7 @@ class SpriteButton<T> extends BorderComponent with HandlesGesture {
           text!,
           position: Offset(
             0.0,
-            offsetTextOnPress && isPressing ? pressedTextOffset : 0.0,
+            isPressing ? pressedTextOffset : 0.0,
           ),
           config: textConfig,
         );
