@@ -95,8 +95,8 @@ class MainMenuScene extends Scene {
   }
 
   @override
-  void update(double dt) {
-    super.update(dt);
+  void updateFrame(double dt) {
+    super.updateFrame(dt);
 
     fps.update(dt);
   }

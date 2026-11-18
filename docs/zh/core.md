@@ -248,17 +248,21 @@ Scene({
 - 因为场景会持续存在于缓存中，`onStart` 会被反复触发；在其中启动的任何内容（计时器、流）都必须可重入。
 - `onAfterLoaded` 由控制器在每次 push 时接线、被 `popScene`/`switchScene` 清除；由于一次性挂载保护，重新 push 一个已缓存场景**不会**再次触发它。
 
-### 3.4 固定时间步长
+### 3.4 固定逻辑与显示帧更新
 
-`Scene.updateTree` 对更新做了量化：
+Flame 根游戏从 `Scene.update(realDt)` 进入时序调度。场景子类应使用以下两个钩子，不应直接重写 `update`，否则会绕过这套调度：
 
 ```dart
 static double fixedRate = 1 / 60;
-// _dtSum += dt;
-// if (_dtSum > fixedRate) { super.updateTree(fixedRate); _dtSum -= fixedRate; }
+
+void fixedUpdate(double dt) {}
+void updateFrame(double dt) {}
+double get simulationInterpolation => ...;
 ```
 
-每个 tick 让游戏逻辑恰好推进 `1/60` 秒，且每渲染帧最多运行**一个** tick。60 fps 下完全透明；低于 60 fps 时游戏时间会比墙上时钟慢（没有追帧循环）。
+每个显示帧先执行 0～5 次 `fixedUpdate(fixedRate)` 和组件树固定更新，再调用一次 `updateFrame(realDt)`；即使本帧没有固定 tick，显示帧钩子也会执行。组件自身的 `update(dt)` 仍只由固定 tick 驱动。
+
+固定步长累加器使用 `>=` 判断，并在低帧率下补帧。若长帧在 5 次补帧后仍积压完整步长，则丢弃这些完整步长、只保留不足一个步长的余量，避免追帧螺旋；因此严重长帧下游戏时间可能慢于墙钟。`simulationInterpolation` 提供范围为 `[0, 1)` 的逻辑余量比例，供可选的渲染插值使用，不代表组件已经自动插值。
 
 ### 3.5 场景辅助成员
 

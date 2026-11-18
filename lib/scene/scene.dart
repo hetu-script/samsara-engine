@@ -13,6 +13,7 @@ import '../gestures/gesture_mixin.dart';
 import '../camera/camera2.dart';
 import '../components/fading_text.dart';
 import 'scene_widget.dart';
+import 'fixed_step_scheduler.dart';
 import '../task.dart';
 
 const kHintTextPriority = 999999999;
@@ -23,9 +24,14 @@ abstract class Scene extends FlameGame with TaskController {
   static const overlayUIBuilderMapKey = 'overlayUI';
   final random = math.Random();
 
-  // fix framerate to 60 updates per second
   static double fixedRate = 1 / 60;
-  double _dtSum = 0.0;
+  late final _fixedStepScheduler = FixedStepScheduler(fixedRate: fixedRate);
+
+  double get simulationInterpolation => _fixedStepScheduler.interpolation;
+
+  void fixedUpdate(double dt) {}
+
+  void updateFrame(double dt) {}
 
   final String id;
   // final SceneController controller;
@@ -378,11 +384,11 @@ abstract class Scene extends FlameGame with TaskController {
 
   @override
   void updateTree(double dt) {
-    _dtSum += dt;
-    if (_dtSum > fixedRate) {
+    _fixedStepScheduler.advance(dt, (fixedRate) {
+      fixedUpdate(fixedRate);
       super.updateTree(fixedRate);
-      _dtSum -= fixedRate;
-    }
+    });
+    updateFrame(dt);
   }
 
   Widget build(

@@ -253,17 +253,21 @@ Caveats:
 - Because scenes persist in the cache, `onStart` will be triggered repeatedly; anything you start there (timers, streams) must be safe to re-enter.
 - `onAfterLoaded` is wired per-push by the controller and cleared by `popScene`/`switchScene`; the one-shot mount guard means a re-pushed cached scene will **not** fire it again.
 
-### 3.4 Fixed timestep
+### 3.4 Fixed logic and display-frame updates
 
-`Scene.updateTree` quantizes updates:
+Flame enters the root game's timing pipeline through `Scene.update(realDt)`. Scene subclasses should use the following two hooks instead of overriding `update`, which would bypass this scheduling:
 
 ```dart
 static double fixedRate = 1 / 60;
-// _dtSum += dt;
-// if (_dtSum > fixedRate) { super.updateTree(fixedRate); _dtSum -= fixedRate; }
+
+void fixedUpdate(double dt) {}
+void updateFrame(double dt) {}
+double get simulationInterpolation => ...;
 ```
 
-Each tick advances game logic by exactly `1/60` s and at most **one** tick runs per rendered frame. At 60 fps this is transparent; below 60 fps game time runs slower than wall-clock time (no catch-up loop).
+Each display frame runs `fixedUpdate(fixedRate)` and the component tree's fixed update 0–5 times, then calls `updateFrame(realDt)` exactly once. The display-frame hook still runs when no fixed tick is due. A component's own `update(dt)` remains driven only by fixed ticks.
+
+The fixed-step accumulator uses `>=` and catches up at lower frame rates. If complete steps remain after the five-step catch-up limit for a long frame, those whole steps are discarded and only the fractional remainder is kept, preventing a catch-up spiral. Game time can therefore fall behind wall-clock time after a severe stall. `simulationInterpolation` exposes the fractional step in `[0, 1)` for optional render interpolation; components are not interpolated automatically.
 
 ### 3.5 Scene helpers
 
