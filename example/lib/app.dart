@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:samsara/samsara.dart';
 
 import 'scene/mainmenu.dart';
@@ -105,17 +104,27 @@ class _GameAppState extends State<GameApp> {
 
   @override
   Widget build(BuildContext context) {
-    final scene = context.watch<SamsaraEngine>().scene;
-    final isLoading = context.watch<SamsaraEngine>().isLoading;
     return Scaffold(
       body: Stack(
         children: [
-          scene?.build(
-                context,
-                loadingBuilder: (context) => const LoadingScreen(),
-              ) ??
-              const LoadingScreen(),
-          if (isLoading) const LoadingScreen(),
+          ValueListenableBuilder<Scene?>(
+            valueListenable: engine.sceneState,
+            builder: (context, scene, _) {
+              return scene?.build(
+                    context,
+                    loadingBuilder: (context) => const LoadingScreen(),
+                  ) ??
+                  const LoadingScreen();
+            },
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: engine.loadingState,
+            builder: (context, isLoading, _) {
+              return isLoading
+                  ? const LoadingScreen()
+                  : const SizedBox.shrink();
+            },
+          ),
         ],
       ),
     );

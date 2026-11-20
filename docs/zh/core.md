@@ -43,7 +43,7 @@ CameraComponent (package:flame)
 
 1. **指针 → 场景**：`PointerDetector`（[`lib/widgets/pointer_detector.dart`](../../lib/widgets/pointer_detector.dart)）是一个 Flutter 控件，它捕获指针/鼠标/滚轮事件，并转发给当前 `Scene` 的 `onTapDown` / `onDragUpdate` / `onMouseHover` 等回调，再由场景以深度优先方式分发给 `HandlesGesture` 组件。Samsara 完全不使用 Flame 的手势 mixin。详见 [gestures.md](gestures.md)。
 2. **游戏 → Flutter 事件**：`EventAggregator`（[`lib/event.dart`](../../lib/event.dart)），一个普通的发布/订阅 mixin。游戏代码调用 `engine.emit('eventId', args)`；Flutter 控件通过 `engine.addEventListener(...)` 注册监听。
-3. **场景切换 → 控件重建**：`SceneController` 是 `ChangeNotifier`。每次导航调用（`pushScene`、`popScene`、`switchScene`）最后都会 `notifyListeners()`，因此控件树中 `context.watch<SamsaraEngine>()` 的位置会重建并替换当前显示的 `SceneWidget`。这就是为什么引擎必须通过 `ChangeNotifierProvider` 提供（见 §4）。
+3. **场景切换 → 控件重建**：`SceneController.sceneListenable` 是 `ValueListenable<Scene?>`。导航只更新这个值，因此 `ValueListenableBuilder` 可以替换当前 `SceneWidget`，而不会因无关的引擎状态重建。`SamsaraEngine.loadingListenable` 独立驱动载入遮罩。原有 `ChangeNotifier` 接口仍然保留，用于兼容旧代码。
 
 ### 1.3 桶文件（barrel）
 
@@ -103,12 +103,13 @@ LLM 相关补充（仅在 `enableLlm: true` 时有意义）：`prepareLlamaBaseS
 
 ```dart
 bool isLoading;
+ValueListenable<bool> get loadingListenable;
 String? loadingTip;
 String? loadingMessage;
 bool setLoading(bool loading, {String? tip, String? message});
 ```
 
-`setLoading` 只在数值**实际变化时**翻转标志并调用 `notifyListeners()`，并返回新状态。example 工程中在 `engine.isLoading` 为 true 时显示 `LoadingScreen` 覆盖层（[`example/lib/app.dart`](../../example/lib/app.dart)）。注意引擎自身不会在 `init()` 期间切换这个标志——由应用来驱动。
+`setLoading` 只在数值**实际变化时**更新 `loadingListenable` 和旧的 `ChangeNotifier`，并返回新状态。载入提示与消息会在通知监听者之前更新。example 工程通过 `ValueListenableBuilder` 在该值为 true 时显示 `LoadingScreen` 覆盖层（[`example/lib/app.dart`](../../example/lib/app.dart)）。注意引擎自身不会在 `init()` 期间切换这个标志——由应用来驱动。
 
 ### 2.4 本地化
 
@@ -182,9 +183,10 @@ void switchMod(String id);   // hetu.interpreter.switchModule(id)
 
 ### 3.1 SceneController
 
-`SceneController`（[`lib/scene/scene_controller.dart`](../../lib/scene/scene_controller.dart)）是抽象的 `ChangeNotifier`，它持有：
+`SceneController`（[`lib/scene/scene_controller.dart`](../../lib/scene/scene_controller.dart)）持有：
 
 - `Scene? scene` —— 当前激活的场景；
+- `ValueListenable<Scene?> sceneListenable` —— 只监听场景变化的细粒度状态；
 - `final _cached = <String, Scene>{}` —— 已构造场景的**惰性缓存**；
 - `final _sceneStack = <String>[]` —— 导航栈（以 `List<String> get sceneStack` 暴露）；
 - 已注册的场景构造器，以及按场景记忆的构造器 id 与参数。
@@ -202,7 +204,7 @@ void registerSceneConstructor(
 
 | 方法 | 行为 |
 | --- | --- |
-| `Future<Scene> pushScene(String sceneId, {String? constructorId, dynamic arguments, bool triggerOnStart = true, void Function()? onAfterLoaded})` | 创建（或从缓存恢复）场景，把 `sceneId` 压栈，对原场景调用 `onEnd()`（不 await），设置 `scene.onAfterLoaded`，通知监听者，然后 await `onStart(arguments)`。如果 `sceneId` 就是当前场景，除了可选地再次触发 `onStart` 外什么都不做——适合"刷新"用途。 |
+| `Future<Scene> pushScene(String sceneId, {String? constructorId, dynamic arguments, bool triggerOnStart = true, void Function(Scene scene)? onAfterLoaded})` | 创建（或从缓存恢复）场景，把 `sceneId` 压栈，对原场景调用 `onEnd()`（不 await），设置 `scene.onAfterLoaded`，通知监听者，然后 await `onStart(arguments)`。如果 `sceneId` 就是当前场景，除了可选地再次触发 `onStart` 外什么都不做——适合"刷新"用途。 |
 | `Future<Scene?> popScene({bool clearCache = false})` | 弹出栈顶，调用 `onEnd()`，可选地把场景从缓存中丢弃（**这是唯一会释放资源的导航操作**），然后 `switchScene` 回新的栈顶。只剩一个场景时拒绝操作（debug 下记录错误并返回 `null`）。 |
 | `Future<Scene?> popSceneTill(String sceneId, {bool clearCache = false})` | 持续弹出直到 `sceneId` 位于栈顶。 |
 | `Future<Scene> switchScene(String sceneId, {dynamic arguments, bool triggerOnStart = true})` | 把 `scene` 切换到一个**已缓存**的场景（断言 `_cached.containsKey(sceneId)`），**不触碰导航栈**。 |
@@ -369,22 +371,28 @@ class _GameAppState extends State<GameApp> {
     // ...更多场景
 
     await engine.init(context);   // 必须在 pushScene 之前运行
-    engine.pushScene('main', onAfterLoaded: () {
+    engine.pushScene('main', onAfterLoaded: (scene) {
       engine.setLoading(false);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final scene = context.watch<SamsaraEngine>().scene;      // 桥 #3
-    final isLoading = context.watch<SamsaraEngine>().isLoading;
     return Scaffold(
       body: Stack(
         children: [
-          scene?.build(context,
-                loadingBuilder: (context) => const LoadingScreen()) ??
-              const LoadingScreen(),
-          if (isLoading) const LoadingScreen(),
+          ValueListenableBuilder<Scene?>(
+            valueListenable: engine.sceneListenable,
+            builder: (context, scene, _) => scene?.build(
+              context,
+              loadingBuilder: (context) => const LoadingScreen(),
+            ) ?? const LoadingScreen(),
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: engine.loadingListenable,
+            builder: (context, isLoading, _) =>
+                isLoading ? const LoadingScreen() : const SizedBox.shrink(),
+          ),
         ],
       ),
     );

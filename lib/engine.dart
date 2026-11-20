@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
@@ -68,19 +69,27 @@ class SamsaraEngine extends SceneController
 
   late BuildContext context;
 
-  bool isLoading = false;
+  final loadingState = ValueNotifier<bool>(false);
+  bool get isLoading => loadingState.value;
+  set isLoading(bool value) => loadingState.value = value;
 
   String? loadingTip;
   String? loadingMessage;
 
   bool setLoading(bool loading, {String? tip, String? message}) {
     if (isLoading != loading) {
-      isLoading = loading;
       loadingTip = tip;
       loadingMessage = message;
+      isLoading = loading;
       notifyListeners();
     }
     return isLoading;
+  }
+
+  @override
+  void dispose() {
+    loadingState.dispose();
+    super.dispose();
   }
 
   SamsaraEngine({

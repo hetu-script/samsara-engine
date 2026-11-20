@@ -43,7 +43,7 @@ A Samsara game is a Flutter app. The two layers are connected by three explicit 
 
 1. **Pointer → scene**: `PointerDetector` ([`lib/widgets/pointer_detector.dart`](../../lib/widgets/pointer_detector.dart)), a Flutter widget, captures pointer/mouse/scroll events and forwards them to the current `Scene`'s `onTapDown` / `onDragUpdate` / `onMouseHover` / etc., which dispatch them depth-first to `HandlesGesture` components. Samsara does not use Flame's gesture mixins at all. See [gestures.md](gestures.md).
 2. **Game → Flutter events**: `EventAggregator` ([`lib/event.dart`](../../lib/event.dart)), a plain pub/sub mixin. Game code calls `engine.emit('eventId', args)`; Flutter widgets register with `engine.addEventListener(...)`.
-3. **Scene switching → widget rebuilds**: `SceneController` is a `ChangeNotifier`. Every navigation call (`pushScene`, `popScene`, `switchScene`) ends with `notifyListeners()`, so a `context .watch<SamsaraEngine>()` in the widget tree rebuilds and swaps the active `SceneWidget`. This is why the engine must be provided through a `ChangeNotifierProvider` (see §4).
+3. **Scene switching → widget rebuilds**: `SceneController.sceneListenable` is a `ValueListenable<Scene?>`. Navigation updates only this value, so a `ValueListenableBuilder` can swap the active `SceneWidget` without rebuilding for unrelated engine state. `SamsaraEngine.loadingListenable` independently drives the loading overlay. The existing `ChangeNotifier` API remains available for compatibility with older consumers.
 
 ### 1.3 Barrel files
 
@@ -108,12 +108,13 @@ LLM extras (only relevant with `enableLlm: true`): `prepareLlamaBaseState(system
 
 ```dart
 bool isLoading;
+ValueListenable<bool> get loadingListenable;
 String? loadingTip;
 String? loadingMessage;
 bool setLoading(bool loading, {String? tip, String? message});
 ```
 
-`setLoading` flips the flag and calls `notifyListeners()` **only when the value actually changes**, and returns the new state. In the example app a `LoadingScreen` overlay is shown while `engine.isLoading` is true ([`example/lib/app.dart`](../../example/lib/app.dart)). Note the engine does not toggle this itself during `init()` — the app drives it.
+`setLoading` updates `loadingListenable` and the legacy `ChangeNotifier` **only when the value actually changes**, and returns the new state. Loading tips and messages are updated before listeners are notified. In the example app a `ValueListenableBuilder` shows a `LoadingScreen` overlay while the value is true ([`example/lib/app.dart`](../../example/lib/app.dart)). Note the engine does not toggle this itself during `init()` — the app drives it.
 
 ### 2.4 Localization
 
@@ -187,9 +188,10 @@ Pass `isMainMod: true` for the game's main module (it is globally imported and r
 
 ### 3.1 SceneController
 
-`SceneController` ([`lib/scene/scene_controller.dart`](../../lib/scene/scene_controller.dart)) is an abstract `ChangeNotifier` that owns:
+`SceneController` ([`lib/scene/scene_controller.dart`](../../lib/scene/scene_controller.dart)) owns:
 
 - `Scene? scene` — the currently active scene;
+- `ValueListenable<Scene?> sceneListenable` — the granular listenable for scene changes;
 - `final _cached = <String, Scene>{}` — **lazy cache** of constructed scenes;
 - `final _sceneStack = <String>[]` — the navigation stack (exposed as `List<String> get sceneStack`);
 - registered scene constructors and remembered per-scene constructor ids and arguments.
@@ -207,7 +209,7 @@ Navigation API:
 
 | Method | Behavior |
 | --- | --- |
-| `Future<Scene> pushScene(String sceneId, {String? constructorId, dynamic arguments, bool triggerOnStart = true, void Function()? onAfterLoaded})` | Creates (or resumes from cache) the scene, pushes `sceneId` on the stack, calls `onEnd()` on the previous scene (not awaited), sets `scene.onAfterLoaded`, notifies listeners, then awaits `onStart(arguments)`. If `sceneId` is already current, nothing happens except the optional `onStart` re-trigger — handy for "refresh". |
+| `Future<Scene> pushScene(String sceneId, {String? constructorId, dynamic arguments, bool triggerOnStart = true, void Function(Scene scene)? onAfterLoaded})` | Creates (or resumes from cache) the scene, pushes `sceneId` on the stack, calls `onEnd()` on the previous scene (not awaited), sets `scene.onAfterLoaded`, notifies listeners, then awaits `onStart(arguments)`. If `sceneId` is already current, nothing happens except the optional `onStart` re-trigger — handy for "refresh". |
 | `Future<Scene?> popScene({bool clearCache = false})` | Pops the top of the stack, calls `onEnd()`, optionally drops the scene from the cache (**this is the only navigation that releases resources**), then `switchScene`s back to the new top. Refuses (logs an error in debug, returns `null`) when only one scene remains. |
 | `Future<Scene?> popSceneTill(String sceneId, {bool clearCache = false})` | Repeatedly pops until `sceneId` is on top. |
 | `Future<Scene> switchScene(String sceneId, {dynamic arguments, bool triggerOnStart = true})` | Switches `scene` to an **already cached** scene (asserts `_cached.containsKey(sceneId)`), **without touching the navigation stack**. |
@@ -374,22 +376,28 @@ class _GameAppState extends State<GameApp> {
     // ...more scenes
 
     await engine.init(context);   // must run before pushScene
-    engine.pushScene('main', onAfterLoaded: () {
+    engine.pushScene('main', onAfterLoaded: (scene) {
       engine.setLoading(false);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final scene = context.watch<SamsaraEngine>().scene;      // bridge #3
-    final isLoading = context.watch<SamsaraEngine>().isLoading;
     return Scaffold(
       body: Stack(
         children: [
-          scene?.build(context,
-                loadingBuilder: (context) => const LoadingScreen()) ??
-              const LoadingScreen(),
-          if (isLoading) const LoadingScreen(),
+          ValueListenableBuilder<Scene?>(
+            valueListenable: engine.sceneListenable,
+            builder: (context, scene, _) => scene?.build(
+              context,
+              loadingBuilder: (context) => const LoadingScreen(),
+            ) ?? const LoadingScreen(),
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: engine.loadingListenable,
+            builder: (context, isLoading, _) =>
+                isLoading ? const LoadingScreen() : const SizedBox.shrink(),
+          ),
         ],
       ),
     );

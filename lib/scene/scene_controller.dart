@@ -5,9 +5,6 @@ import 'package:hetu_script/hetu_script.dart';
 import 'package:samsara/samsara.dart';
 
 abstract class SceneController with ChangeNotifier implements HTLogger {
-  // Scene? _scene;
-  // Scene? get scene => _scene;
-
   final _cached = <String, Scene>{};
 
   final _sceneStack = <String>[];
@@ -34,7 +31,9 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
   final _sw = Stopwatch();
 
   /// 当前场景
-  Scene? scene;
+  final sceneState = ValueNotifier<Scene?>(null);
+  Scene? get scene => sceneState.value;
+  set scene(Scene? value) => sceneState.value = value;
 
   /// 取出当前场景序列的最后一个场景
   /// 如果没有使用场景序列，则此值为 null
@@ -257,5 +256,11 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
       info('cleared all scenes${except != null ? ', except [$except]' : ''}');
     }
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    sceneState.dispose();
+    super.dispose();
   }
 }
