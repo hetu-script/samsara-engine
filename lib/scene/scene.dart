@@ -67,7 +67,7 @@ abstract class Scene extends FlameGame with TaskController {
 
   bool _isFirstLoad = true;
 
-  void Function()? onAfterLoaded;
+  void Function(Scene scene)? onAfterLoaded;
 
   Scene({
     required this.id,
@@ -181,7 +181,7 @@ abstract class Scene extends FlameGame with TaskController {
   void onMount() {
     if (_isFirstLoad) {
       _isFirstLoad = false;
-      onAfterLoaded?.call();
+      onAfterLoaded?.call(this);
     }
   }
 

@@ -103,7 +103,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     String? constructorId,
     dynamic arguments,
     bool triggerOnStart = true,
-    void Function()? onAfterLoaded,
+    void Function(Scene scene)? onAfterLoaded,
   }) async {
     if (scene?.id != sceneId) {
       scene?.onEnd();

@@ -40,7 +40,7 @@ abstract class GameComponent extends PositionComponent
   LightConfig? lightConfig;
 
   bool _onAfterLoadedCalled = false;
-  FutureOr<void> Function()? onAfterLoaded;
+  FutureOr<void> Function(GameComponent component)? onAfterLoaded;
 
   GameComponent({
     super.key,
@@ -77,7 +77,7 @@ abstract class GameComponent extends PositionComponent
 
     if (!_onAfterLoadedCalled) {
       _onAfterLoadedCalled = true;
-      onAfterLoaded?.call();
+      onAfterLoaded?.call(this);
     }
   }
 

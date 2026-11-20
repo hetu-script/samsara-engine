@@ -98,7 +98,7 @@ class _GameAppState extends State<GameApp> {
       await engine.prepareLlamaBaseState(kSystemPromptTemplate1);
     }
 
-    engine.pushScene('main', onAfterLoaded: () {
+    engine.pushScene('main', onAfterLoaded: (scene) {
       engine.setLoading(false);
     });
   }
