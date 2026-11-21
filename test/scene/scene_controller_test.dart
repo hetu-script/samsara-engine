@@ -59,8 +59,32 @@ void main() {
     expect(loadingNotifications, 0);
     expect(legacyNotifications, greaterThanOrEqualTo(4));
   });
+  test('popScene ends the outgoing scene exactly once', () async {
+    final engine = SamsaraEngine();
+    addTearDown(engine.dispose);
+    final first = _TestScene('first');
+    final second = _TestScene('second');
+    engine.registerSceneConstructor('first', (_) async => first);
+    engine.registerSceneConstructor('second', (_) async => second);
+
+    await engine.pushScene('first', triggerOnStart: false);
+    await engine.pushScene('second', triggerOnStart: false);
+    await engine.popScene(clearCache: true);
+
+    expect(engine.scene, first);
+    expect(first.endCount, 1);
+    expect(second.endCount, 1);
+  });
 }
 
 class _TestScene extends Scene {
   _TestScene(String id) : super(id: id);
+
+  int endCount = 0;
+
+  @override
+  void onEnd() {
+    endCount++;
+    super.onEnd();
+  }
 }

@@ -205,9 +205,9 @@ void registerSceneConstructor(
 | 方法 | 行为 |
 | --- | --- |
 | `Future<Scene> pushScene(String sceneId, {String? constructorId, dynamic arguments, bool triggerOnStart = true, void Function(Scene scene)? onAfterLoaded})` | 创建（或从缓存恢复）场景，把 `sceneId` 压栈，对原场景调用 `onEnd()`（不 await），设置 `scene.onAfterLoaded`，通知监听者，然后 await `onStart(arguments)`。如果 `sceneId` 就是当前场景，除了可选地再次触发 `onStart` 外什么都不做——适合"刷新"用途。 |
-| `Future<Scene?> popScene({bool clearCache = false})` | 弹出栈顶，调用 `onEnd()`，可选地把场景从缓存中丢弃（**这是唯一会释放资源的导航操作**），然后 `switchScene` 回新的栈顶。只剩一个场景时拒绝操作（debug 下记录错误并返回 `null`）。 |
+| `Future<Scene?> popScene({bool clearCache = false})` | 弹出栈顶，对被弹出场景调用一次 `onEnd()`，可选地把场景从缓存中丢弃（**这是唯一会释放资源的导航操作**），然后 `switchScene` 回新的栈顶；内部切换不会重复调用被弹出场景的 `onEnd()`。只剩一个场景时拒绝操作（debug 下记录错误并返回 `null`）。 |
 | `Future<Scene?> popSceneTill(String sceneId, {bool clearCache = false})` | 持续弹出直到 `sceneId` 位于栈顶。 |
-| `Future<Scene> switchScene(String sceneId, {dynamic arguments, bool triggerOnStart = true})` | 把 `scene` 切换到一个**已缓存**的场景（断言 `_cached.containsKey(sceneId)`），**不触碰导航栈**。 |
+| `Future<Scene> switchScene(String sceneId, {dynamic arguments, bool triggerOnStart = true, bool triggerOnEnd = true})` | 把 `scene` 切换到一个**已缓存**的场景（断言 `_cached.containsKey(sceneId)`），**不触碰导航栈**。`triggerOnEnd` 可跳过原场景的 `onEnd()`，供已经结束原场景的导航流程使用。 |
 | `void clearCachedScene(String sceneId)` | 从缓存中移除一个场景；若它在栈中，同时从栈和缓存参数中移除。 |
 | `Future<void> clearAllCachedScene({String? except, dynamic arguments, bool triggerOnStart = false})` | 丢弃除 `except` 之外的所有缓存场景（如有则切换到它）。绝不调用 `onEnd()`。 |
 | `bool hasScene(String id)` / `bool hasSceneInSequence(String id)` | 缓存成员 vs. 栈成员。 |

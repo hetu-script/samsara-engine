@@ -138,10 +138,13 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     String sceneId, {
     dynamic arguments,
     bool triggerOnStart = true,
+    bool triggerOnEnd = true,
   }) async {
     assert(_cached.containsKey(sceneId), 'scene [$sceneId] not found!');
     if (scene?.id != sceneId) {
-      scene?.onEnd();
+      if (triggerOnEnd) {
+        scene?.onEnd();
+      }
       scene = _cached[sceneId];
       scene?.onAfterLoaded = null;
       if (kDebugMode) {
@@ -180,7 +183,7 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
     if (clearCache) {
       _cached.remove(scene?.id);
     }
-    scene = await switchScene(_sceneStack.last);
+    scene = await switchScene(_sceneStack.last, triggerOnEnd: false);
     scene?.onAfterLoaded = null;
     notifyListeners();
     return scene;
