@@ -194,7 +194,7 @@ PointerDetector(
 
 ### 内部实现
 
-- 指针移动**超过 1 px** 才开始拖动；在此之前手势仍可能是点击/长按。
+- 指针移动**超过 1 px** 才开始拖动；在此之前手势仍可能是点击/长按。长按已经触发后，后续移动超过同一阈值也会进入拖动并正常发送 `onDragStart` / `onDragUpdate`。
 - move 与 hover 事件先**经 10 ms 定时器聚合**（`kMoveTimeDeltaThresholdByMS`）再触发一次回调——设计上最多引入一个 tick 的输入延迟。
 - 双指缩放：`details.scale` 为当前指距与初始指距之比；焦点为两指中点。
 - 长按用普通 `Timer` 实现；任何移动都会取消它。

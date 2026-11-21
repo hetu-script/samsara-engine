@@ -393,6 +393,7 @@ class PointerDetectorState extends State<PointerDetector> {
 
           switch (_gestureState) {
             case _GestureState.pointerDown:
+            case _GestureState.longPress:
               //print('move distance: ' + distance.toString());
               if (distance > 1) {
                 _gestureState = _GestureState.dragStart;

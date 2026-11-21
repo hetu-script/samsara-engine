@@ -194,7 +194,7 @@ PointerDetector(
 
 ### Internals
 
-- Drag starts only after the pointer moves **more than 1 px** from its down position; until then the gesture is a potential tap/long-press.
+- Drag starts only after the pointer moves **more than 1 px** from its down position; until then the gesture is a potential tap/long-press. After a long press has fired, crossing the same threshold also starts dragging and emits `onDragStart` / `onDragUpdate` normally.
 - Move and hover events are **aggregated over a 10 ms timer** (`kMoveTimeDeltaThresholdByMS`) before a single callback fires — up to one tick of input latency by design.
 - Two-finger scale: `details.scale` is the ratio of the current finger distance to the initial distance; the focal point is the finger midpoint.
 - Long-press is a plain `Timer`; any movement cancels it.
