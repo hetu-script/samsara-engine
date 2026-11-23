@@ -49,6 +49,7 @@ class GameDialogController extends StatefulWidget {
     this.cursor,
     this.screenHintCursor,
     this.barrierColor,
+    this.illustrationOffset = Offset.zero,
     this.dialogTextStyle,
     this.dialogNameTextStyle,
     this.dialogDecoration,
@@ -73,6 +74,7 @@ class GameDialogController extends StatefulWidget {
   final MouseCursor? cursor;
   final MouseCursor? screenHintCursor;
   final Color? barrierColor;
+  final Offset illustrationOffset;
   final TextStyle? dialogTextStyle;
   final TextStyle? dialogNameTextStyle;
   final BoxDecoration? dialogDecoration;
@@ -159,22 +161,20 @@ class _GameDialogControllerState extends State<GameDialogController>
     final dialog = context.read<GameDialog>();
     final sceneInfo = dialog.currentSceneInfo;
     final prevScene = dialog.prevScene;
-    final onlyBackground =
-        dialog.illustrations.isEmpty &&
+    final onlyBackground = dialog.illustrations.isEmpty &&
         dialog.currentContent == null &&
         dialog.selectionsData == null;
 
     final fadeIn = sceneInfo != null && sceneInfo.isFadeIn && onlyBackground;
-    final fadeOut =
-        sceneInfo == null &&
+    final fadeOut = sceneInfo == null &&
         prevScene != null &&
         prevScene.isFadeOut &&
         onlyBackground;
     final nextTaskId = fadeIn
         ? sceneInfo.taskId
         : fadeOut
-        ? prevScene.taskId
-        : null;
+            ? prevScene.taskId
+            : null;
     if (nextTaskId == null) {
       _stopSceneAnimation(finishTask: true);
       return;
@@ -209,8 +209,7 @@ class _GameDialogControllerState extends State<GameDialogController>
     final screenHintInfo = dialog.screenHintInfo;
 
     Widget? background;
-    final onlyBackground =
-        illustrationsInfo.isEmpty &&
+    final onlyBackground = illustrationsInfo.isEmpty &&
         dialogContentData == null &&
         selectionsData == null;
     if (sceneInfo != null) {
@@ -261,14 +260,13 @@ class _GameDialogControllerState extends State<GameDialogController>
           child: GameDialogIllustration(
             key: ValueKey(info.path),
             image: AssetImage(info.path),
-            offsetX: info.offsetX,
-            offsetY: info.offsetY,
+            offsetX: info.offsetX + widget.illustrationOffset.dx,
+            offsetY: info.offsetY + widget.illustrationOffset.dy,
           ),
         ),
     ];
 
-    final isEmpty =
-        background == null &&
+    final isEmpty = background == null &&
         illustrations.isEmpty &&
         dialogContentData == null &&
         selectionsData == null &&

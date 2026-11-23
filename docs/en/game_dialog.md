@@ -242,6 +242,7 @@ Consequences:
 | `cursor` | `MouseCursor?` | Cursor over the dialog box and selection list. |
 | `screenHintCursor` | `MouseCursor?` | Fallback cursor for the screen-hint highlight. |
 | `barrierColor` | `Color?` | If set, a `ModalBarrier` is drawn behind everything, blocking game input while a dialog is open. |
+| `illustrationOffset` | `Offset` | Shared offset for every illustration; defaults to `Offset.zero` and is added to each `pushImage()` offset. |
 | `dialogTextStyle` | `TextStyle?` | Base text style of dialog lines. |
 | `dialogNameTextStyle` | `TextStyle?` | Speaker-name text style. |
 | `dialogDecoration` | `BoxDecoration?` | Decoration of the default dialog box container. |

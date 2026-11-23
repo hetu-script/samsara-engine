@@ -242,6 +242,7 @@ dynamic checkSelected(dynamic data)
 | `cursor` | `MouseCursor?` | 对话框与选择列表上的光标。 |
 | `screenHintCursor` | `MouseCursor?` | 屏幕提示高亮区的兜底光标。 |
 | `barrierColor` | `Color?` | 若设置，会在所有内容背后绘制 `ModalBarrier`，对话打开时阻断游戏输入。 |
+| `illustrationOffset` | `Offset` | 所有立绘的统一偏移，默认 `Offset.zero`；与 `pushImage()` 的单图偏移相加。 |
 | `dialogTextStyle` | `TextStyle?` | 对话文本的基础样式。 |
 | `dialogNameTextStyle` | `TextStyle?` | 说话人名称样式。 |
 | `dialogDecoration` | `BoxDecoration?` | 默认对话框容器的装饰。 |
