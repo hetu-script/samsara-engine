@@ -7,6 +7,8 @@ import 'package:hetu_script/values.dart';
 import 'package:samsara/task.dart';
 import 'package:hetu_script/utils/uid.dart';
 
+enum DialogRunResult { completed, cancelled }
+
 class ScreenHintInfo {
   final double left, top, width, height;
   final String? text;
@@ -81,8 +83,28 @@ class GameDialog with ChangeNotifier, TaskController {
     return storedValues[key];
   }
 
-  Future<void>? execute() {
-    return schedule(() {
+  Future<DialogRunResult>? execute() {
+    if (!isCurrentTaskContext) {
+      return Future.value(DialogRunResult.cancelled);
+    }
+    if (hasTask('execution_to_end')) return null;
+    final completer = Completer<DialogRunResult>();
+    _scheduleExecutionCleanup(completer, 'execution_to_end');
+    return completer.future;
+  }
+
+  void _scheduleExecutionCleanup(
+    Completer<DialogRunResult> completer,
+    String taskId,
+  ) {
+    schedule(() {
+      if (hasTaskAfter(taskId)) {
+        _scheduleExecutionCleanup(
+          completer,
+          'execution_to_end_${randomUID(withTime: true)}',
+        );
+        return;
+      }
       isOpened = false;
       prevScene = null;
       illustrations.clear();
@@ -91,10 +113,37 @@ class GameDialog with ChangeNotifier, TaskController {
       selectionsData = null;
       screenHintInfo = null;
       notifyListeners();
-    }, id: 'execution_to_end');
+      if (!completer.isCompleted) {
+        completer.complete(DialogRunResult.completed);
+      }
+    }, id: taskId)?.then(
+      (_) {},
+      onError: (Object error) {
+        if (completer.isCompleted) return;
+        if (error is TaskCancelledException) {
+          completer.complete(DialogRunResult.cancelled);
+        } else {
+          completer.completeError(error);
+        }
+      },
+    );
+  }
+
+  void reset({bool clearStoredValues = true}) {
+    cancelAllTasks();
+    isOpened = false;
+    prevScene = null;
+    illustrations.clear();
+    scenes.clear();
+    contents.clear();
+    selectionsData = null;
+    screenHintInfo = null;
+    if (clearStoredValues) storedValues.clear();
+    notifyListeners();
   }
 
   void pushBackground(String imageId, {bool isFadeIn = false}) {
+    if (!isCurrentTaskContext) return;
     isOpened = true;
     final taskId = 'push_background_${randomUID(withTime: true)}';
     schedule(
@@ -115,6 +164,7 @@ class GameDialog with ChangeNotifier, TaskController {
   }
 
   void popBackground({String? imageId, isFadeOut = false}) {
+    if (!isCurrentTaskContext) return;
     // assert(isOpened == true);
     final taskId = 'pop_background_${randomUID(withTime: true)}';
     schedule(
@@ -142,6 +192,7 @@ class GameDialog with ChangeNotifier, TaskController {
   }
 
   void popAllBackgrounds() {
+    if (!isCurrentTaskContext) return;
     // assert(isOpened == true);
     final taskId = 'pop_all_backgrounds_${randomUID(withTime: true)}';
     schedule(
@@ -163,6 +214,7 @@ class GameDialog with ChangeNotifier, TaskController {
     double offsetX = 0.0,
     double offsetY = 0.0,
   }) {
+    if (!isCurrentTaskContext) return;
     isOpened = true;
     final taskId = 'push_image_${randomUID(withTime: true)}';
     schedule(
@@ -179,6 +231,7 @@ class GameDialog with ChangeNotifier, TaskController {
   }
 
   void popImage({String? imageId}) {
+    if (!isCurrentTaskContext) return;
     // assert(isOpened == true);
     final taskId = 'pop_image_${randomUID(withTime: true)}';
     schedule(
@@ -198,6 +251,7 @@ class GameDialog with ChangeNotifier, TaskController {
   }
 
   void popAllImages() {
+    if (!isCurrentTaskContext) return;
     // assert(isOpened == true);
     final taskId = 'pop_all_images_${randomUID(withTime: true)}';
     schedule(
@@ -217,6 +271,7 @@ class GameDialog with ChangeNotifier, TaskController {
     void Function()? onTap,
     MouseCursor? cursor,
   }) {
+    if (!isCurrentTaskContext) return;
     isOpened = true;
     final taskId = 'push_screen_hint_${randomUID(withTime: true)}';
     schedule(
@@ -257,6 +312,7 @@ class GameDialog with ChangeNotifier, TaskController {
   /// }
   /// ```
   void pushDialogRaw(dynamic content, {String? imageId}) {
+    if (!isCurrentTaskContext) return;
     isOpened = true;
     if (imageId != null) {
       pushImage(imageId);
@@ -273,7 +329,6 @@ class GameDialog with ChangeNotifier, TaskController {
     } else {
       throw 'Dialog.pushDialogRaw: content must be a String, List<String>, Map or HTStruct. $content';
     }
-    isOpened = true;
     final taskId = 'push_dialog_${randomUID(withTime: true)}';
     resolved['id'] = taskId;
     schedule(
@@ -304,13 +359,20 @@ class GameDialog with ChangeNotifier, TaskController {
   }
 
   void pushTask(FutureOr<dynamic> Function() task, {String? flagId}) {
+    if (!isCurrentTaskContext) return;
     isOpened = true;
     final taskId = 'push_task_${randomUID(withTime: true)}';
-    schedule(task, id: taskId)?.then((result) {
-      if (flagId != null) {
-        storedValues[flagId] = result;
-      }
-    });
+    schedule(task, id: taskId)?.then(
+      (result) {
+        if (flagId != null && isCurrentTaskContext) {
+          storedValues[flagId] = result;
+        }
+      },
+      onError: (Object error) {
+        if (error is TaskCancelledException) return;
+        throw error;
+      },
+    );
   }
 
   /// 按原始数据推送选择对话框，格式如下：
@@ -329,6 +391,7 @@ class GameDialog with ChangeNotifier, TaskController {
     assert(selectionsData is HTStruct || selectionsData is Map,
         'invalid selection data. $selectionsData');
     final taskId = 'push_selection_${randomUID(withTime: true)}';
+    if (!isCurrentTaskContext) return;
     isOpened = true;
     schedule(
       () {
@@ -342,10 +405,9 @@ class GameDialog with ChangeNotifier, TaskController {
   }
 
   void finishSelection(String taskId, String dataId, {dynamic value}) {
-    // assert(isOpened == true);
+    if (!hasTask(taskId)) return;
     storedValues[dataId] = value;
     selectionsData = null;
-    assert(hasTask(taskId));
     completeTask(taskId);
     notifyListeners();
   }

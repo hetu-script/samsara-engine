@@ -58,6 +58,46 @@ class DialogScene extends Scene {
       dialog.execute();
     };
     world.add(hintButton);
+
+    final illustrationButton = SpriteButton(
+      anchor: Anchor.center,
+      text: 'Illustrations',
+      spriteId: 'button.png',
+      useSpriteSrcSize: true,
+      position: center + Vector2(0.0, 120.0),
+    );
+    illustrationButton.onTap = (button, position) {
+      dialog.pushImage('pepe.png', offsetX: -180);
+      dialog.pushImage('light_trail_500.png', offsetX: 180);
+      dialog.pushDialogRaw({
+        'name': 'Pepe the Guide',
+        'icon': 'pepe.png',
+        'lines': [
+          'The small avatar and the larger light trail use their own sizes.',
+          'Both are aligned to the bottom center without a fixed illustration box.',
+        ],
+      });
+      dialog.execute();
+    };
+    world.add(illustrationButton);
+
+    final resetButton = SpriteButton(
+      anchor: Anchor.center,
+      text: 'Reset Dialog',
+      spriteId: 'button.png',
+      useSpriteSrcSize: true,
+      position: center + Vector2(0.0, 220.0),
+    );
+    resetButton.onTap = (button, position) {
+      dialog.reset();
+    };
+    world.add(resetButton);
+  }
+
+  @override
+  void onEnd() {
+    dialog.reset();
+    super.onEnd();
   }
 
   void _runDialogScript() {
@@ -77,11 +117,11 @@ class DialogScene extends Scene {
       'id': 'choice',
       'selections': {
         'sword': {
-          'text': 'I want a sword <icon=sword></>',
+          'text': 'I want a sword',
           'description': '<grey>A sharp blade.</> 攻击 +5',
         },
         'spirit': {
-          'text': 'I want spirit <icon=spirit></>',
+          'text': 'I want spirit',
           'description': '<blue>Mystic energy.</> 灵力 +3',
         },
         'nothing': 'No thanks',
@@ -132,7 +172,33 @@ class DialogScene extends Scene {
         children: [
           SceneWidget(scene: this),
           // 本场景的对话框渲染控制器
-          GameDialogController(),
+          GameDialogController(
+            dialogFrameBuilder: (context, child) {
+              return Container(
+                width: 880,
+                height: 190,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xF2050914),
+                  border: Border.all(color: const Color(0xFF4A899C), width: 2),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: child,
+              );
+            },
+            dialogAvatarSize: const Size(120, 120),
+            dialogAvatarMargin: EdgeInsets.zero,
+            selectionButtonBuilder: (context, key, text, onPressed) {
+              return SizedBox(
+                width: 240,
+                child: OutlinedButton(
+                  onPressed: onPressed,
+                  child: Text(text, textAlign: TextAlign.center),
+                ),
+              );
+            },
+            screenHintBorderColor: const Color(0xFF58DFFF),
+          ),
         ],
       ),
     );

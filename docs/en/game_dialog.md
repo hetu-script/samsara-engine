@@ -7,7 +7,7 @@ Public API is exported from the barrel file `lib/game_dialog.dart`, which re-exp
 | Source file | Contents |
 | --- | --- |
 | `lib/game_dialog/game_dialog.dart` | `GameDialog` model, `SceneInfo`, `IllustrationInfo`, `ScreenHintInfo` |
-| `lib/game_dialog/game_dialog_controller.dart` | `GameDialogController` overlay widget, illustration layout constants |
+| `lib/game_dialog/game_dialog_controller.dart` | `GameDialogController` overlay widget, `GameDialogIllustration` bottom-centered illustration layout |
 | `lib/game_dialog/game_dialog_content.dart` | `GameDialogContent` dialog box widget |
 | `lib/game_dialog/selection_dialog.dart` | `SelectionDialog` choice list widget |
 | `lib/game_dialog/screen_hint.dart` | `ScreenHint` tutorial overlay widget |
@@ -17,7 +17,7 @@ Public API is exported from the barrel file `lib/game_dialog.dart`, which re-exp
 The dialog system follows a **model / controller separation**:
 
 - **`GameDialog`** (`lib/game_dialog/game_dialog.dart:56`) is the model. It mixes in `ChangeNotifier` and `TaskController` (see the TaskController section in `core.md`), and holds the entire scripted state: background scenes, illustrations, pending dialog contents, selection data, screen-hint info, and arbitrary stored values. It owns **no UI**.
-- **`GameDialogController`** (`lib/game_dialog/game_dialog_controller.dart:15`) is a Flutter widget. It listens to the model via `context.watch<GameDialog>()` and overlays the right widget for the current state: `GameDialogContent` (typewriter dialog box with avatar/name), `SelectionDialog` (choice list), `ScreenHint` (tutorial spotlight), plus full-screen background images and centered illustrations.
+- **`GameDialogController`** is a Flutter widget. It listens to the model via `context.watch<GameDialog>()` and overlays the right widget for the current state: `GameDialogContent` (typewriter dialog box with avatar/name), `SelectionDialog` (choice list), `ScreenHint` (tutorial spotlight), plus full-screen background images and bottom-centered illustrations.
 
 A script is a **sequence of scheduled tasks**: each `push*` call appends one task to the model's queue. Interactive tasks (dialog, selection, screen hint) are scheduled with `isAuto: false`, so they block the queue until the player acts; automatic tasks (background swaps, plain code via `pushTask`) complete on their own. `execute()` appends a final cleanup task and returns a `Future` that resolves when the whole script — including waiting for player input — has finished.
 
@@ -132,7 +132,7 @@ void pushSelectionRaw(dynamic selectionsData)
     'nothing': 'No thanks',
     // …or a text plus a hover description
     'sword': {
-      'text': 'I want a sword <icon=sword></>',
+      'text': 'I want a sword',
       'description': '<grey>A sharp blade.</> 攻击 +5',
     },
   },
@@ -177,7 +177,7 @@ void popAllImages()
 
 - `imageId` is relative to `assets/images/` — the model prepends that prefix itself.
 - `pushBackground` records the previous scene for cross-fading; with `isFadeIn: true` the task is non-auto and is completed by the controller when the 800 ms fade animation finishes. `popBackground(isFadeOut: true)` fades the outgoing scene out the same way. Without fade flags these tasks complete immediately.
-- Illustrations are drawn centered horizontally, `150` logical pixels from the top plus `offsetY` (constants `kIllustrationWidth = 600`, `kIllustrationHeight = 900`, `kBaseIllustrationOffsetY = 150` in `lib/game_dialog/game_dialog_controller.dart:10`).
+- Illustrations no longer use a fixed 600×900 box. `GameDialogIllustration` preserves the source aspect ratio, does not upscale small images, and scales oversized images down to fit the screen. The default anchor is bottom center; `offsetX`/`offsetY` are optional adjustments relative to that anchor.
 
 ### Arbitrary tasks and running the script
 
@@ -188,10 +188,13 @@ void pushTask(FutureOr<dynamic> Function() task, {String? flagId})
 Schedules any function in the queue (auto-completes). Pushes made **inside** the function append after the already-queued tasks — this is how scripts are chained dynamically. If `flagId` is given, the task's return value is saved as `storedValues[flagId]`.
 
 ```dart
-Future<void>? execute()
+Future<DialogRunResult>? execute()
+void reset({bool clearStoredValues = true})
 ```
 
-Appends a cleanup task (`id: 'execution_to_end'`) that clears all state (`isOpened`, scenes, illustrations, contents, selections, screen hint) and notifies listeners. The returned future completes when every task queued before it has completed — i.e. after the player has clicked through the whole script. Call `execute()` once after building a script.
+`execute()` appends a cleanup task (`id: 'execution_to_end'`) that clears all state (`isOpened`, scenes, illustrations, contents, selections, screen hint) and notifies listeners. If a running `pushTask()` appends more dialogs or selections, cleanup is deferred until those dynamic tasks finish. It returns `DialogRunResult.completed` after the whole script finishes, or `DialogRunResult.cancelled` after cancellation; cancellation is a normal result, not an exception callers must catch.
+
+`reset()` is the explicit mid-run cancellation path for scene exits and profile changes. It advances the task generation, cancels the queue, and clears visible state immediately, preventing stale asynchronous callbacks from queueing more content. Normal `execute()` preserves `storedValues`; `reset()` clears it by default unless `clearStoredValues: false` is passed.
 
 ### Reading the player's answer
 
@@ -240,10 +243,18 @@ Consequences:
 | `screenHintCursor` | `MouseCursor?` | Fallback cursor for the screen-hint highlight. |
 | `barrierColor` | `Color?` | If set, a `ModalBarrier` is drawn behind everything, blocking game input while a dialog is open. |
 | `dialogTextStyle` | `TextStyle?` | Base text style of dialog lines. |
-| `dialogDecoration` | `BoxDecoration?` | Decoration of the dialog box container. |
+| `dialogNameTextStyle` | `TextStyle?` | Speaker-name text style. |
+| `dialogDecoration` | `BoxDecoration?` | Decoration of the default dialog box container. |
+| `dialogFrameBuilder` | `GameDialogFrameBuilder?` | Custom window frame; suppresses the default Acrylic layer. |
+| `dialogWidth`/`dialogHeight`/`dialogBottom` | `double?` | Default frame dimensions and bottom margin. |
+| `dialogAvatarSize`/`dialogAvatarMargin` | `Size?`/`EdgeInsetsGeometry?` | Avatar size and margin. |
+| `dialogContentPadding`/`dialogTextPadding` | `EdgeInsetsGeometry?` | Content and body-text padding. |
 | `onAvatarPressed` | `void Function(dynamic)?` | Called with `data['characterId']` when the avatar is tapped. |
-| `selectionButtonStyle` | `fluent.ButtonStyle?` | Style of selection buttons (Fluent UI). |
+| `selectionButtonStyle` | `fluent.ButtonStyle?` | Style of default selection buttons (Fluent UI). |
 | `selectionTextStyle` | `TextStyle?` | Text style of selection labels. |
+| `selectionButtonBuilder` | `SelectionButtonBuilder?` | Replaces default buttons while preserving selection completion. |
+| `screenHintBarrierColor`/`screenHintTextStyle` | `Color?`/`TextStyle?` | Screen-hint barrier and text style. |
+| `screenHintBorderColor`/`screenHintBorderRadius` | `Color?`/`double?` | Screen-hint border color and radius. |
 
 Rendering order inside its `Stack`: barrier → background scene (with 800 ms cross-fade support) → illustrations → dialog content → selection dialog → screen hint. When nothing is active it renders `SizedBox.shrink()`, so it is cheap to leave permanently in the tree.
 
@@ -265,11 +276,15 @@ static Future<void> show(
 
 `GameDialogContent.show` does **not** touch `GameDialog` state — it wraps the widget in a plain `showDialog` and pops via `Navigator` when finished. The data must not contain an `'id'` key (asserted), precisely so the widget takes the pop-instead-of-finish path.
 
-Layout (`lib/game_dialog/game_dialog_content.dart:135`): an 880×190 box at the bottom of the screen (20 px margin) with a Fluent UI `Acrylic` blur layer, a 140×140 `Avatar` on the left, the speaker `name` above a `RichText` line. The line text is tokenized with `getRichTextStream` and revealed one token every 100 ms (rich-text tags render correctly because whole tag spans stay atomic). Tapping once completes the current line instantly; tapping again advances to the next line; after the last line the widget calls `GameDialog.finishDialog(id)` (or `Navigator.pop` in standalone mode).
+The default layout is an 880×190 box at the bottom of the screen (20 px margin) with a Fluent UI `Acrylic` blur layer, a 140×140 `Avatar` on the left, and the speaker `name` above a `RichText` line. Dimensions, spacing, name style, and avatar are configurable. `dialogFrameBuilder` can place the semantic content in a host-owned frame, suppressing the default Acrylic; the body uses `Expanded` to follow the frame width.
+
+Line text is tokenized with `getRichTextStream` and revealed one token every 100 ms (rich-text tags render correctly because whole tag spans stay atomic). Tapping once completes the current line instantly; tapping again advances to the next line; after the last line the widget calls `GameDialog.finishDialog(id)` (or `Navigator.pop` in standalone mode). Line state and timers reset only when the dialog data changes, not on unrelated rebuilds.
 
 ### `SelectionDialog`
 
-Centered column of `fluent.Button`s (300 wide), one per key in `data['selections']`. When an option's value is a map with a `'description'`, hovering the button shows that description through `HoverContentState` (`package:samsara/hover_info.dart`, direction `topCenter`) — see `hover_info.md`. Pressing a button hides the hover window and finishes the selection.
+The default is a centered column of `fluent.Button`s (300 wide), one per key in `data['selections']`. `SelectionButtonBuilder` receives the option key, display text, and confirmation callback so a host can supply its own button. Hover content remains owned by `HoverContentState`, not by the custom button.
+
+When an option's value is a map with a `'description'`, hovering the button shows that description through `HoverContentState` (`package:samsara/hover_info.dart`, direction `topCenter`) — see `hover_info.md`. Pressing a button hides the hover window and finishes the selection. Default buttons keep rich-text support; custom buttons control their own text presentation.
 
 Standalone use is also possible:
 
@@ -311,7 +326,7 @@ Note: `Avatar` and `AvatarNameAlignment` are re-exported from `lib/game_dialog.d
 
 ## 6. Walkthrough: `example/lib/scene/dialog_scene.dart`
 
-The demo scene registers itself as `'dialog'` (`example/lib/app.dart:91`) and contains three sprite buttons: *Back*, *Start Dialog*, and *Screen Hint*. Its `build` stacks `GameDialogController()` over `SceneWidget` (see §2).
+The demo scene registers itself as `'dialog'` (`example/lib/app.dart:91`) and contains *Back*, *Start Dialog*, *Screen Hint*, *Illustrations*, and *Reset Dialog*. Its `build` stacks a `GameDialogController` with a custom frame, custom selection buttons, and hint styling over `SceneWidget` (see §2). *Illustrations* demonstrates 120×120 and 800×800 sources anchored to the bottom; *Reset Dialog* demonstrates mid-run cancellation.
 
 *Start Dialog* runs `_runDialogScript()`, a three-act script with a nested task:
 
@@ -333,11 +348,11 @@ void _runDialogScript() {
     'id': 'choice',
     'selections': {
       'sword': {
-        'text': 'I want a sword <icon=sword></>',
+        'text': 'I want a sword',
         'description': '<grey>A sharp blade.</> 攻击 +5',
       },
       'spirit': {
-        'text': 'I want spirit <icon=spirit></>',
+        'text': 'I want spirit',
         'description': '<blue>Mystic energy.</> 灵力 +3',
       },
       'nothing': 'No thanks',
@@ -391,5 +406,5 @@ The overlay darkens everything except that rect, pulses a white frame around it,
 - **Stale duplicate file**: `lib/game_dialog/game_dialog_state.dart` is an old copy of the model (same `SceneInfo`/`IllustrationInfo` definitions) and is **not** exported from the barrel. Ignore it; `GameDialog` lives in `lib/game_dialog/game_dialog.dart`.
 - **Dialog `'image'` key**: the documented content format includes `'image'`, but the built-in `GameDialogContent` never reads it. To show a picture with a dialog, use `pushDialogRaw(content, imageId: '...')` or `pushImage`/`popImage` instead.
 - **One selection / one hint at a time**: `selectionsData` and `screenHintInfo` are single slots; pushing again replaces the current one.
-- **Never forget `execute()`** at the end of a script, or the final state (backgrounds, `isOpened`) is never cleaned up; conversely, remember that the cleanup also wipes illustrations you may still want.
+- **Never forget `execute()`** at the end of a script, or the final state (backgrounds, `isOpened`) is never cleaned up; conversely, remember that the cleanup also wipes illustrations you may still want. Await `DialogRunResult.completed` for normal completion, and use `reset()` plus `DialogRunResult.cancelled` for mid-run exits.
 - **Rich text and icons**: dialog lines and selection texts go through the samsara rich-text pipeline; embedded `<icon=...>` tags require the icons to be registered/preloaded as described in `../richtext/readme.md`.

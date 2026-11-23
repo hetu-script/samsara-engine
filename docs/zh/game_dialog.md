@@ -7,7 +7,7 @@
 | 源文件 | 内容 |
 | --- | --- |
 | `lib/game_dialog/game_dialog.dart` | `GameDialog` 模型、`SceneInfo`、`IllustrationInfo`、`ScreenHintInfo` |
-| `lib/game_dialog/game_dialog_controller.dart` | `GameDialogController` 覆盖层控件、立绘布局常量 |
+| `lib/game_dialog/game_dialog_controller.dart` | `GameDialogController` 覆盖层控件、`GameDialogIllustration` 底部居中立绘 |
 | `lib/game_dialog/game_dialog_content.dart` | `GameDialogContent` 对话框控件 |
 | `lib/game_dialog/selection_dialog.dart` | `SelectionDialog` 选项列表控件 |
 | `lib/game_dialog/screen_hint.dart` | `ScreenHint` 教学高亮控件 |
@@ -17,7 +17,7 @@
 对话系统采用**模型 / 控制器分离**架构：
 
 - **`GameDialog`**（`lib/game_dialog/game_dialog.dart:56`）是模型。它以 mixin 方式组合了 `ChangeNotifier` 与 `TaskController`（见 `core.md` 的 TaskController 一节），持有全部脚本状态：背景场景、立绘、待显示的对话内容、选择数据、屏幕提示信息以及任意存储值。它本身**不包含任何 UI**。
-- **`GameDialogController`**（`lib/game_dialog/game_dialog_controller.dart:15`）是 Flutter 控件。它通过 `context.watch<GameDialog>()` 监听模型，并按当前状态覆盖对应的控件：`GameDialogContent`（带头像与名字的打字机对话框）、`SelectionDialog`（选项列表）、`ScreenHint`（教学聚光），外加全屏背景图与居中立绘。
+- **`GameDialogController`** 是 Flutter 控件。它通过 `context.watch<GameDialog>()` 监听模型，并按当前状态覆盖对应的控件：`GameDialogContent`（带头像与名字的打字机对话框）、`SelectionDialog`（选项列表）、`ScreenHint`（教学聚光），外加全屏背景图与底部居中立绘。
 
 一段脚本就是**一串排入队列的任务**：每个 `push*` 调用向模型的队列追加一个任务。交互式任务（对话、选择、屏幕提示）以 `isAuto: false` 排入，会阻塞队列直到玩家操作；自动任务（背景切换、`pushTask` 的普通代码）自行完成。`execute()` 在队尾追加一个清理任务，并返回一个 `Future`——它在整段脚本（包括等待玩家输入）全部结束后完成。
 
@@ -132,7 +132,7 @@ void pushSelectionRaw(dynamic selectionsData)
     'nothing': 'No thanks',
     // ……也可以是文本加悬停描述
     'sword': {
-      'text': 'I want a sword <icon=sword></>',
+      'text': 'I want a sword',
       'description': '<grey>A sharp blade.</> 攻击 +5',
     },
   },
@@ -177,7 +177,7 @@ void popAllImages()
 
 - `imageId` 相对于 `assets/images/` —— 模型会自动补上该前缀。
 - `pushBackground` 会记录上一个场景用于交叉淡化；`isFadeIn: true` 时任务为非自动，由控制器在 800 ms 淡入动画结束后完成任务。`popBackground(isFadeOut: true)` 以同样方式淡出被弹出的场景。不带淡入淡出标记时任务立即完成。
-- 立绘水平居中绘制，顶部位置为 `150` 逻辑像素加 `offsetY`（常量 `kIllustrationWidth = 600`、`kIllustrationHeight = 900`、`kBaseIllustrationOffsetY = 150`，见 `lib/game_dialog/game_dialog_controller.dart:10`）。
+- 立绘不再使用固定 600×900 容器。`GameDialogIllustration` 读取素材固有宽高比，小图不放大，超出屏幕时等比缩小；默认水平居中且底边对齐屏幕下边缘。`offsetX`／`offsetY` 只是相对该 bottomCenter 锚点的可选微调。
 
 ### 任意任务与运行脚本
 
@@ -188,10 +188,13 @@ void pushTask(FutureOr<dynamic> Function() task, {String? flagId})
 把任意函数排入队列（自动完成）。在函数体内进行的 push 会追加到**已排队任务之后**——动态拼接脚本正是靠这一机制。若传入 `flagId`，任务的返回值会保存为 `storedValues[flagId]`。
 
 ```dart
-Future<void>? execute()
+Future<DialogRunResult>? execute()
+void reset({bool clearStoredValues = true})
 ```
 
-追加一个清理任务（`id: 'execution_to_end'`），清空全部状态（`isOpened`、场景、立绘、对话内容、选择、屏幕提示）并通知监听者。返回的 future 在排在前面的所有任务都完成后才完成——也就是玩家点完整段脚本之后。编排好一段脚本后调用一次 `execute()`。
+`execute()` 追加一个清理任务（`id: 'execution_to_end'`），清空全部状态（`isOpened`、场景、立绘、对话内容、选择、屏幕提示）并通知监听者。如果运行中的 `pushTask()` 又追加了对话或选项，清理会顺延到这些动态任务之后。正常点完整段脚本后返回 `DialogRunResult.completed`；中途取消返回 `DialogRunResult.cancelled`，取消不是需要调用方捕获的异常。
+
+`reset()` 用于场景退出、读档等中途取消：立即递增任务代次、取消队列并清理显示状态，旧代次的异步回调不能重新入队。正常 `execute()` 保留 `storedValues`；`reset()` 默认同时清空它，可显式传入 `clearStoredValues: false` 保留。
 
 ### 读取玩家的选择结果
 
@@ -240,10 +243,18 @@ dynamic checkSelected(dynamic data)
 | `screenHintCursor` | `MouseCursor?` | 屏幕提示高亮区的兜底光标。 |
 | `barrierColor` | `Color?` | 若设置，会在所有内容背后绘制 `ModalBarrier`，对话打开时阻断游戏输入。 |
 | `dialogTextStyle` | `TextStyle?` | 对话文本的基础样式。 |
-| `dialogDecoration` | `BoxDecoration?` | 对话框容器的装饰。 |
+| `dialogNameTextStyle` | `TextStyle?` | 说话人名称样式。 |
+| `dialogDecoration` | `BoxDecoration?` | 默认对话框容器的装饰。 |
+| `dialogFrameBuilder` | `GameDialogFrameBuilder?` | 自定义窗口框架；使用时不再绘制默认 Acrylic。 |
+| `dialogWidth`／`dialogHeight`／`dialogBottom` | `double?` | 默认窗口尺寸与底部间距。 |
+| `dialogAvatarSize`／`dialogAvatarMargin` | `Size?`／`EdgeInsetsGeometry?` | 头像尺寸与边距。 |
+| `dialogContentPadding`／`dialogTextPadding` | `EdgeInsetsGeometry?` | 内容区与正文间距。 |
 | `onAvatarPressed` | `void Function(dynamic)?` | 点按头像时以 `data['characterId']` 调用。 |
-| `selectionButtonStyle` | `fluent.ButtonStyle?` | 选项按钮样式（Fluent UI）。 |
+| `selectionButtonStyle` | `fluent.ButtonStyle?` | 默认选项按钮样式（Fluent UI）。 |
 | `selectionTextStyle` | `TextStyle?` | 选项文字样式。 |
+| `selectionButtonBuilder` | `SelectionButtonBuilder?` | 用宿主按钮替换默认按钮，保留选择回写。 |
+| `screenHintBarrierColor`／`screenHintTextStyle` | `Color?`／`TextStyle?` | 屏幕提示屏障与文字样式。 |
+| `screenHintBorderColor`／`screenHintBorderRadius` | `Color?`／`double?` | 屏幕提示边框颜色与圆角。 |
 
 其 `Stack` 内的渲染顺序：屏障 → 背景场景（支持 800 ms 交叉淡化）→ 立绘 → 对话内容 → 选择对话框 → 屏幕提示。没有任何内容时渲染 `SizedBox.shrink()`，因此可以长期留在控件树中，开销极小。
 
@@ -265,11 +276,15 @@ static Future<void> show(
 
 `GameDialogContent.show` **不会**改动 `GameDialog` 状态——它把控件包进普通的 `showDialog`，结束时通过 `Navigator` 弹出。数据不能包含 `'id'` 键（有 assert），这样控件才会走「直接 pop 而非 finish」的分支。
 
-布局（`lib/game_dialog/game_dialog_content.dart:135`）：屏幕底部一个 880×190 的框（下边距 20 px），内衬 Fluent UI 的 `Acrylic` 模糊层；左侧为 140×140 的 `Avatar`，说话人 `name` 在上、`RichText` 行文本在下。行文本用 `getRichTextStream` 切分为 token，每 100 ms 显示一个（富文本标签作为整体原子渲染，因此着色与图标都正确）。点按一次立即补全当前行；再次点按进入下一行；最后一行结束后控件调用 `GameDialog.finishDialog(id)`（独立模式下则 `Navigator.pop`）。
+默认布局为屏幕底部一个 880×190 的框（下边距 20 px），内衬 Fluent UI 的 `Acrylic` 模糊层；左侧为 140×140 的 `Avatar`，说话人 `name` 在上、`RichText` 行文本在下。尺寸、间距、名称样式和头像均可配置，`dialogFrameBuilder` 可以把内部语义内容放入宿主自己的窗口，此时不绘制默认 Acrylic，正文区域使用 `Expanded` 适应框架宽度。
+
+行文本用 `getRichTextStream` 切分为 token，每 100 ms 显示一个（富文本标签作为整体原子渲染，因此着色与图标都正确）。点按一次立即补全当前行；再次点按进入下一行；最后一行结束后控件调用 `GameDialog.finishDialog(id)`（独立模式下则 `Navigator.pop`）。切换对话数据时才重置行索引和计时器，无关 rebuild 不会重新开始当前行。
 
 ### `SelectionDialog`
 
-一列居中、`fluent.Button`（宽 300）样式的按钮，每个键对应 `data['selections']` 中的一项。当选项的值是含 `'description'` 的 map 时，悬停按钮会通过 `HoverContentState`（`package:samsara/hover_info.dart`，方向 `topCenter`）显示该描述——见 `hover_info.md`。按下按钮会先隐藏悬停窗口，再完成选择。
+默认是一列居中、`fluent.Button`（宽 300）样式的按钮，每个键对应 `data['selections']` 中的一项。`SelectionButtonBuilder` 接收选项 key、显示文本和确认回调，可替换为宿主按钮；浮窗仍由外层通过 `HoverContentState` 管理，自定义按钮不需要自行实现悬窗。
+
+当选项的值是含 `'description'` 的 map 时，悬停按钮会通过 `HoverContentState`（`package:samsara/hover_info.dart`，方向 `topCenter`）显示该描述——见 `hover_info.md`。按下按钮会先隐藏悬停窗口，再完成选择。默认按钮继续支持富文本；自定义按钮的文本呈现由宿主负责。
 
 也可以独立使用：
 
@@ -311,7 +326,7 @@ static Future<String?> show(
 
 ## 6. 实例解析：`example/lib/scene/dialog_scene.dart`
 
-示例场景以 `'dialog'` 注册（`example/lib/app.dart:91`），包含三个精灵按钮：*Back*、*Start Dialog* 和 *Screen Hint*。其 `build` 把 `GameDialogController()` 叠在 `SceneWidget` 之上（见 §2）。
+示例场景以 `'dialog'` 注册（`example/lib/app.dart:91`），包含 *Back*、*Start Dialog*、*Screen Hint*、*Illustrations* 和 *Reset Dialog*。其 `build` 把带自定义窗口框架、选项按钮和提示边框的 `GameDialogController()` 叠在 `SceneWidget` 之上（见 §2）。*Illustrations* 同时展示 120×120 与 800×800 素材的底部居中效果，*Reset Dialog* 演示中途取消。
 
 *Start Dialog* 触发 `_runDialogScript()`——一段三幕、内含嵌套任务的脚本：
 
@@ -333,11 +348,11 @@ void _runDialogScript() {
     'id': 'choice',
     'selections': {
       'sword': {
-        'text': 'I want a sword <icon=sword></>',
+        'text': 'I want a sword',
         'description': '<grey>A sharp blade.</> 攻击 +5',
       },
       'spirit': {
-        'text': 'I want spirit <icon=spirit></>',
+        'text': 'I want spirit',
         'description': '<blue>Mystic energy.</> 灵力 +3',
       },
       'nothing': 'No thanks',
@@ -390,5 +405,5 @@ hintButton.onTap = (button, position) {
 - **过期重复文件**：`lib/game_dialog/game_dialog_state.dart` 是模型的旧拷贝（含有相同的 `SceneInfo`/`IllustrationInfo` 定义），且**未**被桶文件导出。请忽略它；`GameDialog` 位于 `lib/game_dialog/game_dialog.dart`。
 - **对话的 `'image'` 键**：文档列出的内容格式里虽然有 `'image'`，但内置的 `GameDialogContent` 并不读取它。若要在对话期间显示图片，请改用 `pushDialogRaw(content, imageId: '...')` 或 `pushImage`/`popImage`。
 - **选择与提示同时只有一个**：`selectionsData` 和 `screenHintInfo` 都是单槽位；重复 push 会替换当前内容。
-- **别忘了 `execute()`**：脚本结尾不调用它，最终状态（背景、`isOpened`）永远不会被清理；反过来也要记住清理会把立绘一并抹掉，若还需要保留就不要让 `execute()` 过早运行。
+- **别忘了 `execute()`**：脚本结尾不调用它，最终状态（背景、`isOpened`）永远不会被清理；反过来也要记住清理会把立绘一并抹掉，若还需要保留就不要让 `execute()` 过早运行。正常结束等待 `DialogRunResult.completed`，中途退出使用 `reset()` 并处理 `DialogRunResult.cancelled`。
 - **富文本与图标**：对话行与选项文本都经过 samsara 富文本管线；内嵌 `<icon=...>` 标签需要按 `../richtext/readme.md` 所述注册并预载图标。
