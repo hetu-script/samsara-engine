@@ -133,6 +133,53 @@ void main() {
     expect(await execution, DialogRunResult.completed);
   });
 
+  testWidgets('controller offsets selection buttons from screen center', (
+    tester,
+  ) async {
+    final dialog = GameDialog();
+    final hover = HoverContentState();
+    addTearDown(dialog.dispose);
+    addTearDown(hover.dispose);
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: dialog),
+          ChangeNotifierProvider.value(value: hover),
+        ],
+        child: MaterialApp(
+          home: GameDialogController(
+            selectionOffset: const Offset(300, 0),
+            selectionButtonBuilder: (context, key, text, onPressed) {
+              return TextButton(
+                key: ValueKey('option-$key'),
+                onPressed: onPressed,
+                child: Text(text),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    dialog.pushSelectionRaw({
+      'id': 'choice',
+      'selections': {'first': 'First'},
+    });
+    final execution = dialog.execute()!;
+    await tester.pump();
+
+    final option = find.byKey(const ValueKey('option-first'));
+    final screenSize = tester.view.physicalSize / tester.view.devicePixelRatio;
+    expect(
+      tester.getCenter(option),
+      screenSize.center(Offset.zero) + const Offset(300, 0),
+    );
+
+    await tester.tap(option);
+    await tester.pump();
+    expect(await execution, DialogRunResult.completed);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('unrelated rebuild does not restart typewriter or custom frame', (
     tester,
   ) async {

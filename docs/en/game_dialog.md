@@ -251,6 +251,7 @@ Consequences:
 | `dialogAvatarSize`/`dialogAvatarMargin` | `Size?`/`EdgeInsetsGeometry?` | Avatar size and margin. |
 | `dialogContentPadding`/`dialogTextPadding` | `EdgeInsetsGeometry?` | Content and body-text padding. |
 | `onAvatarPressed` | `void Function(dynamic)?` | Called with `data['characterId']` when the avatar is tapped. |
+| `selectionOffset` | `Offset` | Offset of the selection button group from the screen center; defaults to `Offset.zero`. For example, `Offset(300, 0)` moves it 300 logical pixels to the right. |
 | `selectionButtonStyle` | `fluent.ButtonStyle?` | Style of default selection buttons (Fluent UI). |
 | `selectionTextStyle` | `TextStyle?` | Text style of selection labels. |
 | `selectionButtonBuilder` | `SelectionButtonBuilder?` | Replaces default buttons while preserving selection completion. |
@@ -283,7 +284,7 @@ Line text is tokenized with `getRichTextStream` and revealed one token every 100
 
 ### `SelectionDialog`
 
-The default is a centered column of `fluent.Button`s (300 wide), one per key in `data['selections']`. `SelectionButtonBuilder` receives the option key, display text, and confirmation callback so a host can supply its own button. Hover content remains owned by `HoverContentState`, not by the custom button.
+The default is a centered column of `fluent.Button`s (300 wide), one per key in `data['selections']`; `offset` translates the whole column from the center without moving the full-screen barrier. `SelectionButtonBuilder` receives the option key, display text, and confirmation callback so a host can supply its own button. Hover content remains owned by `HoverContentState`, not by the custom button.
 
 When an option's value is a map with a `'description'`, hovering the button shows that description through `HoverContentState` (`package:samsara/hover_info.dart`, direction `topCenter`) — see `hover_info.md`. Pressing a button hides the hover window and finishes the selection. Default buttons keep rich-text support; custom buttons control their own text presentation.
 
@@ -295,6 +296,7 @@ static Future<String?> show(
   required dynamic selectionsData,
   MouseCursor? cursor,
   Color? barrierColor,
+  Offset offset = Offset.zero,
   fluent.ButtonStyle? buttonStyle,
   TextStyle? textStyle,
 })

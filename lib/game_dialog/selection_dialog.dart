@@ -7,13 +7,12 @@ import 'game_dialog.dart';
 import '../hover_info/hover_content.dart';
 import '../widgets/ui/mouse_region2.dart';
 
-typedef SelectionButtonBuilder =
-    Widget Function(
-      BuildContext context,
-      String key,
-      String text,
-      VoidCallback onPressed,
-    );
+typedef SelectionButtonBuilder = Widget Function(
+  BuildContext context,
+  String key,
+  String text,
+  VoidCallback onPressed,
+);
 
 class SelectionDialog extends StatefulWidget {
   /// selection data 数据格式：
@@ -31,6 +30,7 @@ class SelectionDialog extends StatefulWidget {
     required dynamic selectionsData,
     MouseCursor? cursor,
     Color? barrierColor,
+    Offset offset = Offset.zero,
     fluent.ButtonStyle? buttonStyle,
     TextStyle? textStyle,
     SelectionButtonBuilder? buttonBuilder,
@@ -43,6 +43,7 @@ class SelectionDialog extends StatefulWidget {
           data: selectionsData,
           cursor: cursor,
           barrierColor: barrierColor,
+          offset: offset,
           buttonStyle: buttonStyle,
           textStyle: textStyle,
           buttonBuilder: buttonBuilder,
@@ -56,6 +57,7 @@ class SelectionDialog extends StatefulWidget {
     required this.data,
     this.barrierColor,
     this.cursor,
+    this.offset = Offset.zero,
     this.buttonStyle,
     this.textStyle,
     this.buttonBuilder,
@@ -64,6 +66,7 @@ class SelectionDialog extends StatefulWidget {
   final dynamic data;
   final MouseCursor? cursor;
   final Color? barrierColor;
+  final Offset offset;
   final fluent.ButtonStyle? buttonStyle;
   final TextStyle? textStyle;
   final SelectionButtonBuilder? buttonBuilder;
@@ -80,10 +83,10 @@ class _SelectionDialogState extends State<SelectionDialog> {
     } else {
       assert(widget.data['id'] != null);
       context.read<GameDialog>().finishSelection(
-        widget.data['taskId'],
-        widget.data['id'],
-        value: key,
-      );
+            widget.data['taskId'],
+            widget.data['id'],
+            value: key,
+          );
     }
   }
 
@@ -107,62 +110,66 @@ class _SelectionDialogState extends State<SelectionDialog> {
                 onDismiss: _onSelection,
               ),
             Positioned.fill(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List<Widget>.from(
-                  selectionData.keys.map((key) {
-                    final value = selectionData[key];
-                    final text = value == null
-                        ? errorMsg
-                        : value is String
-                        ? value
-                        : value['text'] ?? errorMsg;
-                    final description = value != null && value is! String
-                        ? value['description'] as String?
-                        : null;
-                    final child = widget.buttonBuilder != null
-                        ? widget.buttonBuilder!(
-                            context,
-                            key.toString(),
-                            text.toString(),
-                            () => _onSelection(key.toString()),
-                          )
-                        : fluent.Button(
-                            style: widget.buttonStyle,
-                            onPressed: () => _onSelection(key.toString()),
-                            child: Label(
+              child: Transform.translate(
+                offset: widget.offset,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List<Widget>.from(
+                    selectionData.keys.map((key) {
+                      final value = selectionData[key];
+                      final text = value == null
+                          ? errorMsg
+                          : value is String
+                              ? value
+                              : value['text'] ?? errorMsg;
+                      final description = value != null && value is! String
+                          ? value['description'] as String?
+                          : null;
+                      final child = widget.buttonBuilder != null
+                          ? widget.buttonBuilder!(
+                              context,
+                              key.toString(),
                               text.toString(),
-                              textStyle: TextStyle(
-                                fontFamily: defaultTextStyle?.fontFamily,
-                                fontSize: defaultTextStyle?.fontSize,
-                              ).merge(widget.textStyle),
-                              width: 300,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                                vertical: 8.0,
+                              () => _onSelection(key.toString()),
+                            )
+                          : fluent.Button(
+                              style: widget.buttonStyle,
+                              onPressed: () => _onSelection(key.toString()),
+                              child: Label(
+                                text.toString(),
+                                textStyle: TextStyle(
+                                  fontFamily: defaultTextStyle?.fontFamily,
+                                  fontSize: defaultTextStyle?.fontSize,
+                                ).merge(widget.textStyle),
+                                width: 300,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                  vertical: 8.0,
+                                ),
                               ),
-                            ),
-                          );
-                    return Container(
-                      padding: const EdgeInsets.symmetric(vertical: 5.0),
-                      width: 300,
-                      child: MouseRegion2(
-                        onEnter: description == null
-                            ? null
-                            : (rect) {
-                                context.read<HoverContentState>().show(
-                                  data: description,
-                                  rect: rect,
-                                  direction: HoverContentDirection.topCenter,
-                                );
-                              },
-                        onExit: description == null
-                            ? null
-                            : () => context.read<HoverContentState>().hide(),
-                        child: child,
-                      ),
-                    );
-                  }),
+                            );
+                      return Container(
+                        padding: const EdgeInsets.symmetric(vertical: 2.0),
+                        width: 300,
+                        child: MouseRegion2(
+                          onEnter: description == null
+                              ? null
+                              : (rect) {
+                                  context.read<HoverContentState>().show(
+                                        data: description,
+                                        rect: rect,
+                                        direction:
+                                            HoverContentDirection.topCenter,
+                                      );
+                                },
+                          onExit: description == null
+                              ? null
+                              : () => context.read<HoverContentState>().hide(),
+                          child: child,
+                        ),
+                      );
+                    }),
+                  ),
                 ),
               ),
             ),

@@ -62,6 +62,7 @@ class GameDialogController extends StatefulWidget {
     this.dialogContentPadding,
     this.dialogTextPadding,
     this.onAvatarPressed,
+    this.selectionOffset = Offset.zero,
     this.selectionButtonStyle,
     this.selectionTextStyle,
     this.selectionButtonBuilder,
@@ -87,6 +88,7 @@ class GameDialogController extends StatefulWidget {
   final EdgeInsetsGeometry? dialogContentPadding;
   final EdgeInsetsGeometry? dialogTextPadding;
   final void Function(dynamic)? onAvatarPressed;
+  final Offset selectionOffset;
   final fluent.ButtonStyle? selectionButtonStyle;
   final TextStyle? selectionTextStyle;
   final SelectionButtonBuilder? selectionButtonBuilder;
@@ -306,6 +308,7 @@ class _GameDialogControllerState extends State<GameDialogController>
                   SelectionDialog(
                     data: selectionsData,
                     cursor: widget.cursor,
+                    offset: widget.selectionOffset,
                     buttonStyle: widget.selectionButtonStyle,
                     textStyle: widget.selectionTextStyle,
                     buttonBuilder: widget.selectionButtonBuilder,

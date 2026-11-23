@@ -174,6 +174,7 @@ class DialogScene extends Scene {
           // 本场景的对话框渲染控制器
           GameDialogController(
             illustrationOffset: const Offset(0, -20),
+            selectionOffset: const Offset(300, 0),
             dialogFrameBuilder: (context, child) {
               return Container(
                 width: 880,

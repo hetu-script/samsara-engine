@@ -251,6 +251,7 @@ dynamic checkSelected(dynamic data)
 | `dialogAvatarSize`／`dialogAvatarMargin` | `Size?`／`EdgeInsetsGeometry?` | 头像尺寸与边距。 |
 | `dialogContentPadding`／`dialogTextPadding` | `EdgeInsetsGeometry?` | 内容区与正文间距。 |
 | `onAvatarPressed` | `void Function(dynamic)?` | 点按头像时以 `data['characterId']` 调用。 |
+| `selectionOffset` | `Offset` | 选择按钮组相对屏幕中心的偏移，默认 `Offset.zero`；例如 `Offset(300, 0)` 表示向右移动 300 像素。 |
 | `selectionButtonStyle` | `fluent.ButtonStyle?` | 默认选项按钮样式（Fluent UI）。 |
 | `selectionTextStyle` | `TextStyle?` | 选项文字样式。 |
 | `selectionButtonBuilder` | `SelectionButtonBuilder?` | 用宿主按钮替换默认按钮，保留选择回写。 |
@@ -283,7 +284,7 @@ static Future<void> show(
 
 ### `SelectionDialog`
 
-默认是一列居中、`fluent.Button`（宽 300）样式的按钮，每个键对应 `data['selections']` 中的一项。`SelectionButtonBuilder` 接收选项 key、显示文本和确认回调，可替换为宿主按钮；浮窗仍由外层通过 `HoverContentState` 管理，自定义按钮不需要自行实现悬窗。
+默认是一列居中、`fluent.Button`（宽 300）样式的按钮，每个键对应 `data['selections']` 中的一项；`offset` 可让整列相对中心平移，且不会移动全屏屏障。`SelectionButtonBuilder` 接收选项 key、显示文本和确认回调，可替换为宿主按钮；浮窗仍由外层通过 `HoverContentState` 管理，自定义按钮不需要自行实现悬窗。
 
 当选项的值是含 `'description'` 的 map 时，悬停按钮会通过 `HoverContentState`（`package:samsara/hover_info.dart`，方向 `topCenter`）显示该描述——见 `hover_info.md`。按下按钮会先隐藏悬停窗口，再完成选择。默认按钮继续支持富文本；自定义按钮的文本呈现由宿主负责。
 
@@ -295,6 +296,7 @@ static Future<String?> show(
   required dynamic selectionsData,
   MouseCursor? cursor,
   Color? barrierColor,
+  Offset offset = Offset.zero,
   fluent.ButtonStyle? buttonStyle,
   TextStyle? textStyle,
 })
