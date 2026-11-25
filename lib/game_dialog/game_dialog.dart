@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:async';
 
+import 'package:flutter/animation.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hetu_script/values.dart';
@@ -31,19 +32,45 @@ class ScreenHintInfo {
 class IllustrationInfo {
   final String path;
   final double offsetX, offsetY;
+  final bool isFadeIn;
+  Duration fadeDuration;
   bool isFadeOut;
+  String? taskId;
 
   IllustrationInfo(
     this.path, {
     this.offsetX = 0.0,
     this.offsetY = 0.0,
+    this.isFadeIn = false,
     this.isFadeOut = false,
+    this.fadeDuration = const Duration(milliseconds: 800),
+    this.taskId,
+  });
+}
+
+class SceneMotion {
+  final Duration duration;
+  final Curve curve;
+  final double beginScale, endScale;
+  final Offset beginOffset, endOffset;
+  final Duration? fadeDuration;
+
+  const SceneMotion({
+    required this.duration,
+    this.curve = Curves.linear,
+    this.beginScale = 1.0,
+    this.endScale = 1.0,
+    this.beginOffset = Offset.zero,
+    this.endOffset = Offset.zero,
+    this.fadeDuration,
   });
 }
 
 class SceneInfo {
   final String path;
   final bool isFadeIn;
+  final SceneMotion? motion;
+  Duration fadeDuration;
   bool isFadeOut;
   String? taskId;
 
@@ -51,12 +78,30 @@ class SceneInfo {
     this.path, {
     this.isFadeIn = false,
     this.isFadeOut = false,
+    this.motion,
+    this.fadeDuration = const Duration(milliseconds: 800),
     this.taskId,
+  });
+}
+
+class SceneShadeInfo {
+  final double fromOpacity, targetOpacity;
+  final Duration duration;
+  final String taskId;
+
+  const SceneShadeInfo({
+    required this.fromOpacity,
+    required this.targetOpacity,
+    required this.duration,
+    required this.taskId,
   });
 }
 
 class GameDialog with ChangeNotifier, TaskController {
   bool isOpened = false;
+  bool presentationPaused = false;
+  double sceneShadeOpacity = 0;
+  SceneShadeInfo? sceneShade;
 
   /// key是图片的asset路径
   final Set<SceneInfo> scenes = {};
@@ -65,6 +110,7 @@ class GameDialog with ChangeNotifier, TaskController {
 
   /// key是图片的asset路径，value是图片x坐标的偏移值
   final Set<IllustrationInfo> illustrations = {};
+  IllustrationInfo? prevIllustration;
   final Map<String, dynamic> contents = {};
   dynamic get currentContent => contents.values.lastOrNull;
 
@@ -106,7 +152,11 @@ class GameDialog with ChangeNotifier, TaskController {
         return;
       }
       isOpened = false;
+      presentationPaused = false;
+      sceneShadeOpacity = 0;
+      sceneShade = null;
       prevScene = null;
+      prevIllustration = null;
       illustrations.clear();
       scenes.clear();
       contents.clear();
@@ -116,7 +166,8 @@ class GameDialog with ChangeNotifier, TaskController {
       if (!completer.isCompleted) {
         completer.complete(DialogRunResult.completed);
       }
-    }, id: taskId)?.then(
+    }, id: taskId)
+        ?.then(
       (_) {},
       onError: (Object error) {
         if (completer.isCompleted) return;
@@ -132,7 +183,11 @@ class GameDialog with ChangeNotifier, TaskController {
   void reset({bool clearStoredValues = true}) {
     cancelAllTasks();
     isOpened = false;
+    presentationPaused = false;
+    sceneShadeOpacity = 0;
+    sceneShade = null;
     prevScene = null;
+    prevIllustration = null;
     illustrations.clear();
     scenes.clear();
     contents.clear();
@@ -142,10 +197,78 @@ class GameDialog with ChangeNotifier, TaskController {
     notifyListeners();
   }
 
-  void pushBackground(String imageId, {bool isFadeIn = false}) {
+  void setPresentationPaused(bool paused) {
+    if (presentationPaused == paused) return;
+    presentationPaused = paused;
+    notifyListeners();
+  }
+
+  void setSceneShade(
+    double opacity, {
+    Duration duration = const Duration(milliseconds: 800),
+    bool waitForTransition = true,
+  }) {
+    if (!isCurrentTaskContext) return;
+    assert(opacity >= 0 && opacity <= 1);
+    isOpened = true;
+    final taskId = 'scene_shade_${randomUID(withTime: true)}';
+    final animated = duration > Duration.zero;
+    schedule(
+      () {
+        sceneShade = SceneShadeInfo(
+          fromOpacity: sceneShadeOpacity,
+          targetOpacity: opacity,
+          duration: duration,
+          taskId: taskId,
+        );
+        if (!animated) {
+          sceneShadeOpacity = opacity;
+          sceneShade = null;
+        }
+        notifyListeners();
+      },
+      id: taskId,
+      isAuto: !(animated && waitForTransition),
+    );
+  }
+
+  void completeSceneShade(SceneShadeInfo info) {
+    if (sceneShade != info) return;
+    sceneShadeOpacity = info.targetOpacity;
+    sceneShade = null;
+    finishTask(info.taskId);
+    notifyListeners();
+  }
+
+  void completeSceneTransition(SceneInfo info) {
+    if (prevScene == info && info.isFadeOut) {
+      prevScene = null;
+      notifyListeners();
+    }
+    final taskId = info.taskId;
+    if (taskId != null) finishTask(taskId);
+  }
+
+  void completeIllustrationTransition(IllustrationInfo info) {
+    if (prevIllustration == info && info.isFadeOut) {
+      prevIllustration = null;
+      notifyListeners();
+    }
+    final taskId = info.taskId;
+    if (taskId != null) finishTask(taskId);
+  }
+
+  void pushBackground(
+    String imageId, {
+    bool isFadeIn = false,
+    SceneMotion? motion,
+    Duration fadeDuration = const Duration(milliseconds: 800),
+    bool waitForTransition = true,
+  }) {
     if (!isCurrentTaskContext) return;
     isOpened = true;
     final taskId = 'push_background_${randomUID(withTime: true)}';
+    final animated = isFadeIn || motion != null;
     schedule(
       () {
         if (scenes.isNotEmpty) {
@@ -154,16 +277,23 @@ class GameDialog with ChangeNotifier, TaskController {
         scenes.add(SceneInfo(
           'assets/images/$imageId',
           isFadeIn: isFadeIn,
+          motion: motion,
+          fadeDuration: fadeDuration,
           taskId: taskId,
         ));
         notifyListeners();
       },
       id: taskId,
-      isAuto: !isFadeIn,
+      isAuto: !(animated && waitForTransition),
     );
   }
 
-  void popBackground({String? imageId, isFadeOut = false}) {
+  void popBackground({
+    String? imageId,
+    bool isFadeOut = false,
+    Duration fadeDuration = const Duration(milliseconds: 800),
+    bool waitForTransition = true,
+  }) {
     if (!isCurrentTaskContext) return;
     // assert(isOpened == true);
     final taskId = 'pop_background_${randomUID(withTime: true)}';
@@ -180,14 +310,16 @@ class GameDialog with ChangeNotifier, TaskController {
           prevScene = scenes.last;
         }
         if (isFadeOut) {
-          prevScene!.isFadeOut = isFadeOut;
-          prevScene!.taskId = taskId;
+          prevScene!
+            ..isFadeOut = true
+            ..fadeDuration = fadeDuration
+            ..taskId = taskId;
         }
         scenes.remove(prevScene);
         notifyListeners();
       },
       id: taskId,
-      isAuto: !isFadeOut,
+      isAuto: !(isFadeOut && waitForTransition),
     );
   }
 
@@ -213,6 +345,9 @@ class GameDialog with ChangeNotifier, TaskController {
     String imageId, {
     double offsetX = 0.0,
     double offsetY = 0.0,
+    bool isFadeIn = false,
+    Duration fadeDuration = const Duration(milliseconds: 800),
+    bool waitForTransition = true,
   }) {
     if (!isCurrentTaskContext) return;
     isOpened = true;
@@ -223,14 +358,23 @@ class GameDialog with ChangeNotifier, TaskController {
           'assets/images/$imageId',
           offsetX: offsetX,
           offsetY: offsetY,
+          isFadeIn: isFadeIn,
+          fadeDuration: fadeDuration,
+          taskId: taskId,
         ));
         notifyListeners();
       },
       id: taskId,
+      isAuto: !(isFadeIn && waitForTransition),
     );
   }
 
-  void popImage({String? imageId}) {
+  void popImage({
+    String? imageId,
+    bool isFadeOut = false,
+    Duration fadeDuration = const Duration(milliseconds: 800),
+    bool waitForTransition = true,
+  }) {
     if (!isCurrentTaskContext) return;
     // assert(isOpened == true);
     final taskId = 'pop_image_${randomUID(withTime: true)}';
@@ -238,19 +382,37 @@ class GameDialog with ChangeNotifier, TaskController {
       () {
         assert(illustrations.isNotEmpty,
             'game dialog: pop image failed, no image to pop.');
+        IllustrationInfo? target;
         if (imageId != null) {
-          illustrations
-              .removeWhere((img) => img.path == 'assets/images/$imageId');
+          final path = 'assets/images/$imageId';
+          for (final info in illustrations) {
+            if (info.path == path) target = info;
+          }
         } else if (illustrations.isNotEmpty) {
-          illustrations.remove(illustrations.last);
+          target = illustrations.last;
+        }
+        if (target != null) {
+          prevIllustration = target;
+          if (isFadeOut) {
+            target
+              ..isFadeOut = true
+              ..fadeDuration = fadeDuration
+              ..taskId = taskId;
+          }
+          illustrations.remove(target);
         }
         notifyListeners();
       },
       id: taskId,
+      isAuto: !(isFadeOut && waitForTransition),
     );
   }
 
-  void popAllImages() {
+  void popAllImages({
+    bool isFadeOut = false,
+    Duration fadeDuration = const Duration(milliseconds: 800),
+    bool waitForTransition = true,
+  }) {
     if (!isCurrentTaskContext) return;
     // assert(isOpened == true);
     final taskId = 'pop_all_images_${randomUID(withTime: true)}';
@@ -258,10 +420,20 @@ class GameDialog with ChangeNotifier, TaskController {
       () {
         assert(illustrations.isNotEmpty,
             'game dialog: pop image failed, no image to pop.');
+        if (illustrations.isNotEmpty) {
+          prevIllustration = illustrations.last;
+          if (isFadeOut) {
+            prevIllustration!
+              ..isFadeOut = true
+              ..fadeDuration = fadeDuration
+              ..taskId = taskId;
+          }
+        }
         illustrations.clear();
         notifyListeners();
       },
       id: taskId,
+      isAuto: !(isFadeOut && waitForTransition),
     );
   }
 

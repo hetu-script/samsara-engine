@@ -92,6 +92,38 @@ class DialogScene extends Scene {
       dialog.reset();
     };
     world.add(resetButton);
+
+    final sceneMotionButton = SpriteButton(
+      anchor: Anchor.center,
+      text: 'Scene Motion',
+      spriteId: 'button.png',
+      useSpriteSrcSize: true,
+      position: center + Vector2(0, 280),
+    );
+    sceneMotionButton.onTap = (button, position) {
+      dialog.setSceneShade(1, duration: const Duration(milliseconds: 200));
+      dialog.pushBackground(
+        'pepe.png',
+        motion: const SceneMotion(
+          duration: Duration(seconds: 2),
+          beginScale: 1,
+          endScale: 1.06,
+          beginOffset: Offset.zero,
+          endOffset: Offset(-40, 0),
+          fadeDuration: Duration(milliseconds: 300),
+        ),
+        waitForTransition: false,
+      );
+      dialog.setSceneShade(0, duration: const Duration(milliseconds: 300));
+      dialog.pushDialogRaw({
+        'name': 'Pepe the Guide',
+        'lines': [
+          'The background moves while this dialog remains interactive.'
+        ],
+      });
+      dialog.execute();
+    };
+    world.add(sceneMotionButton);
   }
 
   @override

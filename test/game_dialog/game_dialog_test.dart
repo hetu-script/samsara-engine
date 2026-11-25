@@ -303,6 +303,166 @@ void main() {
     await check(1024, 1024, const Size(300, 300));
     await check(1200, 300, const Size(400, 100));
   });
+
+  testWidgets('motion runs beside dialog and pause restarts typewriter', (
+    tester,
+  ) async {
+    final dialog = GameDialog();
+    addTearDown(dialog.dispose);
+    var skipCount = 0;
+    await tester.pumpWidget(
+      _dialogTestApp(
+        dialog,
+        onSkip: () => skipCount++,
+      ),
+    );
+    dialog.pushBackground(
+      'scene.png',
+      motion: const SceneMotion(
+        duration: Duration(seconds: 1),
+        beginScale: 1,
+        endScale: 1.04,
+        fadeDuration: Duration(milliseconds: 200),
+      ),
+      waitForTransition: false,
+    );
+    dialog.pushDialogRaw({
+      'lines': ['ab']
+    });
+    final execution = dialog.execute()!;
+    await tester.pump();
+    await tester.pump();
+
+    expect(dialog.currentContent?['lines'], ['ab']);
+    expect(find.byKey(const ValueKey('skip-button')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('a', findRichText: true), findsOneWidget);
+
+    dialog.setPresentationPaused(true);
+    await tester.pump();
+    expect(find.byType(GameDialogContent), findsNothing);
+    expect(find.byKey(const ValueKey('skip-button')), findsNothing);
+    expect(dialog.currentContent, isNotNull);
+
+    dialog.setPresentationPaused(false);
+    await tester.pump();
+    expect(find.byType(GameDialogContent), findsOneWidget);
+    expect(find.text('ab', findRichText: true), findsNothing);
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.text('ab', findRichText: true), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('skip-button')));
+    expect(skipCount, 1);
+    dialog.finishDialog(dialog.currentContent['id'] as String);
+    expect(await execution, DialogRunResult.completed);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('selection hides skip button', (tester) async {
+    final dialog = GameDialog();
+    addTearDown(dialog.dispose);
+    await tester.pumpWidget(_dialogTestApp(dialog, onSkip: () {}));
+    dialog.pushSelectionRaw({
+      'id': 'choice',
+      'selections': {'first': 'First'},
+    });
+    final execution = dialog.execute()!;
+    await tester.pump();
+
+    expect(dialog.selectionsData, isNotNull);
+    expect(find.byKey(const ValueKey('skip-button')), findsNothing);
+    dialog.finishSelection(
+      dialog.selectionsData['taskId'] as String,
+      'choice',
+      value: 'first',
+    );
+    expect(await execution, DialogRunResult.completed);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('shade pauses and reset clears pending animation',
+      (tester) async {
+    final dialog = GameDialog();
+    addTearDown(dialog.dispose);
+    await tester.pumpWidget(_dialogTestApp(dialog));
+    dialog.setSceneShade(
+      1,
+      duration: const Duration(seconds: 1),
+      waitForTransition: false,
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(dialog.sceneShade, isNotNull);
+
+    dialog.setPresentationPaused(true);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(dialog.sceneShade, isNotNull);
+    dialog.setPresentationPaused(false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1100));
+    expect(dialog.sceneShade, isNull);
+    expect(dialog.sceneShadeOpacity, 1);
+
+    dialog.setSceneShade(0, duration: const Duration(seconds: 1));
+    dialog.reset();
+    await tester.pump();
+    expect(dialog.sceneShade, isNull);
+    expect(dialog.sceneShadeOpacity, 0);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('illustration fade out clears previous illustration', (
+    tester,
+  ) async {
+    final dialog = GameDialog();
+    addTearDown(dialog.dispose);
+    await tester.pumpWidget(_dialogTestApp(dialog));
+    dialog.pushImage('vera.png');
+    await tester.pump();
+    expect(dialog.illustrations, hasLength(1));
+
+    dialog.popAllImages(
+      isFadeOut: true,
+      fadeDuration: const Duration(milliseconds: 100),
+    );
+    final execution = dialog.execute()!;
+    await tester.pump();
+    expect(dialog.prevIllustration, isNotNull);
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(dialog.prevIllustration, isNull);
+    expect(await execution, DialogRunResult.completed);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+}
+
+Widget _dialogTestApp(GameDialog dialog, {VoidCallback? onSkip}) {
+  return DefaultAssetBundle(
+    bundle: _TestAssetBundle(),
+    child: MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: dialog),
+        ChangeNotifierProvider(create: (_) => HoverContentState()),
+      ],
+      child: MaterialApp(
+        home: GameDialogController(
+          onSkip: onSkip,
+          dialogFrameBuilder: (context, child) {
+            return SizedBox(width: 500, height: 180, child: child);
+          },
+          selectionButtonBuilder: (context, key, text, onPressed) {
+            return TextButton(onPressed: onPressed, child: Text(text));
+          },
+          skipButtonBuilder: (context, onPressed) {
+            return TextButton(
+              key: const ValueKey('skip-button'),
+              onPressed: onPressed,
+              child: const Text('Skip'),
+            );
+          },
+        ),
+      ),
+    ),
+  );
 }
 
 class _TestAssetBundle extends CachingAssetBundle {

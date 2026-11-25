@@ -167,17 +167,31 @@ void finishScreenHint()  // clears screenHintInfo and completes the hint's task
 ### Backgrounds and illustrations
 
 ```dart
-void pushBackground(String imageId, {bool isFadeIn = false})
-void popBackground({String? imageId, isFadeOut = false})
+void pushBackground(
+  String imageId, {
+  bool isFadeIn = false,
+  SceneMotion? motion,
+  Duration fadeDuration = const Duration(milliseconds: 800),
+  bool waitForTransition = true,
+})
+void popBackground({String? imageId, bool isFadeOut = false, ...})
 void popAllBackgrounds()
-void pushImage(String imageId, {double offsetX = 0.0, double offsetY = 0.0})
-void popImage({String? imageId})
-void popAllImages()
+void pushImage(String imageId, {double offsetX = 0.0, double offsetY = 0.0, bool isFadeIn = false, ...})
+void popImage({String? imageId, bool isFadeOut = false, ...})
+void popAllImages({bool isFadeOut = false, ...})
+void setSceneShade(double opacity, {Duration duration = ..., bool waitForTransition = true})
+void setPresentationPaused(bool paused)
 ```
 
 - `imageId` is relative to `assets/images/` — the model prepends that prefix itself.
-- `pushBackground` records the previous scene for cross-fading; with `isFadeIn: true` the task is non-auto and is completed by the controller when the 800 ms fade animation finishes. `popBackground(isFadeOut: true)` fades the outgoing scene out the same way. Without fade flags these tasks complete immediately.
-- Illustrations no longer use a fixed 600×900 box. `GameDialogIllustration` preserves the source aspect ratio, does not upscale small images, and scales oversized images down to fit the screen. The default anchor is bottom center; `offsetX`/`offsetY` are optional adjustments relative to that anchor.
+- `pushBackground` records the previous scene for cross-fading. Explicit fades block the queue by default. `SceneMotion` configures duration, curve, start/end scale, reference-canvas offsets and an optional cross-fade; with `waitForTransition: false`, motion runs beside subsequent dialogs and selections.
+- Offsets use a 1920×1080 reference canvas and are scaled by the actual cover scale. A new `SceneInfo` is a distinct shot even when it reuses the same path.
+- `setSceneShade` controls an independent black overlay without replacing the scene stack. It covers scenes, illustrations and dialog controls, blocking dialog pointer input during transitions so hosts can implement “fade to black → replace scene → reveal”.
+- `setPresentationPaused(true)` preserves scenes and illustrations, freezes animations and removes dialog/selection widgets without cancelling model tasks. Resuming recreates `GameDialogContent`, restarting the current dialog content's typewriter from the beginning.
+- Use `pushImage(..., isFadeIn: true)` and `popImage(..., isFadeOut: true)` or `popAllImages(isFadeOut: true)` for illustration fades.
+- Illustrations do not use a fixed 600×900 box. `GameDialogIllustration` preserves the source aspect ratio, does not upscale small images, and scales oversized images down to fit the screen. The default anchor is bottom center; `offsetX`/`offsetY` adjust that anchor.
+
+`GameDialogController` also accepts `onSkip` and `skipButtonBuilder`. The host button appears at the top right while dialog content is visible, with no selection, pause or black overlay. The controller only forwards the callback; skip behavior belongs to the host.
 
 ### Arbitrary tasks and running the script
 
@@ -258,7 +272,7 @@ Consequences:
 | `screenHintBarrierColor`/`screenHintTextStyle` | `Color?`/`TextStyle?` | Screen-hint barrier and text style. |
 | `screenHintBorderColor`/`screenHintBorderRadius` | `Color?`/`double?` | Screen-hint border color and radius. |
 
-Rendering order inside its `Stack`: barrier → background scene (with 800 ms cross-fade support) → illustrations → dialog content → selection dialog → screen hint. When nothing is active it renders `SizedBox.shrink()`, so it is cheap to leave permanently in the tree.
+Rendering order inside its `Stack`: barrier → background scene (configurable motion and cross-fade) → illustrations → dialog content → selection dialog → skip button → screen hint → black overlay. When nothing is active it renders `SizedBox.shrink()`, so it is cheap to leave permanently in the tree.
 
 ### `GameDialogContent`
 

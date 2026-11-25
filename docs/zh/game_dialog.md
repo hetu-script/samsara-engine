@@ -167,17 +167,31 @@ void finishScreenHint()  // 清空 screenHintInfo 并完成提示的任务
 ### 背景与立绘
 
 ```dart
-void pushBackground(String imageId, {bool isFadeIn = false})
-void popBackground({String? imageId, isFadeOut = false})
+void pushBackground(
+  String imageId, {
+  bool isFadeIn = false,
+  SceneMotion? motion,
+  Duration fadeDuration = const Duration(milliseconds: 800),
+  bool waitForTransition = true,
+})
+void popBackground({String? imageId, bool isFadeOut = false, ...})
 void popAllBackgrounds()
-void pushImage(String imageId, {double offsetX = 0.0, double offsetY = 0.0})
-void popImage({String? imageId})
-void popAllImages()
+void pushImage(String imageId, {double offsetX = 0.0, double offsetY = 0.0, bool isFadeIn = false, ...})
+void popImage({String? imageId, bool isFadeOut = false, ...})
+void popAllImages({bool isFadeOut = false, ...})
+void setSceneShade(double opacity, {Duration duration = ..., bool waitForTransition = true})
+void setPresentationPaused(bool paused)
 ```
 
 - `imageId` 相对于 `assets/images/` —— 模型会自动补上该前缀。
-- `pushBackground` 会记录上一个场景用于交叉淡化；`isFadeIn: true` 时任务为非自动，由控制器在 800 ms 淡入动画结束后完成任务。`popBackground(isFadeOut: true)` 以同样方式淡出被弹出的场景。不带淡入淡出标记时任务立即完成。
+- `pushBackground` 会记录上一个场景用于交叉淡化；显式淡入淡出默认阻塞队列，直到动画结束。传入 `SceneMotion` 可配置时长、曲线、起止缩放、参考画布 offset 和可选交叉淡化时间；`waitForTransition: false` 时运镜与后续台词／选项并行。
+- offset 以 1920×1080 参考画布计，按实际 coverScale 换算。相同路径的新 `SceneInfo` 仍是独立镜头。
+- `setSceneShade` 控制独立黑色遮罩，不替换背景栈。遮罩覆盖背景、立绘与对话控件，过渡时阻断下层对话点击，适合“渐暗→黑场下换图→渐亮”。
+- `setPresentationPaused(true)` 保留背景和立绘、冻结动画，并移除对话正文与选择控件；模型任务不取消。恢复后重建 `GameDialogContent`，当前对话内容从头播放打字机。
+- `pushImage(..., isFadeIn: true)` 与 `popImage(..., isFadeOut: true)`／`popAllImages(isFadeOut: true)` 提供立绘淡入淡出。
 - 立绘不再使用固定 600×900 容器。`GameDialogIllustration` 读取素材固有宽高比，小图不放大，超出屏幕时等比缩小；默认水平居中且底边对齐屏幕下边缘。`offsetX`／`offsetY` 只是相对该 bottomCenter 锚点的可选微调。
+
+`GameDialogController` 还可接收 `onSkip` 与 `skipButtonBuilder`：有台词、无选择、未暂停且无黑场时，在右上角显示宿主按钮。控制器只转发回调，跳过规则由宿主实现。
 
 ### 任意任务与运行脚本
 
@@ -258,7 +272,7 @@ dynamic checkSelected(dynamic data)
 | `screenHintBarrierColor`／`screenHintTextStyle` | `Color?`／`TextStyle?` | 屏幕提示屏障与文字样式。 |
 | `screenHintBorderColor`／`screenHintBorderRadius` | `Color?`／`double?` | 屏幕提示边框颜色与圆角。 |
 
-其 `Stack` 内的渲染顺序：屏障 → 背景场景（支持 800 ms 交叉淡化）→ 立绘 → 对话内容 → 选择对话框 → 屏幕提示。没有任何内容时渲染 `SizedBox.shrink()`，因此可以长期留在控件树中，开销极小。
+其 `Stack` 内的渲染顺序：屏障 → 背景场景（可配置运镜与交叉淡化）→ 立绘 → 对话内容 → 选择对话框 → 跳过按钮 → 屏幕提示 → 黑色遮罩。没有任何内容时渲染 `SizedBox.shrink()`，因此可以长期留在控件树中，开销极小。
 
 ### `GameDialogContent`
 
