@@ -75,6 +75,27 @@ void main() {
     expect(first.endCount, 1);
     expect(second.endCount, 1);
   });
+
+  test('pushScene can keep the outgoing cached scene active', () async {
+    final engine = SamsaraEngine();
+    addTearDown(engine.dispose);
+    final first = _TestScene('first');
+    final second = _TestScene('second');
+    engine.registerSceneConstructor('first', (_) async => first);
+    engine.registerSceneConstructor('second', (_) async => second);
+
+    await engine.pushScene('first', triggerOnStart: false);
+    await engine.pushScene(
+      'second',
+      triggerOnStart: false,
+      triggerOnEnd: false,
+    );
+    await engine.popScene(clearCache: true);
+
+    expect(first.endCount, 0);
+    expect(second.endCount, 1);
+    expect(engine.scene, first);
+  });
 }
 
 class _TestScene extends Scene {

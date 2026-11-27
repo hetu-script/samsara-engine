@@ -97,15 +97,17 @@ abstract class SceneController with ChangeNotifier implements HTLogger {
   }
 
   /// 利用场景序列创造场景
+  /// triggerOnEnd 为 false 时保留当前缓存场景，不触发其 onEnd 清理。
   Future<Scene> pushScene(
     String sceneId, {
     String? constructorId,
     dynamic arguments,
     bool triggerOnStart = true,
+    bool triggerOnEnd = true,
     void Function(Scene scene)? onAfterLoaded,
   }) async {
     if (scene?.id != sceneId) {
-      scene?.onEnd();
+      if (triggerOnEnd) scene?.onEnd();
       _sceneStack.add(sceneId);
       if (constructorId != null) {
         _cachedConstructorIds[sceneId] = constructorId;
